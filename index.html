@@ -18,6 +18,7 @@ button:disabled{opacity:.5} .row{display:flex;gap:10px;flex-wrap:wrap} .row>*{fl
 .missing{background:#fdecea;color:#9b2226} .uploaded{background:#eaf6ec;color:#1e6b2e} .na{background:#eee;color:#555} .pending{background:#fff3cd;color:#7a5b00}
 .item{border:1px solid #ddd;border-radius:8px;padding:12px;margin:10px 0} .item.miss{border-color:#d66;background:#fffafa}
 .chg-scroll{max-height:200px;overflow-y:auto;border:1px solid #ddd;border-radius:8px;padding:6px 12px} .chg-scroll label{display:flex;gap:10px;align-items:center;margin:12px 0;cursor:pointer} .chg-scroll input{width:auto;accent-color:#16324f} .chg-check{color:#1a7f37;font-size:20px;font-weight:700} .chg-head{cursor:pointer}
+.sec-head{cursor:pointer;display:flex;align-items:baseline;gap:8px;margin-bottom:10px} .sec-head h2{flex:1;margin:0} .sec-sum{color:#666;font-size:13px} .sec-chev{color:#16324f;font-weight:700;white-space:nowrap}
 .muted{color:#666;font-size:13px} .small{font-size:13px} .hidden{display:none!important}
 table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid #ddd;padding:6px;text-align:left}
 #printArea{display:none}
@@ -154,15 +155,15 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 
 <div class="card">
 <h2>6 · 导出给会计师：标准化可对接，会计师只审核确认</h2>
-<p class="muted small">三份导出内容一致，均不含社保号与金额，均不锁任何一家报税软件：<b>CSV</b> 是通用表格，可直接用 Excel / Google Sheets 打开，也可导入会计师自己的报税软件，无需重录表类型、付款方与状态；<b>JSON</b> 是机器可读清单；<b>PDF</b> 是打印版，末尾带会计师审核签字栏。导出的是清单与文件名索引，文件原件由你另外经会计师门户 / 邮件发给会计师（演示版文件内容本就不保存）。会计师的工作只是审核确认并签字，平台不抽报税费、不替代签字。</p>
+<p class="muted small">三份导出内容一致，均不含社保号与金额，均不锁任何一家报税软件：<b>CSV</b> 是通用表格，可直接用 Excel / Google Sheets 打开，也可导入会计师自己的报税软件，无需重录表类型、付款方与状态；<b>JSON</b> 是机器可读清单；<b>PDF</b> 是打印版，末尾带会计师审核签字栏。导出的是清单与文件名索引，文件原件由你另外经会计师门户 / 邮件发给会计师（演示版文件内容本就不保存）。会计师的工作只是审核确认并签字（以打印版签字栏手签为准），平台不抽报税费、不替代签字；页面上的复核记录由你自记，不代表 CPA 已确认。</p>
 <p><button id="btnExportCsv">下载通用表格（CSV）</button> <button id="btnExportJson" class="secondary">下载机器可读清单（JSON）</button> <button id="btnPrint" class="secondary">打印 / 另存为 PDF 清单</button></p>
-<h3>会计师审核确认</h3>
-<p class="small" id="cpaReviewText">暂无审核确认。</p>
+<h3>CPA 复核记录（用户自记，非 CPA 签字）</h3>
+<p class="small" id="cpaReviewText">暂无复核记录。用户自记仅表示你已送 CPA 复核，不代表 CPA 已签字确认。</p>
 <div class="row">
-<div><label for="cpaDate">审核日期</label><input id="cpaDate" type="date"></div>
-<div><label for="cpaNote">审核意见（可选）</label><input id="cpaNote" placeholder="例如：已核对，需补 1 项"></div>
+<div><label for="cpaDate">送复核日期</label><input id="cpaDate" type="date"></div>
+<div><label for="cpaNote">备注（可选）</label><input id="cpaNote" placeholder="例如：已送 CPA 复核，需补 1 项"></div>
 </div>
-<p><button id="btnCpaReview" class="secondary">标记 CPA 已审核确认</button> <button id="btnCpaClear" class="secondary">清除审核标记</button></p>
+<p><button id="btnCpaReview" class="secondary">记录：已送 CPA 复核（用户自记）</button> <button id="btnCpaClear" class="secondary">清除复核记录</button></p>
 <ul id="exportLog"></ul>
 </div>
 
@@ -213,8 +214,8 @@ function newPacket(){return {changes:{},lastYear:[],checklist:[],transcript:null
 function statusText(s){return s==="uploaded"?"已上传":s==="na"?"不适用":s==="pending"?"待 transcript":"未开始"}
 function renderCpa(){
   var t=$("cpaReviewText");
-  if(packet.cpaReview){t.innerHTML="<span class='badge uploaded'>CPA 已审核确认</span> "+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · "+esc(packet.cpaReview.note):"");}
-  else{t.textContent="暂无审核确认。";}
+  if(packet.cpaReview){t.innerHTML="<span class='badge uploaded'>用户自记：已送 CPA 复核</span> "+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · "+esc(packet.cpaReview.note):"");}
+  else{t.textContent="暂无复核记录。用户自记仅表示你已送 CPA 复核，不代表 CPA 已签字确认。";}
 }
 function loadPacket(email){packet=load(packetKey(email),null);if(!packet){packet=newPacket();save(packetKey(email),packet)}}
 function savePacket(){if(currentUser)save(packetKey(currentUser),packet)}
@@ -307,7 +308,77 @@ function renderExports(){
   packet.exports.forEach(function(e){var li=document.createElement("li");li.className="small";li.textContent=e;ul.appendChild(li)});
   $("transRecord").textContent=packet.transcript?packet.transcript:"无";
 }
-function renderAll(){renderChanges();renderLast();renderChecklist();renderExports();renderCpa()}
+function renderAll(){renderChanges();renderLast();renderChecklist();renderExports();renderCpa();applyCollapse()}
+function secKeyFromH2(t){
+  if(t.indexOf("3b")==0)return "s3b";
+  if(t.indexOf("3")==0)return "s3";
+  if(t.indexOf("4b")==0)return "s4b";
+  if(t.indexOf("4")==0)return "s4";
+  if(t.indexOf("5b")==0)return "s5b";
+  if(t.indexOf("5")==0)return "s5";
+  if(t.indexOf("6")==0)return "s6";
+  if(t.indexOf("订阅")==0)return "sub";
+  if(t.indexOf("安全")==0)return "safe";
+  return null;
+}
+var secHeads={};
+function wrapSections(){
+  var wrap=$("appViewSections");if(!wrap)return;
+  var kids=[];
+  for(var i=0;i<wrap.children.length;i++)if(wrap.children[i].className.indexOf("card")>=0)kids.push(wrap.children[i]);
+  kids.forEach(function(card){
+    var h2=card.querySelector("h2");if(!h2)return;
+    if(card.querySelector("#changesHead"))return;
+    var key=secKeyFromH2(h2.textContent.trim());if(!key)return;
+    var head=document.createElement("div");head.className="sec-head";
+    var sum=document.createElement("span");sum.className="sec-sum";
+    var check=document.createElement("span");check.className="chg-check hidden";check.textContent="✓";
+    var chev=document.createElement("span");chev.className="sec-chev";chev.textContent="▼";
+    head.appendChild(h2);head.appendChild(sum);head.appendChild(check);head.appendChild(chev);
+    var body=document.createElement("div");body.className="sec-body";
+    while(card.firstChild)body.appendChild(card.firstChild);
+    card.appendChild(head);card.appendChild(body);
+    secHeads[key]={body:body,sum:sum,check:check,chev:chev};
+    head.onclick=function(){
+      if(packet){if(!packet.collapsed)packet.collapsed={};packet.collapsed[key]=!packet.collapsed[key];savePacket();renderAll();}
+      else{body.classList.toggle("hidden");}
+    };
+  });
+}
+function secSummary(key){
+  if(!packet)return "";
+  if(key==="s3")return packet.lastYear.length?("已加 "+packet.lastYear.length+" 项去年表"):"未加";
+  if(key==="s3b"){var sts=packet.checklist.filter(function(it){return it.form==="州税"}).map(function(it){return it.payer});return sts.length?("已加州税："+sts.join("、")):"未选州";}
+  if(key==="s4"){if(!packet.checklist.length)return "暂无清单";var d=packet.checklist.filter(function(it){return it.status==="uploaded"||it.status==="na"}).length;return d+"/"+packet.checklist.length+" 项已解决";}
+  if(key==="s4b")return packet.uncertain&&packet.uncertain.length?("已录 "+packet.uncertain.length+" 项不确定事项"):"无";
+  if(key==="s5")return packet.transcript?("已记录："+packet.transcript):"未上传";
+  if(key==="s5b")return "探针已开启";
+  if(key==="s6"){var s=packet.exports.length?("已导出 "+packet.exports.length+" 次"):"未导出";if(packet.cpaReview)s+=" · 用户自记：已送 CPA 复核";return s;}
+  if(key==="sub")return "即将推出，暂未开通付费";
+  if(key==="safe")return "纯本地演示";
+  return "";
+}
+function secDone(key){
+  if(!packet)return false;
+  if(key==="s3")return packet.lastYear.length>0;
+  if(key==="s3b")return packet.checklist.some(function(it){return it.form==="州税"});
+  if(key==="s4")return packet.checklist.length>0&&packet.checklist.every(function(it){return it.status==="uploaded"||it.status==="na"});
+  if(key==="s6")return packet.exports.length>0;
+  return false;
+}
+function applyCollapse(){
+  if(!packet)return;
+  if(!packet.collapsed)packet.collapsed={s3:true,s3b:true,s4:true,s4b:true,s5:true,s5b:true,s6:true,sub:true,safe:true};
+  Object.keys(secHeads).forEach(function(key){
+    var h=secHeads[key];
+    var collapsed=!!packet.collapsed[key];
+    if(collapsed)h.body.classList.add("hidden");else h.body.classList.remove("hidden");
+    h.chev.textContent=collapsed?"展开 ▼":"收起 ▲";
+    h.sum.textContent=secSummary(key);
+    if(secDone(key))h.check.classList.remove("hidden");else h.check.classList.add("hidden");
+  });
+}
+wrapSections();
 function showApp(){
   $("authView").classList.add("hidden");$("appView").classList.remove("hidden");$("who").textContent=currentUser;renderAll();
 }
@@ -565,11 +636,11 @@ $("btnExportCsv").onclick=function(){
 $("btnCpaReview").onclick=function(){
   var d=$("cpaDate").value||new Date().toLocaleDateString();
   packet.cpaReview={date:d,note:$("cpaNote").value.trim()};savePacket();renderCpa();
-  packet.exports.push(new Date().toLocaleString()+" CPA 已审核确认（"+d+"）");savePacket();renderExports();
+  packet.exports.push(new Date().toLocaleString()+" 用户自记：已送 CPA 复核（"+d+"）");savePacket();renderExports();
 };
 $("btnCpaClear").onclick=function(){packet.cpaReview=null;savePacket();renderCpa();};
 $("btnExportJson").onclick=function(){
-  var data={tool:"报税包整理器 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||""}}),transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存本机，不进导出文件。会计师只审核确认并签字，平台不抽报税费、不替代签字。"};
+  var data={tool:"报税包整理器 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||""}}),transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存本机，不进导出文件。复核记录由用户自记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。"};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tax-packet-checklist.json";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
   packet.exports.push(new Date().toLocaleString()+" 导出机器可读清单 JSON（"+packet.checklist.length+" 项）");savePacket();renderExports();
@@ -577,7 +648,7 @@ $("btnExportJson").onclick=function(){
 $("btnPrint").onclick=function(){
   var rows=packet.checklist.map(function(it,i){return "<tr><td>"+(i+1)+"</td><td>"+esc(it.form)+"</td><td>"+esc(it.payer||"")+"</td><td>"+esc(it.request)+"</td><td>"+esc(statusText(it.status))+"</td><td>"+esc(it.reason||it.fileName||"")+"</td></tr>"}).join("")||"<tr><td colspan='6'>暂无清单</td></tr>";
   var cnt=function(s){return packet.checklist.filter(function(it){return it.status===s}).length};
-  var cpaBlock=packet.cpaReview?("<p>会计师审核确认：已确认 · 日期："+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · 意见："+esc(packet.cpaReview.note):"")+"</p>"):("<p>会计师审核确认栏（请会计师审核后签字，平台不替代签字）：<br>姓名：________________ 持证号：________________ 签字：________________ 日期：________________<br>审核意见：________________________________________</p>");
+  var cpaBlock=packet.cpaReview?("<p>用户自记复核记录：已送 CPA 复核 · 日期："+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · 备注："+esc(packet.cpaReview.note):"")+"（本记录由用户填写，不代表 CPA 已签字；CPA 签字见下方签字栏手签）</p>"):("<p>会计师审核确认栏（请会计师审核后签字，平台不替代签字）：<br>姓名：________________ 持证号：________________ 签字：________________ 日期：________________<br>审核意见：________________________________________</p>");
   $("printArea").innerHTML="<h1>报税包整理清单</h1><p>账号："+esc(currentUser)+" · 导出时间："+esc(new Date().toLocaleString())+"</p><p>只整理、不算税、不报税、不给税务结论。CSV / JSON / PDF 三份内容一致，均不含社保号与金额，均可对接任何一家报税软件，不锁一家。</p><p>合计："+packet.checklist.length+" 项 · 已上传："+cnt("uploaded")+" · 不适用："+cnt("na")+" · 待 transcript："+cnt("pending")+" · 未开始："+cnt("not-started")+"</p><table><tr><th>#</th><th>表</th><th>付款方</th><th>今年需备文件</th><th>状态</th><th>原因/文件名</th></tr>"+rows+"</table><p>变化问答："+esc(JSON.stringify(packet.changes))+"</p><p>Transcript："+esc(packet.transcript||"无")+"</p>"+cpaBlock;
   packet.exports.push(new Date().toLocaleString()+" 打印 / 另存为 PDF 清单（"+packet.checklist.length+" 项）");savePacket();renderExports();
   window.print();
