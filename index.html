@@ -6,7 +6,7 @@
 <title>报税包整理器 V1（演示版）</title>
 <style>
 *{box-sizing:border-box} body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;margin:0;background:#eef1f4;color:#1a1a1a;line-height:1.6}
-header{background:linear-gradient(135deg,#16324f,#1e4a73);color:#fff;padding:20px 16px} header h1{margin:0;font-size:22px} header p{margin:6px 0 0;opacity:.92;font-size:13px}
+header{background:linear-gradient(135deg,#16324f,#2a6db0);color:#fff;padding:20px 16px} header h1{margin:0;font-size:22px} header p{margin:6px 0 0;opacity:.92;font-size:13px}
 main{max-width:860px;margin:0 auto;padding:20px 16px} .card{background:#fff;border:1px solid #e2e6eb;border-radius:14px;padding:20px;margin:16px 0;box-shadow:0 1px 3px rgba(22,50,79,.08)}
 h2{font-size:18px;margin:0 0 10px;color:#16324f} h3{font-size:15px;margin:14px 0 8px;color:#16324f} label{display:block;font-size:13px;margin:8px 0 4px}
 input,select,button{font-size:15px;padding:10px 12px;border-radius:10px;border:1px solid #c3ccd6} input,select{width:100%;background:#fff} input:focus,select:focus{outline:none;border-color:#16324f;box-shadow:0 0 0 3px rgba(22,50,79,.15)}
@@ -155,7 +155,7 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 </div>
 
 <div class="card">
-<h2>6 · 导出给会计师：标准化可对接，会计师只审核确认</h2>
+<h2>6 · 导出给会计师：标准化可对接</h2>
 <p class="muted small">三份导出内容一致，均不含社保号与金额，均不锁任何一家报税软件：<b>CSV</b> 是通用表格，可直接用 Excel / Google Sheets 打开，也可导入会计师自己的报税软件，无需重录表类型、付款方与状态；<b>JSON</b> 是机器可读清单；<b>PDF</b> 是打印版，末尾带会计师审核签字栏。导出的是清单与文件名索引，文件原件由你另外经会计师门户 / 邮件发给会计师（演示版文件内容本就不保存）。会计师的工作只是审核确认并签字（以打印版签字栏手签为准），平台不抽报税费、不替代签字；页面上的复核记录由你自记，不代表 CPA 已确认。</p>
 <p><button id="btnExportCsv">下载通用表格（CSV）</button> <button id="btnExportJson" class="secondary">下载机器可读清单（JSON）</button> <button id="btnPrint" class="secondary">打印 / 另存为 PDF 清单</button></p>
 <h3>CPA 复核记录（用户自记，非 CPA 签字）</h3>
@@ -354,7 +354,7 @@ function secSummary(key){
   if(key==="s4b")return packet.uncertain&&packet.uncertain.length?("已录 "+packet.uncertain.length+" 项不确定事项"):"无";
   if(key==="s5")return packet.transcript?("已记录："+packet.transcript):"未上传";
   if(key==="s5b")return "探针已开启";
-  if(key==="s6"){var n=packet.exports.filter(function(e){return e.indexOf("导出完成")>=0||e.indexOf("打印版已生成")>=0}).length;var s=n?("已导出 "+n+" 次"):"未导出";if(packet.cpaReview)s+=" · 用户自记：已送 CPA 复核";return s;}
+  if(key==="s6"){var n=packet.exports.filter(function(e){return e.indexOf("用户自记")<0}).length;var s=n?("已导出 "+n+" 次"):"未导出";if(packet.cpaReview)s+=" · 用户自记：已送 CPA 复核";return s;}
   if(key==="sub")return "即将推出，暂未开通付费";
   if(key==="safe")return "纯本地演示";
   return "";
@@ -364,7 +364,7 @@ function secDone(key){
   if(key==="s3")return packet.lastYear.length>0;
   if(key==="s3b")return packet.checklist.some(function(it){return it.form==="州税"});
   if(key==="s4")return packet.checklist.length>0&&packet.checklist.every(function(it){return it.status==="uploaded"||it.status==="na"});
-  if(key==="s6")return packet.exports.some(function(e){return e.indexOf("导出完成")>=0||e.indexOf("打印版已生成")>=0});
+  if(key==="s6")return packet.exports.some(function(e){return e.indexOf("用户自记")<0});
   return false;
 }
 function applyCollapse(){
