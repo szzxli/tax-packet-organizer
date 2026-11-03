@@ -31,7 +31,7 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <p>只整理、不算税、不报税、不给税务结论。导出后请给持证 CPA 再审，或自行上传到你选的报税软件。订阅定位：干干净净去见税务师。</p>
 </header>
 <main>
-<div class="notice"><b>演示版说明（请先读）：</b>本页是纯本地演示：不联网、不上传文件到任何服务器、不建仓、不收费、不直连 IRS。文件上传只记录文件名和时间，<b>不读取、不保存文件内容</b>；全程没有社保号、没有金额输入框，请勿在本页输入社保号或金额。正式版上线前，邮箱验证、传输与存储加密、账号隔离仍需接真实邮件与后端服务后另行实测。</div>
+<div class="notice"><b>演示版说明（请先读）：</b>本页是纯本地演示：不联网、不上传文件到任何服务器、不建仓、不收费、不直连 IRS。清单文件上传只记录文件名和时间，不读内容；去年报税表自动识别只在本机浏览器内读文件文字、只提取表类型，内容不上传、不保存，识别结果由你核对后才加入；全程没有社保号、没有金额输入框，请勿在本页输入社保号或金额。正式版上线前，邮箱验证、传输与存储加密、账号隔离仍需接真实邮件与后端服务后另行实测。</div>
 
 <div id="storageWarn" class="notice warn hidden"><b>注意：</b>本浏览器禁止了本地存储，已改用本页内存保存，刷新页面后进度会丢失。换个浏览器或用本地服务器打开可恢复正常保存。</div>
 <div id="authView" class="card">
@@ -74,11 +74,17 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 
 <div class="card">
 <h2>3 · 去年有什么？（只记表类型 + 付款方，不记社保号和金额）</h2>
+<h3>路径一 · 手动输入表格</h3>
 <div class="row">
 <div><label for="lastForm">去年表类型</label><select id="lastForm"></select></div>
 <div><label for="lastPayer">付款方 / 雇主 / 机构 / 房产（可空，如 SSA-1099）</label><input id="lastPayer" placeholder="例如：雇主 A、银行 B"></div>
 </div>
-<p><button id="btnAddLast">加入去年清单</button> <button id="btnGenerate" class="secondary">生成今年清单</button></p>
+<p><button id="btnAddLast">加入去年清单</button></p>
+<h3>路径二 · 提交去年报税表，自动识别</h3>
+<p class="muted small">上传去年报税表（带文字层的 PDF，或 .txt 文本）。识别只在本机浏览器内读文件文字、只提取表类型，内容不上传、不保存；识别结果先给你核对，勾选后才加入去年清单。扫描件（无文字层）或加密文件识别不出时，请走路径一手动输入。付款方机器识别不可靠，识别结果里付款方留空，请你核对补填。</p>
+<p><input type="file" id="returnFile" accept=".pdf,.txt"> <button id="btnRecognize" class="secondary">识别并预览</button> <span id="recognizeMsg" class="small"></span></p>
+<div id="recognizeBox"></div>
+<p><button id="btnGenerate" class="secondary">生成今年清单</button></p>
 <ul id="lastList"></ul>
 <p class="muted small">规则：去年哪行有数、哪张表交过，今年就等对应的文件（见 mapping-v1）。生成时不重复添加已在清单里的同表同付款方。</p>
 </div>
@@ -336,6 +342,83 @@ $("btnLogout").onclick=function(){currentUser=null;packet=null;try{localStorage.
 $("btnDeletePacket").onclick=function(){
   if(!confirm("确定删除本账号的包吗？清单、上传记录、transcript 对齐、导出记录都会删掉，此操作不可撤销。"))return;
   packet=newPacket();savePacket();renderAll();alert("已删除本包。");
+};
+var FORM_TOKENS=[
+["W-2G","W-2G"],["W-2","W-2"],["1099-INT","1099-INT"],["1099-DIV","1099-DIV"],["1099-R","1099-R"],["SSA-1099","SSA-1099"],["1099-B","1099-B"],["1099-G","1099-G"],["1099-MISC","1099-MISC"],["1099-K","1099-K"],["1099-S","1099-S"],["1099-C","1099-C"],["1099-NEC","1099-NEC"],["1098-E","1098-E"],["1098-T","1098-T"],["1098","1098(?![-])"],["Schedule C","Schedule C(?![A-Z])"],["Schedule E","Schedule E(?![A-Z])"],["Schedule F","Schedule F(?![A-Z])"],["Schedule K-1","(?:Schedule )?K-1"],["Form 2441","2441"],["1095-A","1095-A"],["1095-B/C","1095-[BC]"],["5498-SA","5498-SA"],["5498","5498(?![-])"],["1099-SA","1099-SA"]
+];
+function detectForms(text){
+  var found=[];
+  FORM_TOKENS.forEach(function(t){
+    var re=new RegExp("(^|[^A-Za-z0-9])"+t[1]+"([^A-Za-z0-9]|$)","i");
+    if(re.test(text))found.push(t[0]);
+  });
+  var ordered=[];
+  FORM_MAP.forEach(function(f){if(found.indexOf(f[0])>=0)ordered.push(f[0]);});
+  return ordered;
+}
+async function extractPdfText(buf){
+  var bytes=new Uint8Array(buf);
+  var s="";for(var i=0;i<bytes.length;i++)s+=String.fromCharCode(bytes[i]);
+  var texts=[];var re=/stream\r?\n([\s\S]*?)\r?\nendstream/g;var m;
+  var segments=[];
+  while((m=re.exec(s))!==null)segments.push(m[1]);
+  for(var j=0;j<segments.length;j++){
+    var seg=segments[j];var raw=seg;
+    try{
+      var segBytes=new Uint8Array(seg.length);for(var k=0;k<seg.length;k++)segBytes[k]=seg.charCodeAt(k);
+      var out=await new Response(new Blob([segBytes]).stream().pipeThrough(new DecompressionStream("deflate"))).arrayBuffer();
+      var ob=new Uint8Array(out);var t="";for(var k2=0;k2<ob.length;k2++)t+=String.fromCharCode(ob[k2]);raw=t;
+    }catch(e){raw=seg;}
+    var tm=/\((?:\\.|[^\\()])*\)/g;var tm2;
+    while((tm2=tm.exec(raw))!==null){
+      texts.push(tm2[0].slice(1,-1).replace(/\\([()\\])/g,"$1").replace(/\\n/g," ").replace(/\\r/g," "));
+    }
+  }
+  return texts.join(" ");
+}
+function renderRecognizePreview(forms){
+  var box=$("recognizeBox");box.innerHTML="";
+  if(!forms.length){box.innerHTML="<p class='small'>未识别出已知表类型，请走路径一手动输入，或确认文件是去年报税表全文。</p>";return;}
+  var p=document.createElement("p");p.className="small";p.textContent="识别出以下表类型（付款方未自动识别，请核对补填；社保号与金额不会被记入）：";box.appendChild(p);
+  forms.forEach(function(f){
+    var div=document.createElement("div");div.className="row";div.style.marginBottom="6px";
+    var cb=document.createElement("input");cb.type="checkbox";cb.checked=true;cb.style.width="auto";cb.dataset.form=f;
+    var sp=document.createElement("span");sp.textContent=f;sp.style.minWidth="110px";
+    var inp=document.createElement("input");inp.placeholder="付款方（可空，请核对）";inp.dataset.form=f;
+    div.appendChild(cb);div.appendChild(sp);div.appendChild(inp);box.appendChild(div);
+  });
+  var add=document.createElement("button");add.textContent="把勾选的加入去年清单";add.className="secondary";
+  add.onclick=function(){
+    var rows=box.querySelectorAll("input[type=checkbox]");var added=0,skipped=0;
+    rows.forEach(function(cb){
+      if(!cb.checked)return;
+      var inp=box.querySelector("input:not([type=checkbox])[data-form='"+cb.dataset.form+"']");
+      var payer=inp?inp.value.trim():"";
+      if(packet.lastYear.some(function(x){return x.form===cb.dataset.form&&x.payer===payer})){skipped++;return;}
+      packet.lastYear.push({form:cb.dataset.form,payer:payer});added++;
+    });
+    savePacket();renderLast();
+    $("recognizeMsg").textContent=added?("已加入 "+added+" 项"+(skipped?"，跳过已有的 "+skipped+" 项":"")+"。接下来点“生成今年清单”。"):"没有新增项（均已在去年清单里）。";
+  };
+  box.appendChild(add);
+}
+$("btnRecognize").onclick=async function(){
+  var file=$("returnFile").files&&$("returnFile").files[0];
+  if(!file){$("recognizeMsg").textContent="请先选择去年报税表文件（PDF 或 .txt）。";return;}
+  $("recognizeMsg").textContent="识别中…";
+  try{
+    var buf=await file.arrayBuffer();
+    var text="";
+    if(/\.txt$/i.test(file.name))text=new TextDecoder().decode(buf);
+    else if(/\.pdf$/i.test(file.name))text=await extractPdfText(buf);
+    else{text=new TextDecoder().decode(buf);}
+    if(!text||text.replace(/\s/g,"").length<20){$("recognizeMsg").textContent="未能从该文件中读出文字（可能是扫描件或加密文件），请走路径一手动输入。";$("recognizeBox").innerHTML="";return;}
+    var forms=detectForms(text);
+    renderRecognizePreview(forms);
+    $("recognizeMsg").textContent=forms.length?("识别出 "+forms.length+" 种表，请核对后加入。"):"";
+  }catch(e){
+    $("recognizeMsg").textContent="识别失败，请走路径一手动输入。";$("recognizeBox").innerHTML="";
+  }
 };
 $("btnAddLast").onclick=function(){
   var form=$("lastForm").value,payer=$("lastPayer").value.trim();

@@ -14,8 +14,13 @@ give tax conclusions.
   changed items open follow-up document requests.
 - Track each item as not started, uploaded, not applicable (with a reason),
   or pending transcript.
-- Accept user-uploaded transcript alignment (the user downloads their own
-  transcript and uploads it here; this tool does not connect to the IRS).
+- Section 3 has two paths: manual form entry, or uploading last year's
+  return for automatic recognition. Recognition reads the file's text
+  inside the visitor's browser only, extracts form types for the user to
+  confirm, and never uploads or stores file contents. Payer names are
+  left for the user to confirm because machine payer attribution is
+  unreliable; scanned returns without a text layer fall back to manual
+  entry.
 - Cover state tax items for 10 states only: California, Texas, Florida,
   New York, Pennsylvania, Illinois, Ohio, Georgia, North Carolina, and
   Michigan. Texas and Florida have no state personal income tax; the state
@@ -31,8 +36,11 @@ give tax conclusions.
   tax advice. Uncertain items produce a candidate category, a policy
   reference, and a list of questions to take to a tax professional; the
   professional decides.
-- No Social Security number or amount inputs. Uploads record file names
-  only; file contents are not read or stored by this demo page.
+- No Social Security number or amount inputs. Checklist uploads record file
+  names only; file contents are not read or stored by this demo page.
+  The one exception is last-year return recognition, which reads the
+  file's text transiently inside the visitor's browser to extract form
+  types and discards the content afterward.
 - The subscription section in the app is informational only. Payment is
   not enabled and no free feature is locked.
 
