@@ -17,6 +17,7 @@ button:disabled{opacity:.5} .row{display:flex;gap:10px;flex-wrap:wrap} .row>*{fl
 .badge{display:inline-block;padding:1px 8px;border-radius:20px;font-size:12px;font-weight:700}
 .missing{background:#fdecea;color:#9b2226} .uploaded{background:#eaf6ec;color:#1e6b2e} .na{background:#eee;color:#555} .pending{background:#fff3cd;color:#7a5b00}
 .item{border:1px solid #ddd;border-radius:8px;padding:12px;margin:10px 0} .item.miss{border-color:#d66;background:#fffafa}
+.chg-scroll{max-height:200px;overflow-y:auto;border:1px solid #ddd;border-radius:8px;padding:6px 12px} .chg-scroll label{display:flex;gap:10px;align-items:center;margin:12px 0;cursor:pointer} .chg-scroll input{width:auto;accent-color:#16324f} .chg-check{color:#1a7f37;font-size:20px;font-weight:700} .chg-head{cursor:pointer}
 .muted{color:#666;font-size:13px} .small{font-size:13px} .hidden{display:none!important}
 table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid #ddd;padding:6px;text-align:left}
 #printArea{display:none}
@@ -63,9 +64,12 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 
 <div id="appViewSections">
 <div class="card">
-<h2>2 · 今年有什么变化？先问变化，没变的不展开</h2>
-<p class="muted small">每项选“是”才会出现后续证明文件要求；选“否”直接沿用，不展开。工具只列文件，不判断资格。</p>
+<div id="changesHead" class="chg-head"><h2>2 · 今年有什么变化？先问变化，没变的不展开 <span id="changesCheck" class="chg-check hidden">✓</span></h2><p id="changesSummary" class="muted small"></p></div>
+<div id="changesBody">
+<p class="muted small">打开后上下滚动勾选所有适用项，可多选；只勾选的项才会出现后续证明文件要求。选完点“收好”，本栏标题会出现绿勾表示已确认。工具只列文件，不判断资格。</p>
 <div id="changesBox"></div>
+<p><button id="btnCollapseChanges" class="secondary">收好</button></p>
+</div>
 </div>
 
 <div class="card">
@@ -211,22 +215,41 @@ function savePacket(){if(currentUser)save(packetKey(currentUser),packet)}
 function requestText(form){for(var i=0;i<FORM_MAP.length;i++)if(FORM_MAP[i][0]===form)return FORM_MAP[i][1];return "今年 "+form}
 function renderChanges(){
   var box=$("changesBox");box.innerHTML="";
+  var selected=CHANGES.filter(function(c){return packet.changes[c[0]]==="是"}).map(function(c){return c[0]});
+  var none=!!packet.changesNone;
+  var collapsed=!!packet.changesCollapsed;
+  var sum=$("changesSummary"),check=$("changesCheck"),body=$("changesBody");
+  sum.textContent=none?"无变化":selected.length?"已选："+selected.map(function(k){return k+"变化"}).join("、"):"未选";
+  if(collapsed)body.classList.add("hidden");else body.classList.remove("hidden");
+  if(collapsed&&(none||selected.length))check.classList.remove("hidden");else check.classList.add("hidden");
+  $("changesHead").onclick=function(){packet.changesCollapsed=!packet.changesCollapsed;savePacket();renderAll();};
+  $("btnCollapseChanges").onclick=function(){packet.changesCollapsed=true;savePacket();renderAll();};
+  var list=document.createElement("div");list.className="chg-scroll";
+  function addRow(labelText,checked,onchange){
+    var lab=document.createElement("label");var cb=document.createElement("input");cb.type="checkbox";cb.checked=checked;cb.onchange=onchange;var sp=document.createElement("span");sp.textContent=labelText;lab.appendChild(cb);lab.appendChild(sp);list.appendChild(lab);
+  }
   CHANGES.forEach(function(c){
-    var key=c[0],val=packet.changes[key]||"";
-    var div=document.createElement("div");div.className="item";
-    div.innerHTML="<b>"+esc(key)+"有变化吗？</b> <span class='small'>当前："+esc(val||"未选")+"</span><div class='row' style='margin-top:8px'><button data-k='"+esc(key)+"' data-v='否' class='secondary'>否（沿用，不展开）</button><button data-k='"+esc(key)+"' data-v='是'>是（需补证明文件）</button></div>"+(val==="是"?"<p class='small'>后续要求："+esc(c[1])+"。工具只列文件，不判断资格。</p>":"");
-    box.appendChild(div);
+    var key=c[0];
+    addRow(key+"有变化",packet.changes[key]==="是",function(){
+      if(this.checked){
+        packet.changes[key]="是";packet.changesNone=false;
+        var req=c[1];
+        var exists=packet.checklist.some(function(it){return it.request===req});
+        if(!exists)packet.checklist.push({id:Date.now()+""+Math.random(),form:"变化证明",payer:key,request:req,status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:""});
+      }else{packet.changes[key]="否";}
+      savePacket();renderAll();
+    });
   });
-  box.querySelectorAll("button").forEach(function(b){b.onclick=function(){
-    packet.changes[b.dataset.k]=b.dataset.v;
-    if(b.dataset.v==="是"){
-      var idx=CHANGES.findIndex(function(c){return c[0]===b.dataset.k});
-      var req=CHANGES[idx][1];
-      var exists=packet.checklist.some(function(it){return it.request===req});
-      if(!exists)packet.checklist.push({id:Date.now()+""+Math.random(),form:"变化证明",payer:b.dataset.k,request:req,status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:""});
-    }
+  addRow("无变化",none,function(){
+    if(this.checked){packet.changesNone=true;CHANGES.forEach(function(c){packet.changes[c[0]]="否";});}
+    else{packet.changesNone=false;}
     savePacket();renderAll();
-  }});
+  });
+  box.appendChild(list);
+  selected.forEach(function(key){
+    var c=CHANGES.filter(function(x){return x[0]===key})[0];
+    var p=document.createElement("p");p.className="small";p.textContent="后续要求："+key+"："+c[1]+"。工具只列文件，不判断资格。";box.appendChild(p);
+  });
 }
 function renderLast(){
   var ul=$("lastList");ul.innerHTML="";
