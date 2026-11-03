@@ -354,7 +354,7 @@ function secSummary(key){
   if(key==="s4b")return packet.uncertain&&packet.uncertain.length?("已录 "+packet.uncertain.length+" 项不确定事项"):"无";
   if(key==="s5")return packet.transcript?("已记录："+packet.transcript):"未上传";
   if(key==="s5b")return "探针已开启";
-  if(key==="s6"){var s=packet.exports.length?("已导出 "+packet.exports.length+" 次"):"未导出";if(packet.cpaReview)s+=" · 用户自记：已送 CPA 复核";return s;}
+  if(key==="s6"){var n=packet.exports.filter(function(e){return e.indexOf("导出完成")>=0||e.indexOf("打印版已生成")>=0}).length;var s=n?("已导出 "+n+" 次"):"未导出";if(packet.cpaReview)s+=" · 用户自记：已送 CPA 复核";return s;}
   if(key==="sub")return "即将推出，暂未开通付费";
   if(key==="safe")return "纯本地演示";
   return "";
@@ -364,7 +364,7 @@ function secDone(key){
   if(key==="s3")return packet.lastYear.length>0;
   if(key==="s3b")return packet.checklist.some(function(it){return it.form==="州税"});
   if(key==="s4")return packet.checklist.length>0&&packet.checklist.every(function(it){return it.status==="uploaded"||it.status==="na"});
-  if(key==="s6")return packet.exports.length>0;
+  if(key==="s6")return packet.exports.some(function(e){return e.indexOf("导出完成")>=0||e.indexOf("打印版已生成")>=0});
   return false;
 }
 function applyCollapse(){
