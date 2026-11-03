@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>报税包整理器 V1（演示版）</title>
+<style>
+*{box-sizing:border-box} body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;margin:0;background:#f6f7f9;color:#1a1a1a;line-height:1.55}
+header{background:#16324f;color:#fff;padding:18px 16px} header h1{margin:0;font-size:20px} header p{margin:6px 0 0;opacity:.9;font-size:13px}
+main{max-width:880px;margin:0 auto;padding:16px} .card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:16px;margin:14px 0}
+h2{font-size:17px;margin:0 0 10px} h3{font-size:15px;margin:14px 0 8px} label{display:block;font-size:13px;margin:8px 0 4px}
+input,select,button{font-size:15px;padding:9px 10px;border-radius:8px;border:1px solid #bbb} input,select{width:100%}
+button{background:#16324f;color:#fff;border:none;cursor:pointer} button.secondary{background:#fff;color:#16324f;border:1px solid #16324f} button.danger{background:#9b2226}
+button:disabled{opacity:.5} .row{display:flex;gap:10px;flex-wrap:wrap} .row>*{flex:1;min-width:150px}
+.notice{background:#fff8e1;border:1px solid #e6c87a;border-radius:8px;padding:10px 12px;font-size:13px;margin:12px 0}
+.warn{background:#fdecea;border-color:#e0a8a8} .ok{background:#eaf6ec;border-color:#9ccfa2}
+.badge{display:inline-block;padding:1px 8px;border-radius:20px;font-size:12px;font-weight:700}
+.missing{background:#fdecea;color:#9b2226} .uploaded{background:#eaf6ec;color:#1e6b2e} .na{background:#eee;color:#555} .pending{background:#fff3cd;color:#7a5b00}
+.item{border:1px solid #ddd;border-radius:8px;padding:12px;margin:10px 0} .item.miss{border-color:#d66;background:#fffafa}
+.muted{color:#666;font-size:13px} .small{font-size:13px} .hidden{display:none!important}
+table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid #ddd;padding:6px;text-align:left}
+#printArea{display:none}
+@media print{ body{background:#fff} header,.no-print{display:none!important} main{max-width:none;padding:0} .card{border:none;margin:0;padding:0} #printArea{display:block!important} #appViewSections{display:none!important} }
+@media(max-width:600px){ .row>*{min-width:100%} }
+</style>
+</head>
+<body>
+<header>
+<h1>报税包整理器 V1 · 演示版</h1>
+<p>只整理、不算税、不报税、不给税务结论。导出后请给持证 CPA 再审，或自行上传到你选的报税软件。订阅定位：干干净净去见税务师。</p>
+</header>
+<main>
+<div class="notice"><b>演示版说明（请先读）：</b>本页是纯本地演示：不联网、不上传文件到任何服务器、不建仓、不收费、不直连 IRS。文件上传只记录文件名和时间，<b>不读取、不保存文件内容</b>；全程没有社保号、没有金额输入框，请勿在本页输入社保号或金额。正式版上线前，邮箱验证、传输与存储加密、账号隔离仍需接真实邮件与后端服务后另行实测。</div>
+
+<div id="storageWarn" class="notice warn hidden"><b>注意：</b>本浏览器禁止了本地存储，已改用本页内存保存，刷新页面后进度会丢失。换个浏览器或用本地服务器打开可恢复正常保存。</div>
+<div id="authView" class="card">
+<h2>1 · 注册 / 登录会员</h2>
+<p class="muted small">邮箱 + 密码登录。登录后才能看到自己的包；退出再登录，进度还在（本机浏览器内）。Google 登录不在 V1。</p>
+<div class="row">
+<div><label for="regEmail">注册邮箱</label><input id="regEmail" type="email" placeholder="you@example.com" autocomplete="email"></div>
+<div><label for="regPass">密码（至少 8 位）</label><input id="regPass" type="password" placeholder="至少 8 位"></div>
+</div>
+<p><button id="btnRegister">注册</button> <span id="regMsg" class="small"></span></p>
+<div id="verifyBox" class="notice hidden">
+<b>邮箱验证（演示版）：</b>演示版未接邮件服务，验证码仅在本机显示，正式版改为邮件发送。你的演示验证码是：<b id="demoCode"></b><br>
+<label for="verifyCode">输入验证码</label><input id="verifyCode" placeholder="6 位数字">
+<p><button id="btnVerify">验证并激活</button> <span id="verifyMsg" class="small"></span></p>
+</div>
+<hr>
+<div class="row">
+<div><label for="loginEmail">登录邮箱</label><input id="loginEmail" type="email" placeholder="you@example.com"></div>
+<div><label for="loginPass">密码</label><input id="loginPass" type="password"></div>
+</div>
+<p><button id="btnLogin">登录</button> <span id="loginMsg" class="small"></span></p>
+</div>
+
+<div id="appView" class="hidden">
+<div class="card no-print">
+<p><b>已登录：</b><span id="who"></span> · <span id="progressText"></span></p>
+<p><button id="btnLogout" class="secondary">退出登录</button> <button id="btnDeletePacket" class="danger">一键删除我的包和文件记录</button></p>
+<p class="muted small">删除只删本账号的包（含清单、上传记录、transcript 对齐、导出记录），不影响其他账号。文件内容本就未保存，无需另删。</p>
+</div>
+
+<div id="appViewSections">
+<div class="card">
+<h2>2 · 今年有什么变化？先问变化，没变的不展开</h2>
+<p class="muted small">每项选“是”才会出现后续证明文件要求；选“否”直接沿用，不展开。工具只列文件，不判断资格。</p>
+<div id="changesBox"></div>
+</div>
+
+<div class="card">
+<h2>3 · 去年有什么？（只记表类型 + 付款方，不记社保号和金额）</h2>
+<div class="row">
+<div><label for="lastForm">去年表类型</label><select id="lastForm"></select></div>
+<div><label for="lastPayer">付款方 / 雇主 / 机构 / 房产（可空，如 SSA-1099）</label><input id="lastPayer" placeholder="例如：雇主 A、银行 B"></div>
+</div>
+<p><button id="btnAddLast">加入去年清单</button> <button id="btnGenerate" class="secondary">生成今年清单</button></p>
+<ul id="lastList"></ul>
+<p class="muted small">规则：去年哪行有数、哪张表交过，今年就等对应的文件（见 mapping-v1）。生成时不重复添加已在清单里的同表同付款方。</p>
+</div>
+
+<div class="card">
+<h2>3b · 州税范围（本版只覆盖 10 个州）</h2>
+<p class="muted small">按人口前 10 的州：加州、得州、佛州、纽约州、宾州、伊利诺伊州、俄亥俄州、佐治亚州、北卡罗来纳州、密歇根州。其他州暂不支持，如去年在其他州报过税，请手动另行整理，本工具不生成该州清单。得州、佛州无州个人所得税，选州时后面有备注，选了也不生成州所得税清单项。</p>
+<div class="row">
+<div><label for="stateSelect">选州（加州、纽约州已含在前 10 内）</label><select id="stateSelect"></select></div>
+</div>
+<p><button id="btnAddState">加入该州州税项目</button> <span id="stateMsg" class="small"></span></p>
+</div>
+
+<div class="card">
+<h2>4 · 今年清单（按报税顺序，缺的标红）</h2>
+<p class="muted small">每项状态：未开始 / 已上传 / 不适用（须写原因）/ 待 transcript。全部“已上传或不适用”才算整理完。上传资料可以是电子档，也可以拍照上传：每项都有“上传文件”和“拍照上传”两个入口，手机上点拍照会直接调相机；只记文件名，不读文件内容。</p>
+<div class="row">
+<div><label for="newForm">新增今年项目：表类型</label><select id="newForm"></select></div>
+<div><label for="newPayer">付款方 / 实体</label><input id="newPayer" placeholder="去年没有、今年新增的"></div>
+</div>
+<p><button id="btnAddNew" class="secondary">新增今年项目</button></p>
+<div id="checklistBox"></div>
+</div>
+
+<div class="card">
+<h2>4b · 不确定事项：说不清楚的先录下来，追问后再生成预估材料包</h2>
+<p class="muted small">打字或语音录入都行。例如：“我今年在中国老家卖了一套房，怎么报税？”工具会追问买房价、卖房价、交了哪些税、持有年限、是不是常住房等，答完生成一份<b>预估材料包（待税务师审核）</b>并入今年清单，并给出<b>候选税范畴 + 政策依据 + 决定金额的变量清单</b>。定位就是<b>你的报税助手</b>：提醒哪些要报、要备什么文件、依据哪条政策；范畴只给候选、不给结论；<b>应缴金额本工具不算</b>，金额栏留空给税务师填（具体以注册税务师和 IRS 解释为准）。</p>
+<p class="notice warn"><b>先说清边界：</b>这里只整理“要备哪些材料”，<b>不算税、不判断能不能免税、不生成税表、不替你报税</b>。境外售房涉及中美两地规则，最终处理以持证税务师 / 律师审核为准。金额如填了，只存本机浏览器、不进导出文件。</p>
+<label for="uncertainText">不确定事项（打字，或点语音录入后说话）</label>
+<textarea id="uncertainText" rows="3" style="width:100%;font-size:15px;padding:9px 10px;border-radius:8px;border:1px solid #bbb" placeholder="例如：我今年在中国老家卖了一套房，怎么报税？"></textarea>
+<p><button id="btnVoiceStart">开始语音录入</button> <button id="btnVoiceStop" class="secondary">停止语音录入</button> <span id="voiceMsg" class="small"></span></p>
+<p class="muted small">语音用的是浏览器自带识别（Chrome 等），音频可能发往浏览器厂商；不要说社保号、银行卡号，敏感数字建议打字。本浏览器不支持语音识别时会提示，仍可打字。</p>
+<p><button id="btnUncertainAnalyze">识别事项并生成追问</button></p>
+<div id="uncertainQuestions"></div>
+<div id="uncertainPacket"></div>
+<div id="uncertainNext" class="hidden">
+<h3>材料包整理完，下一步你自己选（工具不抽成、不指定某一家）</h3>
+<p><a href="https://irs.treasury.gov/rpo/rpo.jsf" target="_blank" rel="noopener">找税务师复核：IRS 持证报税人目录（官方）</a><br>
+<span class="small muted">在目录里按地区 / 持证类型（CPA、注册代理人、律师等）自己找，IRS 不背书任何一家；签字须由持证人本人负责。</span></p>
+<p><a href="https://www.irs.gov/individual-tax-filing" target="_blank" rel="noopener">自己申报：IRS 个人报税页（含 Free File 入口）</a><br>
+<span class="small muted">从 IRS 官网的 Free File 入口进，不要直接去商业报税软件首页，否则可能进付费流程；是否符合免费条件以 IRS 当季规则为准。</span></p>
+</div>
+</div>
+
+<div class="card">
+<h2>5 · Transcript 对齐（只做你自己上传版，不直连 IRS）</h2>
+<p class="muted small">请你自己去 IRS 在线账户下载 Wage &amp; Income Transcript 再上传到这里。本工具不直连 IRS、不爬 IRS、不宣称一键提交。表单一般 1 月 31 日前寄出，未到时间前不把“没到”当成“缺失结论”。电子档或拍照上传均可，只记文件名，不读内容。</p>
+<label for="transFile">上传你的 transcript 文件（只记文件名，不读内容）</label><input id="transFile" type="file">
+<label for="transPhoto">或拍照上传 transcript</label><input id="transPhoto" type="file" accept="image/*" capture="environment">
+<p class="small">已记录：<span id="transRecord">无</span></p>
+<div class="row">
+<div><label for="irsForm">IRS 显示但清单没有：表类型</label><select id="irsForm"></select></div>
+<div><label for="irsPayer">付款方</label><input id="irsPayer" placeholder="例如：平台 C"></div>
+</div>
+<p><button id="btnAddIrs">加入清单（标“IRS 显示—待你确认”）</button> <button id="btnMarkPending" class="secondary">把未上传项标为“待 transcript”</button></p>
+</div>
+
+<div class="card">
+<h2>5b · IRS 更新探针（已接入本整理器）</h2>
+<p><span class="badge uploaded">探针已开启</span> <span class="small">每周一上午约 9:10 PT 检查一次 · 下次：2026-11-09 周一上午 · 无相关更新时不打扰</span></p>
+<p class="small"><b>盯什么（只报这 6 类）：</b>清单里的表新增 / 改名 / 停用 / 截止日变化；联邦报税与延期截止日；Free File 资格与门槛；申报路径变化（Direct File 开停、在线账户 / transcript 可用性、e-file 警报）；IRS 持证报税人目录变化；覆盖 10 州的州报税截止日（仅影响本包州表时；得州、佛州无州个人所得税）。<br>
+<b>不报：</b>税率、抵扣额变化（整理器不算税）、执法与诈骗提醒、一般报税小贴士。</p>
+<p class="small"><b>最近一次基线核查：2026-11-03，无需改清单。</b>Free File 指导软件、Direct File 2026 季停用、2026 年度报税截止日 2027-04-15 都已在现有链接里。</p>
+<p class="notice"><b>说明：</b>这个本地演示页本身不会自动联网拉 IRS 更新；自动探针由 Noor 的定时任务在后台跑公开页，发现变化先发到本旁聊、你点头后才改映射和清单，不会自动改你的包。</p>
+<p><a href="https://www.irs.gov/newsroom/irs-news-bulletins" target="_blank" rel="noopener">IRS 新闻订阅页（官方）</a> · <a href="https://www.irs.gov/individual-tax-filing" target="_blank" rel="noopener">IRS 个人报税页（官方）</a> · <a href="https://irs.treasury.gov/rpo/rpo.jsf" target="_blank" rel="noopener">IRS 持证报税人目录（官方）</a></p>
+</div>
+
+<div class="card">
+<h2>6 · 导出给会计师：标准化可对接，会计师只审核确认</h2>
+<p class="muted small">三份导出内容一致，均不含社保号与金额，均不锁任何一家报税软件：<b>CSV</b> 是通用表格，可直接用 Excel / Google Sheets 打开，也可导入会计师自己的报税软件，无需重录表类型、付款方与状态；<b>JSON</b> 是机器可读清单；<b>PDF</b> 是打印版，末尾带会计师审核签字栏。导出的是清单与文件名索引，文件原件由你另外经会计师门户 / 邮件发给会计师（演示版文件内容本就不保存）。会计师的工作只是审核确认并签字，平台不抽报税费、不替代签字。</p>
+<p><button id="btnExportCsv">下载通用表格（CSV）</button> <button id="btnExportJson" class="secondary">下载机器可读清单（JSON）</button> <button id="btnPrint" class="secondary">打印 / 另存为 PDF 清单</button></p>
+<h3>会计师审核确认</h3>
+<p class="small" id="cpaReviewText">暂无审核确认。</p>
+<div class="row">
+<div><label for="cpaDate">审核日期</label><input id="cpaDate" type="date"></div>
+<div><label for="cpaNote">审核意见（可选）</label><input id="cpaNote" placeholder="例如：已核对，需补 1 项"></div>
+</div>
+<p><button id="btnCpaReview" class="secondary">标记 CPA 已审核确认</button> <button id="btnCpaClear" class="secondary">清除审核标记</button></p>
+<ul id="exportLog"></ul>
+</div>
+
+<div class="card">
+<h2>订阅：报税季票（即将推出，暂未开通付费）</h2>
+<p class="muted small">定位：干干净净去见税务师。基础整理永久免费；订阅 $49 / 报税季 / 1 个包（假设价，季末复核），第二包 $25，按季一次性、默认不自动续。订阅额外服务：全年提醒线、个性化 IRS 探针、深度不确定事项包、CPA 交接工作台、多包与多年对比、批量归档核对、优先工具支持。订阅不算税、不报税、不给税务结论、不判福利与退税资格——你带着今年值得问的候选清单去问税务师，最后能享受哪些，由税务师确认。本版不接支付、不锁任何免费功能。</p>
+</div>
+
+<div class="card">
+<h2>安全与费用边界</h2>
+<ul class="small">
+<li>演示版：数据只存本机浏览器，不出设备、不给第三方、不拿去训练。</li>
+<li>正式版底线（未在本演示里声称已实现）：传输加密、存储加密、账号隔离、一键删除、数据不训练不给第三方。</li>
+<li><b>R2 费用提醒：</b>如未来启用 Cloudflare R2 存文件，免费额度为存储 10GB/月、A 类 100 万次/月、B 类 1000 万次/月；超额按量收费（存储 $0.015/GB·月、A 类 $4.50/百万次、B 类 $0.36/百万次）。任何扩用量前必须先提醒你、经你同意，不能默默扩大。本演示云存储用量为 0。</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="printArea"></div>
+</main>
+<script>
+"use strict";
+var FORM_MAP=[
+["W-2","今年 W-2（按去年每个雇主）"],["1099-INT","今年 1099-INT（按去年每个付款方）"],["1099-DIV","今年 1099-DIV（按去年每个付款方）"],["1099-R","今年 1099-R（按去年每个付款方）"],["SSA-1099","今年 SSA-1099"],["1099-B","今年 1099-B + 年终券商对账单"],["1099-G","今年 1099-G（州退税 / 失业金）"],["1099-MISC","今年 1099-MISC（按去年每个付款方，含版税/租金/奖金亚类）"],["1099-K","今年 1099-K（按去年每个平台）"],["1099-S","今年 1099-S + 过户结算单"],["1099-C","今年 1099-C"],["1099-NEC","今年 1099-NEC（按去年每个付款方）"],["W-2G","今年 W-2G（按去年每个付款方）"],
+["Schedule C","今年 Schedule C 记录：收入、分类支出收据、去年报过的居家办公/车辆记录"],["Schedule E","今年 Schedule E 记录（按房产）：租金、1098、税单、维修收据"],["Schedule F","今年 Schedule F 记录"],["Schedule K-1","今年 K-1（按去年每个实体）"],
+["1098","今年 1098（按去年每个贷款方）"],["1098-E","今年 1098-E（按去年每个贷款方）"],["1098-T","今年 1098-T（按去年每个学校）"],["Form 2441","今年托育服务方证明"],["房产税单","今年各管辖区房产税单"],["医疗收据","今年医疗/牙科收据汇总（不含诊断）"],["捐赠收据","今年捐赠收据 / 确认函"],
+["1095-A","今年 1095-A"],["1095-B/C","今年 1095-B / C（如收到）"],["5498","今年 5498 / 供款确认"],["5498-SA","今年 5498-SA"],["1099-SA","今年 1099-SA"],
+["预估税","今年预估税缴款确认（联邦 + 覆盖 10 州中去年报过的州）"],["延期缴款","今年延期缴款确认（如今年办延期）"],["IRS/州通知","今年收到的新通知（只上传，不解读）"]
+];
+var CHANGES=[
+["申报身份","申报身份证明文件（如适用）"],["地址","新地址证明"],["抚养人","新增抚养人证明（出生/收养记录等）"],["配偶","婚姻记录（如适用）"]
+];
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function fillSelect(id){var s=$(id);FORM_MAP.forEach(function(f){var o=document.createElement("option");o.value=f[0];o.textContent=f[0]+" — "+f[1];s.appendChild(o)})}
+fillSelect("lastForm");fillSelect("newForm");fillSelect("irsForm");
+var memStore={};
+function load(k,d){try{var v=localStorage.getItem(k);if(v)return JSON.parse(v);if(k in memStore)return memStore[k];return d}catch(e){return (k in memStore)?memStore[k]:d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){memStore[k]=v;var w=$("storageWarn");if(w)w.classList.remove("hidden")}}
+function packetKey(email){return "tpo_packet_"+email}
+function accounts(){return load("tpo_accounts",{})}
+function pending(){return load("tpo_pending",{})}
+function fallbackHash(text){var h=2166136261;for(var i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return "fallback-"+(h>>>0).toString(16)}
+function sha(text){try{if(window.crypto&&crypto.subtle)return crypto.subtle.digest("SHA-256",new TextEncoder().encode(text)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}).catch(function(){return fallbackHash(text)})}catch(e){}return Promise.resolve(fallbackHash(text))}
+var currentUser=null,packet=null;
+function newPacket(){return {changes:{},lastYear:[],checklist:[],transcript:null,exports:[],uncertain:[],cpaReview:null}}
+function statusText(s){return s==="uploaded"?"已上传":s==="na"?"不适用":s==="pending"?"待 transcript":"未开始"}
+function renderCpa(){
+  var t=$("cpaReviewText");
+  if(packet.cpaReview){t.innerHTML="<span class='badge uploaded'>CPA 已审核确认</span> "+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · "+esc(packet.cpaReview.note):"");}
+  else{t.textContent="暂无审核确认。";}
+}
+function loadPacket(email){packet=load(packetKey(email),null);if(!packet){packet=newPacket();save(packetKey(email),packet)}}
+function savePacket(){if(currentUser)save(packetKey(currentUser),packet)}
+function requestText(form){for(var i=0;i<FORM_MAP.length;i++)if(FORM_MAP[i][0]===form)return FORM_MAP[i][1];return "今年 "+form}
+function renderChanges(){
+  var box=$("changesBox");box.innerHTML="";
+  CHANGES.forEach(function(c){
+    var key=c[0],val=packet.changes[key]||"";
+    var div=document.createElement("div");div.className="item";
+    div.innerHTML="<b>"+esc(key)+"有变化吗？</b> <span class='small'>当前："+esc(val||"未选")+"</span><div class='row' style='margin-top:8px'><button data-k='"+esc(key)+"' data-v='否' class='secondary'>否（沿用，不展开）</button><button data-k='"+esc(key)+"' data-v='是'>是（需补证明文件）</button></div>"+(val==="是"?"<p class='small'>后续要求："+esc(c[1])+"。工具只列文件，不判断资格。</p>":"");
+    box.appendChild(div);
+  });
+  box.querySelectorAll("button").forEach(function(b){b.onclick=function(){
+    packet.changes[b.dataset.k]=b.dataset.v;
+    if(b.dataset.v==="是"){
+      var idx=CHANGES.findIndex(function(c){return c[0]===b.dataset.k});
+      var req=CHANGES[idx][1];
+      var exists=packet.checklist.some(function(it){return it.request===req});
+      if(!exists)packet.checklist.push({id:Date.now()+""+Math.random(),form:"变化证明",payer:b.dataset.k,request:req,status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:""});
+    }
+    savePacket();renderAll();
+  }});
+}
+function renderLast(){
+  var ul=$("lastList");ul.innerHTML="";
+  if(!packet.lastYear.length)ul.innerHTML="<li class='muted small'>暂无。请先加去年有过的表。</li>";
+  packet.lastYear.forEach(function(it,i){
+    var li=document.createElement("li");li.textContent=it.form+(it.payer?"（"+it.payer+"）":"");
+    var b=document.createElement("button");b.textContent="删除";b.className="secondary";b.style.marginLeft="8px";b.style.padding="4px 8px";
+    b.onclick=function(){packet.lastYear.splice(i,1);savePacket();renderLast()};
+    li.appendChild(b);ul.appendChild(li);
+  });
+}
+function statusBadge(it){
+  if(it.status==="uploaded")return "<span class='badge uploaded'>已上传</span>";
+  if(it.status==="na")return "<span class='badge na'>不适用</span>";
+  if(it.status==="pending")return "<span class='badge pending'>待 transcript</span>";
+  return "<span class='badge missing'>缺</span>";
+}
+function renderChecklist(){
+  var box=$("checklistBox");box.innerHTML="";
+  if(!packet.checklist.length){box.innerHTML="<p class='muted small'>暂无清单。先在上面加去年表，再点“生成今年清单”。</p>";}
+  packet.checklist.forEach(function(it){
+    var div=document.createElement("div");div.className="item"+(it.status==="not-started"?" miss":"");
+    var extra=(it.isNew?" <span class='badge na'>今年新增</span>":"")+(it.transcriptNote?" <span class='badge pending'>"+esc(it.transcriptNote)+"</span>":"");
+    div.innerHTML="<b>"+esc(it.form)+"</b> "+(it.payer?"（"+esc(it.payer)+"）":"")+" "+statusBadge(it)+extra+"<br><span class='small'>"+esc(it.request)+"</span>"+(it.fileName?"<br><span class='small'>已上传文件："+esc(it.fileName)+"</span>":"")+(it.reason?"<br><span class='small'>不适用原因："+esc(it.reason)+"</span>":"");
+    var row=document.createElement("div");row.className="row";row.style.marginTop="8px";
+    var file=document.createElement("input");file.type="file";file.className="small";file.setAttribute("aria-label","上传 "+it.form);
+    file.onchange=function(){if(file.files&&file.files[0]){it.fileName=file.files[0].name;it.status="uploaded";savePacket();renderAll()}};
+    var photo=document.createElement("input");photo.type="file";photo.className="small";photo.setAttribute("accept","image/*");photo.setAttribute("capture","environment");photo.setAttribute("aria-label","拍照上传 "+it.form);
+    photo.onchange=function(){if(photo.files&&photo.files[0]){it.fileName=photo.files[0].name+"（拍照）";it.status="uploaded";savePacket();renderAll()}};
+    var naInput=document.createElement("input");naInput.placeholder="不适用原因（必填）";naInput.value=it.reason||"";
+    var naBtn=document.createElement("button");naBtn.textContent="标不适用";naBtn.className="secondary";
+    naBtn.onclick=function(){if(!naInput.value.trim()){alert("请先写不适用原因");return}it.reason=naInput.value.trim();it.status="na";savePacket();renderAll()};
+    var pendBtn=document.createElement("button");pendBtn.textContent="标待 transcript";pendBtn.className="secondary";
+    pendBtn.onclick=function(){it.status="pending";savePacket();renderAll()};
+    var delBtn=document.createElement("button");delBtn.textContent="删除本项";delBtn.className="secondary";
+    delBtn.onclick=function(){packet.checklist=packet.checklist.filter(function(x){return x.id!==it.id});savePacket();renderAll()};
+    row.appendChild(file);row.appendChild(photo);row.appendChild(naInput);row.appendChild(naBtn);row.appendChild(pendBtn);row.appendChild(delBtn);
+    div.appendChild(row);box.appendChild(div);
+  });
+  var done=packet.checklist.filter(function(it){return it.status==="uploaded"||it.status==="na"}).length;
+  $("progressText").textContent=packet.checklist.length?("清单进度："+done+"/"+packet.checklist.length+" 项已解决"):"清单进度：暂无清单";
+}
+function renderExports(){
+  var ul=$("exportLog");ul.innerHTML="";
+  if(!packet.exports.length)ul.innerHTML="<li class='muted small'>暂无导出记录。</li>";
+  packet.exports.forEach(function(e){var li=document.createElement("li");li.className="small";li.textContent=e;ul.appendChild(li)});
+  $("transRecord").textContent=packet.transcript?packet.transcript:"无";
+}
+function renderAll(){renderChanges();renderLast();renderChecklist();renderExports();renderCpa()}
+function showApp(){
+  $("authView").classList.add("hidden");$("appView").classList.remove("hidden");$("who").textContent=currentUser;renderAll();
+}
+function showAuth(){
+  $("authView").classList.remove("hidden");$("appView").classList.add("hidden");
+}
+$("btnRegister").onclick=function(){
+  var email=$("regEmail").value.trim().toLowerCase(),pass=$("regPass").value;
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$("regMsg").textContent="邮箱格式不对";return}
+  if(pass.length<8){$("regMsg").textContent="密码至少 8 位";return}
+  var acc=accounts();if(acc[email]){$("regMsg").textContent="该邮箱已注册，请直接登录";return}
+  var code=String(Math.floor(100000+Math.random()*900000));
+  sha(email+":"+pass).then(function(h){
+    var p=pending();p[email]={hash:h,code:code};save("tpo_pending",p);
+    $("demoCode").textContent=code;$("verifyBox").classList.remove("hidden");$("regMsg").textContent="已生成演示验证码（见下方黄框），请输入验证。";
+  });
+};
+$("btnVerify").onclick=function(){
+  var email=$("regEmail").value.trim().toLowerCase(),code=$("verifyCode").value.trim();
+  var p=pending();if(!p[email]){$("verifyMsg").textContent="请先注册";return}
+  if(p[email].code!==code){$("verifyMsg").textContent="验证码不对";return}
+  var acc=accounts();acc[email]={hash:p[email].hash};save("tpo_accounts",acc);
+  delete p[email];save("tpo_pending",p);
+  $("verifyMsg").textContent="验证通过，已激活。请用邮箱 + 密码登录。";$("loginEmail").value=email;
+};
+$("btnLogin").onclick=function(){
+  var email=$("loginEmail").value.trim().toLowerCase(),pass=$("loginPass").value;
+  var acc=accounts();if(!acc[email]){$("loginMsg").textContent="该邮箱未注册或未验证，请先注册验证";return}
+  sha(email+":"+pass).then(function(h){
+    if(h!==acc[email].hash){$("loginMsg").textContent="密码不对";return}
+    currentUser=email;try{localStorage.setItem("tpo_session",email)}catch(e){memStore["tpo_session"]=email}loadPacket(email);showApp();
+  });
+};
+$("btnLogout").onclick=function(){currentUser=null;packet=null;try{localStorage.removeItem("tpo_session")}catch(e){}delete memStore["tpo_session"];showAuth()};
+$("btnDeletePacket").onclick=function(){
+  if(!confirm("确定删除本账号的包吗？清单、上传记录、transcript 对齐、导出记录都会删掉，此操作不可撤销。"))return;
+  packet=newPacket();savePacket();renderAll();alert("已删除本包。");
+};
+$("btnAddLast").onclick=function(){
+  var form=$("lastForm").value,payer=$("lastPayer").value.trim();
+  if(packet.lastYear.some(function(x){return x.form===form&&x.payer===payer})){alert("去年清单里已有这一项");return}
+  packet.lastYear.push({form:form,payer:payer});$("lastPayer").value="";savePacket();renderLast();
+};
+$("btnGenerate").onclick=function(){
+  if(!packet.lastYear.length){alert("请先加至少一项去年表");return}
+  var added=0;
+  packet.lastYear.forEach(function(l){
+    var req=requestText(l.form);
+    if(!packet.checklist.some(function(it){return it.form===l.form&&it.payer===l.payer})){
+      packet.checklist.push({id:Date.now()+""+Math.random(),form:l.form,payer:l.payer,request:req,status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:""});added++;
+    }
+  });
+  savePacket();renderAll();alert(added?("已生成，新增 "+added+" 项。"):"没有新增项（均已在清单里）。");
+};
+$("btnAddNew").onclick=function(){
+  var form=$("newForm").value,payer=$("newPayer").value.trim();
+  packet.checklist.push({id:Date.now()+""+Math.random(),form:form,payer:payer,request:requestText(form),status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:""});
+  $("newPayer").value="";savePacket();renderAll();
+};
+var STATES=[
+["加州","有州个人所得税"],["得州","无州个人所得税"],["佛州","无州个人所得税"],["纽约州","有州个人所得税"],["宾州","有州个人所得税"],["伊利诺伊州","有州个人所得税"],["俄亥俄州","有州个人所得税"],["佐治亚州","有州个人所得税"],["北卡罗来纳州","有州个人所得税"],["密歇根州","有州个人所得税"]
+];
+(function fillStates(){var s=$("stateSelect");if(!s)return;STATES.forEach(function(st){var o=document.createElement("option");o.value=st[0];o.textContent=st[0]+(st[1]==="无州个人所得税"?"（无州个人所得税）":"");s.appendChild(o)})})();
+$("btnAddState").onclick=function(){
+  var st=$("stateSelect").value;
+  var noTax=STATES.some(function(x){return x[0]===st&&x[1]==="无州个人所得税"});
+  if(noTax){$("stateMsg").textContent=st+"无州个人所得税，一般无需州所得税申报表，不生成州所得税清单项；如有外州收入等情形，请以税务师确认为准。";return}
+  if(packet.checklist.some(function(it){return it.form==="州税"&&it.payer===st})){$("stateMsg").textContent="清单里已有"+st+"州税项目。";return}
+  packet.checklist.push({id:Date.now()+""+Math.random(),form:"州税",payer:st,request:"今年"+st+"州所得税表与缴款确认",status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:""});
+  $("stateMsg").textContent="已加入"+st+"州税项目。";savePacket();renderAll();
+};
+$("transFile").onchange=function(e){
+  if(e.target.files&&e.target.files[0]){packet.transcript=e.target.files[0].name+"（只记文件名，未读内容）";savePacket();renderExports()}
+};
+$("transPhoto").onchange=function(e){
+  if(e.target.files&&e.target.files[0]){packet.transcript=e.target.files[0].name+"（拍照，只记文件名，未读内容）";savePacket();renderExports()}
+};
+$("btnAddIrs").onclick=function(){
+  var form=$("irsForm").value,payer=$("irsPayer").value.trim();
+  packet.checklist.push({id:Date.now()+""+Math.random(),form:form,payer:payer,request:requestText(form),status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:"IRS 显示—待你确认"});
+  $("irsPayer").value="";savePacket();renderAll();
+};
+$("btnMarkPending").onclick=function(){
+  var n=0;packet.checklist.forEach(function(it){if(it.status==="not-started"){it.status="pending";n++}});
+  savePacket();renderAll();alert(n?("已把 "+n+" 项未上传项标为待 transcript。"):"没有未上传项可标。");
+};
+var recog=null;
+$("btnVoiceStart").onclick=function(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){$("voiceMsg").textContent="本浏览器不支持语音识别，请打字。";return}
+  try{
+    recog=new SR();recog.lang="zh-CN";recog.interimResults=false;
+    recog.onresult=function(e){var t="";for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;$("uncertainText").value=(($("uncertainText").value+" "+t).trim());$("voiceMsg").textContent="已转写到输入框，请检查后再点“识别事项并生成追问”。"};
+    recog.onerror=function(e){$("voiceMsg").textContent="语音识别出错（"+e.error+"），请打字。";};
+    recog.onend=function(){$("voiceMsg").textContent="语音录入已结束。";};
+    recog.start();$("voiceMsg").textContent="正在听，请说话…";
+  }catch(e){$("voiceMsg").textContent="语音识别启动失败，请打字。";}
+};
+$("btnVoiceStop").onclick=function(){if(recog){try{recog.stop()}catch(e){}}else{$("voiceMsg").textContent="当前没有在录音。";}};
+var FOREIGN_Q=[
+["buy_date","买房时间（年 / 日期）","text","例如：2015年"],
+["buy_price","买房价（币种 + 金额，可空）","text","例如：人民币 200万（可空）"],
+["sell_date","卖房时间（年 / 日期）","text","例如：2026年"],
+["sell_price","卖房价（币种 + 金额，可空）","text","例如：人民币 300万（可空）"],
+["taxes","交了哪些税 / 费用（列名称即可，金额可空）","text","例如：中国个税、契税、中介费"],
+["holding","持有是否超过一定年限？（工具不判断年限门槛，只记录你的回答）","select","不确定|是|否|待查"],
+["primary","是不是自己在中国常住房？","select","不确定|是|否"],
+["lived_years","在该房常住大概几年（可空）","text","例如：3年（可空）"],
+["docs","已有购房 / 售房合同、完税证明吗？","select","不确定|都有|部分有|都没有"]
+];
+var GENERIC_Q=[
+["what","这件事是什么？（一句话）","text",""],
+["when","发生在什么时候？","text",""],
+["docs","手头已有哪些材料？","text",""],
+["need","你最不确定的是哪一点？","text",""]
+];
+var FOREIGN_DOCS=["购房合同与付款凭证","售房合同与收款凭证","中国完税 / 税费缴纳证明","产权证 / 不动产权证书","持有年限证明（购房日期凭证）","常住证明（居住记录等，按税务师要求提供）","买卖汇率换算记录（银行结汇 / 换汇凭证）","中介费、评估费等费用单据"];
+var GENERIC_DOCS=["相关合同 / 凭证","收付款记录","税费缴纳证明（如有）","时间 / 身份证明材料"];
+$("btnUncertainAnalyze").onclick=function(){
+  var text=$("uncertainText").value.trim();
+  if(!text){alert("请先打字或语音录入不确定事项。");return}
+  var isSale=/(卖房|售房|房子|房产|house|property)/i.test(text)&&/(卖|售|sell|sold)/i.test(text);
+  var qs=isSale?FOREIGN_Q:GENERIC_Q;
+  var box=$("uncertainQuestions");box.innerHTML="<h3>追问（只为整理材料，不判断税务结论；金额可空）</h3>";
+  qs.forEach(function(q){
+    var wrap=document.createElement("div");
+    if(q[2]==="select"){
+      var opts=q[3].split("|").map(function(o){return "<option>"+esc(o)+"</option>"}).join("");
+      wrap.innerHTML="<label>"+esc(q[1])+"</label><select id='uq_"+q[0]+"'>"+opts+"</select>";
+    }else{
+      wrap.innerHTML="<label>"+esc(q[1])+"</label><input id='uq_"+q[0]+"' placeholder='"+esc(q[3])+"'>";
+    }
+    box.appendChild(wrap);
+  });
+  var btn=document.createElement("button");btn.textContent="生成预估材料包（待税务师审核）";btn.style.marginTop="10px";
+  btn.onclick=function(){
+    var answers={};qs.forEach(function(q){var el=$("uq_"+q[0]);answers[q[0]]=el?el.value:""});
+    if(!packet.uncertain)packet.uncertain=[];
+    packet.uncertain.push({text:text,type:isSale?"境外售房":"一般不确定事项",answers:answers,at:new Date().toLocaleString()});
+    var docs=isSale?FOREIGN_DOCS:GENERIC_DOCS;
+    var payer=isSale?"中国老家房产":"不确定事项";
+    var added=0;
+    docs.forEach(function(d){
+      if(!packet.checklist.some(function(it){return it.request===d&&it.payer===payer})){
+        packet.checklist.push({id:Date.now()+""+Math.random(),form:"不确定事项",payer:payer,request:d,status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:"不确定事项·待税务师审核"});added++;
+      }
+    });
+    savePacket();renderAll();
+    $("uncertainPacket").innerHTML="<div class='notice ok'><b>预估材料包已生成（待税务师审核）：</b>共 "+docs.length+" 项，已并入今年清单（新增 "+added+" 项），每项可电子档或拍照上传。你的追问回答只存本机，<b>不进导出文件</b>，不含税额计算、不判断免税资格。</div><ul class='small'>"+docs.map(function(d){return "<li>"+esc(d)+"</li>"}).join("")+"</ul>";
+    var classHtml="";
+    if(isSale){
+      classHtml="<div class='card' style='margin:12px 0'><h3>候选税范畴 + 政策依据（候选，非结论）</h3>"
+      +"<p class='small'><b>联邦候选范畴：资本利得——售房收益。</b>一般用 Form 8949 列明取得日、出售日、售价、成本基础与调整，再汇总到 Schedule D；主要居所排除见 IRS Publication 523《Selling Your Home》（所有权与使用测试、排除额度等），<b>是否适用、能排除多少，由税务师判断，工具不判</b>。</p>"
+      +"<p class='small'><b>加州候选范畴：资本利得。</b>加州对资本利得没有优惠税率，按普通收入计税，税率随当年总收入走（FTB 资本利得与损失口径），<b>工具不算州税额</b>；是否为加州居民 / 部分年度居民、收入来源地划分，也由税务师判断。</p>"
+      +"<p class='small'><b>境外候选范畴：外国税收抵免。</b>在中国已缴的所得税是否合格、能否抵免、限额多少，见 IRS Topic 856（外国税收抵免）与 Form 1116，<b>是否合格由税务师判断</b>；利息、罚款、非所得税性质的收费一般不算合格外国税。</p>"
+      +"<p class='small'><b>决定金额的变量（工具只列变量，不算数）：</b>售价；调整后成本基础（购价 + 改良 − 折旧等）；持有期；是否主要居所及居住 / 持有年限；是否收到 1099-S；中国已缴税的性质与金额；买卖时汇率换算；当年其他收入、抵扣与申报身份。</p>"
+      +"<p class='small'><b>应缴金额：待税务师填写，本工具不输出。</b>只凭“卖了一套房”算不出应缴额：缺任何一个变量、或排除与抵免的判断不同，结果都会变；用不完整输入硬算一个数会误导。具体以注册税务师和 IRS 解释为准。</p>"
+      +"<p class='small'><b>报税助手定位：</b>本工具是你的报税助手，职责是提醒哪些要报、候选范畴是什么、要备什么文件、依据哪条政策；不是报税软件本身，不替你算出应缴额、不替你报税。</p>"
+      +"<p class='small'><b>金额怎么来（两条路，都不在 V1 里算）：</b>① IRS 规定推导链（文字版，不算数）：应税收益 = 售价 − 调整后成本基础 − 可排除额（若适用）；联邦税按长期资本利得档位、加州税按普通收入、外国税收抵免受限额限制——具体数须由税务师用完整申报数据算。② 税务软件 API（v2 合作路线，不在 V1 接入）：市面上有面向机构 / 事务所的报税引擎 API，不是 IRS 公共算税接口，也不是 TurboTax 公共 API；接入意味着签约、付费、用户数据出设备、供应商成为报税通道，须另行法律与商业审核后才能上，V1 不擅自接。</p>"
+      +"<p class='small'>政策依据（官方链接）：<a href='https://www.irs.gov/taxtopics/tc856' target='_blank' rel='noopener'>IRS Topic 856 外国税收抵免</a> · <a href='https://www.irs.gov/individual-tax-filing' target='_blank' rel='noopener'>IRS 个人报税页</a>；Publication 523、Form 8949、Form 1116 请在 IRS 站内按名检索当季版本。</p></div>";
+    }else{
+      classHtml="<div class='card' style='margin:12px 0'><h3>候选税范畴（待定）</h3><p class='small'>这类事项工具不分类、不算数：候选范畴、所需文件与金额变量，须由注册税务师根据完整事实判断。具体以注册税务师和 IRS 解释为准。</p></div>";
+    }
+    $("uncertainPacket").innerHTML+=classHtml;
+    $("uncertainNext").classList.remove("hidden");
+  };
+  box.appendChild(btn);
+};
+function csvCell(v){var s=String(v==null?"":v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+$("btnExportCsv").onclick=function(){
+  var head=["序号","表类型","付款方","今年需备文件","状态","不适用原因","文件名","是否今年新增","备注"];
+  var lines=[head.map(csvCell).join(",")];
+  packet.checklist.forEach(function(it,i){lines.push([i+1,it.form,it.payer||"",it.request,statusText(it.status),it.reason||"",it.fileName||"",it.isNew?"是":"否",it.transcriptNote||""].map(csvCell).join(","))});
+  var blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tax-packet-checklist.csv";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+  packet.exports.push(new Date().toLocaleString()+" 导出通用表格 CSV（"+packet.checklist.length+" 项）");savePacket();renderExports();
+};
+$("btnCpaReview").onclick=function(){
+  var d=$("cpaDate").value||new Date().toLocaleDateString();
+  packet.cpaReview={date:d,note:$("cpaNote").value.trim()};savePacket();renderCpa();
+  packet.exports.push(new Date().toLocaleString()+" CPA 已审核确认（"+d+"）");savePacket();renderExports();
+};
+$("btnCpaClear").onclick=function(){packet.cpaReview=null;savePacket();renderCpa();};
+$("btnExportJson").onclick=function(){
+  var data={tool:"报税包整理器 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||""}}),transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存本机，不进导出文件。会计师只审核确认并签字，平台不抽报税费、不替代签字。"};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tax-packet-checklist.json";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+  packet.exports.push(new Date().toLocaleString()+" 导出机器可读清单 JSON（"+packet.checklist.length+" 项）");savePacket();renderExports();
+};
+$("btnPrint").onclick=function(){
+  var rows=packet.checklist.map(function(it,i){return "<tr><td>"+(i+1)+"</td><td>"+esc(it.form)+"</td><td>"+esc(it.payer||"")+"</td><td>"+esc(it.request)+"</td><td>"+esc(statusText(it.status))+"</td><td>"+esc(it.reason||it.fileName||"")+"</td></tr>"}).join("")||"<tr><td colspan='6'>暂无清单</td></tr>";
+  var cnt=function(s){return packet.checklist.filter(function(it){return it.status===s}).length};
+  var cpaBlock=packet.cpaReview?("<p>会计师审核确认：已确认 · 日期："+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · 意见："+esc(packet.cpaReview.note):"")+"</p>"):("<p>会计师审核确认栏（请会计师审核后签字，平台不替代签字）：<br>姓名：________________ 持证号：________________ 签字：________________ 日期：________________<br>审核意见：________________________________________</p>");
+  $("printArea").innerHTML="<h1>报税包整理清单</h1><p>账号："+esc(currentUser)+" · 导出时间："+esc(new Date().toLocaleString())+"</p><p>只整理、不算税、不报税、不给税务结论。CSV / JSON / PDF 三份内容一致，均不含社保号与金额，均可对接任何一家报税软件，不锁一家。</p><p>合计："+packet.checklist.length+" 项 · 已上传："+cnt("uploaded")+" · 不适用："+cnt("na")+" · 待 transcript："+cnt("pending")+" · 未开始："+cnt("not-started")+"</p><table><tr><th>#</th><th>表</th><th>付款方</th><th>今年需备文件</th><th>状态</th><th>原因/文件名</th></tr>"+rows+"</table><p>变化问答："+esc(JSON.stringify(packet.changes))+"</p><p>Transcript："+esc(packet.transcript||"无")+"</p>"+cpaBlock;
+  packet.exports.push(new Date().toLocaleString()+" 打印 / 另存为 PDF 清单（"+packet.checklist.length+" 项）");savePacket();renderExports();
+  window.print();
+};
+(function init(){
+  var s=null;try{s=localStorage.getItem("tpo_session")}catch(e){}if(!s)s=memStore["tpo_session"]||null;
+  if(s&&accounts()[s]){currentUser=s;loadPacket(s);showApp()}
+})();
+</script>
+</body>
+</html>
