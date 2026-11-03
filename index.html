@@ -18,6 +18,10 @@ button:disabled{opacity:.5} .row{display:flex;gap:10px;flex-wrap:wrap} .row>*{fl
 .badge{display:inline-block;padding:1px 8px;border-radius:20px;font-size:12px;font-weight:700}
 .missing{background:#fdecea;color:#9b2226} .uploaded{background:#eaf6ec;color:#1e6b2e} .na{background:#eee;color:#555} .pending{background:#fff3cd;color:#7a5b00}
 .item{border:1px solid #e2e6eb;border-radius:10px;padding:12px;margin:10px 0} .item.miss{border-color:#d66;background:#fffafa}
+.resume-card{border:1px solid #b7cbe0;background:linear-gradient(135deg,#f5f9fd,#fff);display:flex;gap:18px;align-items:center;justify-content:space-between}
+.resume-card h2{margin:0 0 4px}.resume-card p{margin:0}.resume-kicker{font-size:12px;font-weight:700;letter-spacing:.04em;color:#55728e;text-transform:uppercase}
+.step-pill{display:inline-block;background:#e7f0f8;color:#16324f;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;margin-bottom:6px}
+@media(max-width:600px){.resume-card{align-items:stretch;flex-direction:column;gap:12px}.resume-card button{width:100%}}
 .chg-scroll{max-height:200px;overflow-y:auto;border:1px solid #ddd;border-radius:8px;padding:6px 12px} .chg-scroll label{display:flex;gap:10px;align-items:center;margin:12px 0;cursor:pointer} .chg-scroll input{width:auto;accent-color:#16324f} .chg-check{color:#1a7f37;font-size:20px;font-weight:700} .chg-head{cursor:pointer}
 .sec-head{cursor:pointer;display:flex;align-items:baseline;gap:8px;margin:-6px -8px 10px;padding:8px;border-radius:8px} .sec-head:hover{background:#f2f5f8} .sec-head h2{flex:1;margin:0} .sec-sum{color:#666;font-size:13px} .sec-chev{color:#16324f;font-weight:700;white-space:nowrap}
 .muted{color:#666;font-size:13px} .small{font-size:13px} .hidden{display:none!important}
@@ -62,6 +66,11 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <p><b>已登录：</b><span id="who"></span> · <span id="progressText"></span></p>
 <p><button id="btnLogout" class="secondary">退出登录</button> <button id="btnDeletePacket" class="danger">一键删除我的包和文件记录</button></p>
 <p class="muted small">删除只删本账号的包（含清单、上传记录、transcript 对齐、导出记录），不影响其他账号。文件内容本就未保存，无需另删。</p>
+</div>
+
+<div class="card no-print resume-card" id="resumeCard" aria-live="polite">
+<div><div class="resume-kicker">你的整理进度已保存在本机</div><span class="step-pill" id="resumeStep"></span><h2 id="resumeTitle">正在恢复你的进度…</h2><p class="muted small" id="resumeHint"></p></div>
+<button id="btnResume">继续这一步</button>
 </div>
 
 <div id="appViewSections">
@@ -309,7 +318,24 @@ function renderExports(){
   packet.exports.forEach(function(e){var li=document.createElement("li");li.className="small";li.textContent=e;ul.appendChild(li)});
   $("transRecord").textContent=packet.transcript?packet.transcript:"无";
 }
-function renderAll(){renderChanges();renderLast();renderChecklist();renderExports();renderCpa();applyCollapse()}
+function renderResume(){
+  var key="s3",title="",hint="",label="继续这一步";
+  var changesAnswered=!!packet.changesNone||CHANGES.some(function(c){return packet.changes[c[0]]==="是"||packet.changes[c[0]]==="否"});
+  if(!changesAnswered){key="changes";title="先确认今年有没有变化";hint="只回答与你有关的变化；不确定时可以先留着，稍后回来。";label="确认变化";}
+  else if(!packet.lastYear.length){key="s3";title="从去年报过的表开始";hint="先加去年出现过的表类型，付款方可以稍后补。";}
+  else if(!packet.checklist.length){key="s3";title="把去年清单变成今年待办";hint="你已记录去年表格，下一步生成今年的文件清单。";label="生成今年清单";}
+  else if(packet.checklist.some(function(it){return it.status!=="uploaded"&&it.status!=="na"})){key="s4";var open=packet.checklist.filter(function(it){return it.status!=="uploaded"&&it.status!=="na"}).length;title="继续处理今年清单";hint="还有 "+open+" 项未解决。可以先做最容易的一项，也可以标记待 transcript。";}
+  else if(!packet.exports.some(function(e){return e.indexOf("用户自记")<0})){key="s6";title="清单已整理好，可以导出";hint="导出一份清单带给 CPA 复核；你也可以之后再回来。";label="查看导出选项";}
+  else{key="s6";title="整理完成，随时可以回来";hint="清单与导出记录保存在这个浏览器里。需要时可再次导出或更新。";label="查看清单与导出";}
+  $("resumeStep").textContent=key==="changes"?"下一步 · 今年变化":(key==="s3"?"下一步 · 去年表格":key==="s4"?"下一步 · 今年清单":"下一步 · 导出交接");
+  $("resumeTitle").textContent=title;$("resumeHint").textContent=hint;$("btnResume").textContent=label;
+  $("btnResume").onclick=function(){
+    if(key==="changes"){$("changesBody").classList.remove("hidden");packet.changesCollapsed=false;savePacket();renderChanges();$("changesHead").scrollIntoView({behavior:"smooth",block:"start"});return;}
+    if(key==="s3"&&packet.lastYear.length){packet.collapsed.s3=false;savePacket();applyCollapse();$("btnGenerate").scrollIntoView({behavior:"smooth",block:"center"});return;}
+    if(secHeads[key]){packet.collapsed[key]=false;savePacket();applyCollapse();secHeads[key].body.parentElement.scrollIntoView({behavior:"smooth",block:"start"});}
+  };
+}
+function renderAll(){renderChanges();renderLast();renderChecklist();renderExports();renderCpa();applyCollapse();renderResume()}
 function secKeyFromH2(t){
   if(t.indexOf("3b")==0)return "s3b";
   if(t.indexOf("3")==0)return "s3";
