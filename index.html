@@ -231,6 +231,9 @@ function renderChanges(){
   $("changesHead").onclick=function(){packet.changesCollapsed=!packet.changesCollapsed;savePacket();renderAll();};
   $("btnCollapseChanges").onclick=function(){packet.changesCollapsed=true;savePacket();renderAll();};
   var list=document.createElement("div");list.className="chg-scroll";
+  function removeChangeItems(key){
+    packet.checklist=packet.checklist.filter(function(it){return !(it.form==="变化证明"&&it.payer===key&&it.status==="not-started");});
+  }
   function addRow(labelText,checked,onchange){
     var lab=document.createElement("label");var cb=document.createElement("input");cb.type="checkbox";cb.checked=checked;cb.onchange=onchange;var sp=document.createElement("span");sp.textContent=labelText;lab.appendChild(cb);lab.appendChild(sp);list.appendChild(lab);
   }
@@ -242,12 +245,12 @@ function renderChanges(){
         var req=c[1];
         var exists=packet.checklist.some(function(it){return it.request===req});
         if(!exists)packet.checklist.push({id:Date.now()+""+Math.random(),form:"变化证明",payer:key,request:req,status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:""});
-      }else{packet.changes[key]="否";}
+      }else{packet.changes[key]="否";removeChangeItems(key);}
       savePacket();renderAll();
     });
   });
   addRow("无变化",none,function(){
-    if(this.checked){packet.changesNone=true;CHANGES.forEach(function(c){packet.changes[c[0]]="否";});}
+    if(this.checked){packet.changesNone=true;CHANGES.forEach(function(c){packet.changes[c[0]]="否";removeChangeItems(c[0]);});}
     else{packet.changesNone=false;}
     savePacket();renderAll();
   });
