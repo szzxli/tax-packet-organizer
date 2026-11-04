@@ -69,6 +69,11 @@ shows the code on the page itself because no mail service is connected.
 Before any production use, real email verification, transport and storage
 encryption, and account isolation must be connected and tested separately.
 
+## Three pages (organize / subscribe / pay)
+- Page 1 organizes the packet (changes, prior year, checklist, transcript, draft estimate, IRS reminders, export).
+- Page 2 is the Season Pass subscription page: free vs pass comparison, the 7 extra services with their status, expected $49/season for 1 packet ($25 second packet), quarterly one-time, no auto-renew by default, valid to Oct 15.
+- Page 3 is a demo checkout only: no real payment, no real card numbers collected, no charge. Confirming demo payment only records a demo order in the browser (localStorage) for later reconciliation when the pass launches; it does not unlock unlaunched features.
+
 ## License
 
 MIT. See LICENSE.
