@@ -939,13 +939,13 @@ function renderPriorCpa(){
 $("btnSavePriorCpa").onclick=function(){
   if(!packet) return;
   packet.priorCpa={name:$("priorCpaName").value.trim(),contact:$("priorCpaContact").value.trim(),note:$("priorCpaNote").value.trim()};
-  savePacket(); renderPriorCpa();
+  savePacket(); renderAll();
   $("priorCpaMsg").textContent=packet.priorCpa.name?"已保存。下次登录自动带出供确认。":"已保存（姓名为空，视为未指定）。";
 };
 $("btnClearPriorCpa").onclick=function(){
   if(!packet) return;
   packet.priorCpa={name:"",contact:"",note:""};
-  savePacket(); renderPriorCpa(); $("priorCpaMsg").textContent="已清除。";
+  savePacket(); renderAll(); $("priorCpaMsg").textContent="已清除。";
 };
 (function init(){
   var s=null;try{s=localStorage.getItem("tpo_session")}catch(e){}if(!s)s=memStore["tpo_session"]||null;
