@@ -145,7 +145,7 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 
 <div class="card">
 <h2>4c · 今年收入填报（简单版，按收入类型）</h2>
-<p class="muted small">不用懂表名：按你实际有的收入类型填数字就行。去年表仅供参考，以你实际收入为准；同一笔收入只填一边——简单版和第 4 节清单二选一，不要重复。金额均为你填写的草稿，不代表可抵扣结论；抵扣资格与比例由持证税务师确认。凭证缺也可以，数字要有；演示版只记文件名，不存文件内容。</p>
+<p class="muted small">不用懂表名：按你实际有的收入类型填数字就行。去年有数的排在前面，今年请补凭证与数据；后面是按类别的项目库，没用到的类别不用打开。去年表仅供参考，以你实际收入为准；同一笔收入只填一边——简单版和第 4 节清单二选一，不要重复。金额均为你填写的草稿，不代表可抵扣结论；抵扣资格与比例由持证税务师确认。凭证缺也可以，数字要有；演示版只记文件名，不存文件内容。</p>
 <p><button id="btnInferSheets" class="secondary">按去年推算今年填报</button> <span id="inferMsg" class="small"></span></p>
 <p class="small">手动加一项：
 <button class="secondary" data-addsheet="wages">＋工资</button>
@@ -156,6 +156,28 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <button class="secondary" data-addsheet="generic">＋其他</button>
 </p>
 <p class="small">去年表→填报对照：W-2→工资；Schedule E→房租；Schedule C / Schedule SE / 1099-NEC→自雇；1099-INT→利息；1099-DIV→股息；1099-R→退休金；SSA-1099→社保金；其余表进“其他”。</p>
+<p class="small">项目库（按类别，没用到的类别不用打开）：</p>
+<details><summary class="small">其他收入</summary>
+<p class="small"><button class="secondary" data-addsheet="generic" data-title="博彩收入">＋博彩收入</button>
+<button class="secondary" data-addsheet="generic" data-title="政府补助">＋政府补助</button>
+<button class="secondary" data-addsheet="generic" data-title="版税">＋版税</button>
+<button class="secondary" data-addsheet="generic" data-title="其他收入">＋其他收入</button></p>
+</details>
+<details><summary class="small">分项抵扣（Schedule A，如适用；是否分项由 CPA 确认）</summary>
+<p class="small"><button class="secondary" data-addsheet="generic" data-title="房贷利息">＋房贷利息</button>
+<button class="secondary" data-addsheet="generic" data-title="房产税">＋房产税</button>
+<button class="secondary" data-addsheet="generic" data-title="州所得税">＋州所得税</button>
+<button class="secondary" data-addsheet="generic" data-title="慈善捐赠">＋慈善捐赠</button>
+<button class="secondary" data-addsheet="generic" data-title="医疗费用">＋医疗费用</button></p>
+</details>
+<details><summary class="small">教育与托育</summary>
+<p class="small"><button class="secondary" data-addsheet="generic" data-title="教育费用">＋教育费用</button>
+<button class="secondary" data-addsheet="generic" data-title="托育费用">＋托育费用</button></p>
+</details>
+<details><summary class="small">退休供款</summary>
+<p class="small"><button class="secondary" data-addsheet="generic" data-title="退休供款">＋退休供款</button></p>
+</details>
+<p class="small">成本明目不用单独加：房租成本在房租表里，自雇/小企业成本在自雇表里，点开表就能填。</p>
 <div id="sheetsBox"></div>
 <div id="sheetsSummary"></div>
 </div>
@@ -1235,7 +1257,7 @@ function renderSheets(){
   packet.sheets.forEach(function(sh){
     var t=SHEET_TYPES[sh.type]||SHEET_TYPES.generic;
     var card=document.createElement("div");card.className="item";
-    var title=document.createElement("div");title.innerHTML="<b>"+esc(sh.title)+"</b>"+(sh.who?"（"+esc(sh.who)+"）":"");
+    var title=document.createElement("div");title.innerHTML="<b>"+esc(sh.title)+"</b>"+(sh.who?"（"+esc(sh.who)+"）":"")+(sh.fromLastYear?" <span class='badge'>去年有数 · 今年请补凭证与数据</span>":"");
     card.appendChild(title);
     function labeledInput(labelText,value,onchg){
       var row=document.createElement("div");row.className="row";
@@ -1300,32 +1322,38 @@ function renderSheets(){
   var filled=sheets.filter(function(s){return s.incomeCents!=null;}).length;
   var inc=0,exp=0,netT=0;
   sheets.forEach(function(s){if(s.incomeCents!=null){inc+=s.incomeCents;exp+=sheetExpTotal(s);netT+=sheetNet(s);}});
-  sum.innerHTML="<p class='small'>填报小计（草稿）："+filled+"/"+sheets.length+" 项已填数字 · 收入合计 "+fmtMoney(inc)+" · 成本合计 "+fmtMoney(exp)+" · 小计合计 "+fmtMoney(netT)+"。小计为填报数字之和，非申报表；同一笔收入不要在第 4 节重复填；抵扣资格与比例由持证税务师确认。</p>";
+  var missNum=sheets.filter(function(s){return s.incomeCents==null;});
+  var missEv=sheets.filter(function(s){return !s.evidence;});
+  sum.innerHTML="<p class='small'>填报小计（草稿）："+filled+"/"+sheets.length+" 项已填数字 · 收入合计 "+fmtMoney(inc)+" · 成本合计 "+fmtMoney(exp)+" · 小计合计 "+fmtMoney(netT)+"。小计为填报数字之和，非申报表；同一笔收入不要在第 4 节重复填；抵扣资格与比例由持证税务师确认。</p><p class='small'>还差什么（去见税务师前先补齐）："+(missNum.length?("缺数字："+missNum.map(function(s){return esc(s.title)+(s.who?"（"+esc(s.who)+"）":"");}).join("、")):"数字已齐")+"；"+(missEv.length?("缺凭证（可选，不挡数字）："+missEv.map(function(s){return esc(s.title)+(s.who?"（"+esc(s.who)+"）":"");}).join("、")):"凭证已齐")+"。</p>";
 }
 $("btnInferSheets").onclick=function(){
   if(!packet)return;
   if(!packet.sheets)packet.sheets=[];
   var map={"W-2":"wages","Schedule E":"rental","Schedule C":"selfemp","Schedule SE":"selfemp","1099-NEC":"selfemp","1099-INT":"interest","1099-DIV":"dividends","1099-R":"retirement","SSA-1099":"social"};
-  var added=0,skipped=0;
+  var fresh=[],added=0,skipped=0;
   packet.lastYear.forEach(function(l){
     var type=map[l.form]||"generic";
     var title=type==="generic"?l.form:SHEET_TYPES[type].title;
-    if(packet.sheets.some(function(s){return s.type===type&&s.who===(l.payer||"")&&s.title===title})){skipped++;return;}
+    if(packet.sheets.concat(fresh).some(function(s){return s.type===type&&s.who===(l.payer||"")&&s.title===title})){skipped++;return;}
     var sh=newSheet(type,l.payer||"","");
     if(type==="generic")sh.title=l.form;
-    packet.sheets.push(sh);added++;
+    sh.fromLastYear=true;
+    fresh.push(sh);added++;
   });
+  packet.sheets=fresh.concat(packet.sheets);
   savePacket();renderSheets();applyCollapse();
   var m=$("inferMsg");if(!m)return;
   if(!packet.lastYear.length)m.textContent="去年表还是空的：先在第 3 节加去年表（识别、快捷选或手动），再点推算。";
-  else if(added)m.textContent="已推算 "+added+" 项填报"+(skipped?"，跳过已有的 "+skipped+" 项":"")+"。请核对：没有的删掉，缺的再手动加。";
+  else if(added)m.textContent="已推算 "+added+" 项填报（排在前面）："+fresh.map(function(s){return s.title+(s.who?"（"+s.who+"）":"");}).join("、")+"。请核对：没有的删掉，缺的再手动加。";
   else m.textContent="没有新增（均已推算过）。";
 };
 document.querySelectorAll("[data-addsheet]").forEach(function(b){
   b.onclick=function(){
     if(!packet)return;
     if(!packet.sheets)packet.sheets=[];
-    packet.sheets.push(newSheet(b.dataset.addsheet,"",""));
+    var sh=newSheet(b.dataset.addsheet,"","");
+    if(b.dataset.title)sh.title=b.dataset.title;
+    packet.sheets.push(sh);
     savePacket();renderSheets();applyCollapse();
   };
 });
