@@ -948,7 +948,9 @@ function renderRecognizePreview(forms,text){
     var t=text||"";
     var nc=t.replace(/\s/g,"").length;
     var prev=t.replace(/\s+/g," ").slice(0,200);
-    var why=/[A-Za-z]{3,}/.test(prev)?"读出的文字里没有出现已知表名，可能是表格标题印成了图片或矢量图，或表名被拆成了多段，":"读出的文字多为乱码或无可读英文，可能是自定义字体编码或图片型 PDF，表名无法按文字匹配，";
+    var hi=0;for(var i=0;i<t.length;i++){if(t.charCodeAt(i)>127)hi++;}
+    var garbled=nc>1000&&hi/Math.max(1,t.length)>0.3;
+    var why=garbled?"读出的文字是自定义字体编码的乱码，表名无法按文字匹配，":(/[A-Za-z]{3,}/.test(prev)?"读出的文字里没有出现已知表名，可能是表格标题印成了图片或矢量图，或表名被拆成了多段，":"读出的文字多为乱码或无可读英文，可能是自定义字体编码或图片型 PDF，表名无法按文字匹配，");
     box.innerHTML="<p class='small'>未识别出已知表类型（本机读到 "+nc+" 个非空字符）。"+why+"请走路径一手动输入。</p>"+(prev?"<p class='small'>本机读到的文字开头（仅本机显示，不上传）："+esc(prev)+"</p>":"");
     return;
   }
@@ -1088,9 +1090,12 @@ function generateFromLastYear(){
 }
 function showQuickPick(msg){
   var box=$("quickPick");if(!box)return;
-  var common=["W-2","1099-INT","1099-DIV","1099-R","SSA-1099","1099-NEC","1099-MISC","Schedule C","1098","1095-A"];
-  var html="<p class='small'>"+esc(msg)+"</p><p class='small'>不知道选什么？点下面常见表，点一个加一个：</p><p>";
+  var common=["W-2","1099-INT","1099-DIV","1099-R","SSA-1099","1099-NEC","1099-MISC","Schedule C","Schedule E","Schedule SE","1098","1095-A"];
+  var evs=[["银行对账单（利息）","interest"],["银行对账单（股息）","dividends"],["房租收入记录","rental"],["自雇／生意收入记录","selfemp"],["工资单","wages"],["退休金对账单","retirement"],["社保金对账单","social"],["其他收入凭证","generic"]];
+  var html="<p class='small'>"+esc(msg)+"</p><p class='small'>按去年表名加（知道去年报过哪张表的点这里，点一个加一个）：</p><p>";
   common.forEach(function(f){html+="<button class='secondary' data-qp='"+f+"' style='margin:2px'>＋"+f+"</button>";});
+  html+="</p><p class='small'>按手头证据加（不知道表名的点这里，直接去第 4c 节填今年的数字和凭证）：</p><p>";
+  evs.forEach(function(e){html+="<button class='secondary' data-qe='"+e[1]+"' style='margin:2px'>＋"+e[0]+"</button>";});
   html+="</p><p class='small' id='quickPickMsg'></p>";
   box.innerHTML=html;
   box.querySelectorAll("[data-qp]").forEach(function(b){
@@ -1098,6 +1103,16 @@ function showQuickPick(msg){
       var r=addToLastYear([{form:b.dataset.qp,payer:""}]);
       var m=$("quickPickMsg");
       if(m)m.textContent=r.added?("已加 "+b.dataset.qp+"（去年表共 "+packet.lastYear.length+" 项），再点“生成今年清单”。"):(b.dataset.qp+" 已在去年清单里（共 "+packet.lastYear.length+" 项）。");
+    };
+  });
+  box.querySelectorAll("[data-qe]").forEach(function(b){
+    b.onclick=function(){
+      if(!packet.sheets)packet.sheets=[];
+      packet.sheets.push(newSheet(b.dataset.qe,"",""));
+      savePacket();renderSheets();
+      var m=$("quickPickMsg");
+      if(m)m.textContent="已加一张表，去第 4c 节填数字和凭证。";
+      try{var hs=document.querySelectorAll("h2");for(var i=0;i<hs.length;i++){if(hs[i].textContent.indexOf("4c")==0){hs[i].scrollIntoView();break;}}}catch(e){}
     };
   });
 }
@@ -1115,7 +1130,7 @@ $("btnGenerate").onclick=async function(){
     var rec=collectRecognized();
     if(!rec.length){
       showQuickPick("识别出的表都没勾选。请勾选需要的表，或点下面常见表加入。");
-      if(gm)gm.textContent="去年表还是空的，先加至少一项（点下面常见表即可）。";
+      if(gm)gm.textContent="去年表还是空的：要生成第 4 节清单先加至少一项去年表；也可以直接点下面“按手头证据”去填表。";
       return;
     }
     var r=addToLastYear(rec);
@@ -1124,10 +1139,12 @@ $("btnGenerate").onclick=async function(){
     hideQuickPick();return;
   }
   var file=$("returnFile").files&&$("returnFile").files[0];
+  var lastText="";
   if(file&&!isImageFile(file)){
     if(gm)gm.textContent="正在识别已选文件…";
     try{
       var text=await extractReturnText(file);
+      lastText=text;
       var forms=detectForms(text);
       if(forms.length){
         var r2=addToLastYear(forms.map(function(f){return {form:f,payer:""};}));
@@ -1140,8 +1157,10 @@ $("btnGenerate").onclick=async function(){
       }
     }catch(e){}
   }
-  showQuickPick(file&&isImageFile(file)?"图片只预览、不能自动识别表类型。请点下面常见表加入去年表，再点生成今年清单。":"没能从去年表里确定表类型。请点下面常见表加入去年表，再点生成今年清单；也可以走路径一手动输入。");
-  if(gm)gm.textContent="去年表还是空的，先加至少一项（点下面常见表即可）。";
+  var garbled=false;
+  (function(){var t=lastText.replace(/\s/g,"");if(t.length<1000)return;var hi=0;for(var i=0;i<lastText.length;i++){if(lastText.charCodeAt(i)>127)hi++;}if(hi/Math.max(1,lastText.length)>0.3)garbled=true;})();
+  showQuickPick(file&&isImageFile(file)?"图片只预览、不能自动识别表类型。请点下面常见表加入去年表，再点生成今年清单。":(garbled?"这份 PDF 用的是自定义字体编码，本机读出来是乱码，认不出表名（文件内容没有上传，也没有发到任何服务器）。不用纠结去年表名：直接点下面“按手头证据”加表，去填今年的数字和凭证；也可以走路径一手动输入表名。":"没能从去年表里确定表类型。请点下面常见表加入去年表，再点生成今年清单；也可以走路径一手动输入。"));
+  if(gm)gm.textContent="去年表还是空的：要生成第 4 节清单先加至少一项去年表；也可以直接点下面“按手头证据”去填表。";
 };
 $("btnAddNew").onclick=function(){
   var form=$("newForm").value,payer=$("newPayer").value.trim();
