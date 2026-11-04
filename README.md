@@ -26,7 +26,11 @@ give tax conclusions.
   Michigan. Texas and Florida have no state personal income tax; the state
   selector notes this, and selecting them does not create a state
   income-tax checklist item.
-- Export the same checklist three ways: CSV, JSON, and a printable list
+- Section 5d lists basic IRS-matching reminders (figure-vs-form
+  mismatches, missing items, forms present last year but absent this
+  year, figures not yet checked against vouchers or form numbers).
+  These are check-please prompts, not IRS determinations; anything
+  unclear is routed to a CPA.
   with a CPA review signature block. The printable version leads with a
   draft estimate summary (totals by category, each figure traced to its
   evidence file and its two reconciliation states), followed by the
