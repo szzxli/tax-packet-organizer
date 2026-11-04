@@ -27,8 +27,12 @@ give tax conclusions.
   selector notes this, and selecting them does not create a state
   income-tax checklist item.
 - Export the same checklist three ways: CSV, JSON, and a printable list
-  with a CPA review signature block. Exports contain no Social Security
-  numbers and no dollar amounts, and are not locked to any filing software.
+  with a CPA review signature block. The printable version leads with a
+  draft estimate summary (totals by category, each figure traced to its
+  evidence file and its two reconciliation states), followed by the
+  checklist. Exports contain no Social Security numbers, and dollar
+  amounts appear only as user-confirmed evidence figures. Nothing is
+  locked to any filing software.
 
 ## What it does not do
 
@@ -36,11 +40,20 @@ give tax conclusions.
   tax advice. Uncertain items produce a candidate category, a policy
   reference, and a list of questions to take to a tax professional; the
   professional decides.
-- No Social Security number or amount inputs. Checklist uploads record file
-  names only; file contents are not read or stored by this demo page.
-  The one exception is last-year return recognition, which reads the
-  file's text transiently inside the visitor's browser to extract form
-  types and discards the content afterward.
+- No Social Security numbers, ever: they are stripped before amount
+  extraction and never stored. Dollar amounts exist only as
+  user-confirmed evidence figures: an electronic checklist upload is
+  read transiently inside the visitor's browser to propose amount
+  candidates, which the user confirms one per item; photo uploads are
+  not read (no reliable OCR in this demo) and record file names only.
+  Each confirmed figure carries its evidence source and two
+  reconciliation states: checked against the voucher, and checked
+  against the number on the tax form (match, mismatch with difference,
+  or not yet checked). The draft estimate built from these figures is
+  labeled a draft, not a return, and requires CPA verification.
+  Last-year return recognition reads the file's text transiently
+  inside the visitor's browser to extract form types and discards the
+  content afterward.
 - The subscription section in the app is informational only. Payment is
   not enabled and no free feature is locked.
 
