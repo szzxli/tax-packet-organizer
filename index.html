@@ -97,7 +97,8 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <p><input type="file" id="returnFile" accept=".pdf,.txt,.docx,.xlsx,.jpg,.jpeg,.png,.gif,.webp"> <button id="btnRecognize" class="secondary">识别并预览</button> <span id="recognizeMsg" class="small"></span></p>
 <div id="returnPreview"></div>
 <div id="recognizeBox"></div>
-<p><button id="btnGenerate" class="secondary">生成今年清单</button></p>
+<div id="quickPick"></div>
+<p><button id="btnGenerate" class="secondary">生成今年清单</button> <span id="generateMsg" class="small"></span></p>
 <ul id="lastList"></ul>
 <p class="muted small">规则：去年哪行有数、哪张表交过，今年就等对应的文件（见 mapping-v1）。生成时不重复添加已在清单里的同表同付款方。</p>
 </div>
@@ -900,6 +901,20 @@ function renderRecognizePreview(forms,text){
     $("recognizeMsg").textContent=added?("已加入 "+added+" 项"+(skipped?"，跳过已有的 "+skipped+" 项":"")+"。接下来点“生成今年清单”。"):"没有新增项（均已在去年清单里）。";
   };
   box.appendChild(add);
+  var gen=document.createElement("button");gen.textContent="直接生成今年清单";gen.className="secondary";
+  gen.onclick=function(){
+    var rows=box.querySelectorAll("input[type=checkbox]");var items=[];
+    rows.forEach(function(cb){
+      if(!cb.checked)return;
+      var inp=box.querySelector("input:not([type=checkbox])[data-form='"+cb.dataset.form+"']");
+      items.push({form:cb.dataset.form,payer:inp?inp.value.trim():""});
+    });
+    var r=addToLastYear(items);
+    var a=generateFromLastYear();
+    var gm=$("generateMsg");if(gm)gm.textContent="已加入 "+r.added+" 项，生成新增 "+a+" 项。";
+    hideQuickPick();
+  };
+  box.appendChild(gen);
 }
 var returnPreviewUrl=null;
 var returnCache={file:null,text:null};
@@ -932,25 +947,29 @@ $("returnFile").onchange=async function(){
     }
   }catch(e){box.innerHTML="<p class='small'>预览失败，请确认文件未损坏。</p>";}
 };
+function isImageFile(file){return /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);}
+async function extractReturnText(file){
+  var buf=await file.arrayBuffer();
+  if(/\.txt$/i.test(file.name))return new TextDecoder().decode(buf);
+  if(/\.pdf$/i.test(file.name))return await extractPdfText(buf);
+  if(/\.docx$/i.test(file.name)){
+    if(returnCache.file===file&&returnCache.text!=null)return returnCache.text;
+    return await extractDocxText(buf);
+  }
+  if(/\.xlsx$/i.test(file.name)){
+    if(returnCache.file===file&&returnCache.text!=null)return returnCache.text;
+    return (await extractXlsx(buf)).text;
+  }
+  return new TextDecoder().decode(buf);
+}
 $("btnRecognize").onclick=async function(){
   var file=$("returnFile").files&&$("returnFile").files[0];
   if(!file){$("recognizeMsg").textContent="请先选择去年报税表文件（PDF、.txt、.docx、.xlsx，或图片预览）。";return;}
-  if(/\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)){$("recognizeMsg").textContent="图片只预览、不自动识别（照片数字手动输入）。请走路径一手动输入表类型。";$("recognizeBox").innerHTML="";return;}
+  hideQuickPick();
+  if(isImageFile(file)){$("recognizeMsg").textContent="图片只预览、不自动识别（照片数字手动输入）。请走路径一手动输入表类型。";$("recognizeBox").innerHTML="";return;}
   $("recognizeMsg").textContent="识别中…";
   try{
-    var buf=await file.arrayBuffer();
-    var text="";
-    if(/\.txt$/i.test(file.name))text=new TextDecoder().decode(buf);
-    else if(/\.pdf$/i.test(file.name))text=await extractPdfText(buf);
-    else if(/\.docx$/i.test(file.name)){
-      if(returnCache.file===file&&returnCache.text!=null)text=returnCache.text;
-      else text=await extractDocxText(buf);
-    }
-    else if(/\.xlsx$/i.test(file.name)){
-      if(returnCache.file===file&&returnCache.text!=null)text=returnCache.text;
-      else text=(await extractXlsx(buf)).text;
-    }
-    else{text=new TextDecoder().decode(buf);}
+    var text=await extractReturnText(file);
     var forms=detectForms(text);
     if(forms.length){renderRecognizePreview(forms,text);$("recognizeMsg").textContent="识别出 "+forms.length+" 种表，请核对后加入。";}
     else if(!text||text.replace(/\s/g,"").length<20){$("recognizeMsg").textContent="未能从该文件中读出文字（本机只读到 "+text.replace(/\s/g,"").length+" 个非空字符，可能是扫描件或加密文件），请走路径一手动输入。";$("recognizeBox").innerHTML="";}
@@ -964,8 +983,26 @@ $("btnAddLast").onclick=function(){
   if(packet.lastYear.some(function(x){return x.form===form&&x.payer===payer})){alert("去年清单里已有这一项");return}
   packet.lastYear.push({form:form,payer:payer});$("lastPayer").value="";savePacket();renderLast();
 };
-$("btnGenerate").onclick=function(){
-  if(!packet.lastYear.length){alert("请先加至少一项去年表");return}
+function collectRecognized(){
+  var box=$("recognizeBox");if(!box)return [];
+  var out=[];
+  box.querySelectorAll("input[type=checkbox]").forEach(function(cb){
+    if(!cb.checked)return;
+    var inp=box.querySelector("input:not([type=checkbox])[data-form='"+cb.dataset.form+"']");
+    out.push({form:cb.dataset.form,payer:inp?inp.value.trim():""});
+  });
+  return out;
+}
+function addToLastYear(items){
+  var added=0,skipped=0;
+  items.forEach(function(it){
+    if(packet.lastYear.some(function(x){return x.form===it.form&&x.payer===it.payer})){skipped++;return;}
+    packet.lastYear.push({form:it.form,payer:it.payer});added++;
+  });
+  savePacket();renderLast();
+  return {added:added,skipped:skipped};
+}
+function generateFromLastYear(){
   var added=0;
   packet.lastYear.forEach(function(l){
     var req=requestText(l.form);
@@ -973,7 +1010,65 @@ $("btnGenerate").onclick=function(){
       packet.checklist.push({id:Date.now()+""+Math.random(),form:l.form,payer:l.payer,request:req,status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:""});added++;
     }
   });
-  savePacket();renderAll();alert(added?("已生成，新增 "+added+" 项。"):"没有新增项（均已在清单里）。");
+  savePacket();renderAll();
+  return added;
+}
+function showQuickPick(msg){
+  var box=$("quickPick");if(!box)return;
+  var common=["W-2","1099-INT","1099-DIV","1099-R","SSA-1099","1099-NEC","1099-MISC","Schedule C","1098","1095-A"];
+  var html="<p class='small'>"+esc(msg)+"</p><p class='small'>不知道选什么？点下面常见表，点一个加一个：</p><p>";
+  common.forEach(function(f){html+="<button class='secondary' data-qp='"+f+"' style='margin:2px'>＋"+f+"</button>";});
+  html+="</p><p class='small' id='quickPickMsg'></p>";
+  box.innerHTML=html;
+  box.querySelectorAll("[data-qp]").forEach(function(b){
+    b.onclick=function(){
+      var r=addToLastYear([{form:b.dataset.qp,payer:""}]);
+      var m=$("quickPickMsg");
+      if(m)m.textContent=r.added?("已加 "+b.dataset.qp+"（去年表共 "+packet.lastYear.length+" 项），再点“生成今年清单”。"):(b.dataset.qp+" 已在去年清单里（共 "+packet.lastYear.length+" 项）。");
+    };
+  });
+}
+function hideQuickPick(){var box=$("quickPick");if(box)box.innerHTML="";}
+$("btnGenerate").onclick=async function(){
+  var gm=$("generateMsg");if(gm)gm.textContent="";
+  if(packet.lastYear.length){
+    var a=generateFromLastYear();
+    if(gm)gm.textContent=a?("已生成，新增 "+a+" 项。"):"没有新增项（均已在清单里）。";
+    hideQuickPick();return;
+  }
+  var box=$("recognizeBox");
+  var hasRec=box&&box.querySelectorAll("input[type=checkbox]").length>0;
+  if(hasRec){
+    var rec=collectRecognized();
+    if(!rec.length){
+      showQuickPick("识别出的表都没勾选。请勾选需要的表，或点下面常见表加入。");
+      if(gm)gm.textContent="去年表还是空的，先加至少一项（点下面常见表即可）。";
+      return;
+    }
+    var r=addToLastYear(rec);
+    var a2=generateFromLastYear();
+    if(gm)gm.textContent="已从识别结果加入 "+r.added+" 项，生成新增 "+a2+" 项。";
+    hideQuickPick();return;
+  }
+  var file=$("returnFile").files&&$("returnFile").files[0];
+  if(file&&!isImageFile(file)){
+    if(gm)gm.textContent="正在识别已选文件…";
+    try{
+      var text=await extractReturnText(file);
+      var forms=detectForms(text);
+      if(forms.length){
+        var r2=addToLastYear(forms.map(function(f){return {form:f,payer:""};}));
+        var a3=generateFromLastYear();
+        renderRecognizePreview(forms,text);
+        if(gm)gm.textContent="已从文件识别出 "+forms.length+" 种表，加入 "+r2.added+" 项，生成新增 "+a3+" 项。";
+        hideQuickPick();return;
+      }else{
+        renderRecognizePreview(forms,text);
+      }
+    }catch(e){}
+  }
+  showQuickPick(file&&isImageFile(file)?"图片只预览、不能自动识别表类型。请点下面常见表加入去年表，再点生成今年清单。":"没能从去年表里确定表类型。请点下面常见表加入去年表，再点生成今年清单；也可以走路径一手动输入。");
+  if(gm)gm.textContent="去年表还是空的，先加至少一项（点下面常见表即可）。";
 };
 $("btnAddNew").onclick=function(){
   var form=$("newForm").value,payer=$("newPayer").value.trim();

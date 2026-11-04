@@ -86,6 +86,10 @@ encryption, and account isolation must be connected and tested separately.
 - PDF, .txt, .docx, .xlsx: local text extraction in the browser (docx/xlsx are parsed as zip+XML with the browser's own decompression, no external scripts), reused for form-type recognition and figure extraction, plus a content preview (PDF embed, docx text, xlsx first-sheet table).
 - JPG and other images: preview only, no OCR, figures entered manually (per the user's choice). Legacy .doc/.xls are not supported.
 
+## One-click checklist generation (no form knowledge needed)
+- After recognition, a single "直接生成今年清单" button adds the checked forms and generates the checklist at once.
+- 生成今年清单 is smart: with an empty last-year list it first uses checked recognition results, then auto-recognizes the selected file; only when nothing can be determined does it show common-form quick-pick chips instead of a blocking alert.
+
 ## License
 
 MIT. See LICENSE.
