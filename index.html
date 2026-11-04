@@ -25,7 +25,7 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 .orderitem{border:1px solid #e2e6eb;border-radius:10px;padding:10px;margin:8px 0}
 #printArea{display:none}
 @media print{ body{background:#fff} header,.no-print{display:none!important} main{max-width:none;padding:0} .card{border:none;margin:0;padding:0} #printArea{display:block!important} #appViewSections{display:none!important} }
-@media(max-width:600px){ .row>*{min-width:100%} }
+@media(max-width:600px){ .row>*{min-width:100%} main{padding:14px 10px} .card{padding:14px 12px} header{padding:16px 12px} input,select,textarea{font-size:16px} button,input,select{min-height:44px} input[type=file]{width:100%} table{display:block;overflow-x:auto;white-space:nowrap} .card>p>button{width:100%} }
 </style>
 </head>
 <body>
@@ -78,7 +78,7 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <div class="card">
 <div id="changesHead" class="chg-head"><h2>2 · 今年有什么变化？先问变化，没变的不展开 <span id="changesCheck" class="chg-check hidden">✓</span></h2><p id="changesSummary" class="muted small"></p></div>
 <div id="changesBody">
-<p class="muted small">打开后上下滚动勾选所有适用项，可多选；只勾选的项才会出现后续证明文件要求。选完点“收好”，本栏标题会出现绿勾表示已确认。工具只列文件，不判断资格。</p>
+<p class="muted small">打开后上下滚动勾选所有适用项，可多选；只勾选的项才会出现后续证明文件要求。选完本栏标题就会出现绿勾表示已确认；点“收好”可收起本栏。工具只列文件，不判断资格。</p>
 <div id="changesBox"></div>
 <p><button id="btnCollapseChanges" class="secondary">收好</button></p>
 </div>
@@ -86,12 +86,14 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 
 <div class="card">
 <h2>3 · 去年有什么？（只记表类型 + 付款方，不记社保号和金额）</h2>
+<details><summary class="small">没有去年文件？点这里手动输入表类型</summary>
 <h3>路径一 · 手动输入表格</h3>
 <div class="row">
 <div><label for="lastForm">去年表类型</label><select id="lastForm"></select></div>
 <div><label for="lastPayer">付款方 / 雇主 / 机构 / 房产（可空，如 SSA-1099）</label><input id="lastPayer" placeholder="例如：雇主 A、银行 B"></div>
 </div>
 <p><button id="btnAddLast">加入去年清单</button></p>
+</details>
 <h3>路径二 · 提交去年报税表，自动识别</h3>
 <p class="muted small">上传去年报税表：PDF（带文字层）、.txt、Word（.docx）、Excel（.xlsx）。识别只在本机浏览器内读文件文字、只提取表类型，内容不上传、不保存；识别结果先给你核对，勾选后才加入去年清单。扫描件（无文字层）或加密文件识别不出时，请走路径一手动输入。JPG 等图片只预览、不自动识别（照片数字手动输入），请走路径一手动输入表类型。老格式 .doc、.xls 不支持。付款方机器识别不可靠，识别结果里付款方留空，请你核对补填。</p>
 <p><input type="file" id="returnFile" accept=".pdf,.txt,.docx,.xlsx,.jpg,.jpeg,.png,.gif,.webp"> <button id="btnRecognize" class="secondary">识别并预览</button> <span id="recognizeMsg" class="small"></span></p>
@@ -113,14 +115,43 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 </div>
 
 <div class="card">
-<h2>4 · 今年清单（按报税顺序，缺的标红）</h2>
-<p class="muted small">每项状态：未开始 / 已上传 / 不适用（须写原因）/ 待 transcript。全部“已上传或不适用”才算整理完。上传资料可以是电子档，也可以拍照上传：每项都有“上传文件”和“拍照上传”两个入口，手机上点拍照会直接调相机；电子档（PDF、.txt、.docx、.xlsx）上传后本机会即时读文字提数候选、由你确认后才记数字，并显示文件预览；拍照上传只预览、不提数，数字手动输入。老格式 .doc、.xls 不支持。</p>
+<h2>4 · 今年要准备的材料（文件＋数字，一页）</h2>
+<p class="muted small">每行一项收入或一张表：先传证据、再填一个总数；成本、核对、不适用都收在“更多”里。全部“已备或不适用”才算整理完。上传资料可以是电子档，也可以拍照上传：每行都有“上传文件”和“拍照上传”两个入口，手机上点拍照会直接调相机；电子档（PDF、.txt、.docx、.xlsx）上传后本机会即时读文字提数候选、由你确认后才记数字，并显示文件预览；拍照上传只预览、不提数，数字手动输入。老格式 .doc、.xls 不支持。同一笔收入只出现一次，不要重复填。</p>
+<p><button id="btnInferMerged" class="secondary">按去年推算</button> <span id="inferMsg" class="small"></span></p>
 <div class="row">
 <div><label for="newForm">新增今年项目：表类型</label><select id="newForm"></select></div>
 <div><label for="newPayer">付款方 / 实体</label><input id="newPayer" placeholder="去年没有、今年新增的"></div>
 </div>
 <p><button id="btnAddNew" class="secondary">新增今年项目</button></p>
-<div id="checklistBox"></div>
+<p class="small">按收入类型加一项：
+<button class="secondary" data-addsheet="wages">＋工资</button>
+<button class="secondary" data-addsheet="rental">＋房租收入</button>
+<button class="secondary" data-addsheet="selfemp">＋自雇收入</button>
+<button class="secondary" data-addsheet="interest">＋利息</button>
+<button class="secondary" data-addsheet="dividends">＋股息</button>
+<button class="secondary" data-addsheet="generic">＋其他</button>
+</p>
+<details><summary class="small">项目库（按类别，没用到的类别不用打开）</summary>
+<p class="small">其他收入：
+<button class="secondary" data-addsheet="generic" data-title="博彩收入">＋博彩收入</button>
+<button class="secondary" data-addsheet="generic" data-title="政府补助">＋政府补助</button>
+<button class="secondary" data-addsheet="generic" data-title="版税">＋版税</button>
+<button class="secondary" data-addsheet="generic" data-title="其他收入">＋其他收入</button></p>
+<p class="small">分项抵扣（Schedule A，如适用；是否分项由 CPA 确认）：
+<button class="secondary" data-addsheet="generic" data-title="房贷利息">＋房贷利息</button>
+<button class="secondary" data-addsheet="generic" data-title="房产税">＋房产税</button>
+<button class="secondary" data-addsheet="generic" data-title="州所得税">＋州所得税</button>
+<button class="secondary" data-addsheet="generic" data-title="慈善捐赠">＋慈善捐赠</button>
+<button class="secondary" data-addsheet="generic" data-title="医疗费用">＋医疗费用</button></p>
+<p class="small">教育与托育：
+<button class="secondary" data-addsheet="generic" data-title="教育费用">＋教育费用</button>
+<button class="secondary" data-addsheet="generic" data-title="托育费用">＋托育费用</button></p>
+<p class="small">退休供款：
+<button class="secondary" data-addsheet="generic" data-title="退休供款">＋退休供款</button></p>
+</details>
+<p class="small">去年表→类型对照：W-2→工资；Schedule E→房租；Schedule C / Schedule SE / 1099-NEC→自雇；1099-INT→利息；1099-DIV→股息；1099-R→退休金；SSA-1099→社保金；其余进“其他”。</p>
+<div id="mergedBox"></div>
+<div id="mergedSummary"></div>
 </div>
 
 <div class="card">
@@ -144,54 +175,17 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 </div>
 
 <div class="card">
-<h2>4c · 今年收入填报（简单版，按收入类型）</h2>
-<p class="muted small">不用懂表名：按你实际有的收入类型填数字就行。去年有数的排在前面，今年请补凭证与数据；后面是按类别的项目库，没用到的类别不用打开。去年表仅供参考，以你实际收入为准；同一笔收入只填一边——简单版和第 4 节清单二选一，不要重复。金额均为你填写的草稿，不代表可抵扣结论；抵扣资格与比例由持证税务师确认。凭证缺也可以，数字要有；演示版只记文件名，不存文件内容。</p>
-<p><button id="btnInferSheets" class="secondary">按去年推算今年填报</button> <span id="inferMsg" class="small"></span></p>
-<p class="small">手动加一项：
-<button class="secondary" data-addsheet="wages">＋工资</button>
-<button class="secondary" data-addsheet="rental">＋房租收入</button>
-<button class="secondary" data-addsheet="selfemp">＋自雇收入</button>
-<button class="secondary" data-addsheet="interest">＋利息</button>
-<button class="secondary" data-addsheet="dividends">＋股息</button>
-<button class="secondary" data-addsheet="generic">＋其他</button>
-</p>
-<p class="small">去年表→填报对照：W-2→工资；Schedule E→房租；Schedule C / Schedule SE / 1099-NEC→自雇；1099-INT→利息；1099-DIV→股息；1099-R→退休金；SSA-1099→社保金；其余表进“其他”。</p>
-<p class="small">项目库（按类别，没用到的类别不用打开）：</p>
-<details><summary class="small">其他收入</summary>
-<p class="small"><button class="secondary" data-addsheet="generic" data-title="博彩收入">＋博彩收入</button>
-<button class="secondary" data-addsheet="generic" data-title="政府补助">＋政府补助</button>
-<button class="secondary" data-addsheet="generic" data-title="版税">＋版税</button>
-<button class="secondary" data-addsheet="generic" data-title="其他收入">＋其他收入</button></p>
-</details>
-<details><summary class="small">分项抵扣（Schedule A，如适用；是否分项由 CPA 确认）</summary>
-<p class="small"><button class="secondary" data-addsheet="generic" data-title="房贷利息">＋房贷利息</button>
-<button class="secondary" data-addsheet="generic" data-title="房产税">＋房产税</button>
-<button class="secondary" data-addsheet="generic" data-title="州所得税">＋州所得税</button>
-<button class="secondary" data-addsheet="generic" data-title="慈善捐赠">＋慈善捐赠</button>
-<button class="secondary" data-addsheet="generic" data-title="医疗费用">＋医疗费用</button></p>
-</details>
-<details><summary class="small">教育与托育</summary>
-<p class="small"><button class="secondary" data-addsheet="generic" data-title="教育费用">＋教育费用</button>
-<button class="secondary" data-addsheet="generic" data-title="托育费用">＋托育费用</button></p>
-</details>
-<details><summary class="small">退休供款</summary>
-<p class="small"><button class="secondary" data-addsheet="generic" data-title="退休供款">＋退休供款</button></p>
-</details>
-<p class="small">成本明目不用单独加：房租成本在房租表里，自雇/小企业成本在自雇表里，点开表就能填。</p>
-<div id="sheetsBox"></div>
-<div id="sheetsSummary"></div>
-</div>
-<div class="card">
 <h2>5 · Transcript 对齐（只做你自己上传版，不直连 IRS）</h2>
-<p class="muted small">请你自己去 IRS 在线账户下载 Wage &amp; Income Transcript 再上传到这里。本工具不直连 IRS、不爬 IRS、不宣称一键提交。表单一般 1 月 31 日前寄出，未到时间前不把“没到”当成“缺失结论”。电子档或拍照上传均可，只记文件名，不读内容。</p>
+<p class="muted small">请你自己去 IRS 在线账户下载 Wage &amp; Income Transcript 再上传到这里。本工具不直连 IRS、不爬 IRS、不宣称一键提交。表单一般 1 月 31 日前寄出，未到时间前不把“没到”当成“缺失结论”。上传电子档即可，只记文件名，不读内容。</p>
 <label for="transFile">上传你的 transcript 文件（只记文件名，不读内容）</label><input id="transFile" type="file">
-<label for="transPhoto">或拍照上传 transcript</label><input id="transPhoto" type="file" accept="image/*" capture="environment">
 <p class="small">已记录：<span id="transRecord">无</span></p>
+<details><summary class="small">需要对账时展开</summary>
 <div class="row">
 <div><label for="irsForm">IRS 显示但清单没有：表类型</label><select id="irsForm"></select></div>
 <div><label for="irsPayer">付款方</label><input id="irsPayer" placeholder="例如：平台 C"></div>
 </div>
 <p><button id="btnAddIrs">加入清单（标“IRS 显示—待你确认”）</button> <button id="btnMarkPending" class="secondary">把未上传项标为“待 transcript”</button></p>
+</details>
 </div>
 
 <div class="card">
@@ -340,14 +334,65 @@ function pending(){return load("tpo_pending",{})}
 function fallbackHash(text){var h=2166136261;for(var i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return "fallback-"+(h>>>0).toString(16)}
 function sha(text){try{if(window.crypto&&crypto.subtle)return crypto.subtle.digest("SHA-256",new TextEncoder().encode(text)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}).catch(function(){return fallbackHash(text)})}catch(e){}return Promise.resolve(fallbackHash(text))}
 var currentUser=null,packet=null;
-function newPacket(){return {changes:{},lastYear:[],checklist:[],sheets:[],transcript:null,exports:[],uncertain:[],cpaReview:null,orders:[],priorCpa:{name:"",contact:"",note:""},payPacks:1,selectedOrderId:null}}
+function newPacket(){return {changes:{},changesCollapsed:true,mergedV2:true,lastYear:[],checklist:[],sheets:[],transcript:null,exports:[],uncertain:[],cpaReview:null,orders:[],priorCpa:{name:"",contact:"",note:""},payPacks:1,selectedOrderId:null}}
 function statusText(s){return s==="uploaded"?"已上传":s==="na"?"不适用":s==="pending"?"待 transcript":"未开始"}
 function renderCpa(){
   var t=$("cpaReviewText");
   if(packet.cpaReview){t.innerHTML="<span class='badge uploaded'>用户自记：已送 CPA 复核</span> "+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · "+esc(packet.cpaReview.note):"");}
   else{t.textContent="暂无复核记录。用户自记仅表示你已送 CPA 复核，不代表 CPA 已签字确认。";}
 }
-function loadPacket(email){packet=load(packetKey(email),null);if(!packet){packet=newPacket();save(packetKey(email),packet)}}
+function loadPacket(email){packet=load(packetKey(email),null);if(!packet){packet=newPacket();save(packetKey(email),packet)}else{if(packet.changesCollapsed===undefined)packet.changesCollapsed=true;if(!packet.mergedV2){backfillRows();migrateSheets();packet.mergedV2=true;savePacket();}}}
+var FORM_TO_KIND={"W-2":"wages","Schedule E":"rental","Schedule C":"selfemp","Schedule SE":"selfemp","1099-NEC":"selfemp","1099-INT":"interest","1099-DIV":"dividends","1099-R":"retirement","SSA-1099":"social"};
+function formToKind(f){return FORM_TO_KIND[f]||null;}
+function kindCat(kind){if(kind==="wages")return "W-2 工资";if(kind==="interest")return "1099-INT 利息";if(kind==="dividends")return "1099-DIV 股息";if(kind==="selfemp")return "Schedule C 业务收入";if(kind==="rental")return "房租收入";return "其他";}
+function costsTemplate(kind){var t=SHEET_TYPES[kind];if(!t||!t.expenses||!t.expenses.length)return [];var ex=t.expenses.map(function(l){return {label:l,cents:null};});ex.push({label:"其他",custom:true,customLabel:"",cents:null});return ex;}
+function rowTitle(it){if(it.title)return it.title;if(it.kind&&SHEET_TYPES[it.kind])return SHEET_TYPES[it.kind].title;return it.form;}
+function rowIncomeLabel(it){var k=it.kind;if(k==="wages")return "今年1月1日–12月31日工资总额";if(k==="rental")return "今年1月1日–12月31日收到的租金总额";if(k==="selfemp")return "今年1月1日–12月31日总收入";return "今年金额";}
+function rowExpTotal(it){var t=0;(it.costs||[]).forEach(function(e){if(e.cents!=null)t+=e.cents;});return t;}
+function rowNet(it){if(!it.figure)return null;return it.figure.cents-rowExpTotal(it);}
+function rowResolved(it){return it.status==="uploaded"||it.status==="na"||!!it.figure;}
+function rowBadge(it){if(it.status==="uploaded")return "<span class='badge uploaded'>已上传</span>";if(it.status==="na")return "<span class='badge na'>不适用</span>";if(it.status==="pending")return "<span class='badge pending'>待 transcript</span>";if(it.figure)return "<span class='badge uploaded'>数字已填</span>";return "<span class='badge missing'>缺</span>";}
+function newRowFromKind(kind,payer){
+  var t=SHEET_TYPES[kind]||SHEET_TYPES.generic;
+  return {id:Date.now()+""+Math.floor(Math.random()*1e6),form:t.title,kind:kind,title:t.title,payer:payer||"",request:"今年"+t.title+(payer?"（"+payer+"）":""),status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:"",costs:costsTemplate(kind),moreCollapsed:true};
+}
+function backfillRows(){
+  packet.checklist.forEach(function(it){
+    if(!it.kind)it.kind=formToKind(it.form);
+    if(it.title===undefined)it.title=it.form;
+    if((it.kind==="rental"||it.kind==="selfemp")&&!it.costs)it.costs=costsTemplate(it.kind);
+    if(it.moreCollapsed===undefined)it.moreCollapsed=true;
+  });
+}
+function migrateSheets(){
+  var sheets=packet.sheets||[];
+  if(!sheets.length)return;
+  packet.sheetsV1=sheets;
+  sheets.forEach(function(sh){
+    var kind=sh.type||"generic";
+    var payer=kind==="generic"?(sh.who2||""):(sh.who||"");
+    var match=null;
+    if(payer){
+      for(var i=0;i<packet.checklist.length;i++){var it=packet.checklist[i];if((it.kind===kind||formToKind(it.form)===kind)&&it.payer===payer){match=it;break;}}
+    }
+    if(match){
+      if(!match.costs)match.costs=sh.expenses||[];
+      if(!match.figure&&sh.incomeCents!=null)match.figure={cat:kindCat(kind),cents:sh.incomeCents,source:"填报"};
+      if(!match.fileName&&sh.evidence)match.fileName=sh.evidence;
+      if(sh.fromLastYear)match.fromLastYear=true;
+    }else{
+      var row=newRowFromKind(kind,payer);
+      row.isNew=false;
+      if(kind==="generic"){row.title=sh.title||"其他";row.form=sh.title||"其他";row.request=sh.who||sh.title||"其他";}
+      if(sh.incomeCents!=null)row.figure={cat:kindCat(kind),cents:sh.incomeCents,source:"填报"};
+      if(sh.evidence){row.fileName=sh.evidence;row.status="uploaded";}
+      if(sh.fromLastYear)row.fromLastYear=true;
+      row.costs=sh.expenses||costsTemplate(kind);
+      packet.checklist.push(row);
+    }
+  });
+  packet.sheets=[];
+}
 function savePacket(){if(currentUser)save(packetKey(currentUser),packet)}
 function requestText(form){for(var i=0;i<FORM_MAP.length;i++)if(FORM_MAP[i][0]===form)return FORM_MAP[i][1];return "今年 "+form}
 function renderChanges(){
@@ -358,7 +403,7 @@ function renderChanges(){
   var sum=$("changesSummary"),check=$("changesCheck"),body=$("changesBody");
   sum.textContent=none?"无变化":selected.length?"已选："+selected.map(function(k){return k+"变化"}).join("、"):"未选";
   if(collapsed)body.classList.add("hidden");else body.classList.remove("hidden");
-  if(collapsed&&(none||selected.length))check.classList.remove("hidden");else check.classList.add("hidden");
+  if(none||selected.length)check.classList.remove("hidden");else check.classList.add("hidden");
   $("changesHead").onclick=function(){packet.changesCollapsed=!packet.changesCollapsed;savePacket();renderAll();};
   $("btnCollapseChanges").onclick=function(){packet.changesCollapsed=true;savePacket();renderAll();};
   var list=document.createElement("div");list.className="chg-scroll";
@@ -375,7 +420,7 @@ function renderChanges(){
         packet.changes[key]="是";packet.changesNone=false;
         var req=c[1];
         var exists=packet.checklist.some(function(it){return it.request===req});
-        if(!exists)packet.checklist.push({id:Date.now()+""+Math.random(),form:"变化证明",payer:key,request:req,status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:""});
+        if(!exists)packet.checklist.push({id:Date.now()+""+Math.random(),form:"变化证明",kind:null,title:"变化证明",payer:key,request:req,status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:"",costs:[],moreCollapsed:true});
       }else{packet.changes[key]="否";removeChangeItems(key);}
       savePacket();renderAll();
     });
@@ -491,7 +536,7 @@ function computeWarnings(){
       if(it.formAmountCents==null)w.push({text:it.form+(it.payer?"（"+it.payer+"）":"")+"：尚未填表格数，第二步核对未完成。",action:"请填入申报表上的对应数，工具会算一致或差异。"});
       else if(it.formAmountCents!==it.figure.cents)w.push({text:it.form+(it.payer?"（"+it.payer+"）":"")+"：提取数 "+fmtMoney(it.figure.cents)+" 与表格数 "+fmtMoney(it.formAmountCents)+" 不一致，差 "+fmtMoney(Math.abs(it.formAmountCents-it.figure.cents))+"。",action:"请核对两处数字来源；如无法解释，请找 CPA。"});
     }
-    if(it.status==="not-started")w.push({text:it.form+(it.payer?"（"+it.payer+"）":"")+"：仍未开始（缺项）。",action:"请上传证据、标不适用（写原因）或标待 transcript。"});
+    if(it.status==="not-started"&&!it.figure)w.push({text:it.form+(it.payer?"（"+it.payer+"）":"")+"：仍未开始（缺项）。",action:"请上传证据、标不适用（写原因）或标待 transcript。"});
     else if(it.status==="pending")w.push({text:it.form+(it.payer?"（"+it.payer+"）":"")+"：待 transcript。",action:"请在 IRS 在线账户下载 transcript 后补齐。"});
   });
   packet.lastYear.forEach(function(l){
@@ -508,11 +553,11 @@ function renderWarnings(){
   if(!w.length){box.innerHTML="<p class='muted small'>暂无提醒：当前清单与数字没有触发基础提醒。有新数字或新缺项时提醒会出现。</p>";return;}
   box.innerHTML="<ul class='small'>"+w.map(function(x){return "<li><b>提醒：</b>"+esc(x.text)+" "+esc(x.action)+"</li>";}).join("")+"</ul><p class='small'>以上为整理层面的提醒，不是 IRS 的结论；有疑问请找 CPA。</p>";
 }
-function figureArea(it){
+function figureMainArea(it){
   var wrap=document.createElement("div");wrap.style.marginTop="8px";
   var info=document.createElement("p");info.className="small";
   if(it.figure){
-    info.innerHTML="确认数字：<b>"+esc(it.figure.cat)+" "+fmtMoney(it.figure.cents)+"</b>（来源："+esc(it.figure.source||"手动")+"） · 凭证核对："+(it.voucherChecked?"已核对 ✓":"未核对")+" · 表格核对："+esc(matchStatus(it));
+    info.innerHTML="确认数字：<b>"+esc(it.figure.cat)+" "+fmtMoney(it.figure.cents)+"</b>（来源："+esc(it.figure.source||"手动")+"）";
   } else {
     info.textContent="未录数字。电子档上传后本机会即时提数候选、由你确认；或手动输入。";
     if(it.fileName&&it.fileName.indexOf("拍照")>=0)info.textContent+="（拍照件不支持提数。）";
@@ -531,34 +576,77 @@ function figureArea(it){
     var none=document.createElement("p");none.className="small";none.textContent="未识别到数字（文件无匹配关键词、扫描件或加密文件），请手动输入。";wrap.appendChild(none);
   }
   var mrow=document.createElement("div");mrow.className="row";mrow.style.marginTop="6px";
-  var sel=document.createElement("select");FIGURE_CATS.forEach(function(c){var o=document.createElement("option");o.value=c;o.textContent=c;sel.appendChild(o);});
-  if(it.figure)sel.value=it.figure.cat;
-  var amt=document.createElement("input");amt.placeholder="金额（例如 1234.56）";amt.inputMode="decimal";
+  var amt=document.createElement("input");amt.placeholder="今年总数（例如 1234.56）";amt.inputMode="decimal";amt.value=it.figure?(it.figure.cents/100):"";
   var save=document.createElement("button");save.textContent=it.figure?"改数字":"保存数字";save.className="secondary";
-  save.onclick=function(){var c=parseAmountToCents(amt.value.trim());if(c==null||c<=0){alert("请输入有效金额");return}it.figure={cat:sel.value,cents:c,source:it.fileName?("手动（证据："+it.fileName+"）"):"手动"};it.pendingCandidates=null;savePacket();renderAll();};
-  mrow.appendChild(sel);mrow.appendChild(amt);mrow.appendChild(save);
-  if(it.figure){
-    var vbtn=document.createElement("button");vbtn.textContent=it.voucherChecked?"取消凭证核对":"已对照凭证核对";vbtn.className="secondary";
-    vbtn.onclick=function(){it.voucherChecked=!it.voucherChecked;savePacket();renderAll();};
-    var fAmt=document.createElement("input");fAmt.placeholder="表格上的数（可选）";fAmt.inputMode="decimal";fAmt.value=it.formAmountCents!=null?(it.formAmountCents/100).toFixed(2):"";
-    var fSave=document.createElement("button");fSave.textContent="保存表格数";fSave.className="secondary";
-    fSave.onclick=function(){if(!fAmt.value.trim()){it.formAmountCents=null;}else{var c=parseAmountToCents(fAmt.value.trim());if(c==null||c<0){alert("请输入有效表格数");return}it.formAmountCents=c;}savePacket();renderAll();};
-    var clr=document.createElement("button");clr.textContent="清除数字";clr.className="secondary";
-    clr.onclick=function(){it.figure=null;it.voucherChecked=false;it.formAmountCents=null;savePacket();renderAll();};
-    mrow.appendChild(vbtn);mrow.appendChild(fAmt);mrow.appendChild(fSave);mrow.appendChild(clr);
-  }
+  save.onclick=function(){var c=parseAmountToCents(amt.value.trim());if(c==null||c<=0){alert("请输入有效金额");return}it.figure={cat:it.figure?it.figure.cat:kindCat(it.kind),cents:c,source:it.fileName?("手动（证据："+it.fileName+"）"):"手动"};it.pendingCandidates=null;savePacket();renderAll();};
+  mrow.appendChild(amt);mrow.appendChild(save);
   wrap.appendChild(mrow);
   return wrap;
 }
-function renderChecklist(){
-  var box=$("checklistBox");box.innerHTML="";
-  if(!packet.checklist.length){box.innerHTML="<p class='muted small'>暂无清单。先在上面加去年表，再点“生成今年清单”。</p>";}
+function figureMoreArea(it){
+  var wrap=document.createElement("div");wrap.style.marginTop="8px";
+  if(!it.figure){var p=document.createElement("p");p.className="small";p.textContent="核对（有数字后出现）：先对照凭证核对，再与表格数核对。";wrap.appendChild(p);return wrap;}
+  var info=document.createElement("p");info.className="small";
+  info.innerHTML="凭证核对："+(it.voucherChecked?"已核对 ✓":"未核对")+" · 表格核对："+esc(matchStatus(it));
+  wrap.appendChild(info);
+  var mrow=document.createElement("div");mrow.className="row";
+  var vbtn=document.createElement("button");vbtn.textContent=it.voucherChecked?"取消凭证核对":"已对照凭证核对";vbtn.className="secondary";
+  vbtn.onclick=function(){it.voucherChecked=!it.voucherChecked;savePacket();renderAll();};
+  var fAmt=document.createElement("input");fAmt.placeholder="表格上的数（可选）";fAmt.inputMode="decimal";fAmt.value=it.formAmountCents!=null?(it.formAmountCents/100).toFixed(2):"";
+  var fSave=document.createElement("button");fSave.textContent="保存表格数";fSave.className="secondary";
+  fSave.onclick=function(){if(!fAmt.value.trim()){it.formAmountCents=null;}else{var c=parseAmountToCents(fAmt.value.trim());if(c==null||c<0){alert("请输入有效表格数");return}it.formAmountCents=c;}savePacket();renderAll();};
+  var clr=document.createElement("button");clr.textContent="清除数字";clr.className="secondary";
+  clr.onclick=function(){it.figure=null;it.voucherChecked=false;it.formAmountCents=null;savePacket();renderAll();};
+  mrow.appendChild(vbtn);mrow.appendChild(fAmt);mrow.appendChild(fSave);mrow.appendChild(clr);
+  wrap.appendChild(mrow);
+  return wrap;
+}
+function costRow(e){
+  var row=document.createElement("div");row.className="row";
+  if(e.custom){
+    var lab=document.createElement("span");lab.className="small";lab.textContent="其他成本明目：";
+    var linp=document.createElement("input");linp.type="text";linp.value=e.customLabel||"";linp.style.width="140px";linp.placeholder="自填明目";
+    linp.onchange=function(){e.customLabel=linp.value.trim();savePacket();renderMerged();applyCollapse();};
+    var ainp=document.createElement("input");ainp.type="text";ainp.inputMode="decimal";ainp.value=e.cents==null?"":(e.cents/100);ainp.style.width="140px";ainp.placeholder="金额";
+    ainp.onchange=function(){
+      var v=ainp.value.trim();
+      if(!v){e.cents=null;savePacket();renderMerged();applyCollapse();return;}
+      var c=parseAmountToCents(v);
+      if(c==null){alert("请输入有效金额");ainp.value=e.cents==null?"":(e.cents/100);return;}
+      e.cents=c;savePacket();renderMerged();applyCollapse();
+    };
+    row.appendChild(lab);row.appendChild(linp);row.appendChild(ainp);
+  }else{
+    var lab2=document.createElement("span");lab2.className="small";lab2.textContent="可抵扣成本 · "+e.label+"：";
+    var ainp2=document.createElement("input");ainp2.type="text";ainp2.inputMode="decimal";ainp2.value=e.cents==null?"":(e.cents/100);ainp2.style.width="160px";ainp2.placeholder="只填数字";
+    ainp2.onchange=function(){
+      var v=ainp2.value.trim();
+      if(!v){e.cents=null;savePacket();renderMerged();applyCollapse();return;}
+      var c=parseAmountToCents(v);
+      if(c==null){alert("请输入有效金额");ainp2.value=e.cents==null?"":(e.cents/100);return;}
+      e.cents=c;savePacket();renderMerged();applyCollapse();
+    };
+    row.appendChild(lab2);row.appendChild(ainp2);
+  }
+  return row;
+}
+function renderMerged(){
+  var box=$("mergedBox");if(!box||!packet)return;
+  box.innerHTML="";
+  if(!packet.checklist.length){box.innerHTML="<p class='muted small'>暂无清单。先在上面加去年表，再点“生成今年清单”或“按去年推算”。</p>";}
   packet.checklist.forEach(function(it){
-    var div=document.createElement("div");div.className="item"+(it.status==="not-started"?" miss":"");
-    var extra=(it.isNew?" <span class='badge na'>今年新增</span>":"")+(it.transcriptNote?" <span class='badge pending'>"+esc(it.transcriptNote)+"</span>":"");
-    div.innerHTML="<b>"+esc(it.form)+"</b> "+(it.payer?"（"+esc(it.payer)+"）":"")+" "+statusBadge(it)+extra+"<br><span class='small'>"+esc(it.request)+"</span>"+(it.fileName?"<br><span class='small'>已上传文件："+esc(it.fileName)+"</span>":"")+(it.reason?"<br><span class='small'>不适用原因："+esc(it.reason)+"</span>":"");
-    var row=document.createElement("div");row.className="row";row.style.marginTop="8px";
-    var file=document.createElement("input");file.type="file";file.className="small";file.setAttribute("accept",".pdf,.txt,.docx,.xlsx");file.setAttribute("aria-label","上传 "+it.form);
+    var div=document.createElement("div");div.className="item"+(rowResolved(it)?"":" miss");
+    var head=document.createElement("div");head.className="sec-head";head.style.marginBottom="4px";
+    var ht=document.createElement("span");ht.style.flex="1";
+    ht.innerHTML="<b>"+esc(rowTitle(it))+"</b>"+(it.payer?"（"+esc(it.payer)+"）":"")+((it.isNew?" <span class='badge na'>今年新增</span>":"")+(it.fromLastYear?" <span class='badge'>去年有数 · 今年请补凭证与数据</span>":"")+(it.transcriptNote?" <span class='badge pending'>"+esc(it.transcriptNote)+"</span>":""));
+    var hb=document.createElement("span");hb.className="small";hb.innerHTML=rowBadge(it);
+    var chev=document.createElement("span");chev.className="sec-chev";chev.textContent=it.moreCollapsed?"展开更多 ▼":"收起 ▲";
+    head.appendChild(ht);head.appendChild(hb);head.appendChild(chev);
+    head.onclick=function(){it.moreCollapsed=!it.moreCollapsed;savePacket();renderMerged();applyCollapse();};
+    div.appendChild(head);
+    var main=document.createElement("div");
+    var uprow=document.createElement("div");uprow.className="row";uprow.style.marginTop="8px";
+    var file=document.createElement("input");file.type="file";file.className="small";file.setAttribute("accept",".pdf,.txt,.docx,.xlsx");file.setAttribute("aria-label","上传 "+rowTitle(it));
     file.onchange=async function(){
       if(!(file.files&&file.files[0]))return;
       var f=file.files[0];
@@ -571,8 +659,24 @@ function renderChecklist(){
       }catch(e){it.pendingCandidates=[];it.pendingSource=f.name;}
       savePacket();renderAll();
     };
-    var photo=document.createElement("input");photo.type="file";photo.className="small";photo.setAttribute("accept","image/*");photo.setAttribute("capture","environment");photo.setAttribute("aria-label","拍照上传 "+it.form);
+    var photo=document.createElement("input");photo.type="file";photo.className="small";photo.setAttribute("accept","image/*");photo.setAttribute("capture","environment");photo.setAttribute("aria-label","拍照上传 "+rowTitle(it));
     photo.onchange=function(){if(photo.files&&photo.files[0]){var pf=photo.files[0];it.fileName=pf.name+"（拍照）";it.status="uploaded";it.pendingCandidates=null;setEvidencePreview(it.id,{kind:"image",url:URL.createObjectURL(pf)});savePacket();renderAll()}};
+    uprow.appendChild(file);uprow.appendChild(photo);
+    main.appendChild(uprow);
+    if(it.fileName){var fn=document.createElement("p");fn.className="small";fn.textContent="已上传文件："+it.fileName;main.appendChild(fn);}
+    main.appendChild(figureMainArea(it));
+    div.appendChild(main);
+    var more=document.createElement("div");if(it.moreCollapsed)more.classList.add("hidden");
+    var req=document.createElement("p");req.className="small";req.textContent=it.request||"";more.appendChild(req);
+    if(it.costs&&it.costs.length){
+      var ch=document.createElement("p");ch.className="small";ch.textContent="成本明细（可选，点开填；小计只是填报数字之和、非申报表，抵扣资格与比例由 CPA 确认）：";more.appendChild(ch);
+      it.costs.forEach(function(e){more.appendChild(costRow(e));});
+      var foot=document.createElement("p");foot.className="small";
+      foot.innerHTML="成本合计 "+fmtMoney(rowExpTotal(it))+" · 小计 "+(rowNet(it)==null?"—":fmtMoney(rowNet(it)))+"（草稿）";
+      more.appendChild(foot);
+    }
+    more.appendChild(figureMoreArea(it));
+    var arow=document.createElement("div");arow.className="row";arow.style.marginTop="8px";
     var naInput=document.createElement("input");naInput.placeholder="不适用原因（必填）";naInput.value=it.reason||"";
     var naBtn=document.createElement("button");naBtn.textContent="标不适用";naBtn.className="secondary";
     naBtn.onclick=function(){if(!naInput.value.trim()){alert("请先写不适用原因");return}it.reason=naInput.value.trim();it.status="na";savePacket();renderAll()};
@@ -580,11 +684,22 @@ function renderChecklist(){
     pendBtn.onclick=function(){it.status="pending";savePacket();renderAll()};
     var delBtn=document.createElement("button");delBtn.textContent="删除本项";delBtn.className="secondary";
     delBtn.onclick=function(){var old=evidencePreview[it.id];if(old&&old.url)URL.revokeObjectURL(old.url);delete evidencePreview[it.id];packet.checklist=packet.checklist.filter(function(x){return x.id!==it.id});savePacket();renderAll()};
-    row.appendChild(file);row.appendChild(photo);row.appendChild(naInput);row.appendChild(naBtn);row.appendChild(pendBtn);row.appendChild(delBtn);
-    div.appendChild(row);div.appendChild(figureArea(it));if(evidencePreview[it.id]){var pv=document.createElement("div");pv.innerHTML=evidencePreviewHtml(evidencePreview[it.id]);div.appendChild(pv);}box.appendChild(div);
+    arow.appendChild(naInput);arow.appendChild(naBtn);arow.appendChild(pendBtn);arow.appendChild(delBtn);
+    more.appendChild(arow);
+    if(evidencePreview[it.id]){var pv=document.createElement("div");pv.innerHTML=evidencePreviewHtml(evidencePreview[it.id]);more.appendChild(pv);}
+    div.appendChild(more);
+    box.appendChild(div);
   });
-  var done=packet.checklist.filter(function(it){return it.status==="uploaded"||it.status==="na"}).length;
+  var done=packet.checklist.filter(rowResolved).length;
   $("progressText").textContent=packet.checklist.length?("清单进度："+done+"/"+packet.checklist.length+" 项已解决"):"清单进度：暂无清单";
+  var sum=$("mergedSummary");if(sum){
+    var filled=packet.checklist.filter(function(x){return !!x.figure;}).length;
+    var inc=0,exp=0,netT=0;
+    packet.checklist.forEach(function(x){if(x.figure){inc+=x.figure.cents;exp+=rowExpTotal(x);netT+=rowNet(x);}});
+    var missNum=packet.checklist.filter(function(x){return !x.figure;});
+    var missEv=packet.checklist.filter(function(x){return !x.fileName;});
+    sum.innerHTML="<p class='small'>填报小计（草稿）："+filled+"/"+packet.checklist.length+" 项已填数字 · 收入合计 "+fmtMoney(inc)+" · 成本合计 "+fmtMoney(exp)+" · 小计合计 "+fmtMoney(netT)+"。小计为填报数字之和，非申报表；抵扣资格与比例由持证税务师确认。</p><p class='small'>还差什么（去见税务师前先补齐）："+(missNum.length?("缺数字："+missNum.map(function(x){return esc(rowTitle(x))+(x.payer?"（"+esc(x.payer)+"）":"");}).join("、")):"数字已齐")+"；"+(missEv.length?("缺凭证（可选，不挡数字）："+missEv.map(function(x){return esc(rowTitle(x))+(x.payer?"（"+esc(x.payer)+"）":"");}).join("、")):"凭证已齐")+"。</p>";
+  }
 }
 function renderExports(){
   var ul=$("exportLog");ul.innerHTML="";
@@ -592,14 +707,13 @@ function renderExports(){
   packet.exports.forEach(function(e){var li=document.createElement("li");li.className="small";li.textContent=e;ul.appendChild(li)});
   $("transRecord").textContent=packet.transcript?packet.transcript:"无";
 }
-function renderAll(){renderChanges();renderLast();renderChecklist();renderSheets();renderExports();renderCpa();renderDraft();renderWarnings();renderSubStatus();renderOrders();renderPriorCpa();applyCollapse()}
+function renderAll(){renderChanges();renderLast();renderMerged();renderExports();renderCpa();renderDraft();renderWarnings();renderSubStatus();renderOrders();renderPriorCpa();applyCollapse()}
 function secKeyFromH2(t){
   if(t.indexOf("5d")==0)return "s5d";
   if(t.indexOf("5c")==0)return "s5c";
   if(t.indexOf("3b")==0)return "s3b";
   if(t.indexOf("3")==0)return "s3";
   if(t.indexOf("4b")==0)return "s4b";
-  if(t.indexOf("4c")==0)return "s4c";
   if(t.indexOf("4")==0)return "s4";
   if(t.indexOf("5b")==0)return "s5b";
   if(t.indexOf("5")==0)return "s5";
@@ -637,9 +751,8 @@ function secSummary(key){
   if(!packet)return "";
   if(key==="s3")return packet.lastYear.length?("已加 "+packet.lastYear.length+" 项去年表"):"未加";
   if(key==="s3b"){var sts=packet.checklist.filter(function(it){return it.form==="州税"}).map(function(it){return it.payer});return sts.length?("已加州税："+sts.join("、")):"未选州";}
-  if(key==="s4"){if(!packet.checklist.length)return "暂无清单";var d=packet.checklist.filter(function(it){return it.status==="uploaded"||it.status==="na"}).length;return d+"/"+packet.checklist.length+" 项已解决";}
+  if(key==="s4"){if(!packet.checklist.length)return "暂无清单";var d=packet.checklist.filter(rowResolved).length;return d+"/"+packet.checklist.length+" 项已解决";}
   if(key==="s4b")return packet.uncertain&&packet.uncertain.length?("已录 "+packet.uncertain.length+" 项不确定事项"):"无";
-  if(key==="s4c"){var sh=packet.sheets||[];if(!sh.length)return "暂无填报";var f=sh.filter(function(s){return s.incomeCents!=null;}).length;return f+"/"+sh.length+" 项已填数字";}
   if(key==="s5")return packet.transcript?("已记录："+packet.transcript):"未上传";
   if(key==="s5b")return "探针已开启";
   if(key==="s5c"){var ls=draftLines();if(!ls.length)return "未录";var tot=draftTotals();var v=ls.filter(function(it){return it.voucherChecked}).length;var m=ls.filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length;return "已录 "+ls.length+" 项数字，预估合计 "+fmtMoney(tot.grand)+"（凭证已核对 "+v+" · 表格一致 "+m+"）";}
@@ -654,8 +767,7 @@ function secDone(key){
   if(!packet)return false;
   if(key==="s3")return packet.lastYear.length>0;
   if(key==="s3b")return packet.checklist.some(function(it){return it.form==="州税"});
-  if(key==="s4")return packet.checklist.length>0&&packet.checklist.every(function(it){return it.status==="uploaded"||it.status==="na"});
-  if(key==="s4c"){var sh=packet.sheets||[];return sh.length>0&&sh.every(function(s){return s.incomeCents!=null;});}
+  if(key==="s4")return packet.checklist.length>0&&packet.checklist.every(rowResolved);
   if(key==="s5c"){var ls=draftLines();return ls.length>0&&ls.every(function(it){return it.voucherChecked&&it.formAmountCents!=null&&it.formAmountCents===it.figure.cents});}
   if(key==="s5d"){return computeWarnings().length===0&&draftLines().length>0;}
   if(key==="s6b")return !!(packet.priorCpa&&packet.priorCpa.name);
@@ -664,7 +776,7 @@ function secDone(key){
 }
 function applyCollapse(){
   if(!packet)return;
-  if(!packet.collapsed)packet.collapsed={s3:true,s3b:true,s4:true,s4b:true,s4c:true,s5:true,s5b:true,s5c:true,s5d:true,s6:true,s6b:true,sub:true,safe:true};
+  if(!packet.collapsed)packet.collapsed={s3:true,s3b:true,s4:true,s4b:true,s5:true,s5b:true,s5c:true,s5d:true,s6:true,s6b:true,sub:true,safe:true};
   Object.keys(secHeads).forEach(function(key){
     var h=secHeads[key];
     var collapsed=!!packet.collapsed[key];
@@ -1078,13 +1190,17 @@ function addToLastYear(items){
   return {added:added,skipped:skipped};
 }
 function generateFromLastYear(){
-  var added=0;
+  var added=0;var fresh=[];
   packet.lastYear.forEach(function(l){
     var req=requestText(l.form);
-    if(!packet.checklist.some(function(it){return it.form===l.form&&it.payer===l.payer})){
-      packet.checklist.push({id:Date.now()+""+Math.random(),form:l.form,payer:l.payer,request:req,status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:""});added++;
+    var kind=formToKind(l.form);
+    var dup=packet.checklist.some(function(it){return it.form===l.form&&it.payer===l.payer;});
+    if(!dup&&kind&&l.payer)dup=packet.checklist.some(function(it){return it.kind===kind&&it.payer===l.payer;});
+    if(!dup){
+      fresh.push({id:Date.now()+""+Math.random(),form:l.form,kind:kind,title:l.form,payer:l.payer,request:req,status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:"",fromLastYear:true,costs:costsTemplate(kind),moreCollapsed:true});added++;
     }
   });
+  packet.checklist=fresh.concat(packet.checklist);
   savePacket();renderAll();
   return added;
 }
@@ -1092,7 +1208,7 @@ function showQuickPick(msg){
   var box=$("quickPick");if(!box)return;
   var common=["W-2","1099-INT","1099-DIV","1099-R","SSA-1099","1099-NEC","1099-MISC","Schedule C","Schedule E","Schedule SE","1098","1095-A"];
   var evs=[["银行对账单（利息）","interest"],["银行对账单（股息）","dividends"],["房租收入记录","rental"],["自雇／生意收入记录","selfemp"],["工资单","wages"],["退休金对账单","retirement"],["社保金对账单","social"],["其他收入凭证","generic"]];
-  var html="<p class='small'>"+esc(msg)+"</p><p class='small'>按手头证据加（不知道表名的点这里，直接去第 4c 节填今年的数字和凭证）：</p><p>";
+  var html="<p class='small'>"+esc(msg)+"</p><p class='small'>按手头证据加（不知道表名的点这里，直接去今年清单填今年的数字和凭证）：</p><p>";
   evs.forEach(function(e){html+="<button class='secondary' data-qe='"+e[1]+"' style='margin:2px'>＋"+e[0]+"</button>";});
   html+="</p><details><summary class='small'>知道去年表名？点这里展开按表名加</summary><p class='small'>按去年表名加（知道去年报过哪张表的点这里，点一个加一个）：</p><p>";
   common.forEach(function(f){html+="<button class='secondary' data-qp='"+f+"' style='margin:2px'>＋"+f+"</button>";});
@@ -1107,12 +1223,12 @@ function showQuickPick(msg){
   });
   box.querySelectorAll("[data-qe]").forEach(function(b){
     b.onclick=function(){
-      if(!packet.sheets)packet.sheets=[];
-      packet.sheets.push(newSheet(b.dataset.qe,"",""));
-      savePacket();renderSheets();
+      var row=newRowFromKind(b.dataset.qe,"");
+      packet.checklist.push(row);
+      savePacket();renderAll();
       var m=$("quickPickMsg");
-      if(m)m.textContent="已加一张表，去第 4c 节填数字和凭证。";
-      try{var hs=document.querySelectorAll("h2");for(var i=0;i<hs.length;i++){if(hs[i].textContent.indexOf("4c")==0){hs[i].scrollIntoView();break;}}}catch(e){}
+      if(m)m.textContent="已加一项，去今年清单填数字和凭证。";
+      try{var hs=document.querySelectorAll("h2");for(var i=0;i<hs.length;i++){if(hs[i].textContent.indexOf("4 ·")==0){hs[i].scrollIntoView();break;}}}catch(e){}
     };
   });
 }
@@ -1164,7 +1280,8 @@ $("btnGenerate").onclick=async function(){
 };
 $("btnAddNew").onclick=function(){
   var form=$("newForm").value,payer=$("newPayer").value.trim();
-  packet.checklist.push({id:Date.now()+""+Math.random(),form:form,payer:payer,request:requestText(form),status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:""});
+  var _k=formToKind(form);
+  packet.checklist.push({id:Date.now()+""+Math.random(),form:form,kind:_k,title:form,payer:payer,request:requestText(form),status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:"",costs:costsTemplate(_k),moreCollapsed:true});
   $("newPayer").value="";savePacket();renderAll();
 };
 var STATES=[
@@ -1176,18 +1293,16 @@ $("btnAddState").onclick=function(){
   var noTax=STATES.some(function(x){return x[0]===st&&x[1]==="无州个人所得税"});
   if(noTax){$("stateMsg").textContent=st+"无州个人所得税，一般无需州所得税申报表，不生成州所得税清单项；如有外州收入等情形，请以税务师确认为准。";return}
   if(packet.checklist.some(function(it){return it.form==="州税"&&it.payer===st})){$("stateMsg").textContent="清单里已有"+st+"州税项目。";return}
-  packet.checklist.push({id:Date.now()+""+Math.random(),form:"州税",payer:st,request:"今年"+st+"州所得税表与缴款确认",status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:""});
+  packet.checklist.push({id:Date.now()+""+Math.random(),form:"州税",kind:null,title:"州税",payer:st,request:"今年"+st+"州所得税表与缴款确认",status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:"",costs:[],moreCollapsed:true});
   $("stateMsg").textContent="已加入"+st+"州税项目。";savePacket();renderAll();
 };
 $("transFile").onchange=function(e){
-  if(e.target.files&&e.target.files[0]){packet.transcript=e.target.files[0].name+"（只记文件名，未读内容）";savePacket();renderExports()}
-};
-$("transPhoto").onchange=function(e){
-  if(e.target.files&&e.target.files[0]){packet.transcript=e.target.files[0].name+"（拍照，只记文件名，未读内容）";savePacket();renderExports()}
+  if(e.target.files&&e.target.files[0]){packet.transcript=e.target.files[0].name+"（只记文件名，未读内容）";packet.checklist.forEach(function(it){if(it.status==="not-started")it.status="pending";});savePacket();renderAll();}
 };
 $("btnAddIrs").onclick=function(){
   var form=$("irsForm").value,payer=$("irsPayer").value.trim();
-  packet.checklist.push({id:Date.now()+""+Math.random(),form:form,payer:payer,request:requestText(form),status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:"IRS 显示—待你确认"});
+  var _kf=formToKind(form);
+  packet.checklist.push({id:Date.now()+""+Math.random(),form:form,kind:_kf,title:form,payer:payer,request:requestText(form),status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:"IRS 显示—待你确认",costs:costsTemplate(_kf),moreCollapsed:true});
   $("irsPayer").value="";savePacket();renderAll();
 };
 $("btnMarkPending").onclick=function(){
@@ -1252,7 +1367,7 @@ $("btnUncertainAnalyze").onclick=function(){
     var added=0;
     docs.forEach(function(d){
       if(!packet.checklist.some(function(it){return it.request===d&&it.payer===payer})){
-        packet.checklist.push({id:Date.now()+""+Math.random(),form:"不确定事项",payer:payer,request:d,status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:"不确定事项·待税务师审核"});added++;
+        packet.checklist.push({id:Date.now()+""+Math.random(),form:"不确定事项",kind:null,title:"不确定事项",payer:payer,request:d,status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:"不确定事项·待税务师审核",costs:[],moreCollapsed:true});added++;
       }
     });
     savePacket();renderAll();
@@ -1286,138 +1401,19 @@ var SHEET_TYPES={
   social:{title:"社保金",whoLabel:"付款方",expenses:[]},
   generic:{title:"其他",whoLabel:"表名/说明",expenses:[]}
 };
-function newSheet(type,who,who2){
-  var t=SHEET_TYPES[type]||SHEET_TYPES.generic;
-  var ex=(t.expenses||[]).map(function(l){return {label:l,cents:null};});
-  if(t.expenses&&t.expenses.length)ex.push({label:"其他",custom:true,customLabel:"",cents:null});
-  return {id:Date.now()+""+Math.floor(Math.random()*1e6),type:type,title:t.title,who:who||"",who2:who2||"",incomeCents:null,expenses:ex,evidence:""};
-}
-function sheetExpTotal(sh){var t=0;(sh.expenses||[]).forEach(function(e){if(e.cents!=null)t+=e.cents;});return t;}
-function sheetNet(sh){if(sh.incomeCents==null)return null;return sh.incomeCents-sheetExpTotal(sh);}
-function sheetIncomeLabel(sh){
-  if(sh.type==="wages")return "今年1月1日–12月31日工资总额";
-  if(sh.type==="rental")return "今年1月1日–12月31日收到的租金总额";
-  if(sh.type==="selfemp")return "今年1月1日–12月31日总收入";
-  return "今年金额";
-}
-function sheetEvidenceLabel(sh){
-  if(sh.type==="wages")return "工资单／W-2（可选）：";
-  if(sh.type==="rental")return "租金记录／银行对账单（可选）：";
-  if(sh.type==="selfemp")return "业务收入记录／银行对账单（可选）：";
-  if(sh.type==="interest"||sh.type==="dividends"||sh.type==="retirement"||sh.type==="social")return (sh.who?sh.who+"对账单（可选）：":"银行对账单（可选）：");
-  return "相关凭证（可选）：";
-}
-function renderSheets(){
-  var box=$("sheetsBox");if(!box||!packet)return;
-  if(!packet.sheets)packet.sheets=[];
-  box.innerHTML="";
-  if(!packet.sheets.length){box.innerHTML="<p class='muted small'>暂无填报项。点“按去年推算今年填报”，或手动加一项。</p>";}
-  packet.sheets.forEach(function(sh){
-    var t=SHEET_TYPES[sh.type]||SHEET_TYPES.generic;
-    var card=document.createElement("div");card.className="item";
-    var head=document.createElement("div");head.className="sec-head";head.style.marginBottom="4px";
-    var headTitle=document.createElement("span");headTitle.style.flex="1";headTitle.innerHTML="<b>"+esc(sh.title)+"</b>"+(sh.who?"（"+esc(sh.who)+"）":"")+(sh.fromLastYear?" <span class='badge'>去年有数 · 今年请补凭证与数据</span>":"");
-    var headStatus=document.createElement("span");headStatus.className="small";headStatus.textContent=sh.incomeCents==null?"待填数字":"数字已填";
-    var chev=document.createElement("span");chev.className="sec-chev";chev.textContent=sh.collapsed?"展开 ▼":"收起 ▲";
-    var del=document.createElement("button");del.className="secondary";del.textContent="删除";
-    del.onclick=function(e){if(e)e.stopPropagation();packet.sheets=packet.sheets.filter(function(x){return x.id!==sh.id;});savePacket();renderSheets();applyCollapse();};
-    head.appendChild(headTitle);head.appendChild(headStatus);head.appendChild(chev);head.appendChild(del);
-    head.onclick=function(){sh.collapsed=!sh.collapsed;savePacket();renderSheets();applyCollapse();};
-    card.appendChild(head);
-    var body=document.createElement("div");if(sh.collapsed)body.classList.add("hidden");card.appendChild(body);
-    function labeledInput(labelText,value,onchg){
-      var row=document.createElement("div");row.className="row";
-      var lab=document.createElement("span");lab.className="small";lab.textContent=labelText+"：";
-      var inp=document.createElement("input");inp.type="text";inp.value=value||"";inp.style.width="220px";
-      inp.onchange=function(){onchg(inp.value);savePacket();renderSheets();applyCollapse();};
-      row.appendChild(lab);row.appendChild(inp);body.appendChild(row);
-    }
-    function moneyInput(labelText,cents,onchg){
-      var row=document.createElement("div");row.className="row";
-      var lab=document.createElement("span");lab.className="small";lab.textContent=labelText+"：";
-      var inp=document.createElement("input");inp.type="text";inp.inputMode="decimal";inp.value=cents==null?"":(cents/100);inp.style.width="160px";inp.placeholder="只填数字，如 52340";
-      inp.onchange=function(){
-        var v=inp.value.trim();
-        if(!v){onchg(null);savePacket();renderSheets();applyCollapse();return;}
-        var c=parseAmountToCents(v);
-        if(c==null){alert("请输入有效金额");inp.value=cents==null?"":(cents/100);return;}
-        onchg(c);savePacket();renderSheets();applyCollapse();
-      };
-      row.appendChild(lab);row.appendChild(inp);body.appendChild(row);
-    }
-    labeledInput(t.whoLabel,sh.who,function(v){sh.who=v.trim();});
-    if(sh.type==="generic")labeledInput("付款方",sh.who2,function(v){sh.who2=v.trim();});
-    moneyInput(sheetIncomeLabel(sh),sh.incomeCents,function(c){sh.incomeCents=c;});
-    (sh.expenses||[]).forEach(function(e){
-      if(e.custom){
-        var row=document.createElement("div");row.className="row";
-        var lab=document.createElement("span");lab.className="small";lab.textContent="其他成本明目：";
-        var linp=document.createElement("input");linp.type="text";linp.value=e.customLabel||"";linp.style.width="140px";linp.placeholder="自填明目";
-        linp.onchange=function(){e.customLabel=linp.value.trim();savePacket();renderSheets();applyCollapse();};
-        var ainp=document.createElement("input");ainp.type="text";ainp.inputMode="decimal";ainp.value=e.cents==null?"":(e.cents/100);ainp.style.width="140px";ainp.placeholder="金额";
-        ainp.onchange=function(){
-          var v=ainp.value.trim();
-          if(!v){e.cents=null;savePacket();renderSheets();applyCollapse();return;}
-          var c=parseAmountToCents(v);
-          if(c==null){alert("请输入有效金额");ainp.value=e.cents==null?"":(e.cents/100);return;}
-          e.cents=c;savePacket();renderSheets();applyCollapse();
-        };
-        row.appendChild(lab);row.appendChild(linp);row.appendChild(ainp);body.appendChild(row);
-      }else{
-        moneyInput("可抵扣成本 · "+e.label,e.cents,function(c){e.cents=c;});
-      }
-    });
-    var ev=document.createElement("div");ev.className="row";
-    var evLab=document.createElement("span");evLab.className="small";evLab.textContent=sheetEvidenceLabel(sh);
-    var evInp=document.createElement("input");evInp.type="file";evInp.accept=".pdf,.txt,.docx,.xlsx,.jpg,.jpeg,.png";
-    evInp.onchange=function(){var f=evInp.files&&evInp.files[0];if(f){sh.evidence=f.name;savePacket();renderSheets();applyCollapse();}};
-    ev.appendChild(evLab);ev.appendChild(evInp);
-    if(sh.evidence){var evNote=document.createElement("span");evNote.className="small";evNote.textContent="已选："+sh.evidence+"（演示版只记文件名）";ev.appendChild(evNote);}
-    body.appendChild(ev);
-    var foot=document.createElement("div");foot.className="small";
-    var net=sheetNet(sh);
-    foot.innerHTML="收入 "+(sh.incomeCents==null?"—":fmtMoney(sh.incomeCents))+" · 成本合计 "+fmtMoney(sheetExpTotal(sh))+" · 小计 "+(net==null?"—":fmtMoney(net))+"（草稿） · "+(sh.incomeCents==null?"<span class='badge'>待填数字</span>":"<span class='badge uploaded'>数字已填</span>");
-    body.appendChild(foot);
-    box.appendChild(card);
-  });
-  var sum=$("sheetsSummary");if(!sum)return;
-  var sheets=packet.sheets;
-  var filled=sheets.filter(function(s){return s.incomeCents!=null;}).length;
-  var inc=0,exp=0,netT=0;
-  sheets.forEach(function(s){if(s.incomeCents!=null){inc+=s.incomeCents;exp+=sheetExpTotal(s);netT+=sheetNet(s);}});
-  var missNum=sheets.filter(function(s){return s.incomeCents==null;});
-  var missEv=sheets.filter(function(s){return !s.evidence;});
-  sum.innerHTML="<p class='small'>填报小计（草稿）："+filled+"/"+sheets.length+" 项已填数字 · 收入合计 "+fmtMoney(inc)+" · 成本合计 "+fmtMoney(exp)+" · 小计合计 "+fmtMoney(netT)+"。小计为填报数字之和，非申报表；同一笔收入不要在第 4 节重复填；抵扣资格与比例由持证税务师确认。</p><p class='small'>还差什么（去见税务师前先补齐）："+(missNum.length?("缺数字："+missNum.map(function(s){return esc(s.title)+(s.who?"（"+esc(s.who)+"）":"");}).join("、")):"数字已齐")+"；"+(missEv.length?("缺凭证（可选，不挡数字）："+missEv.map(function(s){return esc(s.title)+(s.who?"（"+esc(s.who)+"）":"");}).join("、")):"凭证已齐")+"。</p>";
-}
-$("btnInferSheets").onclick=function(){
+$("btnInferMerged").onclick=function(){
   if(!packet)return;
-  if(!packet.sheets)packet.sheets=[];
-  var map={"W-2":"wages","Schedule E":"rental","Schedule C":"selfemp","Schedule SE":"selfemp","1099-NEC":"selfemp","1099-INT":"interest","1099-DIV":"dividends","1099-R":"retirement","SSA-1099":"social"};
-  var fresh=[],added=0,skipped=0;
-  packet.lastYear.forEach(function(l){
-    var type=map[l.form]||"generic";
-    var title=type==="generic"?l.form:SHEET_TYPES[type].title;
-    if(packet.sheets.concat(fresh).some(function(s){return s.type===type&&s.who===(l.payer||"")&&s.title===title})){skipped++;return;}
-    var sh=newSheet(type,l.payer||"","");
-    if(type==="generic")sh.title=l.form;
-    sh.fromLastYear=true;
-    fresh.push(sh);added++;
-  });
-  packet.sheets=fresh.concat(packet.sheets);
-  savePacket();renderSheets();applyCollapse();
-  var m=$("inferMsg");if(!m)return;
-  if(!packet.lastYear.length)m.textContent="去年表还是空的：先在第 3 节加去年表（识别、快捷选或手动），再点推算。";
-  else if(added)m.textContent="已推算 "+added+" 项填报（排在前面）："+fresh.map(function(s){return s.title+(s.who?"（"+s.who+"）":"");}).join("、")+"。请核对：没有的删掉，缺的再手动加。";
-  else m.textContent="没有新增（均已推算过）。";
+  if(!packet.lastYear.length){$("inferMsg").textContent="去年表还是空的：先在第 3 节加去年表（识别、快捷选或手动），再点推算。";return;}
+  var a=generateFromLastYear();
+  $("inferMsg").textContent=a?("已推算 "+a+" 项（排在前面）。请核对：没有的删掉，缺的再手动加。"):"没有新增（均已推算过）。";
 };
 document.querySelectorAll("[data-addsheet]").forEach(function(b){
   b.onclick=function(){
     if(!packet)return;
-    if(!packet.sheets)packet.sheets=[];
-    var sh=newSheet(b.dataset.addsheet,"","");
-    if(b.dataset.title)sh.title=b.dataset.title;
-    packet.sheets.push(sh);
-    savePacket();renderSheets();applyCollapse();
+    var row=newRowFromKind(b.dataset.addsheet,"");
+    if(b.dataset.title){row.title=b.dataset.title;row.form=b.dataset.title;row.request="今年"+b.dataset.title;}
+    packet.checklist.push(row);
+    savePacket();renderAll();
   };
 });
 function csvCell(v){var s=String(v==null?"":v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
@@ -1425,11 +1421,10 @@ $("btnExportCsv").onclick=function(){
   var head=["序号","表类型","付款方","今年需备文件","状态","不适用原因","文件名","是否今年新增","备注","确认数字类别","确认数字金额","证据来源","凭证核对","表格数","核对结果"];
   var lines=[head.map(csvCell).join(",")];
   packet.checklist.forEach(function(it,i){lines.push([i+1,it.form,it.payer||"",it.request,statusText(it.status),it.reason||"",it.fileName||"",it.isNew?"是":"否",it.transcriptNote||"",it.figure?it.figure.cat:"",it.figure?fmtMoney(it.figure.cents):"",it.figure?(it.figure.source||""):"",it.figure?(it.voucherChecked?"已核对":"未核对"):"",it.formAmountCents!=null?fmtMoney(it.formAmountCents):"",matchStatus(it)].map(csvCell).join(","))});
-  (packet.sheets||[]).forEach(function(sh){
-    if(sh.incomeCents!=null)lines.push([lines.length,sh.title,sh.who||"",sh.title+"（填报）","已填数字","","","否","",sh.title+"收入",fmtMoney(sh.incomeCents),"填报","","","填报数字，须CPA核对"].map(csvCell).join(","));
-    (sh.expenses||[]).forEach(function(e){
+  packet.checklist.forEach(function(it){
+    (it.costs||[]).forEach(function(e){
       if(e.cents==null)return;
-      lines.push([lines.length,sh.title,sh.who||"",sh.title+"（填报）","已填数字","","","否","",(e.custom?(e.customLabel||"其他"):e.label),fmtMoney(e.cents),"填报","","","填报数字，须CPA核对"].map(csvCell).join(","));
+      lines.push([lines.length,rowTitle(it),it.payer||"",rowTitle(it)+"（成本）","已填数字","","","否","",(e.custom?(e.customLabel||"其他"):e.label),fmtMoney(e.cents),"填报","","","填报数字，须CPA核对"].map(csvCell).join(","));
     });
   });
   var blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
@@ -1443,13 +1438,13 @@ $("btnCpaReview").onclick=function(){
 };
 $("btnCpaClear").onclick=function(){packet.cpaReview=null;savePacket();renderCpa();};
 $("btnExportJson").onclick=function(){
-  var data={tool:"报税包整理器 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||"",figure:it.figure?{category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||""}:null,voucher_checked:!!it.voucherChecked,form_amount_cents:it.formAmountCents!=null?it.formAmountCents:null,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),draft_estimate:{lines:draftLines().map(function(it){return {form:it.form,payer:it.payer,category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||"",voucher_checked:!!it.voucherChecked,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),totals_by_category:(function(){var o={};var t=draftTotals();Object.keys(t.byCat).forEach(function(c){o[c]=fmtMoney(t.byCat[c]);});return o;})(),grand_total_display:fmtMoney(draftTotals().grand),counts:{figures:draftLines().length,voucher_checked:draftLines().filter(function(it){return it.voucherChecked}).length,form_matched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length,form_mismatched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length},label:"预估草稿，非申报表，须 CPA 对照凭证与表格数核对"},warnings:computeWarnings(),prior_cpa:packet.priorCpa||null,sheets:(packet.sheets||[]).map(function(sh){return {type:sh.type,title:sh.title,who:sh.who||"",who2:sh.who2||"",income_cents:sh.incomeCents,income_display:sh.incomeCents==null?null:fmtMoney(sh.incomeCents),expenses:(sh.expenses||[]).map(function(e){return {label:e.custom?(e.customLabel||"其他"):e.label,amount_cents:e.cents,amount_display:e.cents==null?null:fmtMoney(e.cents)}}),expense_total_cents:sheetExpTotal(sh),net_cents:sheetNet(sh),evidence_file:sh.evidence||""}}),transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存本机，不进导出文件。复核记录由用户自记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。预估草稿金额为用户确认的证据数字，非申报表，须 CPA 对照凭证与表格数核对；IRS 对照提醒只作请核对提醒，不代表 IRS 已认定任何问题；工具不提取、不保存社保号。去年会计师信息由客户自填，平台不验证、不背书。收入填报数字为用户自填草稿，须CPA核对。"};
+  var data={tool:"报税包整理器 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||"",figure:it.figure?{category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||""}:null,voucher_checked:!!it.voucherChecked,form_amount_cents:it.formAmountCents!=null?it.formAmountCents:null,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it),kind:it.kind||null,costs:(it.costs||[]).map(function(e){return {label:e.custom?(e.customLabel||"其他"):e.label,amount_cents:e.cents,amount_display:e.cents==null?null:fmtMoney(e.cents)}})}}),draft_estimate:{lines:draftLines().map(function(it){return {form:it.form,payer:it.payer,category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||"",voucher_checked:!!it.voucherChecked,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),totals_by_category:(function(){var o={};var t=draftTotals();Object.keys(t.byCat).forEach(function(c){o[c]=fmtMoney(t.byCat[c]);});return o;})(),grand_total_display:fmtMoney(draftTotals().grand),counts:{figures:draftLines().length,voucher_checked:draftLines().filter(function(it){return it.voucherChecked}).length,form_matched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length,form_mismatched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length},label:"预估草稿，非申报表，须 CPA 对照凭证与表格数核对"},warnings:computeWarnings(),prior_cpa:packet.priorCpa||null,transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存本机，不进导出文件。复核记录由用户自记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。预估草稿金额为用户确认的证据数字，非申报表，须 CPA 对照凭证与表格数核对；IRS 对照提醒只作请核对提醒，不代表 IRS 已认定任何问题；工具不提取、不保存社保号。去年会计师信息由客户自填，平台不验证、不背书。收入填报数字为用户自填草稿，须CPA核对。"};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tax-packet-checklist.json";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
   packet.exports.push(new Date().toLocaleString()+" 导出机器可读清单 JSON（"+packet.checklist.length+" 项）");savePacket();renderExports();
 };
 $("btnPrint").onclick=function(){
-  var rows=packet.checklist.map(function(it,i){return "<tr><td>"+(i+1)+"</td><td>"+esc(it.form)+"</td><td>"+esc(it.payer||"")+"</td><td>"+esc(it.request)+"</td><td>"+esc(statusText(it.status))+"</td><td>"+esc(it.reason||it.fileName||"")+(it.figure?" · 数字："+esc(it.figure.cat)+" "+fmtMoney(it.figure.cents)+"（凭证："+(it.voucherChecked?"已核对":"未核对")+"；表格："+esc(matchStatus(it))+"）":"")+"</td></tr>"}).join("")||"<tr><td colspan='6'>暂无清单</td></tr>";
+  var rows=packet.checklist.map(function(it,i){return "<tr><td>"+(i+1)+"</td><td>"+esc(rowTitle(it))+"</td><td>"+esc(it.payer||"")+"</td><td>"+esc(it.request)+"</td><td>"+esc(statusText(it.status))+"</td><td>"+esc(it.reason||it.fileName||"")+(it.figure?" · 数字："+esc(it.figure.cat)+" "+fmtMoney(it.figure.cents)+"（凭证："+(it.voucherChecked?"已核对":"未核对")+"；表格："+esc(matchStatus(it))+"）":"")+((it.costs||[]).some(function(e){return e.cents!=null;})?" · 成本："+(it.costs||[]).filter(function(e){return e.cents!=null;}).map(function(e){return esc(e.custom?(e.customLabel||"其他"):e.label)+" "+fmtMoney(e.cents);}).join("、"):"")+"</td></tr>"}).join("")||"<tr><td colspan='6'>暂无清单</td></tr>";
   var cnt=function(s){return packet.checklist.filter(function(it){return it.status===s}).length};
   var cpaBlock=packet.cpaReview?("<p>用户自记复核记录：已送 CPA 复核 · 日期："+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · 备注："+esc(packet.cpaReview.note):"")+"（本记录由用户填写，不代表 CPA 已签字；CPA 签字见下方签字栏手签）</p>"):("<p>会计师审核确认栏（请会计师审核后签字，平台不替代签字）：<br>姓名：________________ 持证号：________________ 签字：________________ 日期：________________<br>审核意见：________________________________________</p>");
   var dLines=draftLines();
@@ -1462,14 +1457,7 @@ $("btnPrint").onclick=function(){
   var wList=computeWarnings();
   var warnPrint="<h2>IRS 对照提醒（基础版）</h2>";
   warnPrint+=wList.length?("<ul>"+wList.map(function(x){return "<li>"+esc(x.text)+" "+esc(x.action)+"</li>";}).join("")+"</ul><p>以上为整理层面的提醒，不是 IRS 的结论；有疑问请找 CPA。</p>"):"<p>暂无提醒。</p>";
-  var sheetsBlock="<h2>今年收入填报（简单版，按收入类型）</h2>";
-  if(!(packet.sheets||[]).length){sheetsBlock+="<p>暂无填报项。</p>";}
-  else{
-    sheetsBlock+="<table><tr><th>填报项</th><th>说明</th><th>收入</th><th>成本合计</th><th>小计</th><th>凭证</th></tr>"+packet.sheets.map(function(sh){
-      var det=(sh.expenses||[]).filter(function(e){return e.cents!=null;}).map(function(e){return esc(e.custom?(e.customLabel||"其他"):e.label)+" "+fmtMoney(e.cents);}).join(" · ");
-      return "<tr><td>"+esc(sh.title)+"</td><td>"+esc(sh.who||"")+(sh.who2?" · "+esc(sh.who2):"")+"</td><td>"+(sh.incomeCents==null?"—":fmtMoney(sh.incomeCents))+"</td><td>"+fmtMoney(sheetExpTotal(sh))+(det?"<br>"+det:"")+"</td><td>"+(sheetNet(sh)==null?"—":fmtMoney(sheetNet(sh)))+"</td><td>"+esc(sh.evidence||"未上传（可缺）")+"</td></tr>";
-    }).join("")+"</table><p>填报小计为用户自填数字之和，非申报表；同一笔收入不要在第 4 节重复填；抵扣资格与比例由持证税务师确认。</p>";
-  }
+  var sheetsBlock="";
   $("printArea").innerHTML="<h1>报税包整理清单</h1><p>账号："+esc(currentUser)+" · 导出时间："+esc(new Date().toLocaleString())+"</p><p>收件会计师（客户自填，平台不验证、不背书）："+((packet.priorCpa&&packet.priorCpa.name)?esc(packet.priorCpa.name)+(packet.priorCpa.contact?" · "+esc(packet.priorCpa.contact):""):"未指定")+"</p><p>只整理、不算税、不报税、不给税务结论。打印版汇总在前：先是证据数字汇总（预估草稿），后附清单；数字均为用户确认的证据数字，须 CPA 对照凭证与表格数核对；均不含社保号；可对接任何一家报税软件，不锁一家。</p>"+draftBlock+sheetsBlock+warnPrint+"<p>合计："+packet.checklist.length+" 项 · 已上传："+cnt("uploaded")+" · 不适用："+cnt("na")+" · 待 transcript："+cnt("pending")+" · 未开始："+cnt("not-started")+"</p><table><tr><th>#</th><th>表</th><th>付款方</th><th>今年需备文件</th><th>状态</th><th>原因/文件名</th></tr>"+rows+"</table><p>变化问答："+esc(JSON.stringify(packet.changes))+"</p><p>Transcript："+esc(packet.transcript||"无")+"</p>"+cpaBlock;
   packet.exports.push(new Date().toLocaleString()+" 打印 / 另存为 PDF 清单（"+packet.checklist.length+" 项）");savePacket();renderExports();
   window.print();
