@@ -319,7 +319,7 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 "use strict";
 var FORM_MAP=[
 ["W-2","今年 W-2（按去年每个雇主）"],["1099-INT","今年 1099-INT（按去年每个付款方）"],["1099-DIV","今年 1099-DIV（按去年每个付款方）"],["1099-R","今年 1099-R（按去年每个付款方）"],["SSA-1099","今年 SSA-1099"],["1099-B","今年 1099-B + 年终券商对账单"],["1099-G","今年 1099-G（州退税 / 失业金）"],["1099-MISC","今年 1099-MISC（按去年每个付款方，含版税/租金/奖金亚类）"],["1099-K","今年 1099-K（按去年每个平台）"],["1099-S","今年 1099-S + 过户结算单"],["1099-C","今年 1099-C"],["1099-NEC","今年 1099-NEC（按去年每个付款方）"],["W-2G","今年 W-2G（按去年每个付款方）"],
-["Schedule C","今年 Schedule C 记录：收入、分类支出收据、去年报过的居家办公/车辆记录"],["Schedule E","今年 Schedule E 记录（按房产）：租金、1098、税单、维修收据"],["Schedule F","今年 Schedule F 记录"],["Schedule K-1","今年 K-1（按去年每个实体）"],
+["Schedule C","今年 Schedule C 记录：收入、分类支出收据、去年报过的居家办公/车辆记录"],["Schedule E","今年 Schedule E 记录（按房产）：租金、1098、税单、维修收据"],["Schedule F","今年 Schedule F 记录"],["Schedule SE","今年 Schedule SE 记录：自雇收入、自雇税缴款确认"],["Schedule K-1","今年 K-1（按去年每个实体）"],
 ["1098","今年 1098（按去年每个贷款方）"],["1098-E","今年 1098-E（按去年每个贷款方）"],["1098-T","今年 1098-T（按去年每个学校）"],["Form 2441","今年托育服务方证明"],["房产税单","今年各管辖区房产税单"],["医疗收据","今年医疗/牙科收据汇总（不含诊断）"],["捐赠收据","今年捐赠收据 / 确认函"],
 ["1095-A","今年 1095-A"],["1095-B/C","今年 1095-B / C（如收到）"],["5498","今年 5498 / 供款确认"],["5498-SA","今年 5498-SA"],["1099-SA","今年 1099-SA"],
 ["预估税","今年预估税缴款确认（联邦 + 覆盖 10 州中去年报过的州）"],["延期缴款","今年延期缴款确认（如今年办延期）"],["IRS/州通知","今年收到的新通知（只上传，不解读）"]
@@ -787,7 +787,7 @@ $("btnDeletePacket").onclick=function(){
   packet=newPacket();savePacket();renderAll();alert("已删除本包。");
 };
 var FORM_TOKENS=[
-["W-2G","W-2G"],["W-2","W-2"],["1099-INT","1099-INT"],["1099-DIV","1099-DIV"],["1099-R","1099-R"],["SSA-1099","SSA-1099"],["1099-B","1099-B"],["1099-G","1099-G"],["1099-MISC","1099-MISC"],["1099-K","1099-K"],["1099-S","1099-S"],["1099-C","1099-C"],["1099-NEC","1099-NEC"],["1098-E","1098-E"],["1098-T","1098-T"],["1098","1098(?![-])"],["Schedule C","Schedule C(?![A-Z])"],["Schedule E","Schedule E(?![A-Z])"],["Schedule F","Schedule F(?![A-Z])"],["Schedule K-1","(?:Schedule )?K-1"],["Form 2441","2441"],["1095-A","1095-A"],["1095-B/C","1095-[BC]"],["5498-SA","5498-SA"],["5498","5498(?![-])"],["1099-SA","1099-SA"]
+["W-2G","W-2G"],["W-2","W-2"],["1099-INT","1099-INT"],["1099-DIV","1099-DIV"],["1099-R","1099-R"],["SSA-1099","SSA-1099"],["1099-B","1099-B"],["1099-G","1099-G"],["1099-MISC","1099-MISC"],["1099-K","1099-K"],["1099-S","1099-S"],["1099-C","1099-C"],["1099-NEC","1099-NEC"],["1098-E","1098-E"],["1098-T","1098-T"],["1098","1098(?![-])"],["Schedule C","Schedule C(?![A-Z])"],["Schedule E","Schedule E(?![A-Z])"],["Schedule F","Schedule F(?![A-Z])"],["Schedule SE","Schedule SE(?![A-Z])"],["Schedule K-1","(?:Schedule )?K-1"],["Form 2441","2441"],["1095-A","1095-A"],["1095-B/C","1095-[BC]"],["5498-SA","5498-SA"],["5498","5498(?![-])"],["1099-SA","1099-SA"]
 ];
 function detectFormsOn(text){
   var found=[];
@@ -800,7 +800,7 @@ function detectFormsOn(text){
   return ordered;
 }
 var FLAT_NEEDLES=[
-["W-2G","W2G"],["W-2","W2"],["1099-INT","1099INT"],["1099-DIV","1099DIV"],["1099-R","1099R"],["SSA-1099","SSA1099"],["1099-B","1099B"],["1099-G","1099G"],["1099-MISC","1099MISC"],["1099-K","1099K"],["1099-S","1099S"],["1099-C","1099C"],["1099-NEC","1099NEC"],["1098-E","1098E"],["1098-T","1098T"],["1098","1098"],["Schedule C","ScheduleC"],["Schedule E","ScheduleE"],["Schedule F","ScheduleF"],["Schedule K-1","ScheduleK1"],["Schedule K-1","K1"],["Form 2441","2441"],["1095-A","1095A"],["1095-B/C","1095B"],["1095-B/C","1095C"],["5498-SA","5498SA"],["5498","5498"],["1099-SA","1099SA"]
+["W-2G","W2G"],["W-2","W2"],["1099-INT","1099INT"],["1099-DIV","1099DIV"],["1099-R","1099R"],["SSA-1099","SSA1099"],["1099-B","1099B"],["1099-G","1099G"],["1099-MISC","1099MISC"],["1099-K","1099K"],["1099-S","1099S"],["1099-C","1099C"],["1099-NEC","1099NEC"],["1098-E","1098E"],["1098-T","1098T"],["1098","1098"],["Schedule C","ScheduleC"],["Schedule E","ScheduleE"],["Schedule F","ScheduleF"],["Schedule SE","ScheduleSE"],["Schedule K-1","ScheduleK1"],["Schedule K-1","K1"],["Form 2441","2441"],["1095-A","1095A"],["1095-B/C","1095B"],["1095-B/C","1095C"],["5498-SA","5498SA"],["5498","5498"],["1099-SA","1099SA"]
 ];
 function detectFormsFlat(text){
   var flat=text.replace(/[^A-Za-z0-9]/g,"");
@@ -810,13 +810,45 @@ function detectFormsFlat(text){
   FORM_MAP.forEach(function(f){if(found.indexOf(f[0])>=0)ordered.push(f[0]);});
   return ordered;
 }
+var FILING_CONTEXT={
+"W-2":[/Wage and Tax Statement/i],
+"W-2G":[/Certain Gambling Winnings/i],
+"1099-INT":[/Form 1099-INT/i],
+"1099-DIV":[/Form 1099-DIV/i],
+"1099-R":[/Form 1099-R/i],
+"SSA-1099":[/Form SSA-1099/i],
+"1099-B":[/Form 1099-B/i],
+"1099-G":[/Form 1099-G/i],
+"1099-MISC":[/Form 1099-MISC/i],
+"1099-K":[/Form 1099-K/i],
+"1099-S":[/Form 1099-S/i],
+"1099-C":[/Form 1099-C/i],
+"1099-NEC":[/Form 1099-NEC/i],
+"1098":[/Form 1098(?![-\d])/i],
+"1098-E":[/Form 1098-E/i],
+"1098-T":[/Form 1098-T/i],
+"Form 2441":[/Form 2441 \(20\d\d\)/i],
+"1095-A":[/Form 1095-A/i],
+"5498":[/Form 5498(?![-\d])/i],
+"5498-SA":[/Form 5498-SA/i],
+"1099-SA":[/Form 1099-SA/i],
+"Schedule C":[/SCHEDULE C(?![A-Z])/],
+"Schedule E":[/SCHEDULE E(?![A-Z])/],
+"Schedule F":[/SCHEDULE F(?![A-Z])/],
+"Schedule SE":[/SCHEDULE SE(?![A-Z])/],
+"Schedule K-1":[/Partner's Share of Income/i,/Shareholder's Share of Income/i,/Beneficiary's Share of Income/i]
+};
 function detectForms(text){
-  var f=detectFormsOn(text);
-  if(f.length)return f;
   var t2=text.replace(/\s*-\s*/g,"-").replace(/(\d)\s+(?=\d)/g,"$1");
-  f=detectFormsOn(t2);
-  if(f.length)return f;
-  return detectFormsFlat(text);
+  var passes=[detectFormsOn(text),detectFormsOn(t2),detectFormsFlat(text)];
+  for(var i=0;i<passes.length;i++){
+    var f=passes[i].filter(function(form){
+      var ctx=FILING_CONTEXT[form];if(!ctx)return true;
+      return ctx.some(function(re){return re.test(text)||re.test(t2);});
+    });
+    if(f.length)return f;
+  }
+  return [];
 }
 async function inflateRaw(buf){
   var out=await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer();
@@ -920,7 +952,7 @@ function renderRecognizePreview(forms,text){
     box.innerHTML="<p class='small'>未识别出已知表类型（本机读到 "+nc+" 个非空字符）。"+why+"请走路径一手动输入。</p>"+(prev?"<p class='small'>本机读到的文字开头（仅本机显示，不上传）："+esc(prev)+"</p>":"");
     return;
   }
-  var p=document.createElement("p");p.className="small";p.textContent="识别出以下表类型（付款方未自动识别，请核对补填；社保号与金额不会被记入）：";box.appendChild(p);
+  var p=document.createElement("p");p.className="small";p.textContent="识别出以下实报表类型（有实报页才计入；仅在1040行说明里提到的不计入。付款方未自动识别，请核对补填；社保号与金额不会被记入）：";box.appendChild(p);
   forms.forEach(function(f){
     var div=document.createElement("div");div.className="row";div.style.marginBottom="6px";
     var cb=document.createElement("input");cb.type="checkbox";cb.checked=true;cb.style.width="auto";cb.dataset.form=f;
@@ -1249,6 +1281,13 @@ function sheetIncomeLabel(sh){
   if(sh.type==="selfemp")return "今年1月1日–12月31日总收入";
   return "今年金额";
 }
+function sheetEvidenceLabel(sh){
+  if(sh.type==="wages")return "工资单／W-2（可选）：";
+  if(sh.type==="rental")return "租金记录／银行对账单（可选）：";
+  if(sh.type==="selfemp")return "业务收入记录／银行对账单（可选）：";
+  if(sh.type==="interest"||sh.type==="dividends"||sh.type==="retirement"||sh.type==="social")return (sh.who?sh.who+"对账单（可选）：":"银行对账单（可选）：");
+  return "相关凭证（可选）：";
+}
 function renderSheets(){
   var box=$("sheetsBox");if(!box||!packet)return;
   if(!packet.sheets)packet.sheets=[];
@@ -1302,7 +1341,7 @@ function renderSheets(){
       }
     });
     var ev=document.createElement("div");ev.className="row";
-    var evLab=document.createElement("span");evLab.className="small";evLab.textContent="凭证（银行对账单/租约/收据等，可选）：";
+    var evLab=document.createElement("span");evLab.className="small";evLab.textContent=sheetEvidenceLabel(sh);
     var evInp=document.createElement("input");evInp.type="file";evInp.accept=".pdf,.txt,.docx,.xlsx,.jpg,.jpeg,.png";
     evInp.onchange=function(){var f=evInp.files&&evInp.files[0];if(f){sh.evidence=f.name;savePacket();renderSheets();applyCollapse();}};
     ev.appendChild(evLab);ev.appendChild(evInp);
