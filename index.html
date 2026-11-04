@@ -739,9 +739,9 @@ var FLAT_NEEDLES=[
 ["W-2G","W2G"],["W-2","W2"],["1099-INT","1099INT"],["1099-DIV","1099DIV"],["1099-R","1099R"],["SSA-1099","SSA1099"],["1099-B","1099B"],["1099-G","1099G"],["1099-MISC","1099MISC"],["1099-K","1099K"],["1099-S","1099S"],["1099-C","1099C"],["1099-NEC","1099NEC"],["1098-E","1098E"],["1098-T","1098T"],["1098","1098"],["Schedule C","ScheduleC"],["Schedule E","ScheduleE"],["Schedule F","ScheduleF"],["Schedule K-1","ScheduleK1"],["Schedule K-1","K1"],["Form 2441","2441"],["1095-A","1095A"],["1095-B/C","1095B"],["1095-B/C","1095C"],["5498-SA","5498SA"],["5498","5498"],["1099-SA","1099SA"]
 ];
 function detectFormsFlat(text){
-  var flat=text.replace(/\s+/g,"");
+  var flat=text.replace(/[^A-Za-z0-9]/g,"");
   var found=[];
-  FLAT_NEEDLES.forEach(function(n){if(flat.indexOf(n[1])>=0&&found.indexOf(n[0])<0)found.push(n[0]);});
+  FLAT_NEEDLES.forEach(function(n){var nd=n[1].replace(/[^A-Za-z0-9]/g,"");if(nd&&flat.indexOf(nd)>=0&&found.indexOf(n[0])<0)found.push(n[0]);});
   var ordered=[];
   FORM_MAP.forEach(function(f){if(found.indexOf(f[0])>=0)ordered.push(f[0]);});
   return ordered;
@@ -817,10 +817,10 @@ $("btnRecognize").onclick=async function(){
     if(/\.txt$/i.test(file.name))text=new TextDecoder().decode(buf);
     else if(/\.pdf$/i.test(file.name))text=await extractPdfText(buf);
     else{text=new TextDecoder().decode(buf);}
-    if(!text||text.replace(/\s/g,"").length<20){$("recognizeMsg").textContent="未能从该文件中读出文字（本机只读到 "+text.replace(/\s/g,"").length+" 个非空字符，可能是扫描件或加密文件），请走路径一手动输入。";$("recognizeBox").innerHTML="";return;}
     var forms=detectForms(text);
-    renderRecognizePreview(forms,text);
-    $("recognizeMsg").textContent=forms.length?("识别出 "+forms.length+" 种表，请核对后加入。"):"";
+    if(forms.length){renderRecognizePreview(forms,text);$("recognizeMsg").textContent="识别出 "+forms.length+" 种表，请核对后加入。";}
+    else if(!text||text.replace(/\s/g,"").length<20){$("recognizeMsg").textContent="未能从该文件中读出文字（本机只读到 "+text.replace(/\s/g,"").length+" 个非空字符，可能是扫描件或加密文件），请走路径一手动输入。";$("recognizeBox").innerHTML="";}
+    else{renderRecognizePreview(forms,text);$("recognizeMsg").textContent="";}
   }catch(e){
     $("recognizeMsg").textContent="识别失败，请走路径一手动输入。";$("recognizeBox").innerHTML="";
   }
