@@ -725,7 +725,7 @@ $("btnDeletePacket").onclick=function(){
 var FORM_TOKENS=[
 ["W-2G","W-2G"],["W-2","W-2"],["1099-INT","1099-INT"],["1099-DIV","1099-DIV"],["1099-R","1099-R"],["SSA-1099","SSA-1099"],["1099-B","1099-B"],["1099-G","1099-G"],["1099-MISC","1099-MISC"],["1099-K","1099-K"],["1099-S","1099-S"],["1099-C","1099-C"],["1099-NEC","1099-NEC"],["1098-E","1098-E"],["1098-T","1098-T"],["1098","1098(?![-])"],["Schedule C","Schedule C(?![A-Z])"],["Schedule E","Schedule E(?![A-Z])"],["Schedule F","Schedule F(?![A-Z])"],["Schedule K-1","(?:Schedule )?K-1"],["Form 2441","2441"],["1095-A","1095-A"],["1095-B/C","1095-[BC]"],["5498-SA","5498-SA"],["5498","5498(?![-])"],["1099-SA","1099-SA"]
 ];
-function detectForms(text){
+function detectFormsOn(text){
   var found=[];
   FORM_TOKENS.forEach(function(t){
     var re=new RegExp("(^|[^A-Za-z0-9])"+t[1]+"([^A-Za-z0-9]|$)","i");
@@ -734,6 +734,25 @@ function detectForms(text){
   var ordered=[];
   FORM_MAP.forEach(function(f){if(found.indexOf(f[0])>=0)ordered.push(f[0]);});
   return ordered;
+}
+var FLAT_NEEDLES=[
+["W-2G","W2G"],["W-2","W2"],["1099-INT","1099INT"],["1099-DIV","1099DIV"],["1099-R","1099R"],["SSA-1099","SSA1099"],["1099-B","1099B"],["1099-G","1099G"],["1099-MISC","1099MISC"],["1099-K","1099K"],["1099-S","1099S"],["1099-C","1099C"],["1099-NEC","1099NEC"],["1098-E","1098E"],["1098-T","1098T"],["1098","1098"],["Schedule C","ScheduleC"],["Schedule E","ScheduleE"],["Schedule F","ScheduleF"],["Schedule K-1","ScheduleK1"],["Schedule K-1","K1"],["Form 2441","2441"],["1095-A","1095A"],["1095-B/C","1095B"],["1095-B/C","1095C"],["5498-SA","5498SA"],["5498","5498"],["1099-SA","1099SA"]
+];
+function detectFormsFlat(text){
+  var flat=text.replace(/\s+/g,"");
+  var found=[];
+  FLAT_NEEDLES.forEach(function(n){if(flat.indexOf(n[1])>=0&&found.indexOf(n[0])<0)found.push(n[0]);});
+  var ordered=[];
+  FORM_MAP.forEach(function(f){if(found.indexOf(f[0])>=0)ordered.push(f[0]);});
+  return ordered;
+}
+function detectForms(text){
+  var f=detectFormsOn(text);
+  if(f.length)return f;
+  var t2=text.replace(/\s*-\s*/g,"-").replace(/(\d)\s+(?=\d)/g,"$1");
+  f=detectFormsOn(t2);
+  if(f.length)return f;
+  return detectFormsFlat(text);
 }
 async function extractPdfText(buf){
   var bytes=new Uint8Array(buf);
@@ -755,9 +774,16 @@ async function extractPdfText(buf){
   }
   return texts.join(" ");
 }
-function renderRecognizePreview(forms){
+function renderRecognizePreview(forms,text){
   var box=$("recognizeBox");box.innerHTML="";
-  if(!forms.length){box.innerHTML="<p class='small'>未识别出已知表类型，请走路径一手动输入，或确认文件是去年报税表全文。</p>";return;}
+  if(!forms.length){
+    var t=text||"";
+    var nc=t.replace(/\s/g,"").length;
+    var prev=t.replace(/\s+/g," ").slice(0,200);
+    var why=/[A-Za-z]{3,}/.test(prev)?"读出的文字里没有出现已知表名，可能是表格标题印成了图片或矢量图，或表名被拆成了多段，":"读出的文字多为乱码或无可读英文，可能是自定义字体编码或图片型 PDF，表名无法按文字匹配，";
+    box.innerHTML="<p class='small'>未识别出已知表类型（本机读到 "+nc+" 个非空字符）。"+why+"请走路径一手动输入。</p>"+(prev?"<p class='small'>本机读到的文字开头（仅本机显示，不上传）："+esc(prev)+"</p>":"");
+    return;
+  }
   var p=document.createElement("p");p.className="small";p.textContent="识别出以下表类型（付款方未自动识别，请核对补填；社保号与金额不会被记入）：";box.appendChild(p);
   forms.forEach(function(f){
     var div=document.createElement("div");div.className="row";div.style.marginBottom="6px";
@@ -791,9 +817,9 @@ $("btnRecognize").onclick=async function(){
     if(/\.txt$/i.test(file.name))text=new TextDecoder().decode(buf);
     else if(/\.pdf$/i.test(file.name))text=await extractPdfText(buf);
     else{text=new TextDecoder().decode(buf);}
-    if(!text||text.replace(/\s/g,"").length<20){$("recognizeMsg").textContent="未能从该文件中读出文字（可能是扫描件或加密文件），请走路径一手动输入。";$("recognizeBox").innerHTML="";return;}
+    if(!text||text.replace(/\s/g,"").length<20){$("recognizeMsg").textContent="未能从该文件中读出文字（本机只读到 "+text.replace(/\s/g,"").length+" 个非空字符，可能是扫描件或加密文件），请走路径一手动输入。";$("recognizeBox").innerHTML="";return;}
     var forms=detectForms(text);
-    renderRecognizePreview(forms);
+    renderRecognizePreview(forms,text);
     $("recognizeMsg").textContent=forms.length?("识别出 "+forms.length+" 种表，请核对后加入。"):"";
   }catch(e){
     $("recognizeMsg").textContent="识别失败，请走路径一手动输入。";$("recognizeBox").innerHTML="";
