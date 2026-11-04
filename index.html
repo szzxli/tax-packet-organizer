@@ -187,7 +187,20 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <div><label for="cpaNote">备注（可选）</label><input id="cpaNote" placeholder="例如：已送 CPA 复核，需补 1 项"></div>
 </div>
 <p><button id="btnCpaReview" class="secondary">记录：已送 CPA 复核（用户自记）</button> <button id="btnCpaClear" class="secondary">清除复核记录</button></p>
+<p class="small" id="exportCpaLine"></p>
 <ul id="exportLog"></ul>
+</div>
+
+<div class="card">
+<h2>6b · 去年会计师（还是找去年那位）</h2>
+<p class="muted small">还是找去年会计师？在这里填上他/她的信息，包就按这位收件；平台不验证、不背书此人——这是你自己的选择，不是平台推荐。信息只存本机，下次登录自动带出供你确认；换人时改掉或清除即可。</p>
+<div class="row">
+<div><label for="priorCpaName">姓名 / 事务所</label><input id="priorCpaName" placeholder="例如：张会计师 / XX 事务所"></div>
+<div><label for="priorCpaContact">联系方式（邮箱或电话，客户自填）</label><input id="priorCpaContact" placeholder="例如：cpa@example.com"></div>
+</div>
+<div><label for="priorCpaNote">备注（可选）</label><input id="priorCpaNote" placeholder="例如：去年经手的 Schedule C"></div>
+<p><button id="btnSavePriorCpa">保存去年会计师</button> <button id="btnClearPriorCpa" class="secondary">清除</button> <span id="priorCpaMsg" class="small"></span></p>
+<p class="small" id="priorCpaStatus"></p>
 </div>
 
 <div class="card" id="subCard">
@@ -263,7 +276,7 @@ function pending(){return load("tpo_pending",{})}
 function fallbackHash(text){var h=2166136261;for(var i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return "fallback-"+(h>>>0).toString(16)}
 function sha(text){try{if(window.crypto&&crypto.subtle)return crypto.subtle.digest("SHA-256",new TextEncoder().encode(text)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}).catch(function(){return fallbackHash(text)})}catch(e){}return Promise.resolve(fallbackHash(text))}
 var currentUser=null,packet=null;
-function newPacket(){return {changes:{},lastYear:[],checklist:[],transcript:null,exports:[],uncertain:[],cpaReview:null,orders:[]}}
+function newPacket(){return {changes:{},lastYear:[],checklist:[],transcript:null,exports:[],uncertain:[],cpaReview:null,orders:[],priorCpa:{name:"",contact:"",note:""}}}
 function statusText(s){return s==="uploaded"?"已上传":s==="na"?"不适用":s==="pending"?"待 transcript":"未开始"}
 function renderCpa(){
   var t=$("cpaReviewText");
@@ -494,7 +507,7 @@ function renderExports(){
   packet.exports.forEach(function(e){var li=document.createElement("li");li.className="small";li.textContent=e;ul.appendChild(li)});
   $("transRecord").textContent=packet.transcript?packet.transcript:"无";
 }
-function renderAll(){renderChanges();renderLast();renderChecklist();renderExports();renderCpa();renderDraft();renderWarnings();renderSubStatus();renderOrders();applyCollapse()}
+function renderAll(){renderChanges();renderLast();renderChecklist();renderExports();renderCpa();renderDraft();renderWarnings();renderSubStatus();renderOrders();renderPriorCpa();applyCollapse()}
 function secKeyFromH2(t){
   if(t.indexOf("5d")==0)return "s5d";
   if(t.indexOf("5c")==0)return "s5c";
@@ -504,6 +517,7 @@ function secKeyFromH2(t){
   if(t.indexOf("4")==0)return "s4";
   if(t.indexOf("5b")==0)return "s5b";
   if(t.indexOf("5")==0)return "s5";
+  if(t.indexOf("6b")==0)return "s6b";
   if(t.indexOf("6")==0)return "s6";
   if(t.indexOf("订阅")==0)return "sub";
   if(t.indexOf("安全")==0)return "safe";
@@ -543,6 +557,7 @@ function secSummary(key){
   if(key==="s5b")return "探针已开启";
   if(key==="s5c"){var ls=draftLines();if(!ls.length)return "未录";var tot=draftTotals();var v=ls.filter(function(it){return it.voucherChecked}).length;var m=ls.filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length;return "已录 "+ls.length+" 项数字，预估合计 "+fmtMoney(tot.grand)+"（凭证已核对 "+v+" · 表格一致 "+m+"）";}
   if(key==="s5d"){var w=computeWarnings();if(!w.length)return "暂无提醒";var d=w.filter(function(x){return x.text.indexOf("不一致")>=0}).length;var m=w.filter(function(x){return x.text.indexOf("未开始")>=0||x.text.indexOf("待 transcript")>=0}).length;return w.length+" 条提醒（差异 "+d+" · 缺项 "+m+"）";}
+  if(key==="s6b")return (packet.priorCpa&&packet.priorCpa.name)?("已指定："+packet.priorCpa.name):"未指定";
   if(key==="s6"){var n=packet.exports.filter(function(e){return e.indexOf("用户自记")<0}).length;var s=n?("已导出 "+n+" 次"):"未导出";if(packet.cpaReview)s+=" · 用户自记：已送 CPA 复核";return s;}
   if(key==="sub"){var os=(packet.orders||[]);return os.length?("演示订单 "+os.length+" 笔（未扣款）"):"即将推出，暂未开通付费";}
   if(key==="safe")return "纯本地演示";
@@ -555,12 +570,13 @@ function secDone(key){
   if(key==="s4")return packet.checklist.length>0&&packet.checklist.every(function(it){return it.status==="uploaded"||it.status==="na"});
   if(key==="s5c"){var ls=draftLines();return ls.length>0&&ls.every(function(it){return it.voucherChecked&&it.formAmountCents!=null&&it.formAmountCents===it.figure.cents});}
   if(key==="s5d"){return computeWarnings().length===0&&draftLines().length>0;}
+  if(key==="s6b")return !!(packet.priorCpa&&packet.priorCpa.name);
   if(key==="s6")return packet.exports.some(function(e){return e.indexOf("用户自记")<0});
   return false;
 }
 function applyCollapse(){
   if(!packet)return;
-  if(!packet.collapsed)packet.collapsed={s3:true,s3b:true,s4:true,s4b:true,s5:true,s5b:true,s5c:true,s5d:true,s6:true,sub:true,safe:true};
+  if(!packet.collapsed)packet.collapsed={s3:true,s3b:true,s4:true,s4b:true,s5:true,s5b:true,s5c:true,s5d:true,s6:true,s6b:true,sub:true,safe:true};
   Object.keys(secHeads).forEach(function(key){
     var h=secHeads[key];
     var collapsed=!!packet.collapsed[key];
@@ -872,7 +888,7 @@ $("btnCpaReview").onclick=function(){
 };
 $("btnCpaClear").onclick=function(){packet.cpaReview=null;savePacket();renderCpa();};
 $("btnExportJson").onclick=function(){
-  var data={tool:"报税包整理器 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||"",figure:it.figure?{category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||""}:null,voucher_checked:!!it.voucherChecked,form_amount_cents:it.formAmountCents!=null?it.formAmountCents:null,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),draft_estimate:{lines:draftLines().map(function(it){return {form:it.form,payer:it.payer,category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||"",voucher_checked:!!it.voucherChecked,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),totals_by_category:(function(){var o={};var t=draftTotals();Object.keys(t.byCat).forEach(function(c){o[c]=fmtMoney(t.byCat[c]);});return o;})(),grand_total_display:fmtMoney(draftTotals().grand),counts:{figures:draftLines().length,voucher_checked:draftLines().filter(function(it){return it.voucherChecked}).length,form_matched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length,form_mismatched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length},label:"预估草稿，非申报表，须 CPA 对照凭证与表格数核对"},warnings:computeWarnings(),transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存本机，不进导出文件。复核记录由用户自记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。预估草稿金额为用户确认的证据数字，非申报表，须 CPA 对照凭证与表格数核对；IRS 对照提醒只作请核对提醒，不代表 IRS 已认定任何问题；工具不提取、不保存社保号。"};
+  var data={tool:"报税包整理器 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||"",figure:it.figure?{category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||""}:null,voucher_checked:!!it.voucherChecked,form_amount_cents:it.formAmountCents!=null?it.formAmountCents:null,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),draft_estimate:{lines:draftLines().map(function(it){return {form:it.form,payer:it.payer,category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||"",voucher_checked:!!it.voucherChecked,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),totals_by_category:(function(){var o={};var t=draftTotals();Object.keys(t.byCat).forEach(function(c){o[c]=fmtMoney(t.byCat[c]);});return o;})(),grand_total_display:fmtMoney(draftTotals().grand),counts:{figures:draftLines().length,voucher_checked:draftLines().filter(function(it){return it.voucherChecked}).length,form_matched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length,form_mismatched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length},label:"预估草稿，非申报表，须 CPA 对照凭证与表格数核对"},warnings:computeWarnings(),prior_cpa:packet.priorCpa||null,transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存本机，不进导出文件。复核记录由用户自记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。预估草稿金额为用户确认的证据数字，非申报表，须 CPA 对照凭证与表格数核对；IRS 对照提醒只作请核对提醒，不代表 IRS 已认定任何问题；工具不提取、不保存社保号。去年会计师信息由客户自填，平台不验证、不背书。"};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tax-packet-checklist.json";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
   packet.exports.push(new Date().toLocaleString()+" 导出机器可读清单 JSON（"+packet.checklist.length+" 项）");savePacket();renderExports();
@@ -891,7 +907,7 @@ $("btnPrint").onclick=function(){
   var wList=computeWarnings();
   var warnPrint="<h2>IRS 对照提醒（基础版）</h2>";
   warnPrint+=wList.length?("<ul>"+wList.map(function(x){return "<li>"+esc(x.text)+" "+esc(x.action)+"</li>";}).join("")+"</ul><p>以上为整理层面的提醒，不是 IRS 的结论；有疑问请找 CPA。</p>"):"<p>暂无提醒。</p>";
-  $("printArea").innerHTML="<h1>报税包整理清单</h1><p>账号："+esc(currentUser)+" · 导出时间："+esc(new Date().toLocaleString())+"</p><p>只整理、不算税、不报税、不给税务结论。打印版汇总在前：先是证据数字汇总（预估草稿），后附清单；数字均为用户确认的证据数字，须 CPA 对照凭证与表格数核对；均不含社保号；可对接任何一家报税软件，不锁一家。</p>"+draftBlock+warnPrint+"<p>合计："+packet.checklist.length+" 项 · 已上传："+cnt("uploaded")+" · 不适用："+cnt("na")+" · 待 transcript："+cnt("pending")+" · 未开始："+cnt("not-started")+"</p><table><tr><th>#</th><th>表</th><th>付款方</th><th>今年需备文件</th><th>状态</th><th>原因/文件名</th></tr>"+rows+"</table><p>变化问答："+esc(JSON.stringify(packet.changes))+"</p><p>Transcript："+esc(packet.transcript||"无")+"</p>"+cpaBlock;
+  $("printArea").innerHTML="<h1>报税包整理清单</h1><p>账号："+esc(currentUser)+" · 导出时间："+esc(new Date().toLocaleString())+"</p><p>收件会计师（客户自填，平台不验证、不背书）："+((packet.priorCpa&&packet.priorCpa.name)?esc(packet.priorCpa.name)+(packet.priorCpa.contact?" · "+esc(packet.priorCpa.contact):""):"未指定")+"</p><p>只整理、不算税、不报税、不给税务结论。打印版汇总在前：先是证据数字汇总（预估草稿），后附清单；数字均为用户确认的证据数字，须 CPA 对照凭证与表格数核对；均不含社保号；可对接任何一家报税软件，不锁一家。</p>"+draftBlock+warnPrint+"<p>合计："+packet.checklist.length+" 项 · 已上传："+cnt("uploaded")+" · 不适用："+cnt("na")+" · 待 transcript："+cnt("pending")+" · 未开始："+cnt("not-started")+"</p><table><tr><th>#</th><th>表</th><th>付款方</th><th>今年需备文件</th><th>状态</th><th>原因/文件名</th></tr>"+rows+"</table><p>变化问答："+esc(JSON.stringify(packet.changes))+"</p><p>Transcript："+esc(packet.transcript||"无")+"</p>"+cpaBlock;
   packet.exports.push(new Date().toLocaleString()+" 打印 / 另存为 PDF 清单（"+packet.checklist.length+" 项）");savePacket();renderExports();
   window.print();
 };
@@ -907,6 +923,29 @@ $("btnDemoPay").onclick=function(){
   os.push({id:"DEMO-"+Date.now(), at:new Date().toLocaleString(), packs:pk, amountCents:payTotalCents(pk), method:$("payMethod").value, status:"演示订单·未扣款"});
   savePacket(); renderOrders(); renderSubStatus();
   $("payMsg").textContent="演示订单已生成（未扣款）。季票功能待上线后凭订单开通。";
+};
+function renderPriorCpa(){
+  if(!packet) return;
+  if(!packet.priorCpa) packet.priorCpa={name:"",contact:"",note:""};
+  var n=$("priorCpaName"), c=$("priorCpaContact"), t=$("priorCpaNote");
+  if(n && document.activeElement!==n) n.value=packet.priorCpa.name||"";
+  if(c && document.activeElement!==c) c.value=packet.priorCpa.contact||"";
+  if(t && document.activeElement!==t) t.value=packet.priorCpa.note||"";
+  var st=$("priorCpaStatus");
+  if(st) st.textContent=packet.priorCpa.name?("已指定去年会计师："+packet.priorCpa.name+(packet.priorCpa.contact?" · "+packet.priorCpa.contact:"")+(packet.priorCpa.note?" · "+packet.priorCpa.note:"")):"未指定。导出后你可自行发给任何一位会计师。";
+  var el=$("exportCpaLine");
+  if(el) el.textContent=packet.priorCpa.name?("本包收件会计师（你指定的去年会计师）："+packet.priorCpa.name+(packet.priorCpa.contact?" · "+packet.priorCpa.contact:"")):"未指定去年会计师；导出后你可自行发给任何一位会计师。";
+}
+$("btnSavePriorCpa").onclick=function(){
+  if(!packet) return;
+  packet.priorCpa={name:$("priorCpaName").value.trim(),contact:$("priorCpaContact").value.trim(),note:$("priorCpaNote").value.trim()};
+  savePacket(); renderPriorCpa();
+  $("priorCpaMsg").textContent=packet.priorCpa.name?"已保存。下次登录自动带出供确认。":"已保存（姓名为空，视为未指定）。";
+};
+$("btnClearPriorCpa").onclick=function(){
+  if(!packet) return;
+  packet.priorCpa={name:"",contact:"",note:""};
+  savePacket(); renderPriorCpa(); $("priorCpaMsg").textContent="已清除。";
 };
 (function init(){
   var s=null;try{s=localStorage.getItem("tpo_session")}catch(e){}if(!s)s=memStore["tpo_session"]||null;

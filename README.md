@@ -74,6 +74,10 @@ encryption, and account isolation must be connected and tested separately.
 - Page 2 is the Season Pass subscription page: free vs pass comparison, the 7 extra services with their status, expected $49/season for 1 packet ($25 second packet), quarterly one-time, no auto-renew by default, valid to Oct 15.
 - Page 3 is a demo checkout only: no real payment, no real card numbers collected, no charge. Confirming demo payment only records a demo order in the browser (localStorage) for later reconciliation when the pass launches; it does not unlock unlaunched features.
 
+## Returning CPA path (section 6b)
+- The client may designate last year's CPA (name/contact provided by the client). The platform does not verify or endorse this person; it is the client's own choice, not a platform recommendation.
+- The designation is stored locally, carried over to the next login for confirmation, and can be edited or cleared. It appears in the print header and the JSON export (prior_cpa); the CSV checklist format is unchanged.
+
 ## License
 
 MIT. See LICENSE.
