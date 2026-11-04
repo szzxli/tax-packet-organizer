@@ -206,8 +206,26 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <div class="card" id="subCard">
 <h2>订阅：报税季票（即将推出，暂未开通付费）</h2>
 <p class="muted small">定位：干干净净去见税务师。基础整理永久免费；订阅预计 $49 / 报税季 / 1 个包（假设价，季末复核；价格与开通时间以上线时公布为准），第二包 $25，按季一次性、默认不自动续，有效期至当年 10 月 15 日延期截止日。订阅不算税、不报税、不给税务结论、不判福利与退税资格——你带着今年值得问的候选清单去问税务师，最后能享受哪些，由税务师确认。订阅到期也不删包、不锁导出。</p>
+<h3>价格与套餐</h3>
+<p class="small">季票 $49 / 季 / 1 个包；同一账号第二包 $25。按季一次性、默认不自动续，有效期至当年 10 月 15 日延期截止日。</p>
+<p class="small"><label style="display:inline-block;margin-right:12px"><input type="radio" name="subPacks" value="1" checked style="width:auto"> 1 个包 · $49</label><label style="display:inline-block"><input type="radio" name="subPacks" value="2" style="width:auto"> 2 个包 · $74（首包 $49 + 第二包 $25）</label></p>
 <h3>免费版 vs 季票</h3>
-<p class="small">免费版（现在就能用）：去年 → 今年清单、逐项上传与缺项标红、本地提数与两步核对、5c 预估汇总、5d 基础预警、导出三份、一键删除自己的包。<br>季票（计划中）：以下 7 项额外服务。</p>
+<table>
+<tr><th>功能</th><th>免费版</th><th>季票</th></tr>
+<tr><td>去年 → 今年清单</td><td>✓</td><td>✓</td></tr>
+<tr><td>逐项上传与缺项标红</td><td>✓</td><td>✓</td></tr>
+<tr><td>本地提数与两步核对</td><td>✓</td><td>✓</td></tr>
+<tr><td>预估汇总与基础预警</td><td>✓</td><td>✓</td></tr>
+<tr><td>导出三份</td><td>✓</td><td>✓</td></tr>
+<tr><td>全年提醒线</td><td>—</td><td>季票</td></tr>
+<tr><td>个性化 IRS 探针</td><td>—</td><td>季票</td></tr>
+<tr><td>深度不确定事项包</td><td>—</td><td>季票</td></tr>
+<tr><td>CPA 交接工作台</td><td>—</td><td>季票</td></tr>
+<tr><td>多包与多年对比</td><td>—</td><td>季票</td></tr>
+<tr><td>批量归档核对</td><td>—</td><td>季票</td></tr>
+<tr><td>优先工具支持</td><td>—</td><td>季票</td></tr>
+</table>
+<p class="small">季票列的 7 项即下面 7 项额外服务，状态见下；免费版功能永久免费。</p>
 <h3>7 项额外服务与状态</h3>
 <ul class="small">
 <li>全年提醒线 —— 计划中</li>
@@ -218,6 +236,7 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <li>批量归档核对 —— 计划中</li>
 <li>优先工具支持 —— 计划中</li>
 </ul>
+<p class="small">条款：订阅不算税、不报税、不给税务结论、不判福利与退税资格。退款口径待公布（律师核过后写定）；正式上线前不收真实款项，演示订单不是正式订阅。</p>
 <p class="small" id="subStatus"></p>
 <p><button id="btnBuySub">购买季票（去支付页，演示结账）</button></p>
 <p class="muted small">支付页目前只做演示结账：不接真实支付、不收集真实卡号、不扣款；演示订单只存本机，不提前解锁未上线功能。</p>
@@ -236,12 +255,17 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <div class="card">
 <h2>3 · 支付与订单（演示结账，未开通收款）</h2>
 <p class="notice warn"><b>演示支付：</b>本页不接任何真实支付、不收集真实卡号、不扣款。点“确认演示支付”只在本机生成一笔演示订单，记录你选的包数与金额，供季票上线后核对；季票功能在上线前不提前解锁，演示订单不是正式订阅。</p>
+<p class="small"><b>购买流程：</b>1 选套餐 → 2 确认订单 → 3 演示支付 → 4 查看收据（演示订单，不扣款）。</p>
+<div class="notice" id="paySubCard"></div>
 <div class="row">
 <div><label for="payPacks">包数</label><select id="payPacks"><option value="1">1 个包</option><option value="2">2 个包（第二包 $25）</option></select></div>
 <div><label for="payMethod">支付方式（演示选择，不扣款）</label><select id="payMethod"><option>信用卡（演示）</option><option>借记卡（演示）</option><option>PayPal（演示）</option></select></div>
 </div>
-<p class="small">订单汇总：<span id="paySummary"></span></p>
+<h3>确认订单</h3>
+<div id="payPreview"></div>
 <p><button id="btnDemoPay">确认演示支付（不扣款）</button> <span id="payMsg" class="small"></span></p>
+<h3>收据（点下方订单可切换查看）</h3>
+<div id="payReceipt"></div>
 <h3>我的订单（本机记录）</h3>
 <div id="orderList"></div>
 <p class="small" id="payStatus"></p>
@@ -276,7 +300,7 @@ function pending(){return load("tpo_pending",{})}
 function fallbackHash(text){var h=2166136261;for(var i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return "fallback-"+(h>>>0).toString(16)}
 function sha(text){try{if(window.crypto&&crypto.subtle)return crypto.subtle.digest("SHA-256",new TextEncoder().encode(text)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}).catch(function(){return fallbackHash(text)})}catch(e){}return Promise.resolve(fallbackHash(text))}
 var currentUser=null,packet=null;
-function newPacket(){return {changes:{},lastYear:[],checklist:[],transcript:null,exports:[],uncertain:[],cpaReview:null,orders:[],priorCpa:{name:"",contact:"",note:""}}}
+function newPacket(){return {changes:{},lastYear:[],checklist:[],transcript:null,exports:[],uncertain:[],cpaReview:null,orders:[],priorCpa:{name:"",contact:"",note:""},payPacks:1,selectedOrderId:null}}
 function statusText(s){return s==="uploaded"?"已上传":s==="na"?"不适用":s==="pending"?"待 transcript":"未开始"}
 function renderCpa(){
   var t=$("cpaReviewText");
@@ -589,6 +613,9 @@ function applyCollapse(){
 function subOrders(){ if(!packet) return []; if(!packet.orders) packet.orders=[]; return packet.orders; }
 function renderSubStatus(){
   var el=$("subStatus"); if(!el||!packet) return;
+  var pk0=packet.payPacks||1;
+  var radios=document.querySelectorAll('input[name="subPacks"]');
+  for(var ri=0;ri<radios.length;ri++) radios[ri].checked=(parseInt(radios[ri].value,10)===pk0);
   var os=subOrders();
   if(!os.length){ el.textContent="当前状态：免费版。季票尚未开通，演示订单可在支付页生成（不扣款）。"; return; }
   var last=os[os.length-1];
@@ -596,12 +623,42 @@ function renderSubStatus(){
 }
 function payTotalCents(packs){ return packs>=2 ? 7400 : 4900; }
 function renderOrders(){
-  var sum=$("paySummary");
-  if(sum&&packet){ var pk=parseInt(($("payPacks")||{}).value||"1",10)||1; sum.textContent=(pk>=2?"2 个包（首包 $49 + 第二包 $25）":"1 个包")+" · 合计 "+fmtMoney(payTotalCents(pk))+" · 有效期至当年 10 月 15 日 · 按季一次性、默认不自动续"; }
+  var pk=(packet&&packet.payPacks)||1;
+  var sel=$("payPacks"); if(sel) sel.value=String(pk);
+  var pv=$("payPreview");
+  if(pv&&packet){
+    var methodEl=$("payMethod"); var method=methodEl?methodEl.value:"";
+    var rows="<div class='small'>首包：$49.00";
+    if(pk>=2) rows+=" · 第二包：$25.00";
+    rows+=" · 合计：<b>"+fmtMoney(payTotalCents(pk))+"</b> · 有效期：至当年 10 月 15 日 · 支付方式："+esc(method)+" · 状态：演示订单·未扣款（不扣款）</div>";
+    pv.innerHTML=rows;
+  }
+  var card=$("paySubCard");
+  if(card&&packet){
+    var os0=subOrders();
+    card.innerHTML=os0.length?("当前状态：免费版 + 演示订单 "+os0.length+" 笔（未扣款）。正式订阅生效后，有效期至当年 10 月 15 日；演示订单不提前解锁未上线功能。"):("当前状态：免费版。正式订阅生效后，有效期至当年 10 月 15 日；演示订单不提前解锁未上线功能。");
+  }
   var list=$("orderList"); if(!list||!packet) return;
   var os=subOrders();
   if(!os.length){ list.innerHTML="<p class='muted small'>暂无订单。</p>"; }
-  else{ list.innerHTML=os.map(function(o){ return "<div class='orderitem'><b>"+esc(o.id)+"</b> · "+esc(o.at)+" · "+o.packs+" 个包 · "+fmtMoney(o.amountCents)+" · "+esc(o.method)+" · <span class='badge pending'>演示订单·未扣款</span></div>"; }).join(""); }
+  else{
+    list.innerHTML=os.map(function(o){
+      var sel2=(packet.selectedOrderId===o.id)?" <b>（查看中）</b>":"";
+      return "<div class='orderitem' data-oid='"+esc(o.id)+"'><b>"+esc(o.id)+"</b> · "+esc(o.at)+" · "+o.packs+" 个包 · "+fmtMoney(o.amountCents)+" · "+esc(o.method)+" · <span class='badge pending'>演示订单·未扣款</span>"+sel2+"<br><span class='small'>点此查看收据</span></div>";
+    }).join("");
+    var items=list.querySelectorAll(".orderitem");
+    for(var i=0;i<items.length;i++){
+      (function(el){ el.onclick=function(){ packet.selectedOrderId=el.getAttribute("data-oid"); savePacket(); renderOrders(); }; })(items[i]);
+    }
+  }
+  var rec=$("payReceipt");
+  if(rec){
+    var cur=null;
+    for(var j=0;j<os.length;j++) if(os[j].id===packet.selectedOrderId) cur=os[j];
+    if(!cur && os.length) cur=os[os.length-1];
+    if(!cur) rec.innerHTML="<p class='muted small'>暂无收据。演示支付后收据会出现在这里。</p>";
+    else rec.innerHTML="<div class='orderitem'><b>收据 · "+esc(cur.id)+"</b><br><span class='small'>时间："+esc(cur.at)+"<br>套餐："+cur.packs+" 个包<br>金额："+fmtMoney(cur.amountCents)+"<br>支付方式："+esc(cur.method)+"<br>状态：演示订单·未扣款（未扣款，非正式订阅）<br>有效期说明：正式订阅生效后至当年 10 月 15 日</span></div>";
+  }
   var st=$("payStatus"); if(st) st.textContent=os.length?("共 "+os.length+" 笔演示订单，全部未扣款。正式订阅以季票上线公告为准。"):"";
 }
 var currentPage=1;
@@ -915,12 +972,15 @@ $("navOrganize").onclick=function(){showPage(1)};
 $("navSubscribe").onclick=function(){showPage(2)};
 $("navPay").onclick=function(){showPage(3)};
 $("btnBuySub").onclick=function(){showPage(3)};
-$("payPacks").onchange=function(){renderOrders()};
+$("payPacks").onchange=function(){ if(!packet) return; packet.payPacks=parseInt($("payPacks").value,10)||1; savePacket(); renderOrders(); renderSubStatus(); };
+$("payMethod").onchange=function(){renderOrders()};
 $("btnDemoPay").onclick=function(){
   if(!packet) return;
   var pk=parseInt($("payPacks").value,10)||1;
   var os=subOrders();
-  os.push({id:"DEMO-"+Date.now(), at:new Date().toLocaleString(), packs:pk, amountCents:payTotalCents(pk), method:$("payMethod").value, status:"演示订单·未扣款"});
+  var oid="DEMO-"+Date.now();
+  os.push({id:oid, at:new Date().toLocaleString(), packs:pk, amountCents:payTotalCents(pk), method:$("payMethod").value, status:"演示订单·未扣款"});
+  packet.selectedOrderId=oid;
   savePacket(); renderOrders(); renderSubStatus();
   $("payMsg").textContent="演示订单已生成（未扣款）。季票功能待上线后凭订单开通。";
 };
@@ -947,6 +1007,9 @@ $("btnClearPriorCpa").onclick=function(){
   packet.priorCpa={name:"",contact:"",note:""};
   savePacket(); renderAll(); $("priorCpaMsg").textContent="已清除。";
 };
+document.querySelectorAll('input[name="subPacks"]').forEach(function(r){
+  r.onchange=function(){ if(!packet) return; packet.payPacks=parseInt(r.value,10)||1; savePacket(); renderOrders(); renderSubStatus(); };
+});
 (function init(){
   var s=null;try{s=localStorage.getItem("tpo_session")}catch(e){}if(!s)s=memStore["tpo_session"]||null;
   if(s&&accounts()[s]){currentUser=s;loadPacket(s);showApp()}

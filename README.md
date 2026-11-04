@@ -78,6 +78,10 @@ encryption, and account isolation must be connected and tested separately.
 - The client may designate last year's CPA (name/contact provided by the client). The platform does not verify or endorse this person; it is the client's own choice, not a platform recommendation.
 - The designation is stored locally, carried over to the next login for confirmation, and can be edited or cleared. It appears in the print header and the JSON export (prior_cpa); the CSV checklist format is unchanged.
 
+## Complete subscription page and purchase flow (demo)
+- Subscribe page: price card ($49/season for 1 packet, $74 for 2), plan selection synced with the pay page, free-vs-pass comparison table, the 7 services with status, and terms (refund policy pending legal review; no real charges before launch).
+- Pay page: 4-step flow (pick plan, confirm order, demo pay, receipt), order preview with validity to Oct 15, per-order receipt view, subscription status card, and local order history. Still demo-only: no real payment, no card numbers, no charge.
+
 ## License
 
 MIT. See LICENSE.
