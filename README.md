@@ -82,6 +82,10 @@ encryption, and account isolation must be connected and tested separately.
 - Subscribe page: price card ($49/season for 1 packet, $74 for 2), plan selection synced with the pay page, free-vs-pass comparison table, the 7 services with status, and terms (refund policy pending legal review; no real charges before launch).
 - Pay page: 4-step flow (pick plan, confirm order, demo pay, receipt), order preview with validity to Oct 15, per-order receipt view, subscription status card, and local order history. Still demo-only: no real payment, no card numbers, no charge.
 
+## Four-format input (preview, recognition, figures)
+- PDF, .txt, .docx, .xlsx: local text extraction in the browser (docx/xlsx are parsed as zip+XML with the browser's own decompression, no external scripts), reused for form-type recognition and figure extraction, plus a content preview (PDF embed, docx text, xlsx first-sheet table).
+- JPG and other images: preview only, no OCR, figures entered manually (per the user's choice). Legacy .doc/.xls are not supported.
+
 ## License
 
 MIT. See LICENSE.

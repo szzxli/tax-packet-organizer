@@ -93,8 +93,9 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 </div>
 <p><button id="btnAddLast">加入去年清单</button></p>
 <h3>路径二 · 提交去年报税表，自动识别</h3>
-<p class="muted small">上传去年报税表（带文字层的 PDF，或 .txt 文本）。识别只在本机浏览器内读文件文字、只提取表类型，内容不上传、不保存；识别结果先给你核对，勾选后才加入去年清单。扫描件（无文字层）或加密文件识别不出时，请走路径一手动输入。付款方机器识别不可靠，识别结果里付款方留空，请你核对补填。</p>
-<p><input type="file" id="returnFile" accept=".pdf,.txt"> <button id="btnRecognize" class="secondary">识别并预览</button> <span id="recognizeMsg" class="small"></span></p>
+<p class="muted small">上传去年报税表：PDF（带文字层）、.txt、Word（.docx）、Excel（.xlsx）。识别只在本机浏览器内读文件文字、只提取表类型，内容不上传、不保存；识别结果先给你核对，勾选后才加入去年清单。扫描件（无文字层）或加密文件识别不出时，请走路径一手动输入。JPG 等图片只预览、不自动识别（照片数字手动输入），请走路径一手动输入表类型。老格式 .doc、.xls 不支持。付款方机器识别不可靠，识别结果里付款方留空，请你核对补填。</p>
+<p><input type="file" id="returnFile" accept=".pdf,.txt,.docx,.xlsx,.jpg,.jpeg,.png,.gif,.webp"> <button id="btnRecognize" class="secondary">识别并预览</button> <span id="recognizeMsg" class="small"></span></p>
+<div id="returnPreview"></div>
 <div id="recognizeBox"></div>
 <p><button id="btnGenerate" class="secondary">生成今年清单</button></p>
 <ul id="lastList"></ul>
@@ -112,7 +113,7 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 
 <div class="card">
 <h2>4 · 今年清单（按报税顺序，缺的标红）</h2>
-<p class="muted small">每项状态：未开始 / 已上传 / 不适用（须写原因）/ 待 transcript。全部“已上传或不适用”才算整理完。上传资料可以是电子档，也可以拍照上传：每项都有“上传文件”和“拍照上传”两个入口，手机上点拍照会直接调相机；电子档上传后本机会即时读文字提数候选、由你确认后才记数字，拍照上传只记文件名、不提数。</p>
+<p class="muted small">每项状态：未开始 / 已上传 / 不适用（须写原因）/ 待 transcript。全部“已上传或不适用”才算整理完。上传资料可以是电子档，也可以拍照上传：每项都有“上传文件”和“拍照上传”两个入口，手机上点拍照会直接调相机；电子档（PDF、.txt、.docx、.xlsx）上传后本机会即时读文字提数候选、由你确认后才记数字，并显示文件预览；拍照上传只预览、不提数，数字手动输入。老格式 .doc、.xls 不支持。</p>
 <div class="row">
 <div><label for="newForm">新增今年项目：表类型</label><select id="newForm"></select></div>
 <div><label for="newPayer">付款方 / 实体</label><input id="newPayer" placeholder="去年没有、今年新增的"></div>
@@ -390,7 +391,29 @@ async function readEvidenceText(file){
   var buf=await file.arrayBuffer();
   if(/\.pdf$/i.test(file.name))return await extractPdfText(buf);
   if(/\.txt$/i.test(file.name))return new TextDecoder().decode(buf);
+  if(/\.docx$/i.test(file.name))return await extractDocxText(buf);
+  if(/\.xlsx$/i.test(file.name))return (await extractXlsx(buf)).text;
   return "";
+}
+function preHtml(t){return "<pre style='white-space:pre-wrap;max-height:260px;overflow:auto'>"+esc(t.slice(0,4000))+"</pre>";}
+var evidencePreview={};
+function setEvidencePreview(id,entry){
+  var old=evidencePreview[id];
+  if(old&&old.url)URL.revokeObjectURL(old.url);
+  evidencePreview[id]=entry;
+}
+function evidencePreviewHtml(entry){
+  if(!entry)return "";
+  if(entry.kind==="pdf")return "<div style='max-height:440px;overflow:auto'><embed src='"+entry.url+"' type='application/pdf' style='width:100%;height:420px'></div>";
+  if(entry.kind==="image")return "<div style='max-height:400px;overflow:auto'><img src='"+entry.url+"' style='max-width:100%'></div>";
+  return entry.html||"";
+}
+async function evidencePreviewAndText(f){
+  if(/\.pdf$/i.test(f.name))return {preview:{kind:"pdf",url:URL.createObjectURL(f)},text:await extractPdfText(await f.arrayBuffer())};
+  if(/\.txt$/i.test(f.name)){var t=await f.text();return {preview:{kind:"text",html:preHtml(t)},text:t};}
+  if(/\.docx$/i.test(f.name)){var t=await extractDocxText(await f.arrayBuffer());return {preview:{kind:"text",html:t?preHtml(t):"<p class='small'>无法解析该 Word 文件（仅支持 .docx）。</p>"},text:t};}
+  if(/\.xlsx$/i.test(f.name)){var x=await extractXlsx(await f.arrayBuffer());return {preview:{kind:"table",html:x.table?("<div style='max-height:260px;overflow:auto'>"+x.table+"</div><p class='small'>仅预览第一张表。</p>"):"<p class='small'>无法解析该 Excel 文件（仅支持 .xlsx）。</p>"},text:x.text};}
+  return {preview:null,text:""};
 }
 function matchStatus(it){
   if(!it.figure)return "";
@@ -496,31 +519,30 @@ function renderChecklist(){
     var extra=(it.isNew?" <span class='badge na'>今年新增</span>":"")+(it.transcriptNote?" <span class='badge pending'>"+esc(it.transcriptNote)+"</span>":"");
     div.innerHTML="<b>"+esc(it.form)+"</b> "+(it.payer?"（"+esc(it.payer)+"）":"")+" "+statusBadge(it)+extra+"<br><span class='small'>"+esc(it.request)+"</span>"+(it.fileName?"<br><span class='small'>已上传文件："+esc(it.fileName)+"</span>":"")+(it.reason?"<br><span class='small'>不适用原因："+esc(it.reason)+"</span>":"");
     var row=document.createElement("div");row.className="row";row.style.marginTop="8px";
-    var file=document.createElement("input");file.type="file";file.className="small";file.setAttribute("aria-label","上传 "+it.form);
+    var file=document.createElement("input");file.type="file";file.className="small";file.setAttribute("accept",".pdf,.txt,.docx,.xlsx");file.setAttribute("aria-label","上传 "+it.form);
     file.onchange=async function(){
       if(!(file.files&&file.files[0]))return;
       var f=file.files[0];
       it.fileName=f.name;it.status="uploaded";it.pendingCandidates=null;savePacket();renderAll();
-      if(/\.pdf$/i.test(f.name)||/\.txt$/i.test(f.name)){
-        try{
-          var text=await readEvidenceText(f);
-          if(text&&text.replace(/\s/g,"").length>=20){it.pendingCandidates=extractCandidates(text);it.pendingSource=f.name;}
-          else{it.pendingCandidates=[];it.pendingSource=f.name;}
-        }catch(e){it.pendingCandidates=[];it.pendingSource=f.name;}
-        savePacket();renderAll();
-      }
+      try{
+        var r=await evidencePreviewAndText(f);
+        if(r.preview)setEvidencePreview(it.id,r.preview);
+        if(r.text){it.pendingCandidates=extractCandidates(r.text);it.pendingSource=f.name;}
+        else{it.pendingCandidates=[];it.pendingSource=f.name;}
+      }catch(e){it.pendingCandidates=[];it.pendingSource=f.name;}
+      savePacket();renderAll();
     };
     var photo=document.createElement("input");photo.type="file";photo.className="small";photo.setAttribute("accept","image/*");photo.setAttribute("capture","environment");photo.setAttribute("aria-label","拍照上传 "+it.form);
-    photo.onchange=function(){if(photo.files&&photo.files[0]){it.fileName=photo.files[0].name+"（拍照）";it.status="uploaded";it.pendingCandidates=null;savePacket();renderAll()}};
+    photo.onchange=function(){if(photo.files&&photo.files[0]){var pf=photo.files[0];it.fileName=pf.name+"（拍照）";it.status="uploaded";it.pendingCandidates=null;setEvidencePreview(it.id,{kind:"image",url:URL.createObjectURL(pf)});savePacket();renderAll()}};
     var naInput=document.createElement("input");naInput.placeholder="不适用原因（必填）";naInput.value=it.reason||"";
     var naBtn=document.createElement("button");naBtn.textContent="标不适用";naBtn.className="secondary";
     naBtn.onclick=function(){if(!naInput.value.trim()){alert("请先写不适用原因");return}it.reason=naInput.value.trim();it.status="na";savePacket();renderAll()};
     var pendBtn=document.createElement("button");pendBtn.textContent="标待 transcript";pendBtn.className="secondary";
     pendBtn.onclick=function(){it.status="pending";savePacket();renderAll()};
     var delBtn=document.createElement("button");delBtn.textContent="删除本项";delBtn.className="secondary";
-    delBtn.onclick=function(){packet.checklist=packet.checklist.filter(function(x){return x.id!==it.id});savePacket();renderAll()};
+    delBtn.onclick=function(){var old=evidencePreview[it.id];if(old&&old.url)URL.revokeObjectURL(old.url);delete evidencePreview[it.id];packet.checklist=packet.checklist.filter(function(x){return x.id!==it.id});savePacket();renderAll()};
     row.appendChild(file);row.appendChild(photo);row.appendChild(naInput);row.appendChild(naBtn);row.appendChild(pendBtn);row.appendChild(delBtn);
-    div.appendChild(row);div.appendChild(figureArea(it));box.appendChild(div);
+    div.appendChild(row);div.appendChild(figureArea(it));if(evidencePreview[it.id]){var pv=document.createElement("div");pv.innerHTML=evidencePreviewHtml(evidencePreview[it.id]);div.appendChild(pv);}box.appendChild(div);
   });
   var done=packet.checklist.filter(function(it){return it.status==="uploaded"||it.status==="na"}).length;
   $("progressText").textContent=packet.checklist.length?("清单进度："+done+"/"+packet.checklist.length+" 项已解决"):"清单进度：暂无清单";
@@ -754,6 +776,78 @@ function detectForms(text){
   if(f.length)return f;
   return detectFormsFlat(text);
 }
+async function inflateRaw(buf){
+  var out=await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer();
+  return new Uint8Array(out);
+}
+async function zipRead(buf,wanted){
+  var bytes=new Uint8Array(buf);
+  var eocd=-1;
+  for(var i=bytes.length-22;i>=0;i--){if(bytes[i]===0x50&&bytes[i+1]===0x4B&&bytes[i+2]===0x05&&bytes[i+3]===0x06){eocd=i;break;}}
+  if(eocd<0)return null;
+  var dv=new DataView(buf);
+  var cdCount=dv.getUint16(eocd+10,true);
+  var cdOff=dv.getUint32(eocd+16,true);
+  var out={};var p=cdOff;
+  for(var n=0;n<cdCount;n++){
+    if(!(bytes[p]===0x50&&bytes[p+1]===0x4B&&bytes[p+2]===0x01&&bytes[p+3]===0x02))break;
+    var method=dv.getUint16(p+10,true);
+    var csize=dv.getUint32(p+20,true);
+    var fnLen=dv.getUint16(p+28,true);
+    var exLen=dv.getUint16(p+30,true);
+    var coLen=dv.getUint16(p+32,true);
+    var lhOff=dv.getUint32(p+42,true);
+    var fn="";for(var k=0;k<fnLen;k++)fn+=String.fromCharCode(bytes[p+46+k]);
+    if(wanted.indexOf(fn)>=0){
+      var lp=lhOff;
+      var lfn=dv.getUint16(lp+26,true);
+      var lex=dv.getUint16(lp+28,true);
+      var start=lp+30+lfn+lex;
+      var comp=bytes.slice(start,start+csize);
+      if(method===0)out[fn]=comp;
+      else if(method===8)out[fn]=await inflateRaw(comp);
+    }
+    p+=46+fnLen+exLen+coLen;
+  }
+  return out;
+}
+function xmlUnescape(t){return t.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,"&");}
+async function extractDocxText(buf){
+  var z=await zipRead(buf,["word/document.xml"]);
+  if(!z||!z["word/document.xml"])return "";
+  var xml=new TextDecoder().decode(z["word/document.xml"]);
+  return xmlUnescape(xml.replace(/<\/w:p>/g,"\n").replace(/<[^>]+>/g,""));
+}
+async function extractXlsx(buf){
+  var z=await zipRead(buf,["xl/sharedStrings.xml","xl/worksheets/sheet1.xml"]);
+  if(!z||!z["xl/worksheets/sheet1.xml"])return {text:"",table:""};
+  var shared=[];
+  if(z["xl/sharedStrings.xml"]){
+    var ss=new TextDecoder().decode(z["xl/sharedStrings.xml"]);
+    var m,re=/<si>([\s\S]*?)<\/si>/g;
+    while((m=re.exec(ss))!==null){
+      var t="",tm,tre=/<t[^>]*>([\s\S]*?)<\/t>/g;
+      while((tm=tre.exec(m[1]))!==null)t+=tm[1];
+      shared.push(xmlUnescape(t));
+    }
+  }
+  var sh=new TextDecoder().decode(z["xl/worksheets/sheet1.xml"]);
+  var rows=[],rm,rre=/<row[^>]*>([\s\S]*?)<\/row>/g;
+  while((rm=rre.exec(sh))!==null){
+    var cells=[],cm,cre=/<c([^>]*)>([\s\S]*?)<\/c>/g;
+    while((cm=cre.exec(rm[1]))!==null){
+      var attrs=cm[1],typ=/t="s"/.test(attrs)?"s":(/t="inlineStr"/.test(attrs)?"inlineStr":""),inner=cm[2],v="",vm=/<v>([\s\S]*?)<\/v>/.exec(inner);
+      if(typ==="s"&&vm){var idx=parseInt(vm[1],10);v=shared[idx]!=null?shared[idx]:"";}
+      else if(typ==="inlineStr"){var itm=/<t[^>]*>([\s\S]*?)<\/t>/.exec(inner);v=itm?itm[1]:"";}
+      else if(vm)v=vm[1];
+      cells.push(v);
+    }
+    if(cells.length)rows.push(cells);
+  }
+  var text=rows.map(function(r){return r.join(" ");}).join("\n");
+  var cap=rows.slice(0,20).map(function(r){return "<tr>"+r.slice(0,12).map(function(c){return "<td>"+esc(c)+"</td>";}).join("")+"</tr>";}).join("");
+  return {text:text,table:cap?"<table>"+cap+"</table>":""};
+}
 async function extractPdfText(buf){
   var bytes=new Uint8Array(buf);
   var s="";for(var i=0;i<bytes.length;i++)s+=String.fromCharCode(bytes[i]);
@@ -807,15 +901,55 @@ function renderRecognizePreview(forms,text){
   };
   box.appendChild(add);
 }
+var returnPreviewUrl=null;
+var returnCache={file:null,text:null};
+$("returnFile").onchange=async function(){
+  var box=$("returnPreview");if(!box)return;
+  var file=$("returnFile").files&&$("returnFile").files[0];
+  if(returnPreviewUrl){URL.revokeObjectURL(returnPreviewUrl);returnPreviewUrl=null;}
+  returnCache={file:null,text:null};
+  if(!file){box.innerHTML="";return;}
+  try{
+    if(/\.pdf$/i.test(file.name)){
+      returnPreviewUrl=URL.createObjectURL(file);
+      box.innerHTML="<div style='max-height:460px;overflow:auto'><embed src='"+returnPreviewUrl+"' type='application/pdf' style='width:100%;height:440px'></div>";
+    }else if(/\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)){
+      returnPreviewUrl=URL.createObjectURL(file);
+      box.innerHTML="<div style='max-height:460px;overflow:auto'><img src='"+returnPreviewUrl+"' style='max-width:100%'></div>";
+    }else if(/\.txt$/i.test(file.name)){
+      var t=await file.text();
+      box.innerHTML=preHtml(t);
+    }else if(/\.docx$/i.test(file.name)){
+      var dt=await extractDocxText(await file.arrayBuffer());
+      returnCache={file:file,text:dt};
+      box.innerHTML=dt?preHtml(dt):"<p class='small'>无法解析该 Word 文件（仅支持 .docx）。</p>";
+    }else if(/\.xlsx$/i.test(file.name)){
+      var xr=await extractXlsx(await file.arrayBuffer());
+      returnCache={file:file,text:xr.text};
+      box.innerHTML=xr.table?("<div style='max-height:300px;overflow:auto'>"+xr.table+"</div><p class='small'>仅预览第一张表。</p>"):"<p class='small'>无法解析该 Excel 文件（仅支持 .xlsx，第一张表）。</p>";
+    }else{
+      box.innerHTML="<p class='small'>该类型不支持预览，请选择 PDF、.txt、.docx、.xlsx 或图片。</p>";
+    }
+  }catch(e){box.innerHTML="<p class='small'>预览失败，请确认文件未损坏。</p>";}
+};
 $("btnRecognize").onclick=async function(){
   var file=$("returnFile").files&&$("returnFile").files[0];
-  if(!file){$("recognizeMsg").textContent="请先选择去年报税表文件（PDF 或 .txt）。";return;}
+  if(!file){$("recognizeMsg").textContent="请先选择去年报税表文件（PDF、.txt、.docx、.xlsx，或图片预览）。";return;}
+  if(/\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)){$("recognizeMsg").textContent="图片只预览、不自动识别（照片数字手动输入）。请走路径一手动输入表类型。";$("recognizeBox").innerHTML="";return;}
   $("recognizeMsg").textContent="识别中…";
   try{
     var buf=await file.arrayBuffer();
     var text="";
     if(/\.txt$/i.test(file.name))text=new TextDecoder().decode(buf);
     else if(/\.pdf$/i.test(file.name))text=await extractPdfText(buf);
+    else if(/\.docx$/i.test(file.name)){
+      if(returnCache.file===file&&returnCache.text!=null)text=returnCache.text;
+      else text=await extractDocxText(buf);
+    }
+    else if(/\.xlsx$/i.test(file.name)){
+      if(returnCache.file===file&&returnCache.text!=null)text=returnCache.text;
+      else text=(await extractXlsx(buf)).text;
+    }
     else{text=new TextDecoder().decode(buf);}
     var forms=detectForms(text);
     if(forms.length){renderRecognizePreview(forms,text);$("recognizeMsg").textContent="识别出 "+forms.length+" 种表，请核对后加入。";}
