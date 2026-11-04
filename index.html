@@ -1315,14 +1315,22 @@ function renderSheets(){
   packet.sheets.forEach(function(sh){
     var t=SHEET_TYPES[sh.type]||SHEET_TYPES.generic;
     var card=document.createElement("div");card.className="item";
-    var title=document.createElement("div");title.innerHTML="<b>"+esc(sh.title)+"</b>"+(sh.who?"（"+esc(sh.who)+"）":"")+(sh.fromLastYear?" <span class='badge'>去年有数 · 今年请补凭证与数据</span>":"");
-    card.appendChild(title);
+    var head=document.createElement("div");head.className="sec-head";head.style.marginBottom="4px";
+    var headTitle=document.createElement("span");headTitle.style.flex="1";headTitle.innerHTML="<b>"+esc(sh.title)+"</b>"+(sh.who?"（"+esc(sh.who)+"）":"")+(sh.fromLastYear?" <span class='badge'>去年有数 · 今年请补凭证与数据</span>":"");
+    var headStatus=document.createElement("span");headStatus.className="small";headStatus.textContent=sh.incomeCents==null?"待填数字":"数字已填";
+    var chev=document.createElement("span");chev.className="sec-chev";chev.textContent=sh.collapsed?"展开 ▼":"收起 ▲";
+    var del=document.createElement("button");del.className="secondary";del.textContent="删除";
+    del.onclick=function(e){if(e)e.stopPropagation();packet.sheets=packet.sheets.filter(function(x){return x.id!==sh.id;});savePacket();renderSheets();applyCollapse();};
+    head.appendChild(headTitle);head.appendChild(headStatus);head.appendChild(chev);head.appendChild(del);
+    head.onclick=function(){sh.collapsed=!sh.collapsed;savePacket();renderSheets();applyCollapse();};
+    card.appendChild(head);
+    var body=document.createElement("div");if(sh.collapsed)body.classList.add("hidden");card.appendChild(body);
     function labeledInput(labelText,value,onchg){
       var row=document.createElement("div");row.className="row";
       var lab=document.createElement("span");lab.className="small";lab.textContent=labelText+"：";
       var inp=document.createElement("input");inp.type="text";inp.value=value||"";inp.style.width="220px";
       inp.onchange=function(){onchg(inp.value);savePacket();renderSheets();applyCollapse();};
-      row.appendChild(lab);row.appendChild(inp);card.appendChild(row);
+      row.appendChild(lab);row.appendChild(inp);body.appendChild(row);
     }
     function moneyInput(labelText,cents,onchg){
       var row=document.createElement("div");row.className="row";
@@ -1335,7 +1343,7 @@ function renderSheets(){
         if(c==null){alert("请输入有效金额");inp.value=cents==null?"":(cents/100);return;}
         onchg(c);savePacket();renderSheets();applyCollapse();
       };
-      row.appendChild(lab);row.appendChild(inp);card.appendChild(row);
+      row.appendChild(lab);row.appendChild(inp);body.appendChild(row);
     }
     labeledInput(t.whoLabel,sh.who,function(v){sh.who=v.trim();});
     if(sh.type==="generic")labeledInput("付款方",sh.who2,function(v){sh.who2=v.trim();});
@@ -1354,7 +1362,7 @@ function renderSheets(){
           if(c==null){alert("请输入有效金额");ainp.value=e.cents==null?"":(e.cents/100);return;}
           e.cents=c;savePacket();renderSheets();applyCollapse();
         };
-        row.appendChild(lab);row.appendChild(linp);row.appendChild(ainp);card.appendChild(row);
+        row.appendChild(lab);row.appendChild(linp);row.appendChild(ainp);body.appendChild(row);
       }else{
         moneyInput("可抵扣成本 · "+e.label,e.cents,function(c){e.cents=c;});
       }
@@ -1365,14 +1373,11 @@ function renderSheets(){
     evInp.onchange=function(){var f=evInp.files&&evInp.files[0];if(f){sh.evidence=f.name;savePacket();renderSheets();applyCollapse();}};
     ev.appendChild(evLab);ev.appendChild(evInp);
     if(sh.evidence){var evNote=document.createElement("span");evNote.className="small";evNote.textContent="已选："+sh.evidence+"（演示版只记文件名）";ev.appendChild(evNote);}
-    card.appendChild(ev);
+    body.appendChild(ev);
     var foot=document.createElement("div");foot.className="small";
     var net=sheetNet(sh);
     foot.innerHTML="收入 "+(sh.incomeCents==null?"—":fmtMoney(sh.incomeCents))+" · 成本合计 "+fmtMoney(sheetExpTotal(sh))+" · 小计 "+(net==null?"—":fmtMoney(net))+"（草稿） · "+(sh.incomeCents==null?"<span class='badge'>待填数字</span>":"<span class='badge uploaded'>数字已填</span>");
-    card.appendChild(foot);
-    var del=document.createElement("button");del.className="secondary";del.textContent="删除这一项";
-    del.onclick=function(){packet.sheets=packet.sheets.filter(function(x){return x.id!==sh.id;});savePacket();renderSheets();applyCollapse();};
-    card.appendChild(del);
+    body.appendChild(foot);
     box.appendChild(card);
   });
   var sum=$("sheetsSummary");if(!sum)return;
