@@ -31,15 +31,15 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <body>
 <header>
 <h1>报税包整理器 V1 · 演示版</h1>
-<p>只整理、不算税、不报税、不给税务结论。导出后请给持证 CPA 再审，或自行上传到你选的报税软件。订阅定位：干干净净去见税务师。</p>
+<p>列出你今年要给会计师的材料清单。文件不上传，只在你的浏览器里处理。导出后请给持证 CPA 再审。</p>
 </header>
 <main>
-<div class="notice"><b>演示版说明（请先读）：</b>本页是纯本地演示：不联网、不上传文件到任何服务器、不建仓、不收费、不直连 IRS。清单上传的电子档会在本机浏览器内即时读文字提数，只留你确认的数字，文件内容不保存、不上传；拍照件不支持提数，只记文件名。去年报税表自动识别只在本机浏览器内读文件文字、只提取表类型，内容不上传、不保存，识别结果由你核对后才加入；全程不提取、不保存社保号，金额只来自你确认的证据数字（本地提取或手动输入），请勿在本页输入社保号。正式版上线前，邮箱验证、传输与存储加密、账号隔离仍需接真实邮件与后端服务后另行实测。三页版：整理 / 订阅 / 支付；支付页只生成本机演示订单，不扣款、不收集真实卡号。</div>
+<p class="small"><b>演示版：</b>文件不上传，只在你的浏览器里处理。</p><details><summary class="small">数据怎么处理</summary><p class="small">本页是纯本地演示：不联网、不上传文件到任何服务器、不建仓、不收费、不直连 IRS。清单上传的电子档会在本机浏览器内即时读文字提数，只留你确认的数字，文件内容不保存、不上传；拍照件不支持提数，只记文件名。去年报税表自动识别只在本机浏览器内读文件文字、只提取表类型，内容不上传、不保存，识别结果由你核对后才加入；全程不提取、不保存社保号，金额只来自你确认的证据数字（本地提取或手动输入），请勿在本页输入社保号。正式版上线前，邮箱验证、传输与存储加密、账号隔离仍需接真实邮件与后端服务后另行实测。支付页只生成本机演示订单，不扣款、不收集真实卡号。</p></details>
 
 <div id="storageWarn" class="notice warn hidden"><b>注意：</b>本浏览器禁止了本地存储，已改用本页内存保存，刷新页面后进度会丢失。换个浏览器或用本地服务器打开可恢复正常保存。</div>
 <div id="authView" class="card">
 <h2>1 · 注册 / 登录会员</h2>
-<p class="muted small">邮箱 + 密码登录。登录后才能看到自己的包；退出再登录，进度还在（本机浏览器内）。Google 登录不在 V1。</p>
+<p class="muted small">邮箱 + 密码登录。登录后才能看到自己的包；退出再登录，进度还在（同一浏览器内；换设备或清缓存会丢失，重要进度请先用第 7 节导出 JSON 备份）。Google 登录不在 V1。</p>
 <div class="row">
 <div><label for="regEmail">注册邮箱</label><input id="regEmail" type="email" placeholder="you@example.com" autocomplete="email"></div>
 <div><label for="regPass">密码（至少 8 位）</label><input id="regPass" type="password" placeholder="至少 8 位"></div>
@@ -67,11 +67,11 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 
 <div class="card no-print" id="pageNav">
 <div class="row">
-<button id="navOrganize">1 · 整理</button>
-<button id="navSubscribe" class="secondary">2 · 订阅</button>
-<button id="navPay" class="secondary">3 · 支付</button>
+<button id="navOrganize">整理</button>
+<button id="navSubscribe" class="secondary">订阅</button>
+<button id="navPay" class="secondary">支付</button>
 </div>
-<p class="muted small">第 1 页整理你的包；第 2 页看季票；第 3 页下演示订单（未开通收款、不扣款）。整理页内的各节仍可上下收起。</p>
+<p class="muted small">整理页做你的包；订阅页看季票；支付页下演示订单（未开通收款、不扣款）。整理页内的各节仍可上下收起。</p>
 </div>
 
 <div id="appViewSections">
@@ -85,7 +85,16 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 </div>
 
 <div class="card">
-<h2>3 · 去年有什么？（只记表类型 + 付款方，不记社保号和金额）</h2>
+<h2>3 · 州税范围（先确认，本版只覆盖 10 个州）</h2>
+<p class="muted small">先确认你去年在哪个州报税。本版按人口前 10 的州：加州、得州、佛州、纽约州、宾州、伊利诺伊州、俄亥俄州、佐治亚州、北卡罗来纳州、密歇根州。其他州暂不支持，如去年在其他州报过税，请手动另行整理，本工具不生成该州清单。得州、佛州无州个人所得税，选州时后面有备注，选了也不生成州所得税清单项。</p>
+<div class="row">
+<div><label for="stateSelect">选州（加州、纽约州已含在前 10 内）</label><select id="stateSelect"></select></div>
+</div>
+<p><button id="btnAddState">加入该州州税项目</button> <span id="stateMsg" class="small"></span></p>
+</div>
+
+<div class="card">
+<h2>4 · 去年有什么？（只记表类型 + 付款方，不记社保号和金额）</h2>
 <details><summary class="small">没有去年文件？点这里手动输入表类型</summary>
 <h3>路径一 · 手动输入表格</h3>
 <div class="row">
@@ -102,21 +111,12 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <div id="quickPick"></div>
 <p><button id="btnGenerate" class="secondary">生成今年清单</button> <span id="generateMsg" class="small"></span></p>
 <ul id="lastList"></ul>
-<p class="muted small">规则：去年哪行有数、哪张表交过，今年就等对应的文件（见 mapping-v1）。生成时不重复添加已在清单里的同表同付款方。</p>
+<p class="muted small">规则：去年哪行有数、哪张表交过，今年就等对应的文件。生成时不重复添加已在清单里的同表同付款方。</p>
 </div>
 
 <div class="card">
-<h2>3b · 州税范围（本版只覆盖 10 个州）</h2>
-<p class="muted small">按人口前 10 的州：加州、得州、佛州、纽约州、宾州、伊利诺伊州、俄亥俄州、佐治亚州、北卡罗来纳州、密歇根州。其他州暂不支持，如去年在其他州报过税，请手动另行整理，本工具不生成该州清单。得州、佛州无州个人所得税，选州时后面有备注，选了也不生成州所得税清单项。</p>
-<div class="row">
-<div><label for="stateSelect">选州（加州、纽约州已含在前 10 内）</label><select id="stateSelect"></select></div>
-</div>
-<p><button id="btnAddState">加入该州州税项目</button> <span id="stateMsg" class="small"></span></p>
-</div>
-
-<div class="card">
-<h2>4 · 今年要准备的材料（文件＋数字，一页）</h2>
-<p class="muted small">每行一项收入或一张表：先传证据、再填一个总数；成本、核对、不适用都收在“更多”里。全部“已备或不适用”才算整理完。上传资料可以是电子档，也可以拍照上传：每行都有“上传文件”和“拍照上传”两个入口，手机上点拍照会直接调相机；电子档（PDF、.txt、.docx、.xlsx）上传后本机会即时读文字提数候选、由你确认后才记数字，并显示文件预览；拍照上传只预览、不提数，数字手动输入。老格式 .doc、.xls 不支持。同一笔收入只出现一次，不要重复填。</p>
+<h2>5 · 今年要准备的材料（文件＋数字，一页）</h2>
+<p class="muted small">每行一项收入或一张表：先传证据、再填一个总数；成本、核对、不适用都收在“更多”里。全部“已备或不适用”就是整理完；没做完也能先导出，缺项会列在清单里。上传资料可以是电子档，也可以拍照上传：每行都有“上传文件”和“拍照上传”两个入口，手机上点拍照会直接调相机；电子档（PDF、.txt、.docx、.xlsx）上传后本机会即时读文字提数候选、由你确认后才记数字，并显示文件预览；拍照上传只预览、不提数，数字手动输入。老格式 .doc、.xls 不支持。同一笔收入只出现一次，不要重复填。</p>
 <p><button id="btnInferMerged" class="secondary">按去年推算</button> <span id="inferMsg" class="small"></span></p>
 <div class="row">
 <div><label for="newForm">新增今年项目：表类型</label><select id="newForm"></select></div>
@@ -155,7 +155,7 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 </div>
 
 <div class="card">
-<h2>4b · 不确定事项：说不清楚的先录下来，追问后再生成预估材料包</h2>
+<h2>5b · 不确定事项：说不清楚的先录下来，追问后再生成预估材料包</h2>
 <p class="muted small">打字或语音录入都行。例如：“我今年在中国老家卖了一套房，怎么报税？”工具会追问买房价、卖房价、交了哪些税、持有年限、是不是常住房等，答完生成一份<b>预估材料包（待税务师审核）</b>并入今年清单，并给出<b>候选税范畴 + 政策依据 + 决定金额的变量清单</b>。定位就是<b>你的报税助手</b>：提醒哪些要报、要备什么文件、依据哪条政策；范畴只给候选、不给结论；<b>应缴金额本工具不算</b>，金额栏留空给税务师填（具体以注册税务师和 IRS 解释为准）。</p>
 <p class="notice warn"><b>先说清边界：</b>这里只整理“要备哪些材料”，<b>不算税、不判断能不能免税、不生成税表、不替你报税</b>。境外售房涉及中美两地规则，最终处理以持证税务师 / 律师审核为准。金额如填了，只存本机浏览器、不进导出文件。</p>
 <label for="uncertainText">不确定事项（打字，或点语音录入后说话）</label>
@@ -175,8 +175,8 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 </div>
 
 <div class="card">
-<h2>5 · Transcript 对齐（只做你自己上传版，不直连 IRS）</h2>
-<p class="muted small">请你自己去 IRS 在线账户下载 Wage &amp; Income Transcript 再上传到这里。本工具不直连 IRS、不爬 IRS、不宣称一键提交。表单一般 1 月 31 日前寄出，未到时间前不把“没到”当成“缺失结论”。上传电子档即可，只记文件名，不读内容。</p>
+<h2>6 · Transcript 对齐（只做你自己上传版，不直连 IRS）</h2>
+<p class="muted small">为什么要对账：IRS 手里有哪些收入记录，对照一下，能避免漏报。本节可选，不做也能继续整理。请你自己去 IRS 在线账户下载 Wage &amp; Income Transcript 再上传到这里。本工具不直连 IRS、不爬 IRS、不宣称一键提交。表单一般 1 月 31 日前寄出，未到时间前不把“没到”当成“缺失结论”。上传电子档即可，只记文件名，不读内容。</p>
 <label for="transFile">上传你的 transcript 文件（只记文件名，不读内容）</label><input id="transFile" type="file">
 <p class="small">已记录：<span id="transRecord">无</span></p>
 <details><summary class="small">需要对账时展开</summary>
@@ -189,31 +189,31 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 </div>
 
 <div class="card">
-<h2>5b · IRS 更新探针（已接入本整理器）</h2>
-<p><span class="badge uploaded">探针已开启</span> <span class="small">每周一上午约 9:10 PT 检查一次 · 下次：2026-11-09 周一上午 · 无相关更新时不打扰</span></p>
+<h2>6b · IRS 更新提醒</h2>
+<p><span class="badge uploaded">已开启</span> <span class="small">每周一上午约 9:10 PT 检查一次 · 下次：2026-11-09 周一上午 · 无相关更新时不打扰</span></p>
 <p class="small"><b>盯什么（只报这 6 类）：</b>清单里的表新增 / 改名 / 停用 / 截止日变化；联邦报税与延期截止日；Free File 资格与门槛；申报路径变化（Direct File 开停、在线账户 / transcript 可用性、e-file 警报）；IRS 持证报税人目录变化；覆盖 10 州的州报税截止日（仅影响本包州表时；得州、佛州无州个人所得税）。<br>
 <b>不报：</b>税率、抵扣额变化（整理器不算税）、执法与诈骗提醒、一般报税小贴士。</p>
-<p class="small"><b>最近一次基线核查：2026-11-03，无需改清单。</b>Free File 指导软件、Direct File 2026 季停用、2026 年度报税截止日 2027-04-15 都已在现有链接里。</p>
-<p class="notice"><b>说明：</b>这个本地演示页本身不会自动联网拉 IRS 更新；自动探针由 Noor 的定时任务在后台跑公开页，发现变化先发到本旁聊、你点头后才改映射和清单，不会自动改你的包。</p>
+<p class="small"><b>上次检查：2026-11-03，你的清单无需改动。</b></p>
+<p class="notice"><b>说明：</b>我们会关注 IRS 变化，影响你的清单时通知你；不会在你不知情时改你的包。</p>
 <p><a href="https://www.irs.gov/newsroom/irs-news-bulletins" target="_blank" rel="noopener">IRS 新闻订阅页（官方）</a> · <a href="https://www.irs.gov/individual-tax-filing" target="_blank" rel="noopener">IRS 个人报税页（官方）</a> · <a href="https://irs.treasury.gov/rpo/rpo.jsf" target="_blank" rel="noopener">IRS 持证报税人目录（官方）</a></p>
 </div>
 
 <div class="card">
-<h2>5c · 今年预估报税表草稿（证据数字汇总，须 CPA 核对）</h2>
-<p class="muted small">个人整理、工具汇总、CPA 核对，三方各做各的事，工具不替任何一方下结论。数字只来自第 4 节各清单项的证据：电子档在本机即时读数提数、或你手动输入，每行都须你确认；文件内容本身不保存、不上传。会计师的工作方式是两步核对：<b>先对照凭证核对</b>（数字与证据原件一致），<b>再与表格数字核对</b>（数字与申报表上的数一致）。两步都通过才算核对完成。本草稿不是申报表，最终以 CPA 核对为准；社保号永不提取、不保存。拍照件不支持本地提数（无可靠 OCR），拍照提交只记文件名，数字请手动输入。</p>
+<h2>6c · 今年预估报税表草稿（证据数字汇总，须 CPA 核对）</h2>
+<p class="muted small">个人整理、工具汇总、CPA 核对，三方各做各的事，工具不替任何一方下结论。数字只来自第 5 节各清单项的证据：电子档在本机即时读数提数、或你手动输入，每行都须你确认；文件内容本身不保存、不上传。会计师的工作方式是两步核对：<b>先对照凭证核对</b>（数字与证据原件一致），<b>再与表格数字核对</b>（数字与申报表上的数一致）。两步都通过才算核对完成。本草稿不是申报表，最终以 CPA 核对为准；社保号永不提取、不保存。拍照件不支持本地提数（无可靠 OCR），拍照提交只记文件名，数字请手动输入。</p>
 <div id="draftBox"></div>
 </div>
 
 <div class="card">
-<h2>5d · IRS 对照提醒（基础版）</h2>
+<h2>6d · IRS 对照提醒（基础版）</h2>
 <p class="muted small">按 IRS 常见比对口径整理的提醒：信息表漏报、提取数与表格数不一致、未完成两步核对，是常见补件原因。以下只作“请核对、请找 CPA”的提醒，不下税务结论，不代表 IRS 已认定任何问题。基础版免费；更深的规则包以后再议。</p>
 <div id="warnBox"></div>
 </div>
 
 <div class="card">
-<h2>6 · 导出给会计师：标准化可对接</h2>
-<p class="muted small">三份导出均含你确认的证据数字与核对状态，均不含社保号，均不锁任何一家报税软件：<b>CSV</b> 是通用表格，可直接用 Excel / Google Sheets 打开，也可导入会计师自己的报税软件，含确认数字与核对列；<b>JSON</b> 是机器可读清单，含预估草稿汇总与 IRS 对照提醒；<b>PDF</b> 是打印版，汇总在前、清单在后，末尾带会计师审核签字栏。导出的是清单与确认数字，文件原件由你另外经会计师门户 / 邮件发给会计师（演示版文件内容本就不保存）。会计师的工作只是审核确认并签字（以打印版签字栏手签为准），平台不抽报税费、不替代签字；页面上的复核记录由你自记，不代表 CPA 已确认。</p>
-<p><button id="btnExportCsv">下载通用表格（CSV）</button> <button id="btnExportJson" class="secondary">下载机器可读清单（JSON）</button> <button id="btnPrint" class="secondary">打印 / 另存为 PDF 清单</button></p>
+<h2>7 · 导出给会计师：标准化可对接</h2>
+<p class="muted small">没做完也能先导出，缺项会列在清单里，导出后继续补。三份导出均含你确认的证据数字与核对状态，均不含社保号，均不锁任何一家报税软件：<b>CSV</b> 是通用表格，可直接用 Excel / Google Sheets 打开，也可导入会计师自己的报税软件，含确认数字与核对列；<b>JSON</b> 是机器可读清单，含预估草稿汇总与 IRS 对照提醒；<b>PDF</b> 是打印版，汇总在前、清单在后，末尾带会计师审核签字栏。导出的是清单与确认数字，文件原件由你另外经会计师门户 / 邮件发给会计师（演示版文件内容本就不保存）。会计师的工作只是审核确认并签字（以打印版签字栏手签为准），平台不抽报税费、不替代签字；页面上的复核记录由你自记，不代表 CPA 已确认。</p>
+<p><button id="btnPrint">下载给会计师的 PDF 清单</button></p><details><summary class="small">更多格式（CSV / JSON）</summary><p><button id="btnExportCsv" class="secondary">下载通用表格（CSV）</button> <button id="btnExportJson" class="secondary">下载机器可读清单（JSON）</button></p></details>
 <h3>CPA 复核记录（用户自记，非 CPA 签字）</h3>
 <p class="small" id="cpaReviewText">暂无复核记录。用户自记仅表示你已送 CPA 复核，不代表 CPA 已签字确认。</p>
 <div class="row">
@@ -226,7 +226,7 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 </div>
 
 <div class="card">
-<h2>6b · 去年会计师（还是找去年那位）</h2>
+<h2>7b · 去年会计师（还是找去年那位）</h2>
 <p class="muted small">还是找去年会计师？在这里填上他/她的信息，包就按这位收件；平台不验证、不背书此人——这是你自己的选择，不是平台推荐。信息只存本机，下次登录自动带出供你确认；换人时改掉或清除即可。</p>
 <div class="row">
 <div><label for="priorCpaName">姓名 / 事务所</label><input id="priorCpaName" placeholder="例如：张会计师 / XX 事务所"></div>
@@ -240,6 +240,7 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <div class="card" id="subCard">
 <h2>订阅：报税季票（即将推出，暂未开通付费）</h2>
 <p class="muted small">定位：干干净净去见税务师。基础整理永久免费；订阅预计 $49 / 报税季 / 1 个包（假设价，季末复核；价格与开通时间以上线时公布为准），第二包 $25，按季一次性、默认不自动续，有效期至当年 10 月 15 日延期截止日。订阅不算税、不报税、不给税务结论、不判福利与退税资格——你带着今年值得问的候选清单去问税务师，最后能享受哪些，由税务师确认。订阅到期也不删包、不锁导出。</p>
+<p class="notice"><b>调研说明：</b>季票 7 项额外服务目前均为计划中，$49 / $25 是调研用假设价，现在不收钱。演示订单只用来了解你是否愿意为这些功能付费，不开通、不解锁未上线功能。</p>
 <h3>价格与套餐</h3>
 <p class="small">季票 $49 / 季 / 1 个包；同一账号第二包 $25。按季一次性、默认不自动续，有效期至当年 10 月 15 日延期截止日。</p>
 <p class="small"><label style="display:inline-block;margin-right:12px"><input type="radio" name="subPacks" value="1" checked style="width:auto"> 1 个包 · $49</label><label style="display:inline-block"><input type="radio" name="subPacks" value="2" style="width:auto"> 2 个包 · $74（首包 $49 + 第二包 $25）</label></p>
@@ -260,11 +261,11 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <tr><td>优先工具支持</td><td>—</td><td>季票</td></tr>
 </table>
 <p class="small">季票列的 7 项即下面 7 项额外服务，状态见下；免费版功能永久免费。</p>
-<h3>7 项额外服务与状态</h3>
+<h3>7 项额外服务与状态（均为计划中，价格只是调研）</h3>
 <ul class="small">
 <li>全年提醒线 —— 计划中</li>
-<li>个性化 IRS 探针 —— 通用探针面板已有（5b），个性化版计划中</li>
-<li>深度不确定事项包 —— 计划中（4b 不确定事项整理已有，深度包计划中）</li>
+<li>个性化 IRS 探针 —— 通用 IRS 更新提醒已有（6b），个性化版计划中</li>
+<li>深度不确定事项包 —— 计划中（5b 不确定事项整理已有，深度包计划中）</li>
 <li>CPA 交接工作台 —— 计划中（导出三份与自记复核已有，交接工作台计划中）</li>
 <li>多包与多年对比 —— 计划中</li>
 <li>批量归档核对 —— 计划中</li>
@@ -281,14 +282,13 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <ul class="small">
 <li>演示版：数据只存本机浏览器，不出设备、不给第三方、不拿去训练。</li>
 <li>正式版底线（未在本演示里声称已实现）：传输加密、存储加密、账号隔离、一键删除、数据不训练不给第三方。</li>
-<li><b>R2 费用提醒：</b>如未来启用 Cloudflare R2 存文件，免费额度为存储 10GB/月、A 类 100 万次/月、B 类 1000 万次/月；超额按量收费（存储 $0.015/GB·月、A 类 $4.50/百万次、B 类 $0.36/百万次）。任何扩用量前必须先提醒你、经你同意，不能默默扩大。本演示云存储用量为 0。</li>
 </ul>
 </div>
 </div>
 <div id="payView" class="hidden no-print">
 <div class="card">
-<h2>3 · 支付与订单（演示结账，未开通收款）</h2>
-<p class="notice warn"><b>演示支付：</b>本页不接任何真实支付、不收集真实卡号、不扣款。点“确认演示支付”只在本机生成一笔演示订单，记录你选的包数与金额，供季票上线后核对；季票功能在上线前不提前解锁，演示订单不是正式订阅。</p>
+<h2>支付与订单（演示结账，未开通收款）</h2>
+<p class="notice warn"><b>演示支付：</b>本页不接任何真实支付、不收集真实卡号、不扣款。点“确认演示支付”只在本机生成一笔演示订单，记录你选的包数与金额，供季票上线后核对；季票功能在上线前不提前解锁，演示订单不是正式订阅；它只用来了解你是否愿意为计划中的功能付费。</p>
 <p class="small"><b>购买流程：</b>1 选套餐 → 2 确认订单 → 3 演示支付 → 4 查看收据（演示订单，不扣款）。</p>
 <div class="notice" id="paySubCard"></div>
 <div class="row">
@@ -540,7 +540,7 @@ function renderDraft(){
   if(!packet)return;
   var box=$("draftBox");if(!box)return;
   var lines=draftLines();
-  if(!lines.length){box.innerHTML="<p class='muted small'>暂无证据数字。请先在第 4 节给清单项上传电子档提数，或手动输入数字。</p>";return;}
+  if(!lines.length){box.innerHTML="<p class='muted small'>暂无证据数字。请先在第 5 节给清单项上传电子档提数，或手动输入数字。</p>";return;}
   var tot=draftTotals();
   var rows=lines.map(function(it){
     return "<tr><td>"+esc(it.form)+"</td><td>"+esc(it.payer||"")+"</td><td>"+esc(it.figure.cat)+" "+fmtMoney(it.figure.cents)+"</td><td>"+esc(it.figure.source||"")+"</td><td>"+(it.voucherChecked?"已核对 ✓":"未核对")+"</td><td>"+(it.formAmountCents==null?"—":fmtMoney(it.formAmountCents))+"</td><td>"+esc(matchStatus(it))+"</td></tr>";
@@ -549,7 +549,7 @@ function renderDraft(){
   var v=lines.filter(function(it){return it.voucherChecked}).length;
   var m=lines.filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length;
   var d=lines.filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length;
-  box.innerHTML="<table><tr><th>表</th><th>付款方</th><th>确认数字</th><th>来源证据</th><th>凭证核对</th><th>表格数</th><th>核对结果</th></tr>"+rows+"</table><p class='small'><b>合计："+cats+" · 预估合计 "+fmtMoney(tot.grand)+"</b>（草稿，非申报表）</p><p class='small'>凭证已核对 "+v+"/"+lines.length+" · 表格一致 "+m+" · 差异 "+d+" · 未核对表格数 "+(lines.length-m-d)+"。数字在第 4 节各项目里改。</p>";
+  box.innerHTML="<table><tr><th>表</th><th>付款方</th><th>确认数字</th><th>来源证据</th><th>凭证核对</th><th>表格数</th><th>核对结果</th></tr>"+rows+"</table><p class='small'><b>合计："+cats+" · 预估合计 "+fmtMoney(tot.grand)+"</b>（草稿，非申报表）</p><p class='small'>凭证已核对 "+v+"/"+lines.length+" · 表格一致 "+m+" · 差异 "+d+" · 未核对表格数 "+(lines.length-m-d)+"。数字在第 5 节各项目里改。</p>";
 }
 function computeWarnings(){
   var w=[];
@@ -733,16 +733,16 @@ function renderExports(){
 }
 function renderAll(){renderChanges();renderLast();renderMerged();renderExports();renderCpa();renderDraft();renderWarnings();renderSubStatus();renderOrders();renderPriorCpa();applyCollapse()}
 function secKeyFromH2(t){
-  if(t.indexOf("5d")==0)return "s5d";
-  if(t.indexOf("5c")==0)return "s5c";
-  if(t.indexOf("3b")==0)return "s3b";
-  if(t.indexOf("3")==0)return "s3";
-  if(t.indexOf("4b")==0)return "s4b";
-  if(t.indexOf("4")==0)return "s4";
-  if(t.indexOf("5b")==0)return "s5b";
-  if(t.indexOf("5")==0)return "s5";
-  if(t.indexOf("6b")==0)return "s6b";
-  if(t.indexOf("6")==0)return "s6";
+  if(t.indexOf("州税范围")>=0)return "s3b";
+  if(t.indexOf("去年有什么")>=0)return "s3";
+  if(t.indexOf("今年要准备的材料")>=0)return "s4";
+  if(t.indexOf("不确定事项")>=0)return "s4b";
+  if(t.indexOf("Transcript 对齐")>=0)return "s5";
+  if(t.indexOf("IRS 更新提醒")>=0)return "s5b";
+  if(t.indexOf("预估报税表草稿")>=0)return "s5c";
+  if(t.indexOf("IRS 对照提醒")>=0)return "s5d";
+  if(t.indexOf("导出给会计师")>=0)return "s6";
+  if(t.indexOf("去年会计师")>=0)return "s6b";
   if(t.indexOf("订阅")==0)return "sub";
   if(t.indexOf("安全")==0)return "safe";
   return null;
@@ -778,7 +778,7 @@ function secSummary(key){
   if(key==="s4"){if(!packet.checklist.length)return "暂无清单";var d=packet.checklist.filter(rowResolved).length;return d+"/"+packet.checklist.length+" 项已解决";}
   if(key==="s4b")return packet.uncertain&&packet.uncertain.length?("已录 "+packet.uncertain.length+" 项不确定事项"):"无";
   if(key==="s5")return packet.transcript?("已记录："+packet.transcript):"未上传";
-  if(key==="s5b")return "探针已开启";
+  if(key==="s5b")return "IRS 更新提醒已开启";
   if(key==="s5c"){var ls=draftLines();if(!ls.length)return "未录";var tot=draftTotals();var v=ls.filter(function(it){return it.voucherChecked}).length;var m=ls.filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length;return "已录 "+ls.length+" 项数字，预估合计 "+fmtMoney(tot.grand)+"（凭证已核对 "+v+" · 表格一致 "+m+"）";}
   if(key==="s5d"){var w=computeWarnings();if(!w.length)return "暂无提醒";var d=w.filter(function(x){return x.text.indexOf("不一致")>=0}).length;var m=w.filter(function(x){return x.text.indexOf("未开始")>=0||x.text.indexOf("待 transcript")>=0}).length;return w.length+" 条提醒（差异 "+d+" · 缺项 "+m+"）";}
   if(key==="s6b")return (packet.priorCpa&&packet.priorCpa.name)?("已指定："+packet.priorCpa.name):"未指定";
@@ -1270,7 +1270,7 @@ $("btnGenerate").onclick=async function(){
     var rec=collectRecognized();
     if(!rec.length){
       showQuickPick("识别出的表都没勾选。请勾选需要的表，或点下面“按手头证据”加表（知道表名的可展开按表名加）。");
-      if(gm)gm.textContent="去年表还是空的：要生成第 4 节清单先加至少一项去年表；也可以直接点下面“按手头证据”去填表。";
+      if(gm)gm.textContent="去年表还是空的：要生成第 5 节清单先加至少一项去年表；也可以直接点下面“按手头证据”去填表。";
       return;
     }
     var r=addToLastYear(rec);
@@ -1300,7 +1300,7 @@ $("btnGenerate").onclick=async function(){
   var garbled=false;
   (function(){var t=lastText.replace(/\s/g,"");if(t.length<1000)return;var hi=0;for(var i=0;i<lastText.length;i++){if(lastText.charCodeAt(i)>127)hi++;}if(hi/Math.max(1,lastText.length)>0.3)garbled=true;})();
   showQuickPick(file&&isImageFile(file)?"图片只预览、不能自动识别表类型。请点下面“按手头证据”加表，或展开“知道去年表名”按表名加，再点生成今年清单。":(garbled?"这份 PDF 用的是自定义字体编码，本机读出来是乱码，认不出表名（文件内容没有上传，也没有发到任何服务器）。不用纠结去年表名：直接点下面“按手头证据”加表，去填今年的数字和凭证；也可以走路径一手动输入表名。":"没能从去年表里确定表类型。请点下面“按手头证据”加表，或展开“知道去年表名”按表名加，再点生成今年清单；也可以走路径一手动输入。"));
-  if(gm)gm.textContent="去年表还是空的：要生成第 4 节清单先加至少一项去年表；也可以直接点下面“按手头证据”去填表。";
+  if(gm)gm.textContent="去年表还是空的：要生成第 5 节清单先加至少一项去年表；也可以直接点下面“按手头证据”去填表。";
 };
 $("btnAddNew").onclick=function(){
   var form=$("newForm").value,payer=$("newPayer").value.trim();
@@ -1427,7 +1427,7 @@ var SHEET_TYPES={
 };
 $("btnInferMerged").onclick=function(){
   if(!packet)return;
-  if(!packet.lastYear.length){$("inferMsg").textContent="去年表还是空的：先在第 3 节加去年表（识别、快捷选或手动），再点推算。";return;}
+  if(!packet.lastYear.length){$("inferMsg").textContent="去年表还是空的：先在第 4 节加去年表（识别、快捷选或手动），再点推算。";return;}
   var a=generateFromLastYear();
   $("inferMsg").textContent=a?("已推算 "+a+" 项（排在前面）。请核对：没有的删掉，缺的再手动加。"):"没有新增（均已推算过）。";
 };
