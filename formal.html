@@ -128,9 +128,9 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 <h2>把乱糟糟的报税材料，整理成一份清单。</h2>
 <p class="muted">用大白话说今年有什么变化，生成今年的材料清单。</p>
 <label for="heroText">今年有什么变化？</label>
-<textarea id="heroText" placeholder="例如：我今年在中国老家卖了一套房，怎么报税？"></textarea>
+<textarea id="heroText" placeholder="例如：我今年卖房了，中国老家房产怎么报税？"></textarea>
 <div class="hero-chips" id="heroExamples">
-<button type="button" class="secondary" data-ex="我今年在中国老家卖了一套房，怎么报税？">今年卖了房</button>
+<button type="button" class="secondary" data-ex="我今年卖房了，中国老家房产怎么报税？">今年卖了房</button>
 <button type="button" class="secondary" data-ex="我今年换了工作，有两份 W-2。">换了工作</button>
 <button type="button" class="secondary" data-ex="我今年孩子出生了，多了一个抚养人。">孩子出生了</button>
 <button type="button" class="secondary" data-ex="我今年搬到了另一个州。">搬到另一个州</button>
@@ -235,7 +235,7 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 <p class="muted small">打字或语音录入都行。例如：“我今年在中国老家卖了一套房，怎么报税？”工具会追问买房价、卖房价、交了哪些税、持有年限、是不是常住房等，答完生成一份<b>预估材料包（待税务师审核）</b>并入今年清单，并给出<b>候选税范畴 + 政策依据 + 决定金额的变量清单</b>。定位就是<b>你的报税助手</b>：提醒哪些要报、要备什么文件、依据哪条政策；范畴只给候选、不给结论；<b>应缴金额本工具不算</b>，金额栏留空给税务师填（具体以注册税务师和 IRS 解释为准）。</p>
 <p class="notice warn"><b>先说清边界：</b>这里只整理“要备哪些材料”，<b>不算税、不判断能不能免税、不生成税表、不替你报税</b>。境外售房涉及中美两地规则，最终处理以持证税务师 / 律师审核为准。金额如填了，只存你的账号、不进导出文件。</p>
 <label for="uncertainText">不确定事项（打字，或点语音录入后说话）</label>
-<textarea id="uncertainText" rows="3" style="width:100%;font-size:15px;padding:9px 10px;border-radius:8px;border:1px solid #bbb" placeholder="例如：我今年在中国老家卖了一套房，怎么报税？"></textarea>
+<textarea id="uncertainText" rows="3" style="width:100%;font-size:15px;padding:9px 10px;border-radius:8px;border:1px solid #bbb" placeholder="例如：我今年卖房了，中国老家房产怎么报税？"></textarea>
 <p><button id="btnVoiceStart">开始语音录入</button> <button id="btnVoiceStop" class="secondary">停止语音录入</button> <span id="voiceMsg" class="small"></span></p>
 <p class="muted small">语音用的是浏览器自带识别（Chrome 等），音频可能发往浏览器厂商；不要说社保号、银行卡号，敏感数字建议打字。本浏览器不支持语音识别时会提示，仍可打字。</p>
 <p><button id="btnUncertainAnalyze">识别事项并生成追问</button></p>
@@ -444,7 +444,8 @@ function packetKeyFor(){return currentUser?packetKey(currentUser):GUEST_KEY;}
 function loadGuest(){packet=load(GUEST_KEY,null);if(!packet){packet=newPacket();save(GUEST_KEY,packet)}else{if(packet.changesCollapsed===undefined)packet.changesCollapsed=true;if(!packet.mergedV2){backfillRows();migrateSheets();packet.mergedV2=true;savePacket();}}}
 function gateNote(){return "<p class='small'>登录后可用：这是季票功能，登录后解锁。</p><p><button class='secondary' onclick='showAuth()'>登录 / 注册</button></p>";}
 function renderGates(){
-  if(!packet||!isGuest())return;
+  if(!packet)return;
+  if(!isGuest()){var bb=$("batchBox");if(bb&&bb.innerHTML.indexOf("登录后可用")>=0)bb.innerHTML="";return;}
   var g=gateNote();
   var rb=$("reminderBox");if(rb)rb.innerHTML=g;
   var pb=$("probeBox");if(pb)pb.innerHTML=g;
@@ -1084,7 +1085,7 @@ function renderHero(){
   var hero=$("heroBox");if(!hero||!packet)return;
   var show=currentPage===1&&!packet.checklist.length;
   hero.classList.toggle("hidden",!show);
-  var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",currentPage!==1||!!packet.checklist.length);
+  var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",currentPage!==1||!packet.checklist.length);
 }
 function showPage(p){
   if((p===2||p===3)&&isGuest()){pendingPage=p;showAuth();return;}
@@ -1584,7 +1585,9 @@ $("btnAddState").onclick=function(){
 function isSaleText(t){return /(卖房|售房|房子|房产|house|property)/i.test(t)&&/(卖|售|sell|sold)/i.test(t);}
 function addUncertainDocs(text,isSale){
   if(!packet.uncertain)packet.uncertain=[];
-  packet.uncertain.push({text:text,type:isSale?"境外售房":"一般不确定事项",answers:{},at:new Date().toLocaleString()});
+  if(!packet.uncertain.some(function(u){return u.text===text})){
+    packet.uncertain.push({text:text,type:isSale?"境外售房":"一般不确定事项",answers:{},at:new Date().toLocaleString()});
+  }
   var docs=isSale?FOREIGN_DOCS:GENERIC_DOCS;
   var payer=isSale?"中国老家房产":"不确定事项";
   docs.forEach(function(d){
