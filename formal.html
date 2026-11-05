@@ -373,7 +373,7 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 </ul>
 <h3>优先工具支持</h3>
 <p class="small" id="priorityStatus"></p>
-<label for="supportText">优先支持请求（只存你的账号；支持邮箱待公布，后端开通后走支持通道）</label>
+<label for="supportText">优先支持请求（只存你的账号；也可直接发邮件到 <a href="mailto:support@zhuanuc.com">support@zhuanuc.com</a>）</label>
 <textarea id="supportText" rows="2" style="width:100%;font-size:15px;padding:9px 10px;border-radius:8px;border:1px solid #bbb" placeholder="例如：清单里 Schedule E 的凭证核对卡住了"></textarea>
 <p><button id="btnPriority" class="secondary">开启优先支持标记</button> <button id="btnSupportSend" class="secondary">提交优先请求（本地保存）</button></p>
 <div id="supportList"></div>
@@ -1865,7 +1865,7 @@ function renderSnaps(){
 function renderPriority(){
   var el=$("priorityStatus");if(!el||!packet)return;
   var reqs=packet.supportRequests||[];
-  el.innerHTML=(packet.prioritySupport?"<span class='badge uploaded'>优先工具支持已开启（预览）</span>":"<span class='small'>优先工具支持未开启。</span>")+"<span class='small'> 已提交优先请求 "+reqs.length+" 条（只存你的账号；支持邮箱待公布，后端开通后走支持通道）。</span>";
+  el.innerHTML=(packet.prioritySupport?"<span class='badge uploaded'>优先工具支持已开启（预览）</span>":"<span class='small'>优先工具支持未开启。</span>")+"<span class='small'> 已提交优先请求 "+reqs.length+" 条（只存你的账号；也可发邮件到 <a href='mailto:support@zhuanuc.com'>support@zhuanuc.com</a>）。</span>";
   var bp=$("btnPriority");if(bp)bp.textContent=packet.prioritySupport?"关闭优先支持标记":"开启优先支持标记";
   var sl=$("supportList");if(sl)sl.innerHTML=reqs.length?("<ul class='small'>"+reqs.map(function(r){return "<li>"+esc(r.at)+" · "+esc(r.text)+"</li>";}).join("")+"</ul>"):"";
 }
