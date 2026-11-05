@@ -154,6 +154,10 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <p class="small">去年表→类型对照：W-2→工资；Schedule E→房租；Schedule C / Schedule SE / 1099-NEC→自雇；1099-INT→利息；1099-DIV→股息；1099-R→退休金；SSA-1099→社保金；其余进“其他”。</p>
 <div id="mergedBox"></div>
 <div id="mergedSummary"></div>
+<h3>批量归档核对</h3>
+<p class="muted small">一键核对全包：每项有没有文件、有没有数字、不适用还是待 transcript，一次出结果。只出报告，不改任何状态。</p>
+<p><button id="btnBatchCheck" class="secondary">一键批量核对</button></p>
+<div id="batchBox"></div>
 </div>
 
 <div class="card">
@@ -167,6 +171,9 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <p><button id="btnUncertainAnalyze">识别事项并生成追问</button></p>
 <div id="uncertainQuestions"></div>
 <div id="uncertainPacket"></div>
+<h3>深度不确定事项包</h3>
+<p class="muted small">按你已录的每一项展开：原文、已答追问、还缺的信息、对应证据、问税务师的候选问题。只整理、不下税务结论。</p>
+<div id="deepBox"></div>
 <div id="uncertainNext" class="hidden">
 <h3>材料包整理完，下一步你自己选（工具不抽成、不指定某一家）</h3>
 <p><a href="https://irs.treasury.gov/rpo/rpo.jsf" target="_blank" rel="noopener">找税务师复核：IRS 持证报税人目录（官方）</a><br>
@@ -198,6 +205,9 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <p class="small"><b>上次检查：2026-11-03，你的清单无需改动。</b></p>
 <p class="notice"><b>说明：</b>我们会关注 IRS 变化，影响你的清单时通知你；不会在你不知情时改你的包。</p>
 <p><a href="https://www.irs.gov/newsroom/irs-news-bulletins" target="_blank" rel="noopener">IRS 新闻订阅页（官方）</a> · <a href="https://www.irs.gov/individual-tax-filing" target="_blank" rel="noopener">IRS 个人报税页（官方）</a> · <a href="https://irs.treasury.gov/rpo/rpo.jsf" target="_blank" rel="noopener">IRS 持证报税人目录（官方）</a></p>
+<h3>个性化探针（按你的包过滤）</h3>
+<p class="muted small">通用提醒在上面；下面只列与你今年清单里的表相关的探针。清单空着时先显示通用基线。</p>
+<div id="probeBox"></div>
 </div>
 
 <div class="card">
@@ -210,6 +220,12 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <h2>6d · IRS 对照提醒（基础版）</h2>
 <p class="muted small">按 IRS 常见比对口径整理的提醒：信息表漏报、提取数与表格数不一致、未完成两步核对，是常见补件原因。以下只作“请核对、请找 CPA”的提醒，不下税务结论，不代表 IRS 已认定任何问题。基础版免费；更深的规则包以后再议。</p>
 <div id="warnBox"></div>
+</div>
+
+<div class="card">
+<h2>6e · 全年提醒线</h2>
+<p class="muted small">按当年报税季通用截止日 + 你包里的缺项，列出全年提醒。日期按今天实时算状态：已过 / 今天 / 30 天内 / 待办。只提醒、不算税、不替你报税。</p>
+<div id="reminderBox"></div>
 </div>
 
 <div class="card">
@@ -234,6 +250,17 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <div><label for="priorCpaNote">备注（可选）</label><input id="priorCpaNote" placeholder="例如：去年经手的 Schedule C"></div>
 <p><button id="btnSavePriorCpa">保存去年会计师</button> <button id="btnClearPriorCpa" class="secondary">清除</button> <span id="priorCpaMsg" class="small"></span></p>
 <p class="small" id="priorCpaStatus"></p>
+</div>
+
+<div class="card">
+<h2>多包与多年对比</h2>
+<p class="muted small">把当前包存成一版（命名 + 年份），多版之间按表对比：每张表在各版里是已备、缺项还是没有这项。快照只存清单摘要，不复制文件内容；当前包本身不受影响。</p>
+<div class="row">
+<div><label for="snapName">版本名</label><input id="snapName" placeholder="例如：2025 税年定稿"></div>
+<div><label for="snapYear">年份</label><input id="snapYear" placeholder="例如：2025"></div>
+</div>
+<p><button id="btnSnapSave" class="secondary">把当前包存成一版</button> <span id="snapMsg" class="small"></span></p>
+<div id="snapList"></div>
 </div>
 
 <div class="card" id="subCard">
@@ -262,14 +289,20 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <p class="small">季票列的 7 项即下面 7 项额外服务，状态见下；免费版功能永久免费。</p>
 <h3>7 项额外服务与状态</h3>
 <ul class="small">
-<li>全年提醒线 —— 计划中</li>
-<li>个性化 IRS 探针 —— 通用 IRS 更新提醒已有（6b），个性化版计划中</li>
-<li>深度不确定事项包 —— 计划中（5b 不确定事项整理已有，深度包计划中）</li>
+<li>全年提醒线 —— 界面已就绪（正式版预览可见，见 6e 全年提醒线），付费门禁等后端开通</li>
+<li>个性化 IRS 探针 —— 界面已就绪（正式版预览可见，见 6b 个性化探针），付费门禁等后端开通</li>
+<li>深度不确定事项包 —— 界面已就绪（正式版预览可见，见 5b 深度包），付费门禁等后端开通</li>
 <li>CPA 交接工作台 —— 界面已就绪（正式版预览可见），付费门禁等后端开通</li>
-<li>多包与多年对比 —— 计划中</li>
-<li>批量归档核对 —— 计划中</li>
-<li>优先工具支持 —— 计划中</li>
+<li>多包与多年对比 —— 界面已就绪（正式版预览可见），付费门禁等后端开通</li>
+<li>批量归档核对 —— 界面已就绪（正式版预览可见，见 5 批量归档核对），付费门禁等后端开通</li>
+<li>优先工具支持 —— 界面已就绪（正式版预览可见），付费门禁等后端开通</li>
 </ul>
+<h3>优先工具支持</h3>
+<p class="small" id="priorityStatus"></p>
+<label for="supportText">优先支持请求（只存你的账号；支持邮箱待公布，后端开通后走支持通道）</label>
+<textarea id="supportText" rows="2" style="width:100%;font-size:15px;padding:9px 10px;border-radius:8px;border:1px solid #bbb" placeholder="例如：清单里 Schedule E 的凭证核对卡住了"></textarea>
+<p><button id="btnPriority" class="secondary">开启优先支持标记</button> <button id="btnSupportSend" class="secondary">提交优先请求（本地保存）</button></p>
+<div id="supportList"></div>
 <p class="small">条款：订阅不算税、不报税、不给税务结论、不判福利与退税资格。退款口径待公布（律师核过后写定）。</p>
 <p class="small" id="subStatus"></p>
 <p><button id="btnBuySub">购买季票</button></p>
@@ -327,7 +360,7 @@ function pending(){return load("tpo_pending",{})}
 function fallbackHash(text){var h=2166136261;for(var i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return "fallback-"+(h>>>0).toString(16)}
 function sha(text){try{if(window.crypto&&crypto.subtle)return crypto.subtle.digest("SHA-256",new TextEncoder().encode(text)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}).catch(function(){return fallbackHash(text)})}catch(e){}return Promise.resolve(fallbackHash(text))}
 var currentUser=null,packet=null;
-function newPacket(){return {changes:{},changesDir:{},changesCollapsed:true,mergedV2:true,lastYear:[],checklist:[],sheets:[],transcript:null,exports:[],uncertain:[],cpaReview:null,orders:[],priorCpa:{name:"",contact:"",note:""},payPacks:1,selectedOrderId:null}}
+function newPacket(){return {changes:{},changesDir:{},changesCollapsed:true,mergedV2:true,lastYear:[],checklist:[],sheets:[],transcript:null,exports:[],uncertain:[],cpaReview:null,orders:[],priorCpa:{name:"",contact:"",note:""},payPacks:1,selectedOrderId:null,supportRequests:[],prioritySupport:false}}
 function statusText(s){return s==="uploaded"?"已上传":s==="na"?"不适用":s==="pending"?"待 transcript":"未开始"}
 function renderCpa(){
   var t=$("cpaReviewText");
@@ -732,7 +765,7 @@ function renderExports(){
   packet.exports.forEach(function(e){var li=document.createElement("li");li.className="small";li.textContent=e;ul.appendChild(li)});
   $("transRecord").textContent=packet.transcript?packet.transcript:"无";
 }
-function renderAll(){renderChanges();renderLast();renderMerged();renderExports();renderCpa();renderDraft();renderWarnings();renderSubStatus();renderOrders();renderPriorCpa();applyCollapse()}
+function renderAll(){renderChanges();renderLast();renderMerged();renderExports();renderCpa();renderDraft();renderWarnings();renderSubStatus();renderOrders();renderPriorCpa();renderReminders();renderProbe();renderDeep();renderSnaps();renderPriority();applyCollapse()}
 function secKeyFromH2(t){
   if(t.indexOf("州税范围")>=0)return "s3b";
   if(t.indexOf("去年有什么")>=0)return "s3";
@@ -1473,6 +1506,122 @@ $("btnCpaReview").onclick=function(){
   packet.exports.push(new Date().toLocaleString()+" 已发送给会计师（"+d+"）");savePacket();renderExports();
 };
 $("btnCpaClear").onclick=function(){packet.cpaReview=null;packet.exports=packet.exports.filter(function(e){return e.indexOf("已发送给会计师")<0;});savePacket();renderCpa();renderExports();};
+function fmtD(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);}
+function dayLabel(d){var t=new Date();t.setHours(0,0,0,0);var x=new Date(d);x.setHours(0,0,0,0);var n=Math.round((x-t)/86400000);if(n<0)return "已过";if(n===0)return "今天";if(n<=30)return n+" 天后";return "待办";}
+function renderReminders(){
+  var el=$("reminderBox");if(!el||!packet)return;
+  var now=new Date();var y=now.getFullYear();
+  var filingY=(now.getMonth()<3||(now.getMonth()===3&&now.getDate()<=15))?y:y+1;var ty=filingY-1;
+  var items=[
+    [ty+" 税年第 4 季预估税",new Date(filingY,0,15),"季度预估税通用截止日"],
+    [ty+" 税年申报截止",new Date(filingY,3,15),"联邦个人报税截止，以 IRS 当季公告为准"],
+    [filingY+" 年第 1 季预估税",new Date(filingY,3,15),"季度预估税通用截止日"],
+    [ty+" 税年延期截止",new Date(filingY,9,15),"延期申报截止；季票有效期亦至此日"]
+  ];
+  var html="<ul class='small'>"+items.map(function(it){return "<li><b>"+esc(it[0])+" · "+fmtD(it[1])+"（"+dayLabel(it[1])+"）</b>："+esc(it[2])+"</li>";}).join("")+"</ul>";
+  var miss=packet.checklist.filter(function(it){return !rowResolved(it);});
+  var extra=[];
+  if(miss.length)extra.push("补齐缺项：还差 "+miss.length+" 项——"+miss.map(function(it){return rowTitle(it)+(it.payer?"（"+it.payer+"）":"");}).join("、"));
+  if(!packet.transcript)extra.push("Transcript 对账：你还没上传 transcript（可选，不挡整理）");
+  if(packet.uncertain&&packet.uncertain.length)extra.push("不确定事项：已录 "+packet.uncertain.length+" 项，见 5b 深度包");
+  if(packet.cpaReview)extra.push("已发送给会计师：见 7 交接记录");
+  if(extra.length)html+="<p class='small'><b>按你的包提醒：</b></p><ul class='small'>"+extra.map(function(e){return "<li>"+esc(e)+"</li>";}).join("")+"</ul>";
+  el.innerHTML=html;
+}
+var PROBE_NOTES=[
+  {match:["Schedule C","Schedule SE"],text:"自雇相关：季度预估税截止日与 Schedule SE 口径变化会影响你的包，见 6e 提醒线。"},
+  {match:["Schedule E"],text:"出租房产相关：Schedule E 表样与折旧口径变化会影响你的包。"},
+  {match:["1099-INT"],text:"利息相关：1099-INT 信息表口径变化会影响你的包。"},
+  {match:["1099-DIV"],text:"股息相关：1099-DIV 信息表口径变化会影响你的包。"},
+  {match:["1095-A"],text:"医保相关：1095-A 与保费税收抵免对账（Form 8962）口径变化会影响你的包。"},
+  {match:["W-2"],text:"工资相关：W-2 预扣与信息表口径变化会影响你的包。"}
+];
+function renderProbe(){
+  var el=$("probeBox");if(!el||!packet)return;
+  var toks=[];
+  (packet.lastYear||[]).forEach(function(f){if(f.form)toks.push(f.form);if(f.title)toks.push(f.title);});
+  (packet.checklist||[]).forEach(function(it){
+    if(it.form)toks.push(it.form);if(it.title)toks.push(it.title);
+    if(it.kind==="wages")toks.push("W-2");if(it.kind==="rental")toks.push("Schedule E");
+    if(it.kind==="selfemp")toks.push("Schedule C");if(it.kind==="interest")toks.push("1099-INT");
+    if(it.kind==="dividends")toks.push("1099-DIV");
+  });
+  var hits=[];PROBE_NOTES.forEach(function(n){if(n.match.some(function(m){return toks.some(function(t){return t&&t.indexOf(m)>=0;});}))hits.push(n.text);});
+  var base="<p class='small'><b>通用基线（2026-11-03 检查）：</b>2026 税年申报截止 2027-04-15；Free File 2025 税年 AGI 门槛 ≤$89,000；Direct File 2026 季停用。探针每周一复查，有变化影响你的清单时通知你。</p>";
+  if(!hits.length){el.innerHTML=base+"<p class='small'>你的清单里还没有可匹配的表：先生成今年清单，探针会按你的表过滤。</p>";return;}
+  el.innerHTML=base+"<ul class='small'>"+hits.map(function(h){return "<li>"+esc(h)+"</li>";}).join("")+"</ul>";
+}
+function renderDeep(){
+  var el=$("deepBox");if(!el||!packet)return;
+  var us=packet.uncertain||[];
+  if(!us.length){el.innerHTML="<p class='small'>还没录不确定事项。先在上面打字或语音录入，生成预估材料包后，这里会按项展开深度包。</p>";return;}
+  el.innerHTML=us.map(function(u,i){
+    var qs=u.type==="境外售房"?FOREIGN_Q:GENERIC_Q;
+    var answered=[],missing=[];
+    qs.forEach(function(q){var v=u.answers?u.answers[q[0]]:"";if(v&&v!=="不确定"&&v!=="待查")answered.push(q[1]+"："+v);else missing.push(q[1]);});
+    var docs=u.type==="境外售房"?FOREIGN_DOCS:GENERIC_DOCS;
+    var ask=u.type==="境外售房"?["主要居所排除是否适用、能排除多少","在中国已缴税是否合格外国税收抵免、限额多少","加州居民 / 部分年度居民划分与收入来源地"]:["候选税范畴如何定","还需要补哪些事实才能判断","对应要备哪些文件"];
+    return "<div class='card' style='margin:10px 0'><h3>第 "+(i+1)+" 项 · "+esc(u.type)+"（"+esc(u.at||"")+"）</h3>"
+    +"<p class='small'><b>原文：</b>"+esc(u.text)+"</p>"
+    +(answered.length?"<p class='small'><b>已答追问：</b>"+answered.map(esc).join("；")+"</p>":"")
+    +(missing.length?"<p class='small'><b>还缺的信息：</b>"+missing.map(esc).join("、")+"</p>":"<p class='small'><b>追问已答齐。</b></p>")
+    +"<p class='small'><b>对应证据：</b>"+docs.map(esc).join("、")+"</p>"
+    +"<p class='small'><b>问税务师的候选问题：</b>"+ask.map(esc).join("；")+"</p>"
+    +"<p class='small muted'>只整理、不下税务结论；金额与资格由持证税务师判断。</p></div>";
+  }).join("");
+}
+function snapKey(){return "tpo_snaps_"+currentUser;}
+function snapForms(){
+  var f={};(packet.checklist||[]).forEach(function(it){var t=rowTitle(it);if(!f[t])f[t]={done:0,total:0};f[t].total++;if(rowResolved(it))f[t].done++;});
+  return f;
+}
+function renderSnaps(){
+  var el=$("snapList");if(!el||!packet||!currentUser)return;
+  var snaps=load(snapKey(),[]);
+  var cur=snapForms();
+  if(!snaps.length){el.innerHTML="<p class='small'>还没存过版本。上面写个版本名和年份，把当前包存成一版，就能和以后各版对比。</p>";return;}
+  var titles=[];function addT(t){if(titles.indexOf(t)<0)titles.push(t);}
+  Object.keys(cur).forEach(addT);snaps.forEach(function(s){Object.keys(s.forms||{}).forEach(addT);});
+  function cell(f){if(!f)return "—";return f.done+"/"+f.total+" 已解决";}
+  var head="<tr><th>表 / 项目</th><th>当前包</th>"+snaps.map(function(s){return "<th>"+esc(s.name)+(s.year?"（"+esc(s.year)+"）":"")+"</th>";}).join("")+"</tr>";
+  var body=titles.map(function(t){return "<tr><td>"+esc(t)+"</td><td>"+cell(cur[t])+"</td>"+snaps.map(function(s){return "<td>"+cell((s.forms||{})[t])+"</td>";}).join("")+"</tr>";}).join("");
+  el.innerHTML="<p class='small'>各版进度：当前包 "+packet.checklist.filter(rowResolved).length+"/"+packet.checklist.length+" 项已解决；"+snaps.map(function(s){return esc(s.name)+" "+s.done+"/"+s.total;}).join("；")+"。</p><table>"+head+body+"</table>";
+}
+function renderPriority(){
+  var el=$("priorityStatus");if(!el||!packet)return;
+  var reqs=packet.supportRequests||[];
+  el.innerHTML=(packet.prioritySupport?"<span class='badge uploaded'>优先工具支持已开启（预览）</span>":"<span class='small'>优先工具支持未开启。</span>")+"<span class='small'> 已提交优先请求 "+reqs.length+" 条（只存你的账号；支持邮箱待公布，后端开通后走支持通道）。</span>";
+  var sl=$("supportList");if(sl)sl.innerHTML=reqs.length?("<ul class='small'>"+reqs.map(function(r){return "<li>"+esc(r.at)+" · "+esc(r.text)+"</li>";}).join("")+"</ul>"):"";
+}
+$("btnBatchCheck").onclick=function(){
+  if(!packet)return;
+  var rows=packet.checklist||[];
+  var withFile=rows.filter(function(it){return !!it.fileName;});
+  var withNum=rows.filter(function(it){return !!it.figure;});
+  var na=rows.filter(function(it){return it.status==="na";});
+  var pend=rows.filter(function(it){return it.status==="pending";});
+  var unstarted=rows.filter(function(it){return it.status==="not-started";});
+  var missFile=rows.filter(function(it){return !it.fileName&&it.status!=="na";});
+  var missNum=rows.filter(function(it){return !it.figure&&it.status!=="na";});
+  function names(a){return a.map(function(it){return rowTitle(it)+(it.payer?"（"+it.payer+"）":"");}).join("、");}
+  $("batchBox").innerHTML="<div class='notice'><b>批量核对结果（"+new Date().toLocaleString()+"）：</b>共 "+rows.length+" 项 · 有文件 "+withFile.length+" · 有数字 "+withNum.length+" · 不适用 "+na.length+" · 待 transcript "+pend.length+" · 未开始 "+unstarted.length+"</div>"
+  +"<p class='small'><b>缺文件：</b>"+(missFile.length?esc(names(missFile)):"无")+"；<b>缺数字：</b>"+(missNum.length?esc(names(missNum)):"无")+"</p>"
+  +"<p class='small muted'>只出报告，不改状态；缺项去第 5 节逐项补。</p>";
+};
+$("btnSnapSave").onclick=function(){
+  if(!packet||!currentUser)return;
+  var name=$("snapName").value.trim();var year=$("snapYear").value.trim();
+  if(!name){alert("请先写版本名。");return;}
+  var snaps=load(snapKey(),[]);
+  snaps.push({id:Date.now()+""+Math.random(),name:name,year:year,at:new Date().toLocaleString(),total:packet.checklist.length,done:packet.checklist.filter(rowResolved).length,forms:snapForms()});
+  save(snapKey(),snaps);$("snapMsg").textContent="已保存一版："+name;renderSnaps();
+};
+$("btnPriority").onclick=function(){if(!packet)return;packet.prioritySupport=true;savePacket();renderPriority();};
+$("btnSupportSend").onclick=function(){
+  if(!packet)return;var t=$("supportText").value.trim();if(!t){alert("请先写请求内容。");return;}
+  if(!packet.supportRequests)packet.supportRequests=[];
+  packet.supportRequests.push({text:t,at:new Date().toLocaleString()});$("supportText").value="";savePacket();renderPriority();
+};
 $("btnExportJson").onclick=function(){
   var data={tool:"报税包整理器 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,change_dir:packet.changesDir||{},last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||"",figure:it.figure?{category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||""}:null,voucher_checked:!!it.voucherChecked,form_amount_cents:it.formAmountCents!=null?it.formAmountCents:null,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it),kind:it.kind||null,costs:(it.costs||[]).map(function(e){return {label:e.custom?(e.customLabel||"其他"):e.label,amount_cents:e.cents,amount_display:e.cents==null?null:fmtMoney(e.cents)}})}}),draft_estimate:{lines:draftLines().map(function(it){return {form:it.form,payer:it.payer,category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||"",voucher_checked:!!it.voucherChecked,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),totals_by_category:(function(){var o={};var t=draftTotals();Object.keys(t.byCat).forEach(function(c){o[c]=fmtMoney(t.byCat[c]);});return o;})(),grand_total_display:fmtMoney(draftTotals().grand),counts:{figures:draftLines().length,voucher_checked:draftLines().filter(function(it){return it.voucherChecked}).length,form_matched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length,form_mismatched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length},label:"预估草稿，非申报表，须 CPA 对照凭证与表格数核对"},warnings:computeWarnings(),prior_cpa:packet.priorCpa||null,transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存你的账号，不进导出文件。发送记录由用户标记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。预估草稿金额为用户确认的证据数字，非申报表，须 CPA 对照凭证与表格数核对；IRS 对照提醒只作请核对提醒，不代表 IRS 已认定任何问题；工具不提取、不保存社保号。去年会计师信息由客户自填，平台不验证、不背书。收入填报数字为用户自填草稿，须CPA核对。"};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
