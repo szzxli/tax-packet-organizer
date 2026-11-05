@@ -2,7 +2,11 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16324f">
+<meta name="description" content="把报税材料按步骤整理成清单，跟踪缺项，并导出给会计师审核。">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/icon.svg">
 <title>报税包整理器</title>
 <style>
 *{box-sizing:border-box} body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;margin:0;background:#eef1f4;color:#1a1a1a;line-height:1.6}
@@ -26,6 +30,30 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 #printArea{display:none}
 @media print{ body{background:#fff} header,.no-print{display:none!important} main{max-width:none;padding:0} .card{border:none;margin:0;padding:0} #printArea{display:block!important} #appViewSections{display:none!important} }
 @media(max-width:600px){ .row>*{min-width:100%} main{padding:14px 10px} .card{padding:14px 12px} header{padding:16px 12px} input,select,textarea{font-size:16px} button,input,select{min-height:44px} input[type=file]{width:100%} table{display:block;overflow-x:auto;white-space:nowrap} .card>p>button{width:100%} }
+:root{--ink:#16324f;--blue:#2a6db0;--paper:#fff;--mist:#f3f6f8;--line:#dfe7ed;--mint:#e9f5ef;--green:#236b4b}
+body{background:linear-gradient(180deg,#eaf1f6 0,#f4f7f9 320px,#f4f7f9 100%);color:#203040}
+header{padding:22px max(16px,calc((100vw - 1000px)/2));background:linear-gradient(115deg,#123453,#276ca8);box-shadow:0 4px 18px rgba(19,50,79,.12)}
+header h1{font-size:24px;letter-spacing:.01em}header p{font-size:14px}
+main{max-width:1000px;padding:24px 20px 112px}
+.card{border-color:var(--line);border-radius:16px;padding:22px;margin:14px 0;box-shadow:0 5px 18px rgba(19,50,79,.045)}
+#authView{max-width:720px;margin:24px auto;padding:clamp(20px,4vw,34px)}
+h2{line-height:1.35}button,summary{transition:background-color .16s ease,border-color .16s ease,transform .16s ease}
+button{border-radius:11px}button:active{transform:translateY(1px)}
+details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
+#loginPanel{border-top:1px solid var(--line);margin-top:18px;padding-top:8px}
+#loginPanel summary{color:#526475}
+.journey-guide{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 20px;margin:14px 0 18px;background:linear-gradient(120deg,#fff,#f1f7fb);border:1px solid #d9e6ef;border-radius:16px}
+.journey-copy{min-width:220px;flex:1}.journey-copy strong{display:block;color:var(--ink);font-size:17px}.journey-copy p{margin:4px 0 0;color:#596c7d;font-size:13px}
+.journey-steps{display:flex;align-items:center;gap:7px;flex-wrap:wrap;color:#35546c;font-size:12px;font-weight:700}
+.journey-steps .step-tab{background:#fff;color:#35546c;border:1px solid #dbe5ec;border-radius:999px;padding:8px 12px;font-size:12px;min-height:38px;white-space:nowrap}
+.journey-steps .step-tab.active{background:#16324f;color:#fff;border-color:#16324f}
+#flowStepDescription{margin:4px 0 0;color:#596c7d;font-size:13px}
+.sticky-progress{position:fixed;z-index:20;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(760px,calc(100% - 24px));display:flex;align-items:center;gap:16px;padding:13px 16px;background:rgba(255,255,255,.97);border:1px solid #d9e4eb;border-radius:16px;box-shadow:0 10px 34px rgba(16,43,65,.2);backdrop-filter:blur(14px)}
+.sticky-copy{flex:1;min-width:0}.sticky-copy strong{display:block;color:var(--ink);font-size:14px}.sticky-copy p{margin:2px 0 0;color:#5a6d7d;font-size:12px}.progress-track{height:5px;margin-top:8px;overflow:hidden;border-radius:99px;background:#e6edf2}.progress-track span{display:block;width:0;height:100%;background:linear-gradient(90deg,#33896b,#5bb38d);border-radius:inherit;transition:width .25s ease}
+.sticky-progress button{white-space:nowrap;min-height:44px}.sec-head{align-items:center;gap:10px}.sec-sum{line-height:1.35}.sec-head h2{font-size:17px}
+#pageNav{padding:12px 16px}.journey-guide+#appViewSections{scroll-margin-top:16px}
+@media(max-width:600px){main{padding:14px 10px 108px}.card{padding:16px 13px}.journey-guide{padding:15px;gap:12px}.journey-steps{gap:5px}.journey-steps .step-tab{padding:7px 9px;font-size:11px}.sticky-progress{bottom:max(8px,env(safe-area-inset-bottom));gap:10px;padding:10px 11px;border-radius:14px}.sticky-copy strong{font-size:13px}.sticky-copy p{font-size:11px}.sticky-progress button{padding:9px 11px;font-size:13px;max-width:145px;white-space:normal}.sec-head{align-items:flex-start;flex-wrap:wrap}.sec-head h2{flex-basis:100%}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -58,12 +86,14 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <div><label for="loginPass">密码</label><input id="loginPass" type="password"></div>
 </div>
 <p><button id="btnLogin">登录</button> <span id="loginMsg" class="small"></span></p>
+<p><button id="btnBackGuest" class="secondary">先不登录，继续整理</button> <span class="small">整理免费部分不用登录；订阅功能、订阅页、支付才需要登录。</span></p>
 </div>
 
 <div id="appView" class="hidden">
 <div class="card no-print">
-<p><b>已登录：</b><span id="who"></span> · <span id="progressText"></span></p>
-<p><button id="btnLogout" class="secondary">退出登录</button> <button id="btnDeletePacket" class="danger">一键删除我的包和文件记录</button></p>
+<p><b id="whoLabel">已登录：</b><span id="who"></span> · <span id="progressText"></span></p>
+<p><button id="btnLogout" class="secondary">退出登录</button> <button id="btnGoLogin" class="secondary hidden">登录 / 注册</button> <button id="btnDeletePacket" class="danger">一键删除我的包和文件记录</button></p>
+<p class="muted small hidden" id="guestNote">未登录整理中：进度只存这台浏览器，不会跨设备同步；订阅功能（提醒线、探针、深度包、交接、多包对比、批量核对、优先支持）需登录后可用。登录后，未登录时做的包会自动带进你的账号。</p>
 <p class="muted small">删除只删本账号的包（含清单、上传记录、transcript 对齐、导出记录），不影响其他账号。</p>
 </div>
 
@@ -73,10 +103,20 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 <button id="navSubscribe" class="secondary">订阅</button>
 <button id="navPay" class="secondary">支付</button>
 </div>
-<p class="muted small">整理页做你的包；订阅页看季票；支付页完成购买。整理页内的各节仍可上下收起。</p>
+<p class="muted small">整理流程：先建清单，再补材料，最后导出给会计师。订阅与支付是独立页面。</p>
 </div>
 
-<div id="appViewSections">
+<div class="journey-guide no-print" id="journeyGuide">
+<div class="journey-copy"><strong>按步骤整理，今年的材料包一目了然</strong><p id="flowStepDescription">可以分几次完成；每次回来，从上次停下的地方继续。</p></div>
+<div class="journey-steps" role="tablist" aria-label="整理步骤">
+<button id="flowStep1" class="step-tab active" type="button" role="tab" aria-selected="true" aria-controls="appViewSections">01 建清单</button>
+<button id="flowStep2" class="step-tab" type="button" role="tab" aria-selected="false" aria-controls="appViewSections">02 补材料</button>
+<button id="flowStep3" class="step-tab" type="button" role="tab" aria-selected="false" aria-controls="appViewSections">03 复核导出</button>
+</div>
+<button id="installAppBtn" class="secondary hidden" type="button">安装到设备</button>
+</div>
+
+<div id="appViewSections" role="tabpanel" aria-labelledby="flowStep1">
 <div class="card">
 <div id="changesHead" class="chg-head"><h2>2 · 今年有什么变化？先问变化，没变的不展开 <span id="changesCheck" class="chg-check hidden">✓</span></h2><p id="changesSummary" class="muted small"></p></div>
 <div id="changesBody">
@@ -311,6 +351,10 @@ table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid
 
 
 </div>
+<div id="stickyProgress" class="sticky-progress no-print hidden" aria-live="polite">
+<div class="sticky-copy"><strong id="stickyProgressTitle">继续整理</strong><p id="stickyProgressText"></p><div class="progress-track" aria-hidden="true"><span id="stickyProgressFill"></span></div></div>
+<button id="stickyProgressAction" type="button">继续</button>
+</div>
 <div id="payView" class="hidden no-print">
 <div class="card">
 <h2>支付与订单</h2>
@@ -360,6 +404,22 @@ function pending(){return load("tpo_pending",{})}
 function fallbackHash(text){var h=2166136261;for(var i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return "fallback-"+(h>>>0).toString(16)}
 function sha(text){try{if(window.crypto&&crypto.subtle)return crypto.subtle.digest("SHA-256",new TextEncoder().encode(text)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}).catch(function(){return fallbackHash(text)})}catch(e){}return Promise.resolve(fallbackHash(text))}
 var currentUser=null,packet=null;
+var GUEST_KEY="tpo_packet_guest",pendingPage=null;
+function isGuest(){return !currentUser;}
+function packetKeyFor(){return currentUser?packetKey(currentUser):GUEST_KEY;}
+function loadGuest(){packet=load(GUEST_KEY,null);if(!packet){packet=newPacket();save(GUEST_KEY,packet)}else{if(packet.changesCollapsed===undefined)packet.changesCollapsed=true;if(!packet.mergedV2){backfillRows();migrateSheets();packet.mergedV2=true;savePacket();}}}
+function gateNote(){return "<p class='small'>登录后可用：这是季票功能，登录后解锁。</p><p><button class='secondary' onclick='showAuth()'>登录 / 注册</button></p>";}
+function renderGates(){
+  if(!packet||!isGuest())return;
+  var g=gateNote();
+  var rb=$("reminderBox");if(rb)rb.innerHTML=g;
+  var pb=$("probeBox");if(pb)pb.innerHTML=g;
+  var db=$("deepBox");if(db)db.innerHTML=g;
+  var sl=$("snapList");if(sl)sl.innerHTML=g;
+  var bb=$("batchBox");if(bb)bb.innerHTML=g;
+  var ht=$("handoverText");if(ht)ht.innerHTML="登录后可用：交给会计师是季票功能，登录后解锁。";
+  var ct=$("cpaReviewText");if(ct)ct.innerHTML=g;
+}
 function newPacket(){return {changes:{},changesDir:{},changesCollapsed:true,mergedV2:true,lastYear:[],checklist:[],sheets:[],transcript:null,exports:[],uncertain:[],cpaReview:null,orders:[],priorCpa:{name:"",contact:"",note:""},payPacks:1,selectedOrderId:null,supportRequests:[],prioritySupport:false}}
 function statusText(s){return s==="uploaded"?"已上传":s==="na"?"不适用":s==="pending"?"待 transcript":"未开始"}
 function renderCpa(){
@@ -427,7 +487,7 @@ function migrateSheets(){
   });
   packet.sheets=[];
 }
-function savePacket(){if(currentUser)save(packetKey(currentUser),packet)}
+function savePacket(){if(packet)save(packetKeyFor(),packet)}
 function requestText(form){for(var i=0;i<FORM_MAP.length;i++)if(FORM_MAP[i][0]===form)return FORM_MAP[i][1];return "今年 "+form}
 function changeReq(key,dir){
   if(key==="抚养人")return dir==="减少"?"抚养人减少相关证明（如适用）":"新增抚养人证明（出生/收养记录等）";
@@ -765,7 +825,7 @@ function renderExports(){
   packet.exports.forEach(function(e){var li=document.createElement("li");li.className="small";li.textContent=e;ul.appendChild(li)});
   $("transRecord").textContent=packet.transcript?packet.transcript:"无";
 }
-function renderAll(){renderChanges();renderLast();renderMerged();renderExports();renderCpa();renderDraft();renderWarnings();renderSubStatus();renderOrders();renderPriorCpa();renderReminders();renderProbe();renderDeep();renderSnaps();renderPriority();applyCollapse()}
+function renderAll(){renderChanges();renderLast();renderMerged();renderExports();renderCpa();renderDraft();renderWarnings();renderSubStatus();renderOrders();renderPriorCpa();renderReminders();renderProbe();renderDeep();renderSnaps();renderPriority();renderGates();applyCollapse();renderStickyProgress()}
 function secKeyFromH2(t){
   if(t.indexOf("州税范围")>=0)return "s3b";
   if(t.indexOf("去年有什么")>=0)return "s3";
@@ -775,6 +835,8 @@ function secKeyFromH2(t){
   if(t.indexOf("IRS 更新提醒")>=0)return "s5b";
   if(t.indexOf("预估报税表草稿")>=0)return "s5c";
   if(t.indexOf("IRS 对照提醒")>=0)return "s5d";
+  if(t.indexOf("全年提醒线")>=0)return "s5e";
+  if(t.indexOf("多包与多年对比")>=0)return "s6c";
   if(t.indexOf("导出给会计师")>=0)return "s6";
   if(t.indexOf("去年会计师")>=0)return "s6b";
   if(t.indexOf("订阅")==0)return "sub";
@@ -788,8 +850,9 @@ function wrapSections(){
   for(var i=0;i<wrap.children.length;i++)if(wrap.children[i].className.indexOf("card")>=0)kids.push(wrap.children[i]);
   kids.forEach(function(card){
     var h2=card.querySelector("h2");if(!h2)return;
-    if(card.querySelector("#changesHead"))return;
+    if(card.querySelector("#changesHead")){card.dataset.flowStep="1";return;}
     var key=secKeyFromH2(h2.textContent.trim());if(!key)return;
+    card.dataset.flowStep=card.id==="subCard"?"0":String(flowStepForKey(key));
     var head=document.createElement("div");head.className="sec-head";
     var sum=document.createElement("span");sum.className="sec-sum";
     var check=document.createElement("span");check.className="chg-check hidden";check.textContent="✓";
@@ -815,6 +878,8 @@ function secSummary(key){
   if(key==="s5b")return "IRS 更新提醒已开启";
   if(key==="s5c"){var ls=draftLines();if(!ls.length)return "未录";var tot=draftTotals();var v=ls.filter(function(it){return it.voucherChecked}).length;var m=ls.filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length;return "已录 "+ls.length+" 项数字，预估合计 "+fmtMoney(tot.grand)+"（凭证已核对 "+v+" · 表格一致 "+m+"）";}
   if(key==="s5d"){var w=computeWarnings();if(!w.length)return "暂无提醒";var d=w.filter(function(x){return x.text.indexOf("不一致")>=0}).length;var m=w.filter(function(x){return x.text.indexOf("未开始")>=0||x.text.indexOf("待 transcript")>=0}).length;return w.length+" 条提醒（差异 "+d+" · 缺项 "+m+"）";}
+  if(key==="s5e")return "按日期查看全年提醒";
+  if(key==="s6c")return "跨年份清单摘要对照";
   if(key==="s6b")return (packet.priorCpa&&packet.priorCpa.name)?("已指定："+packet.priorCpa.name):"未指定";
   if(key==="s6"){var n=packet.exports.filter(function(e){return e.indexOf("用户自记")<0&&e.indexOf("已发送给会计师")<0}).length;var s=n?("已导出 "+n+" 次"):"未导出";if(packet.cpaReview)s+=" · 已发送给会计师";return s;}
   if(key==="sub"){var os=(packet.orders||[]);return os.length?("订单 "+os.length+" 笔"):"免费版";}
@@ -834,7 +899,9 @@ function secDone(key){
 }
 function applyCollapse(){
   if(!packet)return;
-  if(!packet.collapsed)packet.collapsed={s3:true,s3b:true,s4:true,s4b:true,s5:true,s5b:true,s5c:true,s5d:true,s6:true,s6b:true,sub:true,safe:true};
+  var defaults={s3:true,s3b:true,s4:true,s4b:true,s5:true,s5b:true,s5c:true,s5d:true,s5e:true,s6:true,s6b:true,s6c:true,sub:true,safe:true};
+  if(!packet.collapsed)packet.collapsed={};
+  Object.keys(defaults).forEach(function(key){if(typeof packet.collapsed[key]==="undefined")packet.collapsed[key]=defaults[key];});
   Object.keys(secHeads).forEach(function(key){
     var h=secHeads[key];
     var collapsed=!!packet.collapsed[key];
@@ -896,18 +963,68 @@ function renderOrders(){
   var st=$("payStatus"); if(st) st.textContent=os.length?("共 "+os.length+" 笔订单。"):"";
 }
 var currentPage=1;
+function flowStepForKey(key){
+  if(key==="changes")return 1;
+  if(key==="s3"||key==="s3b")return 1;
+  if(key==="s4"||key==="s4b"||key==="s5")return 2;
+  return 3;
+}
+var currentOrganizeStep=1;
+function updateStepTabs(){
+  var descriptions={1:"先核对今年变化、州税范围和去年表格，再生成今年清单。",2:"逐项补上文件与数字；不确定事项和 transcript 都是可选项。",3:"复核数字与提醒，再导出给会计师。"};
+  var copy=$("flowStepDescription");if(copy)copy.textContent=descriptions[currentOrganizeStep];
+  [1,2,3].forEach(function(step){var tab=$("flowStep"+step);if(!tab)return;var active=step===currentOrganizeStep;tab.classList.toggle("active",active);tab.setAttribute("aria-selected",active?"true":"false");});
+  var panel=$("appViewSections");if(panel)panel.setAttribute("aria-labelledby","flowStep"+currentOrganizeStep);
+}
+function setOrganizeStep(step,scrollToGuide){
+  currentOrganizeStep=Math.max(1,Math.min(3,Number(step)||1));
+  if(currentPage===1){
+    var wrap=$("appViewSections");
+    if(wrap)Array.prototype.forEach.call(wrap.children,function(card){if(card.className.indexOf("card")<0)return;var visible=card.id!=="subCard"&&Number(card.dataset.flowStep||0)===currentOrganizeStep;card.classList.toggle("hidden",!visible);});
+  }
+  updateStepTabs();renderStickyProgress();
+  if(scrollToGuide){var guide=$("journeyGuide");if(guide)guide.scrollIntoView({behavior:"smooth",block:"start"});}
+}
+function navigateToSection(key){
+  if(currentPage!==1)showPage(1);
+  setOrganizeStep(flowStepForKey(key),false);
+  var section=secHeads[key];
+  if(section&&packet){if(!packet.collapsed)packet.collapsed={};packet.collapsed[key]=false;savePacket();applyCollapse();section.body.parentElement.scrollIntoView({behavior:"smooth",block:"start"});return;}
+  var fallback=$("changesHead");if(fallback)fallback.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function recommendedOrganizeStep(){
+  if(!packet||!packet.checklist||!packet.checklist.length)return 1;
+  return packet.checklist.every(rowResolved)?3:2;
+}
+function advanceAfterGenerate(){if(!packet.checklist.length)return;navigateToSection(recommendedOrganizeStep()===3?"s6":"s4");}
+function renderStickyProgress(){
+  var bar=$("stickyProgress");if(!bar)return;
+  if(!packet||currentPage!==1){bar.classList.add("hidden");return;}
+  var rows=packet.checklist||[],total=rows.length,done=rows.filter(rowResolved).length;
+  var pct=total?Math.round(done*100/total):0;
+  var title=$("stickyProgressTitle"),text=$("stickyProgressText"),fill=$("stickyProgressFill"),action=$("stickyProgressAction");
+  var target="s3",label="建立今年清单",message="从去年表格或手头材料开始，先生成今年清单。";
+  if(total>0&&done<total){target="s4";label="继续补齐材料";message="已完成 "+done+" / "+total+" 项 · 还有 "+(total-done)+" 项待处理。";}
+  else if(total>0){target="s6";label="导出给会计师";message="全部 "+total+" 项已标记为已备或不适用，可以导出给 CPA。";}
+  title.textContent=total>0&&done===total?"材料包已整理完成":"你的整理进度";
+  text.textContent=message;fill.style.width=pct+"%";action.textContent=label;
+  action.onclick=function(){navigateToSection(target);};
+  bar.classList.remove("hidden");
+}
 function showPage(p){
+  if((p===2||p===3)&&isGuest()){pendingPage=p;showAuth();return;}
   currentPage=p;
   var sections=$("appViewSections"); var pay=$("payView");
   if(sections){
     for(var i=0;i<sections.children.length;i++){
       var c=sections.children[i]; if(c.className.indexOf("card")<0) continue;
-      if(p===1){ if(c.id==="subCard") c.classList.add("hidden"); else c.classList.remove("hidden"); }
+      if(p===1){var showCard=c.id!=="subCard"&&Number(c.dataset.flowStep||0)===currentOrganizeStep;c.classList.toggle("hidden",!showCard);}
       else if(p===2){ if(c.id==="subCard") c.classList.remove("hidden"); else c.classList.add("hidden"); }
       else c.classList.add("hidden");
     }
     sections.classList.toggle("hidden", p===3);
   }
+  var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",p!==1);
   if(pay) pay.classList.toggle("hidden", p!==3);
   ["navOrganize","navSubscribe","navPay"].forEach(function(id,idx){
     var b=$(id); if(!b) return;
@@ -916,13 +1033,23 @@ function showPage(p){
   });
   if(p===2 && packet){ if(!packet.collapsed) packet.collapsed={}; packet.collapsed.sub=false; savePacket(); applyCollapse(); renderSubStatus(); }
   if(p===3) renderOrders();
+  updateStepTabs();
+  renderStickyProgress();
 }
 wrapSections();
 function showApp(){
-  $("authView").classList.add("hidden");$("appView").classList.remove("hidden");$("who").textContent=currentUser;renderAll();showPage(1);
+  $("authView").classList.add("hidden");$("appView").classList.remove("hidden");
+  var g=isGuest();
+  $("whoLabel").textContent=g?"当前状态：":"已登录：";
+  $("who").textContent=g?"未登录（本机整理）":currentUser;
+  $("btnLogout").classList.toggle("hidden",g);
+  $("btnGoLogin").classList.toggle("hidden",!g);
+  $("guestNote").classList.toggle("hidden",!g);
+  currentOrganizeStep=recommendedOrganizeStep();renderAll();showPage(1);
 }
 function showAuth(){
   $("authView").classList.remove("hidden");$("appView").classList.add("hidden");
+  var sp=$("stickyProgress");if(sp)sp.classList.add("hidden");
 }
 $("btnRegister").onclick=function(){
   var email=$("regEmail").value.trim().toLowerCase(),pass=$("regPass").value;
@@ -959,12 +1086,23 @@ $("btnLogin").onclick=function(){
   var acc=accounts();if(!acc[email]){$("loginMsg").textContent="该邮箱未注册或未验证，请先注册验证";return}
   sha(email+":"+pass).then(function(h){
     if(h!==acc[email].hash){$("loginMsg").textContent="密码不对";return}
-    currentUser=email;try{localStorage.setItem("tpo_session",email)}catch(e){memStore["tpo_session"]=email}loadPacket(email);showApp();
+    (function(){
+    var guestHad=load(GUEST_KEY,null);
+    var guestHas=guestHad&&(((guestHad.checklist||[]).length)||((guestHad.uncertain||[]).length)||((guestHad.lastYear||[]).length));
+    var accHad=load(packetKey(email),null);
+    currentUser=email;try{localStorage.setItem("tpo_session",email)}catch(e){memStore["tpo_session"]=email}
+    if(!accHad&&guestHas){save(packetKey(email),guestHad);try{localStorage.removeItem(GUEST_KEY)}catch(e){}delete memStore[GUEST_KEY];}
+    loadPacket(email);showApp();
+    if(guestHas&&!accHad){alert("已把未登录时整理的包带进你的账号。");}
+    if(pendingPage){var pp=pendingPage;pendingPage=null;showPage(pp);}
+  })();
   });
 };
-$("btnLogout").onclick=function(){currentUser=null;packet=null;try{localStorage.removeItem("tpo_session")}catch(e){}delete memStore["tpo_session"];showAuth()};
+$("btnLogout").onclick=function(){currentUser=null;try{localStorage.removeItem("tpo_session")}catch(e){}delete memStore["tpo_session"];pendingPage=null;loadGuest();showApp()};
+$("btnGoLogin").onclick=function(){showAuth();};
+$("btnBackGuest").onclick=function(){if(!packet)loadGuest();showApp();};
 $("btnDeletePacket").onclick=function(){
-  if(!confirm("确定删除本账号的包吗？清单、上传记录、transcript 对齐、导出记录都会删掉，此操作不可撤销。"))return;
+  if(!confirm(isGuest()?"确定删除本机未登录的包吗？清单、上传记录、transcript 对齐、导出记录都会删掉，此操作不可撤销。":"确定删除本账号的包吗？清单、上传记录、transcript 对齐、导出记录都会删掉，此操作不可撤销。"))return;
   packet=newPacket();savePacket();renderAll();alert("已删除本包。");
 };
 var FORM_TOKENS=[
@@ -1307,7 +1445,7 @@ $("btnGenerate").onclick=async function(){
   if(packet.lastYear.length){
     var a=generateFromLastYear();
     if(gm)gm.textContent=a?("已生成，新增 "+a+" 项。"):"没有新增项（均已在清单里）。";
-    hideQuickPick();return;
+    hideQuickPick();advanceAfterGenerate();return;
   }
   var box=$("recognizeBox");
   var hasRec=box&&box.querySelectorAll("input[type=checkbox]").length>0;
@@ -1321,7 +1459,7 @@ $("btnGenerate").onclick=async function(){
     var r=addToLastYear(rec);
     var a2=generateFromLastYear();
     if(gm)gm.textContent="已从识别结果加入 "+r.added+" 项，生成新增 "+a2+" 项。";
-    hideQuickPick();return;
+    hideQuickPick();advanceAfterGenerate();return;
   }
   var file=$("returnFile").files&&$("returnFile").files[0];
   var lastText="";
@@ -1336,7 +1474,7 @@ $("btnGenerate").onclick=async function(){
         var a3=generateFromLastYear();
         renderRecognizePreview(forms,text);
         if(gm)gm.textContent="已从文件识别出 "+forms.length+" 种表，加入 "+r2.added+" 项，生成新增 "+a3+" 项。";
-        hideQuickPick();return;
+        hideQuickPick();advanceAfterGenerate();return;
       }else{
         renderRecognizePreview(forms,text);
       }
@@ -1500,12 +1638,12 @@ $("btnExportCsv").onclick=function(){
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tax-packet-checklist.csv";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
   packet.exports.push(new Date().toLocaleString()+" 导出通用表格 CSV（"+packet.checklist.length+" 项）");savePacket();renderExports();
 };
-$("btnCpaReview").onclick=function(){
+$("btnCpaReview").onclick=function(){if(isGuest()){showAuth();return;}
   var d=new Date().toLocaleDateString();
   packet.cpaReview={date:d,note:""};savePacket();renderCpa();
   packet.exports.push(new Date().toLocaleString()+" 已发送给会计师（"+d+"）");savePacket();renderExports();
 };
-$("btnCpaClear").onclick=function(){packet.cpaReview=null;packet.exports=packet.exports.filter(function(e){return e.indexOf("已发送给会计师")<0;});savePacket();renderCpa();renderExports();};
+$("btnCpaClear").onclick=function(){if(isGuest()){showAuth();return;}packet.cpaReview=null;packet.exports=packet.exports.filter(function(e){return e.indexOf("已发送给会计师")<0;});savePacket();renderCpa();renderExports();};
 function fmtD(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);}
 function dayLabel(d){var t=new Date();t.setHours(0,0,0,0);var x=new Date(d);x.setHours(0,0,0,0);var n=Math.round((x-t)/86400000);if(n<0)return "已过";if(n===0)return "今天";if(n<=30)return n+" 天后";return "待办";}
 function renderReminders(){
@@ -1594,7 +1732,7 @@ function renderPriority(){
   var bp=$("btnPriority");if(bp)bp.textContent=packet.prioritySupport?"关闭优先支持标记":"开启优先支持标记";
   var sl=$("supportList");if(sl)sl.innerHTML=reqs.length?("<ul class='small'>"+reqs.map(function(r){return "<li>"+esc(r.at)+" · "+esc(r.text)+"</li>";}).join("")+"</ul>"):"";
 }
-$("btnBatchCheck").onclick=function(){
+$("btnBatchCheck").onclick=function(){if(isGuest()){showAuth();return;}
   if(!packet)return;
   var rows=packet.checklist||[];
   var withFile=rows.filter(function(it){return !!it.fileName;});
@@ -1609,7 +1747,7 @@ $("btnBatchCheck").onclick=function(){
   +"<p class='small'><b>缺文件：</b>"+(missFile.length?esc(names(missFile)):"无")+"；<b>缺数字：</b>"+(missNum.length?esc(names(missNum)):"无")+"</p>"
   +"<p class='small muted'>只出报告，不改状态；缺项去第 5 节逐项补。</p>";
 };
-$("btnSnapSave").onclick=function(){
+$("btnSnapSave").onclick=function(){if(isGuest()){showAuth();return;}
   if(!packet||!currentUser)return;
   var name=$("snapName").value.trim();var year=$("snapYear").value.trim();
   if(!name){alert("请先写版本名。");return;}
@@ -1617,8 +1755,8 @@ $("btnSnapSave").onclick=function(){
   snaps.push({id:Date.now()+""+Math.random(),name:name,year:year,at:new Date().toLocaleString(),total:packet.checklist.length,done:packet.checklist.filter(rowResolved).length,forms:snapForms()});
   save(snapKey(),snaps);$("snapMsg").textContent="已保存一版："+name;renderSnaps();
 };
-$("btnPriority").onclick=function(){if(!packet)return;packet.prioritySupport=!packet.prioritySupport;savePacket();renderPriority();};
-$("btnSupportSend").onclick=function(){
+$("btnPriority").onclick=function(){if(isGuest()){showAuth();return;}if(!packet)return;packet.prioritySupport=!packet.prioritySupport;savePacket();renderPriority();};
+$("btnSupportSend").onclick=function(){if(isGuest()){showAuth();return;}
   if(!packet)return;var t=$("supportText").value.trim();if(!t){alert("请先写请求内容。");return;}
   if(!packet.supportRequests)packet.supportRequests=[];
   packet.supportRequests.push({text:t,at:new Date().toLocaleString()});$("supportText").value="";savePacket();renderPriority();
@@ -1644,7 +1782,7 @@ $("btnPrint").onclick=function(){
   var warnPrint="<h2>IRS 对照提醒（基础版）</h2>";
   warnPrint+=wList.length?("<ul>"+wList.map(function(x){return "<li>"+esc(x.text)+" "+esc(x.action)+"</li>";}).join("")+"</ul><p>以上为整理层面的提醒，不是 IRS 的结论；有疑问请找 CPA。</p>"):"<p>暂无提醒。</p>";
   var sheetsBlock="";
-  $("printArea").innerHTML="<h1>报税包整理清单</h1><p>账号："+esc(currentUser)+" · 导出时间："+esc(new Date().toLocaleString())+"</p><p>收件会计师（客户自填，平台不验证、不背书）："+((packet.priorCpa&&packet.priorCpa.name)?esc(packet.priorCpa.name)+(packet.priorCpa.contact?" · "+esc(packet.priorCpa.contact):""):"未指定")+"</p><p>只整理、不算税、不报税、不给税务结论。打印版汇总在前：先是证据数字汇总（预估草稿），后附清单；数字均为用户确认的证据数字，须 CPA 对照凭证与表格数核对；均不含社保号；可对接任何一家报税软件，不锁一家。</p>"+draftBlock+sheetsBlock+warnPrint+"<p>合计："+packet.checklist.length+" 项 · 已上传："+cnt("uploaded")+" · 不适用："+cnt("na")+" · 待 transcript："+cnt("pending")+" · 未开始："+cnt("not-started")+"</p><table><tr><th>#</th><th>表</th><th>付款方</th><th>今年需备文件</th><th>状态</th><th>原因/文件名</th></tr>"+rows+"</table><p>变化问答："+esc(JSON.stringify({changes:packet.changes,change_dir:packet.changesDir||{}}))+"</p><p>Transcript："+esc(packet.transcript||"无")+"</p>"+cpaBlock;
+  $("printArea").innerHTML="<h1>报税包整理清单</h1><p>账号："+esc(currentUser||"未登录（本机整理）")+" · 导出时间："+esc(new Date().toLocaleString())+"</p><p>收件会计师（客户自填，平台不验证、不背书）："+((packet.priorCpa&&packet.priorCpa.name)?esc(packet.priorCpa.name)+(packet.priorCpa.contact?" · "+esc(packet.priorCpa.contact):""):"未指定")+"</p><p>只整理、不算税、不报税、不给税务结论。打印版汇总在前：先是证据数字汇总（预估草稿），后附清单；数字均为用户确认的证据数字，须 CPA 对照凭证与表格数核对；均不含社保号；可对接任何一家报税软件，不锁一家。</p>"+draftBlock+sheetsBlock+warnPrint+"<p>合计："+packet.checklist.length+" 项 · 已上传："+cnt("uploaded")+" · 不适用："+cnt("na")+" · 待 transcript："+cnt("pending")+" · 未开始："+cnt("not-started")+"</p><table><tr><th>#</th><th>表</th><th>付款方</th><th>今年需备文件</th><th>状态</th><th>原因/文件名</th></tr>"+rows+"</table><p>变化问答："+esc(JSON.stringify({changes:packet.changes,change_dir:packet.changesDir||{}}))+"</p><p>Transcript："+esc(packet.transcript||"无")+"</p>"+cpaBlock;
   packet.exports.push(new Date().toLocaleString()+" 打印 / 另存为 PDF 清单（"+packet.checklist.length+" 项）");savePacket();renderExports();
   window.print();
 };
@@ -1683,9 +1821,18 @@ $("btnClearPriorCpa").onclick=function(){
 document.querySelectorAll('input[name="subPacks"]').forEach(function(r){
   r.onchange=function(){ if(!packet) return; packet.payPacks=parseInt(r.value,10)||1; savePacket(); renderOrders(); renderSubStatus(); };
 });
+[1,2,3].forEach(function(step){var tab=$("flowStep"+step);if(tab)tab.onclick=function(){setOrganizeStep(step,true);};});
+var deferredInstallPrompt=null;
+window.addEventListener("beforeinstallprompt",function(event){event.preventDefault();deferredInstallPrompt=event;var installButton=$("installAppBtn");if(installButton)installButton.classList.remove("hidden");});
+var installButton=$("installAppBtn");if(installButton)installButton.onclick=function(){if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();deferredInstallPrompt.userChoice.then(function(){deferredInstallPrompt=null;installButton.classList.add("hidden");});};
+function registerAppShell(){
+  if(!("serviceWorker" in navigator))return;
+  window.addEventListener("load",function(){navigator.serviceWorker.register("./sw.js").catch(function(){});});
+}
+registerAppShell();
 (function init(){
   var s=null;try{s=localStorage.getItem("tpo_session")}catch(e){}if(!s)s=memStore["tpo_session"]||null;
-  if(s&&accounts()[s]){currentUser=s;loadPacket(s);showApp()}
+  if(s&&accounts()[s]){currentUser=s;loadPacket(s);showApp()}else{currentUser=null;loadGuest();showApp()}
 })();
 </script>
 </body>
