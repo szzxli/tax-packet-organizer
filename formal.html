@@ -54,6 +54,14 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 #pageNav{padding:12px 16px}.journey-guide+#appViewSections{scroll-margin-top:16px}
 @media(max-width:600px){main{padding:14px 10px 108px}.card{padding:16px 13px}.journey-guide{padding:15px;gap:12px}.journey-steps{gap:5px}.journey-steps .step-tab{padding:7px 9px;font-size:11px}.sticky-progress{bottom:max(8px,env(safe-area-inset-bottom));gap:10px;padding:10px 11px;border-radius:14px}.sticky-copy strong{font-size:13px}.sticky-copy p{font-size:11px}.sticky-progress button{padding:9px 11px;font-size:13px;max-width:145px;white-space:normal}.sec-head{align-items:flex-start;flex-wrap:wrap}.sec-head h2{flex-basis:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+#heroBox h2{font-size:20px}
+#heroBox textarea{width:100%;font-size:16px;padding:12px;border-radius:12px;border:1px solid #bbb;min-height:76px}
+.hero-chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.hero-chips button{border-radius:999px}
+.hero-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.hero-3 div{border:1px solid var(--line);border-radius:12px;padding:12px}
+.hero-3 b{display:block;margin-bottom:4px}
+@media(max-width:600px){.hero-3{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -114,6 +122,28 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 <button id="flowStep3" class="step-tab" type="button" role="tab" aria-selected="false" aria-controls="appViewSections">03 复核导出</button>
 </div>
 <button id="installAppBtn" class="secondary hidden" type="button">安装到设备</button>
+</div>
+
+<div class="card no-print" id="heroBox">
+<h2>把乱糟糟的报税材料，整理成一份清单。</h2>
+<p class="muted">用大白话说今年有什么变化，生成今年的材料清单。</p>
+<label for="heroText">今年有什么变化？</label>
+<textarea id="heroText" placeholder="例如：我今年在中国老家卖了一套房，怎么报税？"></textarea>
+<div class="hero-chips" id="heroExamples">
+<button type="button" class="secondary" data-ex="我今年在中国老家卖了一套房，怎么报税？">今年卖了房</button>
+<button type="button" class="secondary" data-ex="我今年换了工作，有两份 W-2。">换了工作</button>
+<button type="button" class="secondary" data-ex="我今年孩子出生了，多了一个抚养人。">孩子出生了</button>
+<button type="button" class="secondary" data-ex="我今年搬到了另一个州。">搬到另一个州</button>
+<button type="button" class="secondary" data-ex="我今年开始收房租了。">开始收房租</button>
+</div>
+<div class="row"><div><label for="heroState">在哪个州报税（选填）</label><select id="heroState"><option value="">不选（先不填）</option></select></div></div>
+<p><button id="btnHeroGenerate">生成今年清单</button> <span id="heroMsg" class="small"></span></p>
+<p class="muted small">不用登录 · 进度只存这台浏览器。只整理、不算税、不报税、不给税务结论；清单最后由会计师审核。</p>
+<div class="hero-3">
+<div><b>自己整理</b><span class="small">对着清单一项项备齐，缺什么一眼看到。</span></div>
+<div><b>交给会计师</b><span class="small">一份文件讲清楚，咨询更快更省钱。</span></div>
+<div><b>会计师提效</b><span class="small">清单、证据数字、待核对项已经排好了。</span></div>
+</div>
 </div>
 
 <div id="appViewSections" role="tabpanel" aria-labelledby="flowStep1">
@@ -272,6 +302,10 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 <h2>7 · 导出给会计师：标准化可对接</h2>
 <p class="muted small">没做完也能先导出，缺项会列在清单里，导出后继续补。三份导出均含你确认的证据数字与核对状态，均不含社保号，均不锁任何一家报税软件：<b>CSV</b> 是通用表格，可直接用 Excel / Google Sheets 打开，也可导入会计师自己的报税软件，含确认数字与核对列；<b>JSON</b> 是机器可读清单，含预估草稿汇总与 IRS 对照提醒；<b>PDF</b> 是打印版，汇总在前、清单在后，末尾带会计师审核签字栏。导出的是清单与确认数字，文件原件由你另外经会计师门户 / 邮件发给会计师。会计师的工作只是审核确认并签字（以打印版签字栏手签为准），平台不抽报税费、不替代签字；发送记录由你标记，不代表 CPA 已确认。</p>
 <p><button id="btnPrint">下载给会计师的 PDF 清单</button></p><details><summary class="small">更多格式（CSV / JSON）</summary><p><button id="btnExportCsv" class="secondary">下载通用表格（CSV）</button> <button id="btnExportJson" class="secondary">下载机器可读清单（JSON）</button></p></details>
+<h3>再补几句</h3>
+<p class="muted small">清单生成后，针对你写的内容再问几句，答了就更新清单；只为整理材料，不判断税务结论。</p>
+<div id="followUpBox"></div>
+<p><span id="followUpMsg" class="small"></span></p>
 <h3>交给会计师</h3>
 <p class="small" id="handoverText"></p>
 <p class="small" id="cpaReviewText">暂无发送记录。发送记录仅表示你已把清单发给会计师，不代表 CPA 已签字确认。</p>
@@ -634,16 +668,20 @@ function renderDraft(){
   if(!packet)return;
   var box=$("draftBox");if(!box)return;
   var lines=draftLines();
-  if(!lines.length){box.innerHTML="<p class='muted small'>暂无证据数字。请先在第 5 节给清单项上传电子档提数，或手动输入数字。</p>";return;}
+  var missing=packet.checklist.filter(function(it){return !it.figure&&it.kind&&it.status!=="na";});
+  if(!lines.length&&!missing.length){box.innerHTML="<p class='muted small'>暂无证据数字。请先在第 5 节给清单项上传电子档提数，或手动输入数字。</p>";return;}
   var tot=draftTotals();
   var rows=lines.map(function(it){
     return "<tr><td>"+esc(it.form)+"</td><td>"+esc(it.payer||"")+"</td><td>"+esc(it.figure.cat)+" "+fmtMoney(it.figure.cents)+"</td><td>"+esc(it.figure.source||"")+"</td><td>"+(it.voucherChecked?"已核对 ✓":"未核对")+"</td><td>"+(it.formAmountCents==null?"—":fmtMoney(it.formAmountCents))+"</td><td>"+esc(matchStatus(it))+"</td></tr>";
+  }).join("");
+  rows+=missing.map(function(it){
+    return "<tr><td>"+esc(it.form)+"</td><td>"+esc(it.payer||"")+"</td><td>【待填】</td><td>—</td><td>未核对</td><td>"+(it.formAmountCents==null?"—":fmtMoney(it.formAmountCents))+"</td><td>待补数字</td></tr>";
   }).join("");
   var cats=Object.keys(tot.byCat).map(function(c){return c+" "+fmtMoney(tot.byCat[c]);}).join(" · ");
   var v=lines.filter(function(it){return it.voucherChecked}).length;
   var m=lines.filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length;
   var d=lines.filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length;
-  box.innerHTML="<table><tr><th>表</th><th>付款方</th><th>确认数字</th><th>来源证据</th><th>凭证核对</th><th>表格数</th><th>核对结果</th></tr>"+rows+"</table><p class='small'><b>合计："+cats+" · 预估合计 "+fmtMoney(tot.grand)+"</b>（草稿，非申报表）</p><p class='small'>凭证已核对 "+v+"/"+lines.length+" · 表格一致 "+m+" · 差异 "+d+" · 未核对表格数 "+(lines.length-m-d)+"。数字在第 5 节各项目里改。</p>";
+  box.innerHTML="<table><tr><th>表</th><th>付款方</th><th>确认数字</th><th>来源证据</th><th>凭证核对</th><th>表格数</th><th>核对结果</th></tr>"+rows+"</table><p class='small'><b>合计："+cats+" · 预估合计 "+fmtMoney(tot.grand)+"</b>（草稿，非申报表）</p><p class='small'>凭证已核对 "+v+"/"+lines.length+" · 表格一致 "+m+" · 差异 "+d+" · 未核对表格数 "+(lines.length-m-d)+"。数字在第 5 节各项目里改。</p>"+(missing.length?"<p class='small'>另有 "+missing.length+" 项未录数字（【待填】），在第 5 节各项目里补。</p>":"");
 }
 function computeWarnings(){
   var w=[];
@@ -825,7 +863,38 @@ function renderExports(){
   packet.exports.forEach(function(e){var li=document.createElement("li");li.className="small";li.textContent=e;ul.appendChild(li)});
   $("transRecord").textContent=packet.transcript?packet.transcript:"无";
 }
-function renderAll(){renderChanges();renderLast();renderMerged();renderExports();renderCpa();renderDraft();renderWarnings();renderSubStatus();renderOrders();renderPriorCpa();renderReminders();renderProbe();renderDeep();renderSnaps();renderPriority();renderGates();applyCollapse();renderStickyProgress()}
+function followUpQuestions(){
+  var out=[];
+  (packet.uncertain||[]).forEach(function(u,ui){
+    var qs=u.type==="境外售房"?FOREIGN_Q:GENERIC_Q;
+    qs.forEach(function(q){
+      var a=u.answers&&u.answers[q[0]];
+      if(!a)out.push({ui:ui,q:q,text:u.text});
+    });
+  });
+  return out.slice(0,4);
+}
+function renderFollowUp(){
+  var box=$("followUpBox");if(!box||!packet)return;
+  var qs=followUpQuestions();
+  if(!qs.length){box.innerHTML="<p class='muted small'>暂无需要补充的问题：已录的不确定事项都已答完，或还没有不确定事项。</p>";return;}
+  var h="<p class='small'><b>答了就更新清单，不判断税务结论。</b></p>";
+  qs.forEach(function(item,i){
+    var q=item.q;
+    h+="<div><label>"+esc(q[1])+" <span class='muted small'>（来自：“"+esc((item.text||"").slice(0,24))+"……”）</span></label>";
+    if(q[2]==="select"){var opts=q[3].split("|").map(function(o){return "<option>"+esc(o)+"</option>"}).join("");h+="<select id='fu_"+i+"'>"+opts+"</select>";}
+    else{h+="<input id='fu_"+i+"' placeholder='"+esc(q[3]||"")+"'>";}
+    h+="</div>";
+  });
+  h+="<p><button id='btnFollowUpSave' class='secondary'>保存这几句</button></p>";
+  box.innerHTML=h;
+  $("btnFollowUpSave").onclick=function(){
+    qs.forEach(function(item,i){var el=$("fu_"+i);if(!el)return;var v=el.value;if(v==null)v="";var u=packet.uncertain[item.ui];if(!u.answers)u.answers={};u.answers[item.q[0]]=v;});
+    savePacket();renderAll();
+    var m=$("followUpMsg");if(m)m.textContent="已保存，清单已更新。";
+  };
+}
+function renderAll(){renderChanges();renderLast();renderMerged();renderExports();renderCpa();renderDraft();renderWarnings();renderSubStatus();renderOrders();renderPriorCpa();renderReminders();renderProbe();renderDeep();renderSnaps();renderPriority();renderGates();applyCollapse();renderStickyProgress();renderHero();renderFollowUp()}
 function secKeyFromH2(t){
   if(t.indexOf("州税范围")>=0)return "s3b";
   if(t.indexOf("去年有什么")>=0)return "s3";
@@ -1011,6 +1080,12 @@ function renderStickyProgress(){
   action.onclick=function(){navigateToSection(target);};
   bar.classList.remove("hidden");
 }
+function renderHero(){
+  var hero=$("heroBox");if(!hero||!packet)return;
+  var show=currentPage===1&&!packet.checklist.length;
+  hero.classList.toggle("hidden",!show);
+  var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",currentPage!==1||!!packet.checklist.length);
+}
 function showPage(p){
   if((p===2||p===3)&&isGuest()){pendingPage=p;showAuth();return;}
   currentPage=p;
@@ -1024,7 +1099,7 @@ function showPage(p){
     }
     sections.classList.toggle("hidden", p===3);
   }
-  var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",p!==1);
+  renderHero();
   if(pay) pay.classList.toggle("hidden", p!==3);
   ["navOrganize","navSubscribe","navPay"].forEach(function(id,idx){
     var b=$(id); if(!b) return;
@@ -1495,13 +1570,72 @@ var STATES=[
 ["加州","有州个人所得税"],["得州","无州个人所得税"],["佛州","无州个人所得税"],["纽约州","有州个人所得税"],["宾州","有州个人所得税"],["伊利诺伊州","有州个人所得税"],["俄亥俄州","有州个人所得税"],["佐治亚州","有州个人所得税"],["北卡罗来纳州","有州个人所得税"],["密歇根州","有州个人所得税"]
 ];
 (function fillStates(){var s=$("stateSelect");if(!s)return;STATES.forEach(function(st){var o=document.createElement("option");o.value=st[0];o.textContent=st[0]+(st[1]==="无州个人所得税"?"（无州个人所得税）":"");s.appendChild(o)})})();
+function addStateRow(st){
+  var noTax=STATES.some(function(x){return x[0]===st&&x[1]==="无州个人所得税"});
+  if(noTax)return st+"无州个人所得税，一般无需州所得税申报表，不生成州所得税清单项；如有外州收入等情形，请以税务师确认为准。";
+  if(packet.checklist.some(function(it){return it.form==="州税"&&it.payer===st}))return "清单里已有"+st+"州税项目。";
+  packet.checklist.push({id:Date.now()+""+Math.random(),form:"州税",kind:null,title:"州税",payer:st,request:"今年"+st+"州所得税表与缴款确认",status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:"",costs:[],moreCollapsed:true});
+  return "已加入"+st+"州税项目。";
+}
 $("btnAddState").onclick=function(){
   var st=$("stateSelect").value;
-  var noTax=STATES.some(function(x){return x[0]===st&&x[1]==="无州个人所得税"});
-  if(noTax){$("stateMsg").textContent=st+"无州个人所得税，一般无需州所得税申报表，不生成州所得税清单项；如有外州收入等情形，请以税务师确认为准。";return}
-  if(packet.checklist.some(function(it){return it.form==="州税"&&it.payer===st})){$("stateMsg").textContent="清单里已有"+st+"州税项目。";return}
-  packet.checklist.push({id:Date.now()+""+Math.random(),form:"州税",kind:null,title:"州税",payer:st,request:"今年"+st+"州所得税表与缴款确认",status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:"",costs:[],moreCollapsed:true});
-  $("stateMsg").textContent="已加入"+st+"州税项目。";savePacket();renderAll();
+  $("stateMsg").textContent=addStateRow(st);savePacket();renderAll();
+};
+function isSaleText(t){return /(卖房|售房|房子|房产|house|property)/i.test(t)&&/(卖|售|sell|sold)/i.test(t);}
+function addUncertainDocs(text,isSale){
+  if(!packet.uncertain)packet.uncertain=[];
+  packet.uncertain.push({text:text,type:isSale?"境外售房":"一般不确定事项",answers:{},at:new Date().toLocaleString()});
+  var docs=isSale?FOREIGN_DOCS:GENERIC_DOCS;
+  var payer=isSale?"中国老家房产":"不确定事项";
+  docs.forEach(function(d){
+    if(!packet.checklist.some(function(it){return it.request===d&&it.payer===payer})){
+      packet.checklist.push({id:Date.now()+""+Math.random(),form:"不确定事项",kind:null,title:"不确定事项",payer:payer,request:d,status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:"不确定事项·待税务师审核",costs:[],moreCollapsed:true});
+    }
+  });
+}
+function applyChangeFromHero(key,dir){
+  if(!packet.changes)packet.changes={};
+  if(!packet.changesDir)packet.changesDir={};
+  packet.changes[key]="是";packet.changesNone=false;
+  if(key==="抚养人")packet.changesDir[key]=dir||"增加";
+  var req=changeReq(key,packet.changesDir[key]);
+  var ex=null;
+  for(var i=0;i<packet.checklist.length;i++){if(packet.checklist[i].form==="变化证明"&&packet.checklist[i].payer===key){ex=packet.checklist[i];break;}}
+  if(ex)ex.request=req;
+  else packet.checklist.push({id:Date.now()+""+Math.random(),form:"变化证明",kind:null,title:"变化证明",payer:key,request:req,status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:"",costs:[],moreCollapsed:true});
+}
+function detectStateInText(t){
+  for(var i=0;i<STATES.length;i++){
+    var name=STATES[i][0];
+    if(t.indexOf(name)>=0)return name;
+    if(name.length>=3&&t.indexOf(name.slice(0,-1))>=0)return name;
+  }
+  return "";
+}
+(function(){var s=$("heroState");if(!s)return;STATES.forEach(function(st){var o=document.createElement("option");o.value=st[0];o.textContent=st[0]+(st[1]==="无州个人所得税"?"（无州个人所得税）":"");s.appendChild(o)})})();
+document.querySelectorAll("#heroExamples button").forEach(function(b){
+  b.onclick=function(){var t=$("heroText");t.value=b.getAttribute("data-ex");t.focus();};
+});
+$("btnHeroGenerate").onclick=function(){
+  var text=$("heroText").value.trim();
+  var msg=$("heroMsg");if(msg)msg.textContent="";
+  if(!text){if(msg)msg.textContent="先写一句今年的变化，或点一个例子。";return;}
+  addUncertainDocs(text,isSaleText(text));
+  if(/(W-2|换工作|换了工作|新工作|入职|工资)/.test(text)){
+    if(!packet.lastYear.some(function(l){return l.form==="W-2";}))packet.lastYear.push({form:"W-2",payer:""});
+    generateFromLastYear();
+  }
+  if(!isSaleText(text)&&/(房租|出租|租金|收租|房东)/.test(text)){
+    if(!packet.lastYear.some(function(l){return l.form==="Schedule E";}))packet.lastYear.push({form:"Schedule E",payer:""});
+    generateFromLastYear();
+  }
+  if(/(孩子|出生|抚养|新生儿|二胎)/.test(text))applyChangeFromHero("抚养人","增加");
+  if(/(搬家|搬到|新地址|地址变)/.test(text))applyChangeFromHero("地址");
+  var st=$("heroState").value||detectStateInText(text);
+  if(st)addStateRow(st);
+  savePacket();renderAll();
+  if(packet.checklist.length)advanceAfterGenerate();
+  else if(msg)msg.textContent="已记录。";
 };
 $("transFile").onchange=function(e){
   if(e.target.files&&e.target.files[0]){packet.transcript=e.target.files[0].name+"（只记文件名，未读内容）";packet.checklist.forEach(function(it){if(it.status==="not-started")it.status="pending";});savePacket();renderAll();}
