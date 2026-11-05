@@ -1591,6 +1591,7 @@ function renderPriority(){
   var el=$("priorityStatus");if(!el||!packet)return;
   var reqs=packet.supportRequests||[];
   el.innerHTML=(packet.prioritySupport?"<span class='badge uploaded'>优先工具支持已开启（预览）</span>":"<span class='small'>优先工具支持未开启。</span>")+"<span class='small'> 已提交优先请求 "+reqs.length+" 条（只存你的账号；支持邮箱待公布，后端开通后走支持通道）。</span>";
+  var bp=$("btnPriority");if(bp)bp.textContent=packet.prioritySupport?"关闭优先支持标记":"开启优先支持标记";
   var sl=$("supportList");if(sl)sl.innerHTML=reqs.length?("<ul class='small'>"+reqs.map(function(r){return "<li>"+esc(r.at)+" · "+esc(r.text)+"</li>";}).join("")+"</ul>"):"";
 }
 $("btnBatchCheck").onclick=function(){
@@ -1616,7 +1617,7 @@ $("btnSnapSave").onclick=function(){
   snaps.push({id:Date.now()+""+Math.random(),name:name,year:year,at:new Date().toLocaleString(),total:packet.checklist.length,done:packet.checklist.filter(rowResolved).length,forms:snapForms()});
   save(snapKey(),snaps);$("snapMsg").textContent="已保存一版："+name;renderSnaps();
 };
-$("btnPriority").onclick=function(){if(!packet)return;packet.prioritySupport=true;savePacket();renderPriority();};
+$("btnPriority").onclick=function(){if(!packet)return;packet.prioritySupport=!packet.prioritySupport;savePacket();renderPriority();};
 $("btnSupportSend").onclick=function(){
   if(!packet)return;var t=$("supportText").value.trim();if(!t){alert("请先写请求内容。");return;}
   if(!packet.supportRequests)packet.supportRequests=[];
