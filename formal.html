@@ -13,7 +13,7 @@
 header{background:linear-gradient(135deg,#16324f,#2a6db0);color:#fff;padding:20px 16px} header h1{margin:0;font-size:22px} header p{margin:6px 0 0;opacity:.92;font-size:13px}
 main{max-width:860px;margin:0 auto;padding:20px 16px} .card{background:#fff;border:1px solid #e2e6eb;border-radius:14px;padding:20px;margin:16px 0;box-shadow:0 1px 3px rgba(22,50,79,.08)}
 h2{font-size:18px;margin:0 0 10px;color:#16324f} h3{font-size:15px;margin:14px 0 8px;color:#16324f} label{display:block;font-size:13px;margin:8px 0 4px}
-input,select,button{font-size:15px;padding:10px 12px;border-radius:10px;border:1px solid #c3ccd6} input,select{width:100%;background:#fff} input:focus,select:focus{outline:none;border-color:#16324f;box-shadow:0 0 0 3px rgba(22,50,79,.15)}
+input,select,button{font-size:15px;padding:10px 12px;border-radius:10px;border:1px solid #c3ccd6} input,select{width:100%;background:#fff} input[type="checkbox"],input[type="radio"]{width:auto} input:focus,select:focus{outline:none;border-color:#16324f;box-shadow:0 0 0 3px rgba(22,50,79,.15)}
 button{background:#16324f;color:#fff;border:none;cursor:pointer;font-weight:600;padding:10px 16px} button:hover{background:#1e4a73} button.secondary{background:#fff;color:#16324f;border:1px solid #16324f} button.secondary:hover{background:#eef4fa} button.danger{background:#9b2226} button.danger:hover{background:#7d1b1f} button:focus-visible{outline:2px solid #16324f;outline-offset:2px}
 a{color:#14507e} #progressText{font-weight:700;color:#16324f}
 button:disabled{opacity:.5} .row{display:flex;gap:10px;flex-wrap:wrap} .row>*{flex:1;min-width:150px}
@@ -975,7 +975,7 @@ function renderMerged(){
     var div=document.createElement("div");div.className="item"+(rowResolved(it)?"":" miss");
     var head=document.createElement("div");head.className="sec-head";head.style.marginBottom="4px";
     var ht=document.createElement("span");ht.style.flex="1";
-    ht.innerHTML="<b>"+esc(rowTitle(it))+"</b>"+(it.payer?"（"+esc(it.payer)+"）":"")+((it.isNew?" <span class='badge na'>今年新增</span>":"")+(it.fromLastYear?" <span class='badge'>去年有数 · 今年请补凭证与数据</span>":"")+(it.transcriptNote?" <span class='badge pending'>"+esc(it.transcriptNote)+"</span>":""));
+    ht.innerHTML="<b>"+esc(rowTitle(it))+"</b>"+(it.payer?"（"+esc(it.payer)+"）":"")+(it.form==="不确定事项"&&it.request?" — "+esc(it.request):"")+((it.isNew?" <span class='badge na'>今年新增</span>":"")+(it.fromLastYear?" <span class='badge'>去年有数 · 今年请补凭证与数据</span>":"")+(it.transcriptNote?" <span class='badge pending'>"+esc(it.transcriptNote)+"</span>":""));
     var hb=document.createElement("span");hb.className="small";hb.innerHTML=rowBadge(it);
     var chev=document.createElement("span");chev.className="sec-chev";chev.textContent=it.moreCollapsed?"展开更多 ▼":"收起 ▲";
     head.appendChild(ht);head.appendChild(hb);head.appendChild(chev);
@@ -2203,18 +2203,22 @@ $("btnTagGenerate").onclick=function(){
   var sel=[];document.querySelectorAll("#tagGrid .tag-btn.on").forEach(function(b){sel.push(b);});
   var msg=$("tagMsg");
   if(!sel.length){if(msg)msg.textContent=t("先点选一到多项今年的情况。");return;}
-  var phrases=[],forms=[];
+  var phrases=[];
   sel.forEach(function(b){
+    var label=(b.textContent||"").trim();
     var ph=b.getAttribute("data-phrase");if(ph)phrases.push(ph);
-    var f=b.getAttribute("data-form");if(f)forms.push(f);
+    var f=b.getAttribute("data-form");
+    if(f){if(!packet.lastYear.some(function(l){return l.form===f;}))packet.lastYear.push({form:f,payer:""});}
+    if(label==="孩子出生")applyChangeFromHero("抚养人","增加");
+    if(label==="换了州")applyChangeFromHero("地址");
+    if(label==="卖了房"){
+      if(!packet.checklist.some(function(it){return it.form==="变化证明"&&it.payer==="卖房";}))
+        packet.checklist.push({id:Date.now()+""+Math.random(),form:"变化证明",kind:null,title:"卖房",payer:"卖房",request:"卖房证明与成交文件（合同、过户记录、原值凭证）",status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:"",costs:[],moreCollapsed:true});
+    }
   });
-  var text=phrases.join("");
-  $("heroText").value=text;
-  addUncertainDocs(text,isSaleText(text));
-  forms.forEach(function(f){
-    if(!packet.lastYear.some(function(l){return l.form===f;}))packet.lastYear.push({form:f,payer:""});
-  });
+  $("heroText").value=phrases.join("");
   generateFromLastYear();
+  savePacket();renderAll();
   if(msg)msg.textContent=t("已按点选的情况生成清单，请到“今年要准备的材料”一节逐项核对。");
   showPage(1);
 };
