@@ -443,7 +443,10 @@ function sha(text){try{if(window.crypto&&crypto.subtle)return crypto.subtle.dige
 var currentUser=null,packet=null;
 var serverEntitlementEnd=0,serverSyncTimer=null,localOnly=false;
 function apiOn(){return (typeof TpoApi!=="undefined")&&TpoApi.enabled();}
-function refreshEntitlement(){if(!apiOn()||!currentUser)return Promise.resolve(0);return TpoApi.me().then(function(m){serverEntitlementEnd=(m&&m.entitlement_end)||0;if(typeof renderSubStatus==="function")renderSubStatus();return serverEntitlementEnd;}).catch(function(){return 0;});}
+var serverOrders=[];
+function displayOrders(){ if(serverOrders&&serverOrders.length) return serverOrders.map(function(o){ return {id:o.id, at:new Date(o.created_at).toLocaleString(), packs:o.packs, amountCents:o.amount_cents, method:"\u4fe1\u7528\u5361", status:o.status==="paid"?"paid":"pending", entitlementEnd:o.entitlement_end}; }); return subOrders(); }
+function refreshOrders(){if(!apiOn()||localOnly||!currentUser)return Promise.resolve([]);return TpoApi.listOrders().then(function(d){serverOrders=(d&&d.orders)||[];if(typeof renderOrders==="function")renderOrders();return serverOrders;}).catch(function(){return serverOrders;});}
+function refreshEntitlement(){if(!apiOn()||!currentUser)return Promise.resolve(0);return TpoApi.me().then(function(m){serverEntitlementEnd=(m&&m.entitlement_end)||0;if(typeof renderSubStatus==="function")renderSubStatus();refreshOrders();return serverEntitlementEnd;}).catch(function(){return 0;});}
 function scheduleServerSave(){if(!apiOn()||localOnly||!currentUser||!packet)return;if(serverSyncTimer)clearTimeout(serverSyncTimer);serverSyncTimer=setTimeout(function(){serverSyncTimer=null;if(!packet||!currentUser)return;TpoApi.putPacket(packet).catch(function(){});},1000);}
 var GUEST_KEY="tpo_packet_guest",pendingPage=null;
 function isGuest(){return !currentUser;}
@@ -970,7 +973,7 @@ function secSummary(key){
   if(key==="s6c")return "跨年份清单摘要对照";
   if(key==="s6b")return (packet.priorCpa&&packet.priorCpa.name)?("已指定："+packet.priorCpa.name):"未指定";
   if(key==="s6"){var n=packet.exports.filter(function(e){return e.indexOf("用户自记")<0&&e.indexOf("已发送给会计师")<0}).length;var s=n?("已导出 "+n+" 次"):"未导出";if(packet.cpaReview)s+=" · 已发送给会计师";return s;}
-  if(key==="sub"){var os=(packet.orders||[]);return os.length?("订单 "+os.length+" 笔"):"免费版";}
+  if(key==="sub"){var os=displayOrders();return os.length?("订单 "+os.length+" 笔"):"免费版";}
   if(key==="safe")return "数据保护";
   return "";
 }
@@ -1025,16 +1028,17 @@ function renderOrders(){
   }
   var card=$("paySubCard");
   if(card&&packet){
-    var os0=subOrders();
-    card.innerHTML=os0.length?("当前状态：免费版 + 订单 "+os0.length+" 笔。订阅生效后，有效期至当年 10 月 15 日。"):("当前状态：免费版。订阅生效后，有效期至当年 10 月 15 日。");
+    var os0=displayOrders();
+    var paid0=os0.filter(function(o){return o.status==="paid";});
+    card.innerHTML=paid0.length?("当前状态：已支付 "+paid0.length+" 笔，季票有效"+(serverEntitlementEnd?("，至 "+new Date(serverEntitlementEnd).toLocaleDateString()):"")+"。"):(os0.length?("当前状态：免费版 + 订单 "+os0.length+" 笔（待支付）。订阅生效后，有效期至当年 10 月 15 日。"):("当前状态：免费版。订阅生效后，有效期至当年 10 月 15 日。"));
   }
   var list=$("orderList"); if(!list||!packet) return;
-  var os=subOrders();
+  var os=displayOrders();
   if(!os.length){ list.innerHTML="<p class='muted small'>暂无订单。</p>"; }
   else{
     list.innerHTML=os.map(function(o){
       var sel2=(packet.selectedOrderId===o.id)?" <b>（查看中）</b>":"";
-      return "<div class='orderitem' data-oid='"+esc(o.id)+"'><b>"+esc(o.id)+"</b> · "+esc(o.at)+" · "+o.packs+" 个包 · "+fmtMoney(o.amountCents)+" · "+esc(o.method)+" · <span class='badge pending'>待支付</span>"+sel2+"<br><span class='small'>点此查看收据</span></div>";
+      return "<div class='orderitem' data-oid='"+esc(o.id)+"'><b>"+esc(o.id)+"</b> · "+esc(o.at)+" · "+o.packs+" 个包 · "+fmtMoney(o.amountCents)+" · "+esc(o.method)+" · "+(o.status==="paid"?"<span class='badge'>已支付</span>":"<span class='badge pending'>待支付</span>")+sel2+"<br><span class='small'>点此查看收据</span></div>";
     }).join("");
     var items=list.querySelectorAll(".orderitem");
     for(var i=0;i<items.length;i++){
@@ -1047,7 +1051,7 @@ function renderOrders(){
     for(var j=0;j<os.length;j++) if(os[j].id===packet.selectedOrderId) cur=os[j];
     if(!cur && os.length) cur=os[os.length-1];
     if(!cur) rec.innerHTML="<p class='muted small'>暂无收据。支付完成后收据会出现在这里。</p>";
-    else rec.innerHTML="<div class='orderitem'><b>收据 · "+esc(cur.id)+"</b><br><span class='small'>时间："+esc(cur.at)+"<br>套餐："+cur.packs+" 个包<br>金额："+fmtMoney(cur.amountCents)+"<br>支付方式："+esc(cur.method)+"<br>状态：待支付<br>有效期说明：订阅生效后至当年 10 月 15 日</span></div>";
+    else rec.innerHTML="<div class='orderitem'><b>收据 · "+esc(cur.id)+"</b><br><span class='small'>时间："+esc(cur.at)+"<br>套餐："+cur.packs+" 个包<br>金额："+fmtMoney(cur.amountCents)+"<br>支付方式："+esc(cur.method)+"<br>状态："+(cur.status==="paid"?"已支付":"待支付")+"<br>"+(cur.status==="paid"&&cur.entitlementEnd?("有效期至："+new Date(cur.entitlementEnd).toLocaleDateString()):"有效期说明：订阅生效后至当年 10 月 15 日")+"</span></div>";
   }
   var st=$("payStatus"); if(st) st.textContent=os.length?("共 "+os.length+" 笔订单。"):"";
 }

@@ -43,6 +43,7 @@
     deletePacket: function () { return req("/api/packet", { method: "DELETE" }); },
     claimPromo: function (promo) { return req("/api/promo/claim", { method: "POST", body: { promo: promo || "first50" } }); },
     checkout: function (packs) { return req("/api/orders/checkout", { method: "POST", body: { packs: packs } }); },
+    listOrders: function () { return req("/api/orders"); },
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else global.TpoApi = api;
