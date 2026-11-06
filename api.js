@@ -45,6 +45,7 @@
     checkout: function (packs) { return req("/api/orders/checkout", { method: "POST", body: { packs: packs } }); },
     listOrders: function () { return req("/api/orders"); },
     support: function (email, message) { return req("/api/support", { method: "POST", body: { email: email, message: message } }); },
+    aiChecklist: function (description, lang) { return req("/api/ai-checklist", { method: "POST", body: { description: description, lang: lang } }); },
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else global.TpoApi = api;
