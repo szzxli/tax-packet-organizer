@@ -472,8 +472,9 @@ function renderGates(){
 function newPacket(){return {changes:{},changesDir:{},changesCollapsed:true,mergedV2:true,lastYear:[],checklist:[],sheets:[],transcript:null,exports:[],uncertain:[],cpaReview:null,orders:[],priorCpa:{name:"",contact:"",note:""},payPacks:1,selectedOrderId:null,supportRequests:[],prioritySupport:false}}
 function statusText(s){return s==="uploaded"?"已上传":s==="na"?"不适用":s==="pending"?"待 transcript":"未开始"}
 function renderCpa(){
-  if(!hasPass()){var g0=isGuest()?gateNote():passGateNote();var t0=$("cpaReviewText");if(t0)t0.innerHTML=g0;var h0=$("handoverText");if(h0)h0.innerHTML=isGuest()?"登录后可用：交给会计师是季票功能，登录后解锁。":"购买季票后解锁：交给会计师是季票功能。";return;}
+  if(!hasPass()){var g0=isGuest()?gateNote():passGateNote();var t0=$("cpaReviewText");if(t0)t0.innerHTML=g0;var h0=$("handoverText");if(h0)h0.innerHTML=isGuest()?"登录后可用：交给会计师是季票功能，登录后解锁。":"购买季票后解锁：交给会计师是季票功能。";var b1=$("btnCpaReview"),b2=$("btnCpaClear");if(b1)b1.style.display="none";if(b2)b2.style.display="none";return;}
   var t=$("cpaReviewText");
+  var b1=$("btnCpaReview"),b2=$("btnCpaClear");if(b1)b1.style.display="";if(b2)b2.style.display="";
   if(packet.cpaReview){t.innerHTML="<span class='badge uploaded'>已发送给会计师</span> "+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · "+esc(packet.cpaReview.note):"");}
   else{t.textContent="暂无发送记录。发送记录仅表示你已把清单发给会计师，不代表 CPA 已签字确认。";}
   var h=$("handoverText");
@@ -1857,12 +1858,12 @@ $("btnExportCsv").onclick=function(){
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tax-packet-checklist.csv";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
   packet.exports.push(new Date().toLocaleString()+" 导出通用表格 CSV（"+packet.checklist.length+" 项）");savePacket();renderExports();
 };
-$("btnCpaReview").onclick=function(){if(isGuest()){showAuth();return;}
+$("btnCpaReview").onclick=function(){if(isGuest()){showAuth();return;}if(!hasPass()){renderCpa();return;}
   var d=new Date().toLocaleDateString();
   packet.cpaReview={date:d,note:""};savePacket();renderCpa();
   packet.exports.push(new Date().toLocaleString()+" 已发送给会计师（"+d+"）");savePacket();renderExports();
 };
-$("btnCpaClear").onclick=function(){if(isGuest()){showAuth();return;}packet.cpaReview=null;packet.exports=packet.exports.filter(function(e){return e.indexOf("已发送给会计师")<0;});savePacket();renderCpa();renderExports();};
+$("btnCpaClear").onclick=function(){if(isGuest()){showAuth();return;}if(!hasPass()){renderCpa();return;}packet.cpaReview=null;packet.exports=packet.exports.filter(function(e){return e.indexOf("已发送给会计师")<0;});savePacket();renderCpa();renderExports();};
 function fmtD(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);}
 function dayLabel(d){var t=new Date();t.setHours(0,0,0,0);var x=new Date(d);x.setHours(0,0,0,0);var n=Math.round((x-t)/86400000);if(n<0)return "已过";if(n===0)return "今天";if(n<=30)return n+" 天后";return "待办";}
 function renderReminders(){
@@ -1936,8 +1937,18 @@ function snapForms(){
   return f;
 }
 function renderSnaps(){
-  var el=$("snapList");if(!el||!packet||!currentUser)return;
-  if(!hasPass()){el.innerHTML=isGuest()?gateNote():passGateNote();return;}
+  var el=$("snapList");if(!el||!packet)return;
+  if(!hasPass()){
+    el.innerHTML=isGuest()?gateNote():passGateNote();
+    var sn=$("snapName"),sy=$("snapYear"),sb=$("btnSnapSave"),sm=$("snapMsg");
+    if(sn)sn.disabled=true;if(sy)sy.disabled=true;if(sb)sb.disabled=true;
+    if(sm)sm.textContent=isGuest()?"登录后可用：多包与多年对比是季票功能。":"购买季票后解锁：多包与多年对比是季票功能。";
+    return;
+  }
+  if(!currentUser)return;
+  var sn2=$("snapName"),sy2=$("snapYear"),sb2=$("btnSnapSave"),sm2=$("snapMsg");
+  if(sn2)sn2.disabled=false;if(sy2)sy2.disabled=false;if(sb2)sb2.disabled=false;
+  if(sm2&&sm2.textContent.indexOf("季票功能")>=0)sm2.textContent="";
   var snaps=load(snapKey(),[]);
   var cur=snapForms();
   if(!snaps.length){el.innerHTML="<p class='small'>还没存过版本。上面写个版本名和年份，把当前包存成一版，就能和以后各版对比。</p>";return;}
@@ -1971,7 +1982,7 @@ $("btnBatchCheck").onclick=function(){if(isGuest()){showAuth();return;}if(!hasPa
   +"<p class='small'><b>缺文件：</b>"+(missFile.length?esc(names(missFile)):"无")+"；<b>缺数字：</b>"+(missNum.length?esc(names(missNum)):"无")+"</p>"
   +"<p class='small muted'>只出报告，不改状态；缺项去第 5 节逐项补。</p>";
 };
-$("btnSnapSave").onclick=function(){if(isGuest()){showAuth();return;}
+$("btnSnapSave").onclick=function(){if(isGuest()){showAuth();return;}if(!hasPass()){renderSnaps();return;}
   if(!packet||!currentUser)return;
   var name=$("snapName").value.trim();var year=$("snapYear").value.trim();
   if(!name){alert("请先写版本名。");return;}
