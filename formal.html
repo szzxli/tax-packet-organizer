@@ -460,7 +460,7 @@ function loadGuest(){packet=load(GUEST_KEY,null);if(!packet){packet=newPacket();
 function gateNote(){return "<p class='small'>登录后可用：这是季票功能，登录后解锁。</p><p><button class='secondary' onclick='showAuth()'>登录 / 注册</button></p>";}
 function hasPass(){return !isGuest()&&serverEntitlementEnd>Date.now();}
 function passGateNote(){return "<p class='small'>购买季票后解锁：这是季票功能。</p><p><button class='secondary' onclick='goSub()'>去订阅</button></p>";}
-function goSub(){var el=$("subCard");if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}
+function goSub(){if(typeof showPage==="function")showPage(2);var el=$("subCard");if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}
 function fmtDateUTC(ts){try{return new Date(ts).toLocaleDateString(undefined,{timeZone:"UTC"});}catch(e){return new Date(ts).toLocaleDateString();}}
 function shortOrderId(id){if(!id)return "";if(id.indexOf("cs_test_")===0||id.indexOf("cs_live_")===0)return "TPO-"+id.slice(-8);return id;}
 function renderGates(){
