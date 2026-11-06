@@ -85,7 +85,7 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 <div id="verifyBox" class="notice hidden">
 <b>邮箱验证：</b>验证码已发到你的注册邮箱，请输入。预览未接邮件服务，可点下方预览进入跳过验证。<b id="demoCode" style="display:none"></b><br>
 <label for="verifyCode">输入验证码</label><input id="verifyCode" placeholder="6 位数字">
-<p><button id="btnVerify">验证并激活</button> <span id="verifyMsg" class="small"></span></p>
+<p><button id="btnVerify">验证并激活</button> <button id="btnResendCode" class="secondary">重新发送验证码</button> <span id="verifyMsg" class="small"></span></p>
 <p><button id="btnPreviewEnter" class="secondary">预览进入（跳过验证，仅预览用）</button> <span class="small">预览专用：正式版没有这个按钮。</span></p>
 </div>
 <hr>
@@ -413,7 +413,9 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 
 <div id="printArea"></div>
 </main>
+<script src="api.js"></script>
 <script>
+if(typeof TpoApi!=="undefined"){try{TpoApi.setBase("https://tax-packet-api.szzxli711.workers.dev")}catch(e){}}
 "use strict";
 var FORM_MAP=[
 ["W-2","今年 W-2（按去年每个雇主）"],["1099-INT","今年 1099-INT（按去年每个付款方）"],["1099-DIV","今年 1099-DIV（按去年每个付款方）"],["1099-R","今年 1099-R（按去年每个付款方）"],["SSA-1099","今年 SSA-1099"],["1099-B","今年 1099-B + 年终券商对账单"],["1099-G","今年 1099-G（州退税 / 失业金）"],["1099-MISC","今年 1099-MISC（按去年每个付款方，含版税/租金/奖金亚类）"],["1099-K","今年 1099-K（按去年每个平台）"],["1099-S","今年 1099-S + 过户结算单"],["1099-C","今年 1099-C"],["1099-NEC","今年 1099-NEC（按去年每个付款方）"],["W-2G","今年 W-2G（按去年每个付款方）"],
@@ -438,6 +440,10 @@ function pending(){return load("tpo_pending",{})}
 function fallbackHash(text){var h=2166136261;for(var i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return "fallback-"+(h>>>0).toString(16)}
 function sha(text){try{if(window.crypto&&crypto.subtle)return crypto.subtle.digest("SHA-256",new TextEncoder().encode(text)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}).catch(function(){return fallbackHash(text)})}catch(e){}return Promise.resolve(fallbackHash(text))}
 var currentUser=null,packet=null;
+var serverEntitlementEnd=0,serverSyncTimer=null,localOnly=false;
+function apiOn(){return (typeof TpoApi!=="undefined")&&TpoApi.enabled();}
+function refreshEntitlement(){if(!apiOn()||!currentUser)return Promise.resolve(0);return TpoApi.me().then(function(m){serverEntitlementEnd=(m&&m.entitlement_end)||0;if(typeof renderSubStatus==="function")renderSubStatus();return serverEntitlementEnd;}).catch(function(){return 0;});}
+function scheduleServerSave(){if(!apiOn()||localOnly||!currentUser||!packet)return;if(serverSyncTimer)clearTimeout(serverSyncTimer);serverSyncTimer=setTimeout(function(){serverSyncTimer=null;if(!packet||!currentUser)return;TpoApi.putPacket(packet).catch(function(){});},1000);}
 var GUEST_KEY="tpo_packet_guest",pendingPage=null;
 function isGuest(){return !currentUser;}
 function packetKeyFor(){return currentUser?packetKey(currentUser):GUEST_KEY;}
@@ -470,7 +476,18 @@ function renderCpa(){
     h.textContent="收件会计师："+cpa+" · 清单进度："+done+"/"+total+" 项已解决"+(missing.length?" · 缺项："+missing.join("、"):" · 无缺项");
   }
 }
-function loadPacket(email){packet=load(packetKey(email),null);if(!packet){packet=newPacket();save(packetKey(email),packet)}else{if(packet.changesCollapsed===undefined)packet.changesCollapsed=true;if(!packet.mergedV2){backfillRows();migrateSheets();packet.mergedV2=true;savePacket();}}}
+function loadPacket(email){
+  function normalize(){if(packet.changesCollapsed===undefined)packet.changesCollapsed=true;if(!packet.mergedV2){backfillRows();migrateSheets();packet.mergedV2=true;savePacket();}}
+  if(!apiOn()||localOnly){packet=load(packetKey(email),null);if(!packet){packet=newPacket();save(packetKey(email),packet)}else{normalize()}return Promise.resolve(packet);}
+  return TpoApi.getPacket().then(function(d){
+    if(d&&d.packet){packet=d.packet;normalize();save(packetKey(email),packet);}
+    else{packet=newPacket();save(packetKey(email),packet);TpoApi.putPacket(packet).catch(function(){});}
+    return packet;
+  }).catch(function(){
+    packet=load(packetKey(email),null);if(!packet){packet=newPacket();save(packetKey(email),packet)}else{normalize()}
+    return packet;
+  });
+}
 var FORM_TO_KIND={"W-2":"wages","Schedule E":"rental","Schedule C":"selfemp","Schedule SE":"selfemp","1099-NEC":"selfemp","1099-INT":"interest","1099-DIV":"dividends","1099-R":"retirement","SSA-1099":"social"};
 function formToKind(f){return FORM_TO_KIND[f]||null;}
 function kindCat(kind){if(kind==="wages")return "W-2 工资";if(kind==="interest")return "1099-INT 利息";if(kind==="dividends")return "1099-DIV 股息";if(kind==="selfemp")return "Schedule C 业务收入";if(kind==="rental")return "房租收入";return "其他";}
@@ -522,7 +539,7 @@ function migrateSheets(){
   });
   packet.sheets=[];
 }
-function savePacket(){if(packet)save(packetKeyFor(),packet)}
+function savePacket(){if(!packet)return;save(packetKeyFor(),packet);scheduleServerSave();}
 function requestText(form){for(var i=0;i<FORM_MAP.length;i++)if(FORM_MAP[i][0]===form)return FORM_MAP[i][1];return "今年 "+form}
 function changeReq(key,dir){
   if(key==="抚养人")return dir==="减少"?"抚养人减少相关证明（如适用）":"新增抚养人证明（出生/收养记录等）";
@@ -988,6 +1005,7 @@ function renderSubStatus(){
   var radios=document.querySelectorAll('input[name="subPacks"]');
   for(var ri=0;ri<radios.length;ri++) radios[ri].checked=(parseInt(radios[ri].value,10)===pk0);
   var os=subOrders();
+  if(!isGuest()&&serverEntitlementEnd>Date.now()){el.textContent="当前状态：季票有效，至 "+new Date(serverEntitlementEnd).toLocaleDateString()+"。";return;}
   if(!os.length){ el.textContent="当前状态：免费版。"; return; }
   var last=os[os.length-1];
   el.textContent="当前状态：免费版 + 订单 "+os.length+" 笔（最近："+last.at+"，"+last.packs+" 个包，"+fmtMoney(last.amountCents)+"）。";
@@ -1131,20 +1149,34 @@ $("btnRegister").onclick=function(){
   var email=$("regEmail").value.trim().toLowerCase(),pass=$("regPass").value;
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$("regMsg").textContent="邮箱格式不对";return}
   if(pass.length<8){$("regMsg").textContent="密码至少 8 位";return}
-  var acc=accounts();if(acc[email]){$("regMsg").textContent="该邮箱已注册，请直接登录";return}
-  var code=String(Math.floor(100000+Math.random()*900000));
-  sha(email+":"+pass).then(function(h){
-    var p=pending();p[email]={hash:h,code:code};save("tpo_pending",p);
-    $("demoCode").textContent=code;$("verifyBox").classList.remove("hidden");$("regMsg").textContent="验证码已发到你的邮箱，请输入验证。";
+  if(!apiOn()){$("regMsg").textContent="后端未接通，请用下方的预览进入。";return}
+  $("regMsg").textContent="正在发送验证码…";
+  TpoApi.register(email,pass).then(function(){
+    $("verifyBox").classList.remove("hidden");$("regMsg").textContent="验证码已发到你的邮箱，请输入验证。";
+  }).catch(function(e){
+    var c=(e&&e.code)||"";
+    $("regMsg").textContent=c==="already_registered"?"该邮箱已注册，请直接登录":(c==="email_not_configured"||c.indexOf("resend_status_")===0)?"邮件服务暂不可用，请稍后再试":("注册失败（"+c+"），请稍后再试。");
   });
 };
 $("btnVerify").onclick=function(){
   var email=$("regEmail").value.trim().toLowerCase(),code=$("verifyCode").value.trim();
-  var p=pending();if(!p[email]){$("verifyMsg").textContent="请先注册";return}
-  if(p[email].code!==code){$("verifyMsg").textContent="验证码不对";return}
-  var acc=accounts();acc[email]={hash:p[email].hash};save("tpo_accounts",acc);
-  delete p[email];save("tpo_pending",p);
-  $("verifyMsg").textContent="验证通过，已激活。请用邮箱 + 密码登录。";$("loginEmail").value=email;
+  if(!apiOn()){$("verifyMsg").textContent="后端未接通，请用下方的预览进入。";return}
+  if(!code){$("verifyMsg").textContent="请输入验证码";return}
+  TpoApi.verify(email,code).then(function(){
+    $("verifyMsg").textContent="验证通过，已激活。请用邮箱 + 密码登录。";$("loginEmail").value=email;
+  }).catch(function(e){
+    var c=(e&&e.code)||"";
+    $("verifyMsg").textContent=c==="bad_code"?"验证码不对":c==="code_expired"?"验证码已过期，请点重新发送":c==="too_many_attempts"?"尝试次数过多，请稍后再试":c==="not_registered"?"请先注册":("验证失败（"+c+"），请稍后再试。");
+  });
+};
+$("btnResendCode").onclick=function(){
+  var email=$("regEmail").value.trim().toLowerCase();
+  if(!apiOn()){$("verifyMsg").textContent="后端未接通，请用下方的预览进入。";return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$("verifyMsg").textContent="邮箱格式不对";return}
+  TpoApi.resendCode(email).then(function(){$("verifyMsg").textContent="验证码已重新发送，请查收邮箱。";}).catch(function(e){
+    var c=(e&&e.code)||"";
+    $("verifyMsg").textContent=c==="cooldown"?"发送太频繁，请 1 分钟后再试":c==="not_pending"?"该邮箱已验证或未注册，请直接登录":("发送失败（"+c+"），请稍后再试。");
+  });
 };
 $("btnPreviewEnter").onclick=function(){
   var email=$("regEmail").value.trim().toLowerCase(),pass=$("regPass").value;
@@ -1159,27 +1191,52 @@ $("btnPreviewEnter").onclick=function(){
 };
 $("btnLogin").onclick=function(){
   var email=$("loginEmail").value.trim().toLowerCase(),pass=$("loginPass").value;
-  var acc=accounts();if(!acc[email]){$("loginMsg").textContent="该邮箱未注册或未验证，请先注册验证";return}
-  sha(email+":"+pass).then(function(h){
-    if(h!==acc[email].hash){$("loginMsg").textContent="密码不对";return}
-    (function(){
+  if(!apiOn()){$("loginMsg").textContent="后端未接通，请用下方的预览进入。";return}
+  $("loginMsg").textContent="正在登录…";
+  TpoApi.login(email,pass).then(function(){
+    localOnly=false;
     var guestHad=load(GUEST_KEY,null);
-    var guestHas=guestHad&&(((guestHad.checklist||[]).length)||((guestHad.uncertain||[]).length)||((guestHad.lastYear||[]).length));
-    var accHad=load(packetKey(email),null);
+    var guestHas=!!(guestHad&&(((guestHad.checklist||[]).length)||((guestHad.uncertain||[]).length)||((guestHad.lastYear||[]).length)));
     currentUser=email;try{localStorage.setItem("tpo_session",email)}catch(e){memStore["tpo_session"]=email}
-    if(!accHad&&guestHas){save(packetKey(email),guestHad);try{localStorage.removeItem(GUEST_KEY)}catch(e){}delete memStore[GUEST_KEY];}
-    loadPacket(email);showApp();
-    if(guestHas&&!accHad){alert("已把未登录时整理的包带进你的账号。");}
-    if(pendingPage){var pp=pendingPage;pendingPage=null;showPage(pp);}
-  })();
+    return TpoApi.getPacket().then(function(d){return !!(d&&d.packet);}).catch(function(){return null;}).then(function(accHas){
+      var merged=false;
+      if(accHas===false&&guestHas){merged=true;return TpoApi.putPacket(guestHad).then(function(){try{localStorage.removeItem(GUEST_KEY)}catch(e){}delete memStore[GUEST_KEY];save(packetKey(email),guestHad);}).catch(function(){save(packetKey(email),guestHad);}).then(function(){return merged;});}
+      return merged;
+    }).then(function(merged){
+      return loadPacket(email).then(function(){
+        refreshEntitlement();showApp();
+        if(merged){alert("已把未登录时整理的包带进你的账号。");}
+        if(pendingPage){var pp=pendingPage;pendingPage=null;showPage(pp);}
+      });
+    });
+  }).catch(function(e){
+    var c=(e&&e.code)||"";
+    if(c==="bad_credentials"&&accounts()[email]){
+      localOnly=true;
+      sha(email+":"+pass).then(function(h){
+        if(h!==accounts()[email].hash){$("loginMsg").textContent="邮箱或密码不对，请检查后重试";return}
+        var guestHad=load(GUEST_KEY,null);
+        var guestHas=guestHad&&(((guestHad.checklist||[]).length)||((guestHad.uncertain||[]).length)||((guestHad.lastYear||[]).length));
+        var accHad=load(packetKey(email),null);
+        currentUser=email;try{localStorage.setItem("tpo_session",email)}catch(e){memStore["tpo_session"]=email}
+        if(!accHad&&guestHas){save(packetKey(email),guestHad);try{localStorage.removeItem(GUEST_KEY)}catch(e){}delete memStore[GUEST_KEY];}
+        loadPacket(email).then(function(){showApp();});
+        if(guestHas&&!accHad){alert("已把未登录时整理的包带进你的账号。");}
+        if(pendingPage){var pp=pendingPage;pendingPage=null;showPage(pp);}
+      });
+      return;
+    }
+    $("loginMsg").textContent=c==="bad_credentials"?"邮箱或密码不对，请检查后重试":c==="not_verified"?"该邮箱未验证，请先完成验证":("登录失败（"+c+"），请稍后再试。");
   });
 };
-$("btnLogout").onclick=function(){currentUser=null;try{localStorage.removeItem("tpo_session")}catch(e){}delete memStore["tpo_session"];pendingPage=null;loadGuest();showApp()};
+$("btnLogout").onclick=function(){if(apiOn()){try{TpoApi.logout()}catch(e){}}serverEntitlementEnd=0;localOnly=false;if(serverSyncTimer){clearTimeout(serverSyncTimer);serverSyncTimer=null;}currentUser=null;try{localStorage.removeItem("tpo_session")}catch(e){}delete memStore["tpo_session"];pendingPage=null;loadGuest();showApp()};
 $("btnGoLogin").onclick=function(){showAuth();};
 $("btnBackGuest").onclick=function(){if(!packet)loadGuest();showApp();};
 $("btnDeletePacket").onclick=function(){
   if(!confirm(isGuest()?"确定删除本机未登录的包吗？清单、上传记录、transcript 对齐、导出记录都会删掉，此操作不可撤销。":"确定删除本账号的包吗？清单、上传记录、transcript 对齐、导出记录都会删掉，此操作不可撤销。"))return;
-  packet=newPacket();savePacket();renderAll();alert("已删除本包。");
+  if(serverSyncTimer){clearTimeout(serverSyncTimer);serverSyncTimer=null;}
+  function done(){packet=newPacket();save(packetKeyFor(),packet);renderAll();alert("已删除本包。");}
+  if(!isGuest()&&apiOn()){TpoApi.deletePacket().then(done).catch(function(){done();});}else{done();}
 };
 var FORM_TOKENS=[
 ["W-2G","W-2G"],["W-2","W-2"],["1099-INT","1099-INT"],["1099-DIV","1099-DIV"],["1099-R","1099-R"],["SSA-1099","SSA-1099"],["1099-B","1099-B"],["1099-G","1099-G"],["1099-MISC","1099-MISC"],["1099-K","1099-K"],["1099-S","1099-S"],["1099-C","1099-C"],["1099-NEC","1099-NEC"],["1098-E","1098-E"],["1098-T","1098-T"],["1098","1098(?![-])"],["Schedule C","Schedule C(?![A-Z])"],["Schedule E","Schedule E(?![A-Z])"],["Schedule F","Schedule F(?![A-Z])"],["Schedule SE","Schedule SE(?![A-Z])"],["Schedule K-1","(?:Schedule )?K-1"],["Form 2441","2441"],["1095-A","1095-A"],["1095-B/C","1095-[BC]"],["5498-SA","5498-SA"],["5498","5498(?![-])"],["1099-SA","1099-SA"]
@@ -1969,7 +2026,16 @@ function registerAppShell(){
 registerAppShell();
 (function init(){
   var s=null;try{s=localStorage.getItem("tpo_session")}catch(e){}if(!s)s=memStore["tpo_session"]||null;
-  if(s&&accounts()[s]){currentUser=s;loadPacket(s);showApp()}else{currentUser=null;loadGuest();showApp()}
+  function localRestore(){
+    if(s&&accounts()[s]){currentUser=s;loadPacket(s).then(function(){showApp();});}
+    else{currentUser=null;loadGuest();showApp();}
+  }
+  if(apiOn()&&s){
+    TpoApi.me().then(function(m){
+      currentUser=(m&&m.email)||s;
+      loadPacket(currentUser).then(function(){refreshEntitlement();showApp();});
+    }).catch(function(){localRestore();});
+  }else{localRestore();}
 })();
 </script>
 </body>
