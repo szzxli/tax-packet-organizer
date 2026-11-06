@@ -629,10 +629,13 @@ function newPacket(){return {changes:{},changesDir:{},changesCollapsed:true,merg
 function statusText(s){return s==="uploaded"?"已上传":s==="na"?"不适用":s==="pending"?"待 transcript":"未开始"}
 function renderCpa(){
   if(!hasPass()){var g0=isGuest()?gateNote():passGateNote();var t0=$("cpaReviewText");if(t0)t0.innerHTML=g0;var h0=$("handoverText");if(h0)h0.innerHTML=isGuest()?t("登录后可用：交给会计师是季票功能，登录后解锁。"):t("购买季票后解锁：交给会计师是季票功能。");var b1=$("btnCpaReview"),b2=$("btnCpaClear");if(b1)b1.style.display="none";if(b2)b2.style.display="none";return;}
-  var t=$("cpaReviewText");
+  // Do not shadow the translation helper `t()`. This used to throw when a
+  // signed-in subscriber opened the CPA handoff step, preventing the rest of
+  // the UI refresh from completing.
+  var reviewText=$("cpaReviewText");
   var b1=$("btnCpaReview"),b2=$("btnCpaClear");if(b1)b1.style.display="";if(b2)b2.style.display="";
-  if(packet.cpaReview){t.innerHTML="<span class='badge uploaded'>已发送给会计师</span> "+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · "+esc(packet.cpaReview.note):"");}
-  else{t.textContent="暂无发送记录。发送记录仅表示你已把清单发给会计师，不代表 CPA 已签字确认。";}
+  if(packet.cpaReview){reviewText.innerHTML="<span class='badge uploaded'>已发送给会计师</span> "+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · "+esc(packet.cpaReview.note):"");}
+  else{reviewText.textContent="暂无发送记录。发送记录仅表示你已把清单发给会计师，不代表 CPA 已签字确认。";}
   var h=$("handoverText");
   if(h){
     var cpa=(packet.priorCpa&&packet.priorCpa.name)?packet.priorCpa.name:"未指定（去“去年会计师”一节填写）";
