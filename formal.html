@@ -36,7 +36,12 @@ header{padding:22px max(16px,calc((100vw - 1000px)/2));background:linear-gradien
 header h1{font-size:24px;letter-spacing:.01em}header p{font-size:14px}
 main{max-width:1000px;padding:24px 20px 112px}
 .card{border-color:var(--line);border-radius:16px;padding:22px;margin:14px 0;box-shadow:0 5px 18px rgba(19,50,79,.045)}
-#authView{max-width:720px;margin:24px auto;padding:clamp(20px,4vw,34px)}
+#authView{max-width:720px;margin:16px auto;padding:clamp(16px,3vw,22px)}
+#authView h2{margin-bottom:6px}
+#authView p{margin:8px 0}
+#authView .notice{margin:10px 0;padding:10px 12px}
+#authView hr{margin:12px 0}
+#authView label{margin:6px 0 3px}
 h2{line-height:1.35}button,summary{transition:background-color .16s ease,border-color .16s ease,transform .16s ease}
 button{border-radius:11px}button:active{transform:translateY(1px)}
 details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
@@ -1150,6 +1155,21 @@ function showAuth(){
   $("authView").classList.remove("hidden");$("appView").classList.add("hidden");
   var sp=$("stickyProgress");if(sp)sp.classList.add("hidden");
 }
+var resendTimer=null;
+function startResendCountdown(){
+  var btn=$("btnResendCode");if(!btn)return;
+  if(resendTimer)clearInterval(resendTimer);
+  var left=60;btn.disabled=true;btn.textContent="重新发送验证码（"+left+"s）";
+  resendTimer=setInterval(function(){
+    left--;
+    if(left<=0){clearInterval(resendTimer);resendTimer=null;btn.disabled=false;btn.textContent="重新发送验证码";return;}
+    btn.textContent="重新发送验证码（"+left+"s）";
+  },1000);
+}
+function resetResendButton(){
+  if(resendTimer){clearInterval(resendTimer);resendTimer=null;}
+  var btn=$("btnResendCode");if(btn){btn.disabled=false;btn.textContent="重新发送验证码";}
+}
 $("btnRegister").onclick=function(){
   var email=$("regEmail").value.trim().toLowerCase(),pass=$("regPass").value;
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$("regMsg").textContent="邮箱格式不对";return}
@@ -1157,7 +1177,7 @@ $("btnRegister").onclick=function(){
   if(!apiOn()){$("regMsg").textContent="后端未接通，请用下方的预览进入。";return}
   $("regMsg").textContent="正在发送验证码…";
   TpoApi.register(email,pass).then(function(){
-    $("verifyBox").classList.remove("hidden");$("regMsg").textContent="验证码已发到你的邮箱，请输入验证。";
+    $("verifyBox").classList.remove("hidden");$("regMsg").textContent="验证码已发到你的邮箱，请输入验证。";startResendCountdown();
   }).catch(function(e){
     var c=(e&&e.code)||"";
     $("regMsg").textContent=c==="already_registered"?"该邮箱已注册，请直接登录":(c==="email_not_configured"||c.indexOf("resend_status_")===0)?"邮件服务暂不可用，请稍后再试":("注册失败（"+c+"），请稍后再试。");
@@ -1168,7 +1188,7 @@ $("btnVerify").onclick=function(){
   if(!apiOn()){$("verifyMsg").textContent="后端未接通，请用下方的预览进入。";return}
   if(!code){$("verifyMsg").textContent="请输入验证码";return}
   TpoApi.verify(email,code).then(function(){
-    $("verifyMsg").textContent="验证通过，已激活。请用邮箱 + 密码登录。";$("loginEmail").value=email;
+    $("verifyBox").classList.add("hidden");resetResendButton();$("verifyMsg").textContent="";$("regMsg").textContent="验证通过，已激活。请用邮箱 + 密码登录。";$("loginEmail").value=email;var lp=$("loginPass");if(lp)lp.focus();
   }).catch(function(e){
     var c=(e&&e.code)||"";
     $("verifyMsg").textContent=c==="bad_code"?"验证码不对":c==="code_expired"?"验证码已过期，请点重新发送":c==="too_many_attempts"?"尝试次数过多，请稍后再试":c==="not_registered"?"请先注册":("验证失败（"+c+"），请稍后再试。");
@@ -1178,7 +1198,7 @@ $("btnResendCode").onclick=function(){
   var email=$("regEmail").value.trim().toLowerCase();
   if(!apiOn()){$("verifyMsg").textContent="后端未接通，请用下方的预览进入。";return}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$("verifyMsg").textContent="邮箱格式不对";return}
-  TpoApi.resendCode(email).then(function(){$("verifyMsg").textContent="验证码已重新发送，请查收邮箱。";}).catch(function(e){
+  TpoApi.resendCode(email).then(function(){$("verifyMsg").textContent="验证码已重新发送，请查收邮箱。";startResendCountdown();}).catch(function(e){
     var c=(e&&e.code)||"";
     $("verifyMsg").textContent=c==="cooldown"?"发送太频繁，请 1 分钟后再试":c==="not_pending"?"该邮箱已验证或未注册，请直接登录":("发送失败（"+c+"），请稍后再试。");
   });
