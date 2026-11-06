@@ -380,6 +380,7 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 <p class="small">条款：订阅不算税、不报税、不给税务结论、不判福利与退税资格。退款口径待公布（律师核过后写定）。</p>
 <p class="small" id="subStatus"></p>
 <p><button id="btnBuySub">购买季票</button></p>
+<p><button id="btnClaimPromo">领取前 50 名免费季票</button> <span id="promoMsg" class="small"></span></p>
 <p class="muted small">支付页完成购买；本站不保存你的完整卡号。</p>
 </div>
 
@@ -1984,6 +1985,18 @@ $("navOrganize").onclick=function(){showPage(1)};
 $("navSubscribe").onclick=function(){showPage(2)};
 $("navPay").onclick=function(){showPage(3)};
 $("btnBuySub").onclick=function(){showPage(3)};
+$("btnClaimPromo").onclick=function(){
+  if(isGuest()){$("promoMsg").textContent="请先登录再领取。";return}
+  if(!apiOn()){$("promoMsg").textContent="后端未接通，暂无法领取。";return}
+  if(serverEntitlementEnd>Date.now()){$("promoMsg").textContent="你已有有效季票，无需重复领取。";return}
+  TpoApi.claimPromo().then(function(){
+    $("promoMsg").textContent="已领取免费季票。";
+    refreshEntitlement();
+  }).catch(function(e){
+    var c=(e&&e.code)||"";
+    $("promoMsg").textContent=c==="promo_full"?"免费季名额已满。":c==="already_claimed"?"你已领过免费季。":("领取失败（"+c+"），请稍后再试。");
+  });
+};
 $("payPacks").onchange=function(){ if(!packet) return; packet.payPacks=parseInt($("payPacks").value,10)||1; savePacket(); renderOrders(); renderSubStatus(); };
 $("payMethod").onchange=function(){renderOrders()};
 $("btnDemoPay").onclick=function(){
