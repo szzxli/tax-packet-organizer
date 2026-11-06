@@ -44,6 +44,7 @@
     claimPromo: function (promo) { return req("/api/promo/claim", { method: "POST", body: { promo: promo || "first50" } }); },
     checkout: function (packs) { return req("/api/orders/checkout", { method: "POST", body: { packs: packs } }); },
     listOrders: function () { return req("/api/orders"); },
+    support: function (email, message) { return req("/api/support", { method: "POST", body: { email: email, message: message } }); },
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else global.TpoApi = api;
