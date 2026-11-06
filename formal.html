@@ -2000,7 +2000,20 @@ $("btnClaimPromo").onclick=function(){
 $("payPacks").onchange=function(){ if(!packet) return; packet.payPacks=parseInt($("payPacks").value,10)||1; savePacket(); renderOrders(); renderSubStatus(); };
 $("payMethod").onchange=function(){renderOrders()};
 $("btnDemoPay").onclick=function(){
-  $("payMsg").textContent="支付服务尚未接通，无法完成付款。";
+  if(!apiOn()){$("payMsg").textContent="后端未接通，暂无法付款。";return;}
+  if(!currentUser){$("payMsg").textContent="请先登录后再付款。";return;}
+  if(localOnly){$("payMsg").textContent="预览账号无法付款，请用后端账号登录。";return;}
+  var packs=(packet&&packet.payPacks===2)?2:1;
+  var btn=$("btnDemoPay");btn.disabled=true;
+  $("payMsg").textContent="正在跳转到收银台…";
+  TpoApi.checkout(packs).then(function(d){
+    if(d&&d.url){window.location.href=d.url;}
+    else{btn.disabled=false;$("payMsg").textContent="支付创建失败，请稍后再试。";}
+  }).catch(function(e){
+    btn.disabled=false;
+    var c=(e&&e.code)||"";
+    $("payMsg").textContent=c==="stripe_not_configured"?"支付服务尚未接通，无法完成付款。":c==="stripe_error"?"支付创建失败，请稍后再试。":(e&&e.status===401)?"登录已过期，请重新登录。":("付款失败（"+c+"），请稍后再试。");
+  });
 };
 function renderPriorCpa(){
   if(!packet) return;
@@ -2043,10 +2056,13 @@ registerAppShell();
     if(s&&accounts()[s]){currentUser=s;loadPacket(s).then(function(){showApp();});}
     else{currentUser=null;loadGuest();showApp();}
   }
+  var q=new URLSearchParams(window.location.search||"");
+  var ret=q.get("paid")==="1"?"paid":(q.get("canceled")==="1"?"canceled":null);
+  if(ret){try{history.replaceState(null,"",window.location.pathname+window.location.hash);}catch(e){}}
   if(apiOn()&&s){
     TpoApi.me().then(function(m){
       currentUser=(m&&m.email)||s;
-      loadPacket(currentUser).then(function(){refreshEntitlement();showApp();});
+      loadPacket(currentUser).then(function(){refreshEntitlement();showApp();if(ret){$("payMsg").textContent=ret==="paid"?"付款完成，季票已开通，有效期见上方状态。":"已取消付款，未扣款。";}});
     }).catch(function(){localRestore();});
   }else{localRestore();}
 })();
