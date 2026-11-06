@@ -1079,7 +1079,7 @@ function renderFollowUp(){
   };
 }
 function applyOrganizeStep(){if(currentPage!==1)return;var wrap=$("appViewSections");if(!wrap)return;for(var i=0;i<wrap.children.length;i++){var c=wrap.children[i];if(c.className.indexOf("card")<0)continue;var showCard=c.id!=="subCard"&&Number(c.dataset.flowStep||0)===currentOrganizeStep;c.classList.toggle("hidden",!showCard);}}
-function renderAll(){renderChanges();renderLast();renderMerged();renderExports();renderCpa();renderDraft();renderWarnings();renderSubStatus();renderOrders();renderPriorCpa();renderReminders();renderProbe();renderDeep();renderSnaps();renderPriority();renderGates();applyCollapse();renderStickyProgress();renderHero();renderFollowUp();applyOrganizeStep()}
+function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderWarnings,renderSubStatus,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderGates,applyCollapse];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
 function secKeyFromH2(t){
   if(t.indexOf("州税范围")>=0)return "s3b";
   if(t.indexOf("去年有什么")>=0)return "s3";
