@@ -2066,7 +2066,7 @@ registerAppShell();
   if(apiOn()&&s){
     TpoApi.me().then(function(m){
       currentUser=(m&&m.email)||s;
-      loadPacket(currentUser).then(function(){refreshEntitlement();showApp();if(ret){$("payMsg").textContent=ret==="paid"?"付款完成，季票已开通，有效期见上方状态。":"已取消付款，未扣款。";}});
+      loadPacket(currentUser).then(function(){refreshEntitlement();showApp();if(ret){$("payMsg").textContent=ret==="paid"?"付款完成，季票已开通，有效期见上方状态。":"已取消付款，未扣款。";if(ret==="paid")setTimeout(function(){refreshOrders();},3000);}});
     }).catch(function(){localRestore();});
   }else{localRestore();}
 })();
