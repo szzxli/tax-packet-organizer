@@ -2693,5 +2693,70 @@ try{captureZh();var _sl=null;try{_sl=localStorage.getItem("tpo_lang");}catch(e){
   }else{localRestore();}
 })();
 </script>
+<style id="polish">
+/* 视觉打磨 + 对比度修复：从另一版页面里挑出来、值得并进来的部分 */
+:root{--p-bg:#0b1118;--p-card:#111a24;--p-line:#223244;--p-text:#e6edf3;--p-sub:#9fb0c0;--p-accent:#2fd4a0;--p-accent-ink:#06261b}
+body{background:var(--p-bg);-webkit-font-smoothing:antialiased;letter-spacing:.005em}
+.card{transition:border-color .2s ease,box-shadow .2s ease}
+.card:hover{border-color:#2c4258}
+
+/* 首屏：大标题 + 一点薄荷光晕 */
+#startCard{position:relative;overflow:hidden;padding:clamp(22px,4vw,40px)!important}
+#startCard::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(47,212,160,.28),transparent 70%);pointer-events:none}
+.start-title{font-size:clamp(22px,3.4vw,32px)!important;line-height:1.3!important;letter-spacing:-.01em;position:relative}
+.start-sub{opacity:.95;font-size:15px;position:relative}
+
+/* 顶栏按钮：原来深蓝字压在深底上（2.2:1），几乎看不见 */
+#navSubscribe,#navPay{opacity:1!important;color:var(--p-text)!important;border-color:var(--p-line)!important;background:transparent!important}
+#navSubscribe:hover,#navPay:hover{border-color:var(--p-accent)!important;color:var(--p-accent)!important}
+
+/* 步骤条 */
+.journey-steps .step-tab{background:transparent!important;color:var(--p-sub)!important;border:1px solid var(--p-line)!important}
+.journey-steps .step-tab[aria-selected="true"]{background:var(--p-accent)!important;color:var(--p-accent-ink)!important;border-color:var(--p-accent)!important}
+.journey-steps .step-tab:hover{color:var(--p-text)!important;border-color:var(--p-accent)!important}
+#flowStepDescription{color:var(--p-sub)!important}
+
+/* 交付物预览：白纸上的灰字原来只有 1.7:1 */
+#coverPreviewCard{background:var(--p-card)!important;display:flex;flex-direction:column;align-items:center}
+#coverPreviewCard .cover-preview{width:100%;max-width:560px;background:linear-gradient(160deg,#fbfcfd,#eef3f7)!important;border:1px solid #d6e0e8!important;box-shadow:0 18px 40px -18px rgba(0,0,0,.6)!important;transform:rotate(-.6deg)}
+#coverPreviewCard .cover-preview .small,#coverPreviewCard .cover-preview .muted{color:#4a5d6e!important}
+#coverPreviewCard .cover-preview b{color:#16324f}
+#coverPreviewCard>p.muted{color:var(--p-sub)!important;text-align:center}
+
+/* 标签：手机上保持药丸，不再一行一个 */
+.tag-grid{display:flex!important;flex-wrap:wrap;gap:8px}
+.tag-btn{transition:border-color .15s ease,background .15s ease}
+.tag-btn:hover{border-color:var(--p-accent)!important}
+@media(max-width:600px){.tag-grid .tag-btn{width:auto!important;flex:0 0 auto;min-width:0!important;padding:8px 14px}}
+
+/* 折叠区标题：原来深蓝字在深底上（1.3:1） */
+.sec-chev{color:var(--p-accent)!important;opacity:1!important}
+.sec-sum{color:var(--p-sub)!important}
+.sec-head:hover{background:rgba(255,255,255,.04)!important}
+
+/* 底部进度条：原来浅字压浅底（1.1:1） */
+#stickyProgressTitle{color:#16324f!important;opacity:1!important}
+#stickyProgressText{color:#3c5060!important}
+
+/* 交付前核对：浅底 + 浅字，等于空白。改成一张深色页上的白纸 */
+#checkPanel{background:#f8fbfd!important;border:1px solid #d6e0e8!important;color:#16324f!important}
+#checkPanel h3{color:#16324f!important}
+#checkPanel .small,#checkPanel .muted{color:#4a5d6e!important}
+#checkPanel table th,#checkPanel table td{border-color:#d6e0e8!important;color:#16324f}
+#checkPanel .notice{background:#eef4f9!important;border-color:#d6e0e8!important;color:#16324f!important}
+#checkPanel .notice.ok{background:#e9f5ef!important;border-color:#bfe3d0!important;color:#14532d!important}
+#checkPanel .notice.warn{background:#fff7e6!important;border-color:#e8cf9a!important;color:#7a4a00!important}
+
+/* 技术支持表单标签 */
+#supportCard label,.sup-form label{color:var(--p-sub)!important}
+
+/* FAQ：问答内容原来也是深底深字 */
+#faqCard summary,#faqCard b,#faqCard h3{color:var(--p-accent)!important}
+#faqCard p,#faqCard div,#faqCard li{color:var(--p-sub)!important}
+
+textarea{line-height:1.6}
+:focus-visible{outline:2px solid var(--p-accent)!important;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}#coverPreviewCard .cover-preview{transform:none!important}}
+</style>
 </body>
 </html>
