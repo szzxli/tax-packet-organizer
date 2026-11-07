@@ -1839,6 +1839,7 @@ function addStateRow(st){
 $("btnAddState").onclick=function(){
   var st=$("stateSelect").value;
   $("stateMsg").textContent=addStateRow(st);savePacket();renderAll();
+  var s2=$("stateSelect");if(s2)s2.value=st;
 };
 function isSaleText(t){return /(卖房|售房|房子|房产|house|property)/i.test(t)&&/(卖|售|sell|sold)/i.test(t);}
 function addUncertainDocs(text,isSale){
@@ -1896,6 +1897,7 @@ $("btnHeroGenerate").onclick=function(){
   var stateMsg="";
   if(st)stateMsg=addStateRow(st);
   savePacket();renderAll();
+  var hs=$("heroState");if(hs&&st)hs.value=st;
   if(packet.checklist.length){advanceAfterGenerate();if(st==="其他州"&&msg)msg.textContent=stateMsg;}
   else if(msg)msg.textContent=stateMsg||"已记录。";
 };
