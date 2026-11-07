@@ -28,8 +28,8 @@ button:disabled{opacity:.5} .row{display:flex;gap:10px;flex-wrap:wrap} .row>*{fl
 table{width:100%;border-collapse:collapse;font-size:13px} th,td{border:1px solid #ddd;padding:6px;text-align:left}
 .orderitem{border:1px solid #e2e6eb;border-radius:10px;padding:10px;margin:8px 0}
 #printArea{display:none}
-@media print{ body{background:#fff} header,.no-print{display:none!important} main{max-width:none;padding:0} main>*:not(#printArea){display:none!important} .card{border:none;margin:0;padding:0} #printArea{display:block!important} #appViewSections{display:none!important} }
-@media(max-width:600px){ .row>*{min-width:100%} main{padding:14px 10px} .card{padding:14px 12px} header{padding:16px 12px} input,select,textarea{font-size:16px} button,input,select{min-height:44px} input[type=file]{width:100%} table{display:block;overflow-x:auto;white-space:nowrap} .card>p>button{width:100%} }
+@media print{ body{background:#fff} header,.no-print{display:none!important} main{max-width:none;padding:0} main>*:not(#printArea){display:none!important} .card{border:none;margin:0;padding:0} #printArea{display:block!important} #appViewSections{display:none!important} #printArea table{font-size:10px;width:100%} #printArea h1{font-size:18px} }
+@media(max-width:600px){ .row>*{min-width:100%} main{padding:14px 10px} .card{padding:14px 12px} #checkPanel button{width:100%} header{padding:16px 12px} input,select,textarea{font-size:16px} button,input,select{min-height:44px} input[type=file]{width:100%} table{display:block;overflow-x:auto;white-space:nowrap} .card>p>button{width:100%} }
 :root{--ink:#16324f;--blue:#2a6db0;--paper:#fff;--mist:#f3f6f8;--line:#dfe7ed;--mint:#e9f5ef;--green:#236b4b}
 body{background:linear-gradient(180deg,#eaf1f6 0,#f4f7f9 320px,#f4f7f9 100%);color:#203040}
 header{padding:22px max(16px,calc((100vw - 1000px)/2));background:linear-gradient(115deg,#123453,#276ca8);box-shadow:0 4px 18px rgba(19,50,79,.12)}
@@ -179,6 +179,11 @@ header{position:relative;padding-right:150px}
 #bootCard .sk.short{width:60%}
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
 #changesCard,#stateCard{display:none!important}
+#handoffSection,#priorCpaCard,#snapCard,#priorityDetails,#payView{display:none!important}
+.chk-red,.chk-yellow,.chk-green{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.chk-red{background:#c0392b}.chk-yellow{background:#d39e00}.chk-green{background:#1e7a4c}
+#checkPanel{background:#f8fbfd}
+#checkPanel table{font-size:12px}
 @media(max-width:600px){
  header{padding-right:110px}
  header h1{font-size:20px}
@@ -397,10 +402,6 @@ header{position:relative;padding-right:150px}
 <p class="small">去年表→类型对照：W-2→工资；Schedule E→房租；Schedule C / Schedule SE / 1099-NEC→自雇；1099-INT→利息；1099-DIV→股息；1099-R→退休金；SSA-1099→社保金；其余进“其他”。</p>
 <div id="mergedBox"></div>
 <div id="mergedSummary"></div>
-<h3>交付前总核对</h3>
-<p class="muted small">点一次，输出可交 / 不可交和缺项表；可重跑，只报告不改状态。</p>
-<p><button id="btnBatchCheck" class="secondary">运行交付前总核对</button></p>
-<div id="batchBox"></div>
 </div>
 
 <div class="card">
@@ -442,7 +443,7 @@ header{position:relative;padding-right:150px}
 
 <div class="card">
 <h2>IRS 更新提醒</h2>
-<p><span class="badge uploaded">已开启</span> <span class="small">每周一上午约 9:10 PT 检查一次 · 下次：2026-11-09 周一上午 · 无相关更新时不打扰</span></p>
+<p><span class="badge pending">内测中</span> <span class="small">计划 3–5 次：表到齐、4/15 前两周、10/15 前两周、你的表今年规则变了；不是天天推。当前只在本页展示，未接自动发送。</span></p>
 <p class="small"><b>盯什么（只报这 6 类）：</b>清单里的表新增 / 改名 / 停用 / 截止日变化；联邦报税与延期截止日；Free File 资格与门槛；申报路径变化（Direct File 开停、在线账户 / transcript 可用性、e-file 警报）；IRS 持证报税人目录变化；覆盖 10 州的州报税截止日（仅影响本包州表时；得州、佛州无州个人所得税）。<br>
 <b>不报：</b>税率、抵扣额变化（整理器不算税）、执法与诈骗提醒、一般报税小贴士。</p>
 <p class="small"><b>上次检查：2026-11-03，你的清单无需改动。</b></p>
@@ -474,6 +475,13 @@ header{position:relative;padding-right:150px}
 <div class="card">
 <h2>导出：一份能交出去的清单</h2>
 <p class="muted small">没做完也能先导出，缺项会列在清单里，导出后继续补。三份导出均含你确认的证据数字与核对状态，均不含社保号，均不锁任何一家报税软件：<b>CSV</b> 是通用表格，可直接用 Excel / Google Sheets 打开，也可导入会计师自己的报税软件，含确认数字与核对列；<b>JSON</b> 是机器可读清单，含预估草稿汇总与 IRS 对照提醒；<b>PDF</b> 是打印版，汇总在前、清单在后，末尾带会计师审核签字栏。导出的是清单与确认数字，文件原件由你另外经会计师门户 / 邮件发给会计师。会计师的工作只是审核确认并签字（以打印版签字栏手签为准），平台不抽报税费、不替代签字；发送记录由你标记，不代表 CPA 已确认。</p>
+<div class="notice" id="checkPanel">
+<h3>交之前核一遍</h3>
+<p class="small" id="checkSummary">还有 0 项没核对；导出不受影响。</p>
+<p class="small muted">只查结构：表在不在、数字填没填、表数对不对、凭证有没有；不判断数字真伪、不算税。</p>
+<p><button type="button" id="btnCheck">交之前核一遍</button> <span id="checkMsg" class="small"></span></p>
+<div id="checkReport"></div>
+</div>
 <p><button id="btnPrint">下载清单 PDF（交得出去）</button></p><details><summary class="small">更多格式（CSV / JSON）</summary><p><button id="btnExportCsv" class="secondary">下载通用表格（CSV）</button> <button id="btnExportJson" class="secondary">下载机器可读清单（JSON）</button></p></details>
 <div id="exportSaveGuide" class="notice hidden"><b>已导出。</b> 注册免费账号可保存进度、换设备继续，清单会自动带入。 <button type="button" id="btnGuideSave" class="secondary">保存进度 / 换设备</button> <button type="button" id="btnGuideClose" class="secondary" aria-label="关闭提示">关闭</button></div>
 <p class="small hidden" id="saveToAccountLine">不用注册也能导出。想保存进度、换设备继续？ <button type="button" id="btnSaveToAccount" class="secondary">保存进度 / 换设备</button></p>
@@ -481,15 +489,17 @@ header{position:relative;padding-right:150px}
 <p class="muted small">清单生成后，针对你写的内容再问几句，答了就更新清单；只为整理材料，不判断税务结论。</p>
 <div id="followUpBox"></div>
 <p><span id="followUpMsg" class="small"></span></p>
+<div id="handoffSection">
 <h3>交得出去</h3>
 <p class="small" id="handoverText"></p>
 <p class="small" id="cpaReviewText">暂无发送记录。发送记录仅表示你已把清单发给会计师，不代表 CPA 已签字确认。</p>
 <p><button id="btnCpaReview">标记为已发送给会计师</button> <button id="btnCpaClear" class="secondary">清除发送记录</button></p>
 <p class="small" id="exportCpaLine"></p>
+</div>
 <ul id="exportLog"></ul>
 </div>
 
-<div class="card">
+<div class="card" id="priorCpaCard">
 <h2>去年会计师（还是找去年那位）</h2>
 <p class="muted small">还是找去年会计师？在这里填上他/她的信息，包就按这位收件；平台不验证、不背书此人——这是你自己的选择，不是平台推荐。信息只存你的账号，下次登录自动带出供你确认；换人时改掉或清除即可。</p>
 <div class="row">
@@ -501,7 +511,7 @@ header{position:relative;padding-right:150px}
 <p class="small" id="priorCpaStatus"></p>
 </div>
 
-<div class="card">
+<div class="card" id="snapCard">
 <h2>多包与多年对比</h2>
 <p class="muted small">把当前包存成一版（命名 + 年份），多版之间按表对比：每张表在各版里是已备、缺项还是没有这项。快照只存清单摘要，不复制文件内容；当前包本身不受影响。</p>
 <div class="row">
@@ -528,6 +538,9 @@ header{position:relative;padding-right:150px}
 <div class="sub-three-item"><b>交付前总核对</b><span>点一次，输出「可交 / 不可交 + 缺项表」；可重跑，只报告不改数据。</span></div>
 <div class="sub-three-item"><b>全年盯梢 <span class="badge pending">内测中</span></b><span>缺项、规则变化命中你的表、截止日；目前只在本页展示，自动提醒未接。</span></div>
 </div>
+<p class="small"><b>核对报告：</b>1 页，逐表红/黄/绿 + 可交/不可交 + 缺项清单（每项写去哪拿）；可重跑、可打印/存 PDF。</p>
+<p class="small"><b>盯梢：</b>3–5 次（表到齐、4/15 前两周、10/15 前两周、你的表今年规则变了）；不是天天推。</p>
+<p class="small muted">只查结构：表在不在、数字填没填、表数对不对、凭证有没有；不判断数字真伪、不算税。</p>
 
 <h3>免费版 vs 季票</h3>
 <table>
@@ -538,7 +551,7 @@ header{position:relative;padding-right:150px}
 </table>
 <p class="small">条款：订阅不算税、不报税、不给税务结论、不判福利与退税资格。退款口径待公布（律师核过后写定）。</p>
 <p class="small" id="subStatus"></p>
-<p><button id="btnClaimPromo">领取前 50 名免费季票</button> <span id="promoMsg" class="small"></span></p>
+<p class="small muted">在导出前或交出去前开通；领取后同一页出报告。</p>
 <p class="muted small">内测期免费，1 月公布价格；本站不保存完整卡号。</p>
 </div>
 
@@ -574,7 +587,7 @@ header{position:relative;padding-right:150px}
 <h2>常见问题</h2>
 <div class="faq-item"><b>这工具是干什么的？</b><p>把今年报税要准备的材料整理成一份清单，导出后自己核对，或给会计师对照着填。只整理、不算税、不报税、不给税务结论；清单最后由你或会计师复核。</p></div>
 <div class="faq-item"><b>免费版包括什么？</b><p>基础整理与文件提交永久免费。不用登录也能用，进度只存这台浏览器。</p></div>
-<div class="faq-item"><b>季票包括什么？</b><p>两件事：交付前总核对、全年盯梢（内测中）。免费版已含清单、上传、提数、三种导出、封面+复核签字和明年复用。内测期免费，1 月公布价格。</p></div>
+<div class="faq-item"><b>季票包括什么？</b><p>两件事：交付前总核对、全年盯梢（内测中）。核对报告 1 页（逐表红/黄/绿 + 可交/不可交 + 缺项清单），可重跑、可打印；盯梢 3–5 次，不是天天推。免费版已含清单、上传、提数、三种导出、封面+复核签字和明年复用。内测期免费，1 月公布价格。</p></div>
 <div class="faq-item"><b>我的税表和社保号会上传吗？</b><p>不会。文件内容、社保号、整份税表只留在你自己电脑上，不经过后端；后端只收加密的清单包（表名、付款方、你确认的金额、文件名、状态）。</p></div>
 <div class="faq-item"><b>现在能买季票吗？</b><p>季票购买目前处于测试阶段，正式收费将在实体注册后开通；朋友内测期间不收真钱。</p></div>
 <div class="faq-item"><b>退款怎么办？</b><p>退款口径正在由律师核对，核过后公布。</p></div>
@@ -591,7 +604,7 @@ header{position:relative;padding-right:150px}
 <label for="supMsg">遇到的问题</label>
 <textarea id="supMsg" placeholder="例如：登录后清单不见了……"></textarea>
 <p><button id="btnSupportSubmit">提交请求</button> <span id="supMsg2" class="small"></span></p>
-<details><summary class="small">优先工具支持（季票权益，仍可用）</summary>
+<details id="priorityDetails"><summary class="small">优先工具支持（季票权益，仍可用）</summary>
 <p class="small" id="priorityStatus"></p>
 <label for="supportText">优先支持请求（只存你的账号；也可直接发邮件到 <a href="mailto:support@zhuanuc.com">support@zhuanuc.com</a>）</label>
 <textarea id="supportText" rows="2" style="width:100%;font-size:15px;padding:9px 10px;border-radius:8px;border:1px solid #bbb" placeholder="例如：清单里 Schedule E 的凭证核对卡住了"></textarea>
@@ -677,6 +690,8 @@ Object.assign(I18N,{"把今年报税要准备的材料整理成一份清单，�
 Object.assign(I18N,{"把今年的报税材料，整理成一份能交出去的清单。":{"en":"Turn this year's tax paperwork into a checklist you can hand over.","es":"Convierta los documentos fiscales de este año en una lista que pueda entregar."},"说一句今年变了什么，不用登录，3 分钟生成，导出 CSV / JSON / PDF。":{"en":"Describe what changed this year. No login, 3 minutes, export CSV / JSON / PDF.","es":"Describa qué cambió este año. Sin inicio de sesión, 3 minutos, exporte CSV / JSON / PDF."},"把今年的材料放进来":{"en":"Bring in this year's documents","es":"Traer los documentos de este año"},"看看要准备什么":{"en":"See what you'll need","es":"Ver qué necesitará"},"点选今年有过的，或直接写一句；不确定的别选。":{"en":"Tap what applies this year, or type one line; skip what you're unsure about.","es":"Toque lo que aplique este año o escriba una línea; omita lo que no esté seguro."},"申报身份变了":{"en":"Filing status changed","es":"Cambió el estado civil fiscal"},"抚养人减少":{"en":"Dependent removed","es":"Se quitó un dependiente"},"没有变化":{"en":"No changes","es":"Sin cambios"},"登录后，未登录时做的包会自动带进你的账号。":{"en":"After you log in, the packet you made while logged out is brought into your account.","es":"Después de iniciar sesión, el paquete que hizo sin sesión se traslada a su cuenta."}});
 Object.assign(I18N,{"不会写？用 AI 描述":{"en":"Not sure what to write? Use AI","es":"¿No sabe qué escribir? Use la IA"}});
 Object.assign(I18N,{"免费 = 做完；季票 = 做对。基础整理永久免费，内测期免费，1 月公布价格。":{"en":"Free = done; pass = done right. Basic organizing is free forever; free during beta, pricing announced in January.","es":"Gratis = hecho; pase = bien hecho. La organización básica es gratis para siempre; gratis durante la beta, precios en enero."},"免费永久包含":{"en":"Free forever","es":"Gratis para siempre"},"清单生成、逐项上传、本地提数、三种导出":{"en":"Checklist generation, item uploads, local figure extraction, three exports","es":"Generación de lista, carga por elemento, extracción local de cifras, tres exportaciones"},"封面 + 复核签字页":{"en":"Cover + review signature page","es":"Portada + página de firma de revisión"},"明年复用：打开自动带出去年清单":{"en":"Reuse next year: last year's checklist is carried over automatically","es":"Reutilizar el próximo año: la lista del año pasado se traslada automáticamente"},"季票只做两件事":{"en":"The pass does two things","es":"El pase hace dos cosas"},"点一次，输出「可交 / 不可交 + 缺项表」；可重跑，只报告不改数据。":{"en":"One click outputs “ready / not ready + missing-items table”; rerunnable, report only, never changes data.","es":"Un clic muestra «listo / no listo + tabla de faltantes»; se puede repetir, solo informa y no cambia datos."},"全年盯梢":{"en":"Year-round watch","es":"Vigilancia todo el año"},"缺项、规则变化命中你的表、截止日；目前只在本页展示，自动提醒未接。":{"en":"Missing items, rule changes that hit your forms, deadlines; shown on this page only — automatic reminders are not connected yet.","es":"Faltantes, cambios de reglas que afectan sus formularios y fechas límite; solo se muestra en esta página: los recordatorios automáticos aún no están conectados."},"交付前总核对（可交/不可交 + 缺项表）":{"en":"Pre-delivery check (ready/not ready + missing-items table)","es":"Verificación previa (listo/no listo + tabla de faltantes)"},"全年盯梢（缺项、规则变化、截止日）":{"en":"Year-round watch (missing items, rule changes, deadlines)","es":"Vigilancia todo el año (faltantes, cambios de reglas, fechas límite)"},"内测中":{"en":"Beta","es":"Beta"},"免费 = 做完，季票 = 做对":{"en":"Free = done; pass = done right","es":"Gratis = hecho; pase = bien hecho"},"基础整理和导出永久免费；季票帮你交付前再核对一遍，并全年盯住变化。":{"en":"Basic organizing and exports are free forever; the pass adds a pre-delivery check and a year-round watch.","es":"La organización básica y las exportaciones son gratis para siempre; el pase añade una verificación previa y una vigilancia todo el año."},"可交 / 不可交 + 缺项表，可重跑。":{"en":"Ready / not ready + missing-items table; rerunnable.","es":"Listo / no listo + tabla de faltantes; se puede repetir."},"缺项、规则变化、截止日；自动提醒未接。":{"en":"Missing items, rule changes, deadlines; automatic reminders are not connected yet.","es":"Faltantes, cambios de reglas y fechas límite; los recordatorios automáticos aún no están conectados."},"内测期免费，1 月公布价格。登录后领取免费季票。":{"en":"Free during beta; pricing announced in January. Log in to claim a free pass.","es":"Gratis durante la beta; precios en enero. Inicie sesión para reclamar un pase gratis."},"两件事：交付前总核对、全年盯梢（内测中）。免费版已含清单、上传、提数、三种导出、封面+复核签字和明年复用。内测期免费，1 月公布价格。":{"en":"Two things: pre-delivery check and year-round watch (beta). The free version already includes the checklist, uploads, figure extraction, three exports, cover + review signature, and next-year reuse. Free during beta; pricing announced in January.","es":"Dos cosas: verificación previa y vigilancia todo el año (beta). La versión gratis ya incluye la lista, cargas, extracción de cifras, tres exportaciones, portada + firma de revisión y reutilización el próximo año. Gratis durante la beta; precios en enero."},"交付前总核对 · 全年盯梢（内测中）。内测期免费，1 月公布价格。":{"en":"Pre-delivery check · Year-round watch (beta). Free during beta; pricing announced in January.","es":"Verificación previa · Vigilancia todo el año (beta). Gratis durante la beta; precios en enero."},"领取免费季票后解锁（内测期免费）：这是季票功能。":{"en":"Claim a free pass to unlock (free during beta): this is a season-pass feature.","es":"Reclame un pase gratis para desbloquear (gratis durante la beta): es una función del pase."},"点一次，输出可交 / 不可交和缺项表；可重跑，只报告不改状态。":{"en":"One click outputs ready / not ready and a missing-items table; rerunnable, report only.","es":"Un clic muestra listo / no listo y una tabla de faltantes; se puede repetir, solo informa."},"运行交付前总核对":{"en":"Run pre-delivery check","es":"Ejecutar verificación previa"},"交付前总核对":{"en":"Pre-delivery check","es":"Verificación previa"},"内测中：目前只在本页展示，未接自动提醒/邮件。":{"en":"Beta: shown on this page only; automatic reminders/email are not connected yet.","es":"Beta: solo se muestra en esta página; los recordatorios automáticos/correo aún no están conectados."}});
+Object.assign(I18N,{"核对报告：":{"en":"Check report:","es":"Informe de verificación:"},"盯梢：":{"en":"Watch:","es":"Vigilancia:"},"1 页，逐表红/黄/绿 + 可交/不可交 + 缺项清单（每项写去哪拿）；可重跑、可打印/存 PDF。":{"en":"One page: red/yellow/green per form, ready/not ready, and a missing-items list with where to get each one; rerunnable, printable / save as PDF.","es":"Una página: rojo/amarillo/verde por formulario, listo/no listo y lista de faltantes con dónde obtener cada uno; se puede repetir, imprimir / guardar en PDF."},"3–5 次（表到齐、4/15 前两周、10/15 前两周、你的表今年规则变了）；不是天天推。":{"en":"3–5 times (forms complete, two weeks before 4/15, two weeks before 10/15, a rule change for your forms); not daily.","es":"3–5 veces (formularios completos, dos semanas antes del 4/15, dos semanas antes del 10/15, un cambio de regla para sus formularios); no a diario."},"只查结构：表在不在、数字填没填、表数对不对、凭证有没有；不判断数字真伪、不算税。":{"en":"Structure only: is the form there, is the number filled, does it match the form amount, is there a voucher; it does not judge whether numbers are true and does not calculate tax.","es":"Solo estructura: si el formulario está, si la cifra está puesta, si coincide con el importe del formulario y si hay comprobante; no juzga la veracidad ni calcula impuestos."},"交之前核一遍":{"en":"Check before handing over","es":"Verificar antes de entregar"},"计划 3–5 次：表到齐、4/15 前两周、10/15 前两周、你的表今年规则变了；不是天天推。当前只在本页展示，未接自动发送。":{"en":"Planned 3–5 times: forms complete, two weeks before 4/15, two weeks before 10/15, a rule change for your forms; not daily. Shown on this page only; automatic sending is not connected.","es":"Previstas 3–5 veces: formularios completos, dos semanas antes del 4/15, dos semanas antes del 10/15, un cambio de regla para sus formularios; no a diario. Solo se muestra en esta página; el envío automático no está conectado."},"在导出前或交出去前开通；领取后同一页出报告。":{"en":"Unlock before export or handoff; the report appears on the same page after claiming.","es":"Actívelo antes de exportar o entregar; el informe aparece en la misma página tras reclamarlo."},"季票功能（内测期免费）：在导出前开通后可用。":{"en":"Pass feature (free during beta): available after unlocking before export.","es":"Función del pase (gratis durante la beta): disponible tras activarla antes de exportar."},"去导出前开通":{"en":"Go unlock before export","es":"Ir a activar antes de exportar"},"领取免费季票并核对":{"en":"Claim a free pass and run the check","es":"Reclamar pase gratis y verificar"},"打印 / 存 PDF":{"en":"Print / save PDF","es":"Imprimir / guardar PDF"},"交付前总核对报告":{"en":"Pre-delivery check report","es":"Informe de verificación previa"}});
+Object.assign(I18N,{"两件事：交付前总核对、全年盯梢（内测中）。核对报告 1 页（逐表红/黄/绿 + 可交/不可交 + 缺项清单），可重跑、可打印；盯梢 3–5 次，不是天天推。免费版已含清单、上传、提数、三种导出、封面+复核签字和明年复用。内测期免费，1 月公布价格。":{"en":"Two things: pre-delivery check and year-round watch (beta). The check report is one page (red/yellow/green per form, ready/not ready, missing-items list), rerunnable and printable; the watch runs 3–5 times, not daily. The free version already includes the checklist, uploads, figure extraction, three exports, cover + review signature, and next-year reuse. Free during beta; pricing announced in January.","es":"Dos cosas: verificación previa y vigilancia todo el año (beta). El informe es de una página (rojo/amarillo/verde por formulario, listo/no listo, lista de faltantes), se puede repetir e imprimir; la vigilancia se ejecuta 3–5 veces, no a diario. La versión gratis ya incluye la lista, cargas, extracción de cifras, tres exportaciones, portada + firma de revisión y reutilización el próximo año. Gratis durante la beta; precios en enero."}});
 var LANG="zh";
 function t(s){if(LANG==="zh")return s;var e=I18N[s];return (e&&e[LANG])?e[LANG]:s;}
 function tr(zh,en,es){return LANG==="en"?en:(LANG==="es"?es:zh);}
@@ -731,7 +746,7 @@ function apiOn(){return (typeof TpoApi!=="undefined")&&TpoApi.enabled();}
 var serverOrders=[];
 function displayOrders(){ if(serverOrders&&serverOrders.length) return serverOrders.map(function(o){ return {id:o.id, at:new Date(o.created_at).toLocaleString(), packs:o.packs, amountCents:o.amount_cents, method:"\u4fe1\u7528\u5361", status:o.status==="paid"?"paid":"pending", entitlementEnd:o.entitlement_end}; }); return subOrders(); }
 function refreshOrders(){if(!apiOn()||localOnly||!currentUser)return Promise.resolve([]);return TpoApi.listOrders().then(function(d){serverOrders=(d&&d.orders)||[];if(typeof renderOrders==="function")renderOrders();return serverOrders;}).catch(function(){return serverOrders;});}
-function refreshEntitlement(){if(!apiOn()||!currentUser)return Promise.resolve(0);return TpoApi.me().then(function(m){serverEntitlementEnd=(m&&m.entitlement_end)||0;if(typeof renderSubStatus==="function")renderSubStatus();refreshOrders();if(typeof renderGates==="function")renderGates();if(typeof renderHero==="function")renderHero();if(hasPass()){if(typeof renderReminders==="function")renderReminders();if(typeof renderProbe==="function")renderProbe();if(typeof renderDeep==="function")renderDeep();if(typeof renderSnaps==="function")renderSnaps();if(typeof renderCpa==="function")renderCpa();if(typeof renderPriority==="function")renderPriority();}return serverEntitlementEnd;}).catch(function(){return 0;});}
+function refreshEntitlement(){if(!apiOn()||!currentUser)return Promise.resolve(0);return TpoApi.me().then(function(m){serverEntitlementEnd=(m&&m.entitlement_end)||0;if(typeof renderSubStatus==="function")renderSubStatus();refreshOrders();if(typeof renderHero==="function")renderHero();if(hasPass()){if(typeof renderReminders==="function")renderReminders();if(typeof renderProbe==="function")renderProbe();if(typeof renderDeep==="function")renderDeep();if(typeof renderSnaps==="function")renderSnaps();if(typeof renderCpa==="function")renderCpa();if(typeof renderPriority==="function")renderPriority();}return serverEntitlementEnd;}).catch(function(){return 0;});}
 function scheduleServerSave(){if(!apiOn()||localOnly||!currentUser||!packet)return;if(serverSyncTimer)clearTimeout(serverSyncTimer);serverSyncTimer=setTimeout(function(){serverSyncTimer=null;if(!packet||!currentUser)return;TpoApi.putPacket(packet).catch(function(){});},1000);}
 var GUEST_KEY="tpo_packet_guest",pendingPage=null;
 function isGuest(){return !currentUser;}
@@ -754,16 +769,11 @@ function localLogin(email,pass){
 function loadGuest(){packet=load(GUEST_KEY,null);if(!packet){packet=newPacket();save(GUEST_KEY,packet)}else{if(packet.changesCollapsed===undefined)packet.changesCollapsed=true;if(!packet.mergedV2){backfillRows();migrateSheets();packet.mergedV2=true;savePacket();}}}
 function gateNote(){return "<p class='small'>"+t("登录后可用：这是季票功能，登录后解锁。")+"</p><p><button class='secondary' onclick='showAuth()'>"+t("登录 / 注册")+"</button></p>";}
 function hasPass(){return !isGuest()&&serverEntitlementEnd>Date.now();}
-function passGateNote(){return "<p class='small'>"+t("领取免费季票后解锁（内测期免费）：这是季票功能。")+"</p><p><button class='secondary' onclick='goSub()'>"+t("去订阅")+"</button></p>";}
+function passGateNote(){return "<p class='small'>"+t("季票功能（内测期免费）：在导出前开通后可用。")+"</p><p><button class='secondary' onclick='goCheck()'>"+t("去导出前开通")+"</button></p>";}
 function goSub(){if(typeof showPage==="function")showPage(2);var el=$("subCard");if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}
+function goCheck(){if(typeof showPage==="function")showPage(1);try{setOrganizeStep(3,true);}catch(e){}var el=$("checkPanel");if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}
 function fmtDateUTC(ts){try{return new Date(ts).toLocaleDateString(undefined,{timeZone:"UTC"});}catch(e){return new Date(ts).toLocaleDateString();}}
 function shortOrderId(id){if(!id)return "";if(id.indexOf("cs_test_")===0||id.indexOf("cs_live_")===0)return "TPO-"+id.slice(-8);return id;}
-function renderGates(){
-  if(!packet)return;
-  var bb=$("batchBox");
-  if(hasPass()){if(bb&&bb.innerHTML.indexOf("季票功能")>=0)bb.innerHTML="";return;}
-  if(bb)bb.innerHTML=isGuest()?gateNote():passGateNote();
-}
 function newPacket(){return {changes:{},changesDir:{},changesCollapsed:true,mergedV2:true,lastYear:[],checklist:[],sheets:[],transcript:null,exports:[],uncertain:[],cpaReview:null,orders:[],priorCpa:{name:"",contact:"",note:""},payPacks:1,selectedOrderId:null,supportRequests:[],prioritySupport:false}}
 function statusText(s){return s==="uploaded"?"已上传":s==="na"?"不适用":s==="pending"?"待 transcript":"未开始"}
 function renderCpa(){
@@ -805,6 +815,84 @@ function rowExpTotal(it){var t=0;(it.costs||[]).forEach(function(e){if(e.cents!=
 function rowNet(it){if(!it.figure)return null;return it.figure.cents-rowExpTotal(it);}
 function rowResolved(it){return it.status==="uploaded"||it.status==="na"||!!it.figure;}
 function unresolvedRows(){return (packet&&packet.checklist?packet.checklist:[]).filter(function(it){return !rowResolved(it);});}
+function whereToGet(it){
+  var f=(it.form||"")+" "+(it.title||"");
+  if(/W-2/.test(f))return "雇主人事 / 工资系统";
+  if(/1099-INT|1099-DIV|1099-B/.test(f))return "银行 / 券商下载";
+  if(/Schedule E/.test(f))return "租客 / 物业 / 银行流水";
+  if(/Schedule C|1099-NEC|1099-MISC|1099-K/.test(f))return "客户 / 平台后台";
+  if(/1098-T/.test(f))return "学校门户";
+  if(/1098-E/.test(f))return "学贷机构";
+  if(/1098/.test(f))return "贷款方";
+  if(/1099-R|5498/.test(f))return "退休计划 / 账户";
+  if(/SSA-1099/.test(f))return "SSA 在线账户";
+  if(/州税/.test(f))return "州税务局";
+  return "付款方 / 去年报税文件";
+}
+function checkRow(it){
+  if(it.status==="na")return {level:"green",label:"绿",why:"不适用",where:"—"};
+  var hasFile=!!it.fileName,hasNum=!!it.figure;
+  if(!hasFile&&!hasNum)return {level:"red",label:"红",why:"缺文件、缺数字",where:whereToGet(it)};
+  if(!hasNum)return {level:"yellow",label:"黄",why:"有文件，未填数字",where:"在“今年要准备的材料”里填确认数字"};
+  if(!it.voucherChecked)return {level:"yellow",label:"黄",why:"数字未对照凭证",where:"点开该行“已对照凭证核对”"};
+  if(it.formAmountCents==null)return {level:"yellow",label:"黄",why:"未填表格数",where:"对照表格填“表格数”"};
+  if(it.formAmountCents!==it.figure.cents)return {level:"red",label:"红",why:"表格数与确认数字不一致",where:"回查凭证/表格，改到一致"};
+  return {level:"green",label:"绿",why:"结构齐",where:"—"};
+}
+function checkStats(){
+  var rows=(packet&&packet.checklist)||[];
+  var r={red:0,yellow:0,green:0,total:rows.length,rows:[]};
+  rows.forEach(function(it){var c=checkRow(it);r[c.level]++;r.rows.push({it:it,c:c});});
+  r.unchecked=r.red+r.yellow;
+  return r;
+}
+function renderCheckSummary(){
+  var el=$("checkSummary");if(!el||!packet)return;
+  var st=checkStats();
+  el.textContent=st.total?tr("还有 "+st.unchecked+" 项没核对；导出不受影响。","Still "+st.unchecked+" unverified; export is not blocked.","Aún hay "+st.unchecked+" sin verificar; la exportación no se bloquea."):tr("还没有清单；先生成清单再核对。","No checklist yet; generate one first.","Aún no hay lista; genere una primero.");
+}
+function checkReportTableHtml(st){
+  if(!st.total)return "<p class='small'>清单为空。</p>";
+  return "<table><tr><th>表</th><th>付款方</th><th>状态</th><th>缺什么</th><th>去哪拿 / 怎么补</th></tr>"+st.rows.map(function(x){return "<tr><td>"+esc(rowTitle(x.it))+"</td><td>"+esc(x.it.payer||"—")+"</td><td><span class='chk-"+x.c.level+"'></span>"+x.c.label+"</td><td>"+esc(x.c.why)+"</td><td>"+esc(x.c.where)+"</td></tr>";}).join("")+"</table>";
+}
+function runCheckReport(){
+  var el=$("checkReport");if(!el)return;
+  var st=checkStats();
+  var verdict=st.unchecked?tr("不可交","Not ready","No listo"):tr("可交","Ready","Listo");
+  el.innerHTML="<div class='notice "+(st.unchecked?"warn":"ok")+"'><b>"+verdict+"</b> · 共 "+st.total+" 项 · 红 "+st.red+" · 黄 "+st.yellow+" · 绿 "+st.green+"</div>"+checkReportTableHtml(st)+"<p class='small muted'>只查结构：表在不在、数字填没填、表数对不对、凭证有没有；不判断数字真伪、不算税。</p><p><button type='button' id='btnPrintCheck' class='secondary'>打印 / 存 PDF</button></p>";
+  var pb=$("btnPrintCheck");if(pb)pb.onclick=printCheckReport;
+  if($("checkMsg"))$("checkMsg").textContent="已重跑，报告在上方。";
+  renderCheckSummary();
+}
+function printCheckReport(){
+  var st=checkStats();
+  var verdict=st.unchecked?tr("不可交","Not ready","No listo"):tr("可交","Ready","Listo");
+  $("printArea").innerHTML="<h1>交付前总核对报告</h1><p>生成时间："+esc(new Date().toLocaleString())+" · 共 "+st.total+" 项 · 红 "+st.red+" · 黄 "+st.yellow+" · 绿 "+st.green+"</p><p><b>"+verdict+"</b></p>"+checkReportTableHtml(st)+"<p class='small'>只查结构：表在不在、数字填没填、表数对不对、凭证有没有；不判断数字真伪、不算税。</p>";
+  window.print();
+}
+function showClaimGate(){
+  var el=$("checkReport");if(!el)return;
+  el.innerHTML="<div class='notice'><b>交付前总核对是季票功能。</b> 内测期免费；领取后同一页出报告，不用等邮件。<p><button type='button' id='btnClaimForCheck'>领取免费季票并核对</button> <span id='claimCheckMsg' class='small'></span></p></div>";
+  $("btnClaimForCheck").onclick=function(){
+    var b=this;
+    if(isGuest()){ $("claimCheckMsg").textContent="先登录再领取。"; showAuth(); return; }
+    if(!apiOn()){ $("claimCheckMsg").textContent="后端未接通，暂时无法领取。"; return; }
+    b.disabled=true;
+    TpoApi.claimPromo().then(function(){return refreshEntitlement();}).then(function(){
+      if(hasPass()){runCheckReport();}
+      else{$("claimCheckMsg").textContent="领取后权益还没生效，请刷新重试。";b.disabled=false;}
+    }).catch(function(e){
+      var c=(e&&e.code)||"";
+      if(c==="already_claimed"){
+        refreshEntitlement().then(function(){if(hasPass())runCheckReport();else{$("claimCheckMsg").textContent="你已领过，但权益还没生效，请刷新。";b.disabled=false;}});
+        return;
+      }
+      $("claimCheckMsg").textContent=c==="promo_full"?"免费名额已满。":("领取失败（"+c+"）");
+      b.disabled=false;
+    });
+  };
+}
+
 function taxYearLabel(){var now=new Date(),y=now.getFullYear();var fy=(now.getMonth()<3||(now.getMonth()===3&&now.getDate()<=15))?y:y+1;return (fy-1)+" 税年";}
 var lastResolvedCount=null,toastTimer=null,sampleOpen=false,coverOpen=true;
 function renderReturnState(){
@@ -1243,7 +1331,7 @@ function renderFollowUp(){
   };
 }
 function applyOrganizeStep(){if(currentPage!==1)return;var wrap=$("appViewSections");if(!wrap)return;for(var i=0;i<wrap.children.length;i++){var c=wrap.children[i];if(c.className.indexOf("card")<0)continue;var showCard=c.id!=="subCard"&&Number(c.dataset.flowStep||0)===currentOrganizeStep;c.classList.toggle("hidden",!showCard);}}
-function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderWarnings,renderSubStatus,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderGates,renderReturnState,applyCollapse];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
+function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderWarnings,renderSubStatus,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,applyCollapse];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
 function secKeyFromH2(t){
   if(t.indexOf("州税范围")>=0)return "s3b";
   if(t.indexOf("去年有什么")>=0)return "s3";
@@ -2223,7 +2311,7 @@ function renderProbe(){
   });
   var hits=[];PROBE_NOTES.forEach(function(n){if(n.match.some(function(m){return toks.some(function(t){return t&&t.indexOf(m)>=0;});}))hits.push(n.text);});
   var beta=tr("内测中：目前只在本页展示，未接自动提醒/邮件。","Beta: shown here only; automatic reminders/email are not connected yet.","Beta: solo se muestra aquí; los recordatorios automáticos/correo aún no están conectados.");
-  var base="<p class='small'><b>通用基线（2026-11-03 检查）：</b>2026 税年申报截止 2027-04-15；Free File 2025 税年 AGI 门槛 ≤$89,000；Direct File 2026 季停用。探针每周一复查，有变化影响你的清单时通知你。</p>";
+  var base="<p class='small'><b>通用基线（2026-11-03 检查）：</b>2026 税年申报截止 2027-04-15；Free File 2025 税年 AGI 门槛 ≤$89,000；Direct File 2026 季停用。探针计划 3–5 次（表到齐、4/15 前两周、10/15 前两周、你的表规则变了），不是每天推；当前只在本页展示。</p>";
   if(!hits.length){el.innerHTML=beta+base+"<p class='small'>你的清单里还没有可匹配的表：先生成今年清单，探针会按你的表过滤。</p>";return;}
   el.innerHTML=beta+base+"<ul class='small'>"+hits.map(function(h){return "<li>"+esc(h)+"</li>";}).join("")+"</ul>";
 }
@@ -2274,16 +2362,6 @@ function renderPriority(){
   var bp=$("btnPriority");if(bp)bp.textContent=packet.prioritySupport?"关闭优先支持标记":"开启优先支持标记";
   var sl=$("supportList");if(sl)sl.innerHTML=reqs.length?("<ul class='small'>"+reqs.map(function(r){return "<li>"+esc(r.at)+" · "+esc(r.text)+"</li>";}).join("")+"</ul>"):"";
 }
-$("btnBatchCheck").onclick=function(){if(isGuest()){showAuth();return;}if(!hasPass()){var bb2=$("batchBox");if(bb2)bb2.innerHTML=passGateNote();return;}
-  if(!packet)return;
-  var rows=packet.checklist||[];
-  var miss=rows.filter(function(it){return !rowResolved(it);});
-  var na=rows.filter(function(it){return it.status==="na";});
-  var pend=rows.filter(function(it){return it.status==="pending";});
-  var verdict=!rows.length?"还不能核对：清单为空":(miss.length?"不可交":"可交");
-  var table=miss.length?("<table><tr><th>表</th><th>付款方</th><th>缺什么</th></tr>"+miss.map(function(it){return "<tr><td>"+esc(rowTitle(it))+"</td><td>"+esc(it.payer||"—")+"</td><td>"+esc(missingWhat(it))+"</td></tr>";}).join("")+"</table>"):"<p class='small'>没有缺项。</p>";
-  $("batchBox").innerHTML="<div class='notice "+(miss.length?"warn":"ok")+"'><b>交付前总核对："+verdict+"</b> · 共 "+rows.length+" 项 · 可交 "+(rows.length-miss.length)+" · 缺项 "+miss.length+" · 不适用 "+na.length+" · 待 transcript "+pend.length+"</div>"+table+"<p class='small muted'>只出报告，不改状态；可重跑。缺项去“今年要准备的材料”逐项补。</p>";
-};
 $("btnSnapSave").onclick=function(){if(isGuest()){showAuth();return;}
   if(!packet||!currentUser)return;
   var name=$("snapName").value.trim();var year=$("snapYear").value.trim();
@@ -2409,21 +2487,14 @@ $("btnPrint").onclick=function(){
 };
 $("navOrganize").onclick=function(){showPage(1)};
 $("navSubscribe").onclick=function(){showPage(2)};
-$("btnClaimPromo").onclick=function(){
-  if(isGuest()){$("promoMsg").textContent=t("请先登录再领取。");return}
-  if(!apiOn()){$("promoMsg").textContent="后端未接通，暂无法领取。";return}
-  if(serverEntitlementEnd>Date.now()){$("promoMsg").textContent=t("你已有有效季票，无需重复领取。");return}
-  TpoApi.claimPromo().then(function(){
-    $("promoMsg").textContent=t("已领取免费季票。");
-    refreshEntitlement();
-  }).catch(function(e){
-    var c=(e&&e.code)||"";
-    $("promoMsg").textContent=c==="promo_full"?t("免费季名额已满。"):c==="already_claimed"?t("你已领过免费季。"):(t("领取失败（")+c+t("），请稍后再试。"));
-  });
-};
 document.querySelectorAll("#tagGrid .tag-btn").forEach(function(b){
   b.addEventListener("click",function(){b.classList.toggle("on");});
 });
+$("btnCheck").onclick=function(){
+  if(!packet||!packet.checklist.length){if($("checkMsg"))$("checkMsg").textContent="先生成清单再核对。";return;}
+  if(!hasPass()){if(isGuest()){if($("checkMsg"))$("checkMsg").textContent="登录后可领取（内测期免费）。";showAuth();return;}showClaimGate();return;}
+  runCheckReport();
+};
 $("btnMake").onclick=function(){
   var text=$("heroText").value.trim();
   var sel=[];document.querySelectorAll("#tagGrid .tag-btn.on").forEach(function(b){sel.push(b);});
