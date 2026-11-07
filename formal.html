@@ -290,14 +290,6 @@ header{position:relative;padding-right:150px}
 <div class="card no-print" id="heroBox">
 <label for="heroText">今年有什么变化？</label>
 <textarea id="heroText" data-i18n-ph="例如：我今年卖房了，中国老家房产怎么报税？" placeholder="例如：我今年卖房了，中国老家房产怎么报税？"></textarea>
-<div class="hero-chips" id="heroExamples">
-<button type="button" class="secondary" data-ex="我今年卖房了，中国老家房产怎么报税？">今年卖了房</button>
-<button type="button" class="secondary" data-ex="我今年换了工作，有两份 W-2。">换了工作</button>
-<button type="button" class="secondary" data-ex="我今年孩子出生了，多了一个抚养人。">孩子出生了</button>
-<button type="button" class="secondary" data-ex="我今年结婚了。">结婚了</button>
-<button type="button" class="secondary" data-ex="我今年搬到了另一个州。">搬到另一个州</button>
-<button type="button" class="secondary" data-ex="我今年开始收房租了。">开始收房租</button>
-</div>
 <p class="small muted">点选今年有过的，或直接写一句；不确定的别选。</p>
 <div class="tag-grid" id="tagGrid">
 <button type="button" class="tag-btn" data-form="W-2" data-phrase="我今年有工资。">有工资</button>
@@ -1432,7 +1424,7 @@ function recommendedOrganizeStep(){
 function advanceAfterGenerate(){if(!packet.checklist.length)return;navigateToSection(recommendedOrganizeStep()===3?"s6":"s4");}
 function renderStickyProgress(){
   var bar=$("stickyProgress");if(!bar)return;
-  if(!packet||currentPage!==1){bar.classList.add("hidden");return;}
+  if(!packet||currentPage!==1||!packet.checklist.length){bar.classList.add("hidden");return;}
   var rows=packet.checklist||[],total=rows.length,done=rows.filter(rowResolved).length;
   var pct=total?Math.round(done*100/total):0;
   var title=$("stickyProgressTitle"),text=$("stickyProgressText"),fill=$("stickyProgressFill"),action=$("stickyProgressAction");
@@ -2095,9 +2087,6 @@ function detectStateInText(t){
   return "";
 }
 (function(){var s=$("heroState");if(!s)return;STATES.forEach(function(st){var o=document.createElement("option");o.value=st[0];o.textContent=st[0]+(st[1]==="无州个人所得税"?"（无州个人所得税）":"");s.appendChild(o)});var oe=document.createElement("option");oe.value="其他州";oe.textContent="其他州（暂未覆盖）";s.appendChild(oe)})();
-document.querySelectorAll("#heroExamples button").forEach(function(b){
-  b.onclick=function(){var t=$("heroText");t.value=b.getAttribute("data-ex");t.focus();};
-});
 $("transFile").onchange=function(e){
   if(e.target.files&&e.target.files[0]){packet.transcript=e.target.files[0].name+"（只记文件名，未读内容）";packet.checklist.forEach(function(it){if(it.status==="not-started")it.status="pending";});savePacket();renderAll();}
 };
