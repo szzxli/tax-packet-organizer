@@ -5,6 +5,16 @@
 (function (global) {
   var API_BASE = ""; // 部署后填 Worker 地址，如 https://tax-packet-api.<子域>.workers.dev
   var TOKEN_KEY = "tpo_token";
+  // 正式收费开关。false = 前端不发起结账请求，直接提示"暂未开放"。
+  // 只有 Worker 侧 /api/orders/checkout 已返回 503 subscription_closed 时才保持 false；
+  // 定价公布、实体注册完成、由 li jun 明确同意后，前后端一起改为 true。
+  var SUBSCRIPTION_OPEN = false;
+  function closedError() {
+    var err = new Error("subscription_closed");
+    err.code = "subscription_closed";
+    err.status = 503;
+    return err;
+  }
   function token() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
   function setToken(t) { try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); } catch (e) {} }
   async function req(path, opts) {
@@ -42,7 +52,11 @@
     putPacket: function (packet) { return req("/api/packet", { method: "PUT", body: { packet: packet } }); },
     deletePacket: function () { return req("/api/packet", { method: "DELETE" }); },
     claimPromo: function (promo) { return req("/api/promo/claim", { method: "POST", body: { promo: promo || "first50" } }); },
-    checkout: function (packs) { return req("/api/orders/checkout", { method: "POST", body: { packs: packs } }); },
+    checkout: function (packs) {
+      if (!SUBSCRIPTION_OPEN) return Promise.reject(closedError());
+      return req("/api/orders/checkout", { method: "POST", body: { packs: packs } });
+    },
+    subscriptionOpen: function () { return SUBSCRIPTION_OPEN; },
     listOrders: function () { return req("/api/orders"); },
     support: function (email, message) { return req("/api/support", { method: "POST", body: { email: email, message: message } }); },
     aiChecklist: function (description, lang) { return req("/api/ai-checklist", { method: "POST", body: { description: description, lang: lang } }); },

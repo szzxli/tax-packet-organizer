@@ -2688,6 +2688,7 @@ $("payPacks").onchange=function(){ if(!packet) return; packet.payPacks=parseInt(
 $("payMethod").onchange=function(){renderOrders()};
 $("btnDemoPay").onclick=function(){
   if(!apiOn()){$("payMsg").textContent=t("后端未接通，暂无法付款。");return;}
+  if(typeof TpoApi!=="undefined"&&TpoApi.subscriptionOpen&&!TpoApi.subscriptionOpen()){$("payMsg").textContent=t("季票暂未开放购买：内测期免费，1 月公布价格。");return;}
   if(!currentUser){$("payMsg").textContent=t("请先登录后再付款。");return;}
   if(localOnly){$("payMsg").textContent=t("预览账号无法付款，请用后端账号登录。");return;}
   var packs=(packet&&packet.payPacks===2)?2:1;
@@ -2699,7 +2700,7 @@ $("btnDemoPay").onclick=function(){
   }).catch(function(e){
     btn.disabled=false;
     var c=(e&&e.code)||"";
-    $("payMsg").textContent=c==="stripe_not_configured"?"支付服务尚未接通，无法完成付款。":c==="stripe_error"?"支付创建失败，请稍后再试。":(e&&e.status===401)?"登录已过期，请重新登录。":("付款失败（"+c+"），请稍后再试。");
+    $("payMsg").textContent=c==="subscription_closed"?t("季票暂未开放购买：内测期免费，1 月公布价格。"):c==="stripe_not_configured"?"支付服务尚未接通，无法完成付款。":c==="stripe_error"?"支付创建失败，请稍后再试。":(e&&e.status===401)?"登录已过期，请重新登录。":("付款失败（"+c+"），请稍后再试。");
   });
 };
 function renderPriorCpa(){
