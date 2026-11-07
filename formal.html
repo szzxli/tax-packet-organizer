@@ -188,7 +188,7 @@ header{position:relative;padding-right:150px}
  #startCard{padding:18px 14px}
  #startCard .start-title{font-size:22px}
  #startCard p button{width:100%}
- #btnTagGenerate{width:100%}
+ #btnMake{width:100%}
  #pageNav .nav-bar{flex-wrap:nowrap}
  #pageNav button{flex:0 0 auto}
 }
@@ -291,6 +291,7 @@ header{position:relative;padding-right:150px}
 <label for="heroText">今年有什么变化？</label>
 <textarea id="heroText" data-i18n-ph="例如：我今年卖房了，中国老家房产怎么报税？" placeholder="例如：我今年卖房了，中国老家房产怎么报税？"></textarea>
 <p class="small muted">点选今年有过的，或直接写一句；不确定的别选。</p>
+<p class="small"><a href="#" id="btnAiOpen">不会写？用 AI 描述</a></p>
 <div class="tag-grid" id="tagGrid">
 <button type="button" class="tag-btn" data-form="W-2" data-phrase="我今年有工资。">有工资</button>
 <button type="button" class="tag-btn" data-form="1099-INT" data-phrase="我今年有银行利息。">银行利息</button>
@@ -305,7 +306,7 @@ header{position:relative;padding-right:150px}
 <button type="button" class="tag-btn" data-form="1098-T" data-phrase="我今年交了学费。">学费</button>
 <button type="button" class="tag-btn" data-form="" data-phrase="我今年的申报身份变了。">申报身份变了</button><button type="button" class="tag-btn" data-form="" data-phrase="我今年的抚养人减少了。">抚养人减少</button><button type="button" class="tag-btn" data-form="" data-phrase="我今年没有变化。">没有变化</button></div>
 <div class="row"><div><label for="heroState">在哪个州报税（选填）</label><select id="heroState"><option value="">不选（先不填）</option></select></div></div>
-<p><button id="btnTagGenerate">生成今年清单</button> <span id="tagMsg" class="small"></span></p>
+<p><button id="btnMake">生成今年清单</button> <span id="tagMsg" class="small"></span></p>
 </div>
 
 <div class="card no-print hidden" id="sampleCard">
@@ -356,7 +357,6 @@ header{position:relative;padding-right:150px}
 <div id="returnPreview"></div>
 <div id="recognizeBox"></div>
 <div id="quickPick"></div>
-<p><button id="btnGenerate" class="secondary">生成今年清单</button> <span id="generateMsg" class="small"></span></p>
 <ul id="lastList"></ul>
 <p class="muted small">规则：去年哪行有数、哪张表交过，今年就等对应的文件。生成时不重复添加已在清单里的同表同付款方。</p>
 </div>
@@ -364,7 +364,6 @@ header{position:relative;padding-right:150px}
 <div class="card">
 <h2>今年要准备的材料（文件＋数字，一页）</h2>
 <p class="muted small">每行一项收入或一张表：先传证据、再填一个总数；成本、核对、不适用都收在“更多”里。全部“已备或不适用”就是整理完；没做完也能先导出，缺项会列在清单里。上传资料可以是电子档，也可以拍照上传：每行都有“上传文件”和“拍照上传”两个入口，手机上点拍照会直接调相机；电子档（PDF、.txt、.docx、.xlsx）上传后会即时读文字提数候选、由你确认后才记数字，并显示文件预览；拍照上传只预览、不提数，数字手动输入。老格式 .doc、.xls 不支持。同一笔收入只出现一次，不要重复填。</p>
-<p><button id="btnInferMerged" class="secondary">按去年推算</button> <span id="inferMsg" class="small"></span></p>
 <div class="row">
 <div><label for="newForm">新增今年项目：表类型</label><select id="newForm"></select></div>
 <div><label for="newPayer">付款方 / 实体</label><input id="newPayer" placeholder="去年没有、今年新增的"></div>
@@ -677,6 +676,7 @@ Object.assign(I18N,{"列出你今年要交出去的报税材料清单。导出�
 Object.assign(I18N,{"不用登录 · 进度只存这台浏览器。只整理、不算税、不报税、不给税务结论；清单最后由你或会计师复核。":{"en":"No login needed · progress is stored only in this browser. We only organize — we don't calculate tax, file returns, or give tax advice; you or your accountant review the final checklist.","es":"No necesita iniciar sesión · el progreso se guarda solo en este navegador. Solo organizamos: no calculamos impuestos, no presentamos declaraciones ni damos asesoría fiscal; usted o su contador revisan la lista final."}});
 Object.assign(I18N,{"把今年报税要准备的材料整理成一份清单，导出后自己核对，或给会计师对照着填。只整理、不算税、不报税、不给税务结论；清单最后由你或会计师复核。":{"en":"It organizes the materials you need for this year's taxes into one checklist; export it to check yourself or give it to your accountant. We only organize — we don't calculate tax, file returns, or give tax advice; you or your accountant review the final checklist.","es":"Organiza los materiales que necesita para los impuestos de este año en una sola lista; expórtela para revisarla usted mismo o entregarla a su contador. Solo organizamos: no calculamos impuestos, no presentamos declaraciones ni damos asesoría fiscal; usted o su contador revisan la lista final."}});
 Object.assign(I18N,{"把今年的报税材料，整理成一份能交出去的清单。":{"en":"Turn this year's tax paperwork into a checklist you can hand over.","es":"Convierta los documentos fiscales de este año en una lista que pueda entregar."},"说一句今年变了什么，不用登录，3 分钟生成，导出 CSV / JSON / PDF。":{"en":"Describe what changed this year. No login, 3 minutes, export CSV / JSON / PDF.","es":"Describa qué cambió este año. Sin inicio de sesión, 3 minutos, exporte CSV / JSON / PDF."},"把今年的材料放进来":{"en":"Bring in this year's documents","es":"Traer los documentos de este año"},"看看要准备什么":{"en":"See what you'll need","es":"Ver qué necesitará"},"点选今年有过的，或直接写一句；不确定的别选。":{"en":"Tap what applies this year, or type one line; skip what you're unsure about.","es":"Toque lo que aplique este año o escriba una línea; omita lo que no esté seguro."},"申报身份变了":{"en":"Filing status changed","es":"Cambió el estado civil fiscal"},"抚养人减少":{"en":"Dependent removed","es":"Se quitó un dependiente"},"没有变化":{"en":"No changes","es":"Sin cambios"},"登录后，未登录时做的包会自动带进你的账号。":{"en":"After you log in, the packet you made while logged out is brought into your account.","es":"Después de iniciar sesión, el paquete que hizo sin sesión se traslada a su cuenta."}});
+Object.assign(I18N,{"不会写？用 AI 描述":{"en":"Not sure what to write? Use AI","es":"¿No sabe qué escribir? Use la IA"}});
 var LANG="zh";
 function t(s){if(LANG==="zh")return s;var e=I18N[s];return (e&&e[LANG])?e[LANG]:s;}
 function tr(zh,en,es){return LANG==="en"?en:(LANG==="es"?es:zh);}
@@ -1447,7 +1447,7 @@ function renderHero(){
   var cq=$("coverPreviewQs");if(cq){var cqs=cpaQuestions();var cempty=tr("暂无，按你的情况补充","None yet — add your own","Aún no hay nada; añada su caso");var cqh=cqs.length?("<ol class='cover-qs small'>"+cqs.map(function(q){return "<li>"+esc(q)+"</li>";}).join("")+"</ol>"):"<p class='small'>"+cempty+"</p>";if(cqs.length&&cqs.length<3)cqh+="<p class='small'>"+cempty+"</p>";cq.innerHTML=cqh;}
   var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",currentPage!==1);
   var sc=$("subShowcase");if(sc)sc.classList.toggle("hidden",currentPage!==1||!packet.checklist.length||hasPass()||currentOrganizeStep!==3);
-  var ai=$("aiCard");if(ai)ai.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==1);
+  var ai=$("aiCard");if(ai){var showAi=ai.dataset.open==="1"&&currentPage===1&&currentOrganizeStep===1;ai.classList.toggle("hidden",!showAi);}
   var fq=$("faqCard");if(fq)fq.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==3);
   var sp=$("supportCard");if(sp)sp.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==3);
   var pg=$("stepPager");if(pg)pg.classList.toggle("hidden",currentPage!==1||!packet.checklist.length);
@@ -1455,6 +1455,7 @@ function renderHero(){
   renderReturnState();
 }
 $("btnStart").onclick=function(){var t=$("heroText");if(t){t.scrollIntoView({behavior:"smooth",block:"center"});t.focus();}};
+$("btnAiOpen").onclick=function(e){e.preventDefault();var ai=$("aiCard");if(ai){ai.dataset.open="1";ai.classList.remove("hidden");ai.scrollIntoView({behavior:"smooth",block:"start"});}};
 $("btnSee").onclick=function(){sampleOpen=true;coverOpen=true;renderHero();var s=$("sampleCard");if(s){s.classList.remove("hidden");s.scrollIntoView({behavior:"smooth",block:"start"});}};
 function showPage(p){
   if((p===2||p===3)&&isGuest()){pendingPage=p;showAuth();return;}
@@ -1839,7 +1840,7 @@ function renderRecognizePreview(forms,text){
     $("recognizeMsg").textContent=added?("已加入 "+added+" 项"+(skipped?"，跳过已有的 "+skipped+" 项":"")+"。接下来点“生成今年清单”。"):"没有新增项（均已在去年清单里）。";
   };
   box.appendChild(add);
-  var gen=document.createElement("button");gen.textContent="直接生成今年清单";gen.className="secondary";
+  var gen=document.createElement("button");gen.textContent="加入去年清单";gen.className="secondary";
   gen.onclick=function(){
     var rows=box.querySelectorAll("input[type=checkbox]");var items=[];
     rows.forEach(function(cb){
@@ -1848,9 +1849,9 @@ function renderRecognizePreview(forms,text){
       items.push({form:cb.dataset.form,payer:inp?inp.value.trim():""});
     });
     var r=addToLastYear(items);
-    var a=generateFromLastYear();
-    var gm=$("generateMsg");if(gm)gm.textContent="已加入 "+r.added+" 项，生成新增 "+a+" 项。";
+    if($("recognizeMsg"))$("recognizeMsg").textContent="已加入 "+r.added+" 项；到上面点“生成今年清单”。";
     hideQuickPick();
+    var b=$("btnMake");if(b)b.scrollIntoView({behavior:"smooth",block:"center"});
   };
   box.appendChild(gen);
 }
@@ -1985,51 +1986,6 @@ function showQuickPick(msg){
   });
 }
 function hideQuickPick(){var box=$("quickPick");if(box)box.innerHTML="";}
-$("btnGenerate").onclick=async function(){
-  var gm=$("generateMsg");if(gm)gm.textContent="";
-  if(packet.lastYear.length){
-    var a=generateFromLastYear();
-    if(gm)gm.textContent=a?("已生成，新增 "+a+" 项。"):"没有新增项（均已在清单里）。";
-    hideQuickPick();advanceAfterGenerate();return;
-  }
-  var box=$("recognizeBox");
-  var hasRec=box&&box.querySelectorAll("input[type=checkbox]").length>0;
-  if(hasRec){
-    var rec=collectRecognized();
-    if(!rec.length){
-      showQuickPick("识别出的表都没勾选。请勾选需要的表，或点下面“按手头证据”加表（知道表名的可展开按表名加）。");
-      if(gm)gm.textContent="去年表还是空的：要生成材料清单，先加至少一项去年表；也可以直接点下面“按手头证据”去填表。";
-      return;
-    }
-    var r=addToLastYear(rec);
-    var a2=generateFromLastYear();
-    if(gm)gm.textContent="已从识别结果加入 "+r.added+" 项，生成新增 "+a2+" 项。";
-    hideQuickPick();advanceAfterGenerate();return;
-  }
-  var file=$("returnFile").files&&$("returnFile").files[0];
-  var lastText="";
-  if(file&&!isImageFile(file)){
-    if(gm)gm.textContent="正在识别已选文件…";
-    try{
-      var text=await extractReturnText(file);
-      lastText=text;
-      var forms=detectForms(text);
-      if(forms.length){
-        var r2=addToLastYear(forms.map(function(f){return {form:f,payer:""};}));
-        var a3=generateFromLastYear();
-        renderRecognizePreview(forms,text);
-        if(gm)gm.textContent="已从文件识别出 "+forms.length+" 种表，加入 "+r2.added+" 项，生成新增 "+a3+" 项。";
-        hideQuickPick();advanceAfterGenerate();return;
-      }else{
-        renderRecognizePreview(forms,text);
-      }
-    }catch(e){}
-  }
-  var garbled=false;
-  (function(){var t=lastText.replace(/\s/g,"");if(t.length<1000)return;var hi=0;for(var i=0;i<lastText.length;i++){if(lastText.charCodeAt(i)>127)hi++;}if(hi/Math.max(1,lastText.length)>0.3)garbled=true;})();
-  showQuickPick(file&&isImageFile(file)?"图片只预览、不能自动识别表类型。请点下面“按手头证据”加表，或展开“知道去年表名”按表名加，再点生成今年清单。":(garbled?"这份 PDF 用的是自定义字体编码，读出来是乱码，认不出表名。不用纠结去年表名：直接点下面“按手头证据”加表，去填今年的数字和凭证；也可以走路径一手动输入表名。":"没能从去年表里确定表类型。请点下面“按手头证据”加表，或展开“知道去年表名”按表名加，再点生成今年清单；也可以走路径一手动输入。"));
-  if(gm)gm.textContent="去年表还是空的：要生成材料清单，先加至少一项去年表；也可以直接点下面“按手头证据”去填表。";
-};
 $("btnAddNew").onclick=function(){
   var form=$("newForm").value,payer=$("newPayer").value.trim();
   var _k=formToKind(form);
@@ -2191,12 +2147,6 @@ var SHEET_TYPES={
   retirement:{title:"退休金",whoLabel:"付款方",expenses:[]},
   social:{title:"社保金",whoLabel:"付款方",expenses:[]},
   generic:{title:"其他",whoLabel:"表名/说明",expenses:[]}
-};
-$("btnInferMerged").onclick=function(){
-  if(!packet)return;
-  if(!packet.lastYear.length){$("inferMsg").textContent="去年表还是空的：先在“去年有什么”一节加去年表（识别、快捷选或手动），再点推算。";return;}
-  var a=generateFromLastYear();
-  $("inferMsg").textContent=a?("已推算 "+a+" 项（排在前面）。请核对：没有的删掉，缺的再手动加。"):"没有新增（均已推算过）。";
 };
 document.querySelectorAll("[data-addsheet]").forEach(function(b){
   b.onclick=function(){
@@ -2489,7 +2439,7 @@ $("btnClaimPromo").onclick=function(){
 document.querySelectorAll("#tagGrid .tag-btn").forEach(function(b){
   b.addEventListener("click",function(){b.classList.toggle("on");});
 });
-$("btnTagGenerate").onclick=function(){
+$("btnMake").onclick=function(){
   var text=$("heroText").value.trim();
   var sel=[];document.querySelectorAll("#tagGrid .tag-btn.on").forEach(function(b){sel.push(b);});
   var msg=$("tagMsg");
