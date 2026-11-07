@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>内测报名｜报税包整理器</title>
+<style>
+  :root{--ink:#1f2a37;--muted:#5b6776;--line:#dfe3e8;--bg:#f6f7f5;--card:#fff;--accent:#1f4e79;--accent2:#2f6f4e;--warn:#8a5a00}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 18px 60px}
+  header{padding:8px 0 18px}
+  .brand{font-size:13px;letter-spacing:.08em;color:var(--accent);font-weight:700;text-transform:uppercase}
+  h1{font-size:30px;line-height:1.25;margin:10px 0 8px}
+  .sub{color:var(--muted);margin:0 0 6px}
+  .note{background:#fff8e6;border:1px solid #f0d9a8;color:var(--warn);padding:12px 14px;border-radius:10px;font-size:14px;margin:16px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin:18px 0;box-shadow:0 1px 2px rgba(16,24,40,.03)}
+  .card h2{font-size:21px;margin:0 0 6px}
+  .card p.lead{color:var(--muted);margin:0 0 16px}
+  .pill{display:inline-block;background:#eef4fb;color:var(--accent);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;margin-bottom:10px}
+  label{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
+  input,select,textarea{width:100%;border:1px solid #c9d0d8;border-radius:9px;padding:10px 11px;font:inherit;background:#fff;color:var(--ink)}
+  input:focus,select:focus,textarea:focus{outline:2px solid #b9d2ea;border-color:var(--accent)}
+  textarea{min-height:72px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.row{grid-template-columns:1fr}h1{font-size:25px}}
+  .check{display:flex;gap:9px;align-items:flex-start;font-weight:400;font-size:14px;margin:14px 0}
+  .check input{width:18px;height:18px;margin-top:2px;flex:0 0 auto}
+  button{margin-top:16px;width:100%;border:0;border-radius:10px;background:var(--accent);color:#fff;font:600 16px/1 inherit;padding:14px 16px;cursor:pointer}
+  button:hover{background:#173c5d}
+  .family button{background:var(--accent2)}
+  .family button:hover{background:#24583e}
+  .fine{font-size:12.5px;color:var(--muted);margin-top:12px}
+  .ok{display:none;background:#eaf5ee;border:1px solid #b7dcc4;color:#1f5e37;padding:14px 16px;border-radius:10px;margin:16px 0;font-weight:600}
+  footer{color:var(--muted);font-size:12.5px;margin-top:26px;line-height:1.7}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">报税包整理器 · 内测</div>
+    <h1>报名：20 分钟测试，或 50 家庭免费陪跑</h1>
+    <p class="sub">只收排期信息；不传报税文件，不填 SSN。手机号只用于约时间，不做营销。</p>
+  </header>
+
+  <div id="thanks" class="ok">已收到。确认邮件会发到你填的邮箱；如果 24 小时没收到，回那封邮件即可。</div>
+
+  <div class="note">
+    R1 测试只招 <strong>8 人 + 2 备选</strong>，手机 3 人、电脑 3 人；50 家庭陪跑 11/17 开放，5 场小组 × 10 家。
+  </div>
+
+  <section class="card">
+    <div class="pill">R1 · 11/11–11/13</div>
+    <h2>20 分钟真实测试</h2>
+    <p class="lead">你自己打开链接、按自己的情况整理、最后导出 PDF。我不教、不提示，只看你卡在哪。做完送你一份清单 PDF + 前 50 名免费季票。</p>
+
+    <form action="https://formsubmit.co/chaselyjun@gmail.com" method="POST" accept-charset="UTF-8">
+      <input type="hidden" name="_subject" value="R1 报名｜报税材料测试">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_next" value="https://szzxli.github.io/tax-packet-organizer/signup.html?sent=1#thanks">
+      <input type="hidden" name="_autoresponse" value="已收到你的 R1 报名。我们会在 24 小时内邮件确认时段。测试 20 分钟，只观察不教；请准备去年报税表 + 2–3 份收入表，SSN 遮住。手机或电脑都行。">
+      <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+
+      <div class="row">
+        <div>
+          <label for="r1-name">称呼</label>
+          <input id="r1-name" name="称呼" required autocomplete="name" placeholder="怎么称呼你">
+        </div>
+        <div>
+          <label for="r1-email">邮箱</label>
+          <input id="r1-email" type="email" name="邮箱" required autocomplete="email" placeholder="用于确认时段">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="r1-phone">手机号</label>
+          <input id="r1-phone" type="tel" name="手机号" required autocomplete="tel" placeholder="只用于排期">
+        </div>
+        <div>
+          <label for="r1-device">设备</label>
+          <select id="r1-device" name="设备" required>
+            <option value="">选一个</option>
+            <option>手机</option>
+            <option>电脑</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="r1-model">机型 / 系统</label>
+      <input id="r1-model" name="机型或系统" required placeholder="iPhone 14 / Android / Mac / Windows">
+
+      <div class="row">
+        <div>
+          <label for="r1-state">报税州</label>
+          <select id="r1-state" name="州" required>
+            <option value="">选一个</option>
+            <option>CA 加州</option><option>NY 纽约州</option><option>TX 得州</option><option>FL 佛州</option>
+            <option>PA 宾州</option><option>IL 伊利诺伊州</option><option>OH 俄亥俄州</option><option>GA 佐治亚州</option>
+            <option>NC 北卡罗来纳州</option><option>MI 密歇根州</option><option>其他州</option>
+          </select>
+        </div>
+        <div>
+          <label for="r1-self">今年自己报税？</label>
+          <select id="r1-self" name="今年自己报税" required>
+            <option value="">选一个</option>
+            <option>是</option>
+            <option>否（交给 CPA）</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="r1-type">收入类型</label>
+          <select id="r1-type" name="收入类型" required>
+            <option value="">选一个</option>
+            <option>自雇 / 1099</option><option>房东 / Schedule E</option><option>跨境（中国房产/账户）</option>
+            <option>W-2 上班族</option><option>股票 / RSU</option><option>其他</option>
+          </select>
+        </div>
+        <div>
+          <label for="r1-slot">可参加时段（PT）</label>
+          <select id="r1-slot" name="可参加时段" required>
+            <option value="">选一个</option>
+            <option>11/11 周三 10:00</option>
+            <option>11/11 周三 14:00</option>
+            <option>11/12 周四 10:00</option>
+            <option>11/13 周五 10:00</option>
+            <option>备选 / 晚上周末</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="check">
+        <input type="checkbox" name="同意记录" value="是" required>
+        <span>我同意：测试不录屏、记录用化名、90 天后删除；不上传报税文件，不填 SSN。</span>
+      </label>
+
+      <label for="r1-note">备注（可选）</label>
+      <textarea id="r1-note" name="备注" placeholder="比如：只有手机、晚上 8 点后方便"></textarea>
+
+      <button type="submit">提交 R1 报名</button>
+      <p class="fine">提交后 24 小时内会收到确认邮件；名额 8 + 2 备选，按设备和报名顺序排。</p>
+    </form>
+  </section>
+
+  <section class="card family">
+    <div class="pill">50 家庭 · 11/17 开放</div>
+    <h2>免费陪跑：把报税材料理成一张清单</h2>
+    <p class="lead">5 场小组，每场 10 家，20:00–20:45；复杂件加 1 次 1 对 1。做完拿走自己的清单 PDF，不收费，只换一句真实反馈。</p>
+
+    <form action="https://formsubmit.co/chaselyjun@gmail.com" method="POST" accept-charset="UTF-8">
+      <input type="hidden" name="_subject" value="50 家庭陪跑报名">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_next" value="https://szzxli.github.io/tax-packet-organizer/signup.html?sent=1#thanks">
+      <input type="hidden" name="_autoresponse" value="已收到 50 家庭陪跑报名。11/17 前会发小组时间；5 场小组，每场 10 家。先准备去年报税表 + 今年 2–3 份收入表（SSN 遮住）。名额满了会进候补，按报名顺序通知。">
+      <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+
+      <div class="row">
+        <div>
+          <label for="f-name">称呼</label>
+          <input id="f-name" name="称呼" required autocomplete="name">
+        </div>
+        <div>
+          <label for="f-email">邮箱</label>
+          <input id="f-email" type="email" name="邮箱" required autocomplete="email">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="f-phone">手机号</label>
+          <input id="f-phone" type="tel" name="手机号" required autocomplete="tel" placeholder="只用于排期">
+        </div>
+        <div>
+          <label for="f-state">报税州</label>
+          <select id="f-state" name="州" required>
+            <option value="">选一个</option>
+            <option>CA 加州</option><option>NY 纽约州</option><option>TX 得州</option><option>FL 佛州</option>
+            <option>PA 宾州</option><option>IL 伊利诺伊州</option><option>OH 俄亥俄州</option><option>GA 佐治亚州</option>
+            <option>NC 北卡罗来纳州</option><option>MI 密歇根州</option><option>其他州</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="f-type">身份 / 收入类型</label>
+      <select id="f-type" name="身份或收入类型" required>
+        <option value="">选一个</option>
+        <option>自雇 / 1099</option><option>房东 / Schedule E</option><option>跨境（中国房产/账户）</option>
+        <option>W-2 上班族</option><option>股票 / RSU</option><option>其他</option>
+      </select>
+
+      <label for="f-change">今年最大的变化</label>
+      <input id="f-change" name="今年最大的变化" required placeholder="卖房 / 换工作 / 生孩子 / 搬州 / 自雇 / 国内有房">
+
+      <div class="row">
+        <div>
+          <label for="f-slot">想参加的小组</label>
+          <select id="f-slot" name="小组场次" required>
+            <option value="">选一个</option>
+            <option>11/18 周三 20:00</option>
+            <option>11/21 周六 20:00</option>
+            <option>11/25 周三 20:00</option>
+            <option>11/28 周六 20:00</option>
+            <option>12/3 周三 20:00</option>
+          </select>
+        </div>
+        <div>
+          <label for="f-case">愿意授权打码案例？</label>
+          <select id="f-case" name="授权案例" required>
+            <option value="">选一个</option>
+            <option>愿意</option>
+            <option>不愿意</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="f-note">备注（可选）</label>
+      <textarea id="f-note" name="备注" placeholder="比如：复杂件，想加 1 对 1"></textarea>
+
+      <button type="submit">提交陪跑报名</button>
+      <p class="fine">11/17 前按报名顺序确认；50 个名额满了进候补，不收费。</p>
+    </form>
+  </section>
+
+  <footer>
+    <p><strong>隐私：</strong>报名表只收称呼、邮箱、手机号、设备与报税州，用于排期和确认；不传报税文件，不填 SSN。手机号不做营销，90 天后删除报名记录。</p>
+    <p><a href="formal.html">先看看工具</a> · 工具只整理材料，不算税、不报税、不给税务结论。</p>
+  </footer>
+</div>
+
+<script>
+  (function(){
+    var p = new URLSearchParams(location.search);
+    if (p.get('sent')) {
+      var el = document.getElementById('thanks');
+      if (el) el.style.display = 'block';
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+  })();
+</script>
+</body>
+</html>
