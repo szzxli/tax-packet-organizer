@@ -155,6 +155,43 @@ select option{background:#0f141b;color:#e6edf3}
 .sub-three-item{border:1px solid #dbe5ec;border-radius:12px;padding:12px 14px;background:#fbfdff}
 .sub-three-item b{display:block;color:#16324f;margin-bottom:4px}
 .sub-three-item span{font-size:13px;color:#41576a}
+#startCard{background:linear-gradient(160deg,#16324f,#2a6db0);color:#fff;border:none;padding:26px 24px}
+#startCard .start-kicker{margin:0 0 8px;font-size:12px;letter-spacing:.12em;opacity:.8}
+#startCard .start-title{margin:0 0 10px;font-size:30px;line-height:1.25;color:#fff}
+#startCard .start-sub{margin:0 0 16px;font-size:15px;line-height:1.6;color:#e8f1f9}
+#startCard button{background:#fff;color:#16324f;border:1px solid #fff}
+#startCard button.secondary{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6)}
+#startCard button:hover{background:#e8f1f9}
+#startCard button.secondary:hover{background:rgba(255,255,255,.12)}
+.nav-bar{display:flex;align-items:center;gap:6px}
+.nav-spacer{flex:1}
+#pageNav{padding:6px 10px;border-radius:10px;margin:8px 0}
+#pageNav button{min-height:34px;padding:6px 12px;font-size:13px}
+#navSubscribe,#navPay{background:transparent;color:#35546c;border:1px solid #dbe5ec}
+#navSubscribe:not(.secondary),#navPay:not(.secondary){background:#16324f;color:#fff;border-color:#16324f}
+.lang-switch{position:absolute;top:10px;right:12px;display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.16);border-radius:999px;padding:3px 6px}
+.lang-globe{font-size:14px;line-height:1}
+.lang-switch button{padding:4px 7px;font-size:12px;min-height:0;border:none;background:transparent;color:#fff;border-radius:999px}
+.lang-switch button.active{background:#fff;color:#16324f}
+header{position:relative;padding-right:150px}
+#bootCard .sk{height:12px;border-radius:8px;background:linear-gradient(90deg,#e9eef3,#f7fafc,#e9eef3);background-size:200% 100%;animation:sk 1.2s ease-in-out infinite;margin:8px 0}
+#bootCard .sk.title{height:20px;width:45%}
+#bootCard .sk.short{width:60%}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+#changesCard,#stateCard{display:none!important}
+@media(max-width:600px){
+ header{padding-right:110px}
+ header h1{font-size:20px}
+ .lang-switch{top:8px;right:8px}
+ #tagGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #tagGrid .tag-btn{width:100%;font-size:14px}
+ #startCard{padding:18px 14px}
+ #startCard .start-title{font-size:22px}
+ #startCard p button{width:100%}
+ #btnTagGenerate{width:100%}
+ #pageNav .nav-bar{flex-wrap:nowrap}
+ #pageNav button{flex:0 0 auto}
+}
 @media print{body{background:#fff;color:#000}.card{background:#fff;border-color:#ddd}h2,h3{color:#000}}
 </style>
 </head>
@@ -163,13 +200,13 @@ select option{background:#0f141b;color:#e6edf3}
 <header>
 <h1>报税包整理器</h1>
 <p>列出你今年要交出去的报税材料清单。导出后自己核对，或请会计师复核。</p>
-<div class="lang-switch no-print"><button type="button" data-lang-btn="zh" class="active">中文</button><button type="button" data-lang-btn="en">English</button><button type="button" data-lang-btn="es">Español</button></div>
+<div class="lang-switch no-print"><span class="lang-globe" aria-hidden="true">🌐</span><button type="button" data-lang-btn="zh" class="active">中文</button><button type="button" data-lang-btn="en">English</button><button type="button" data-lang-btn="es">Español</button></div>
 </header>
 <main>
-<p class="small"><b>你的数据归你所有：</b>文件不上传，仅匿名统计访问与点击；账号内容加密存储、账号隔离、一键可删。</p><details><summary class="small">数据怎么处理</summary><p class="small">注册后，你的清单、上传记录与确认数字存在你的账号里，传输与存储加密，账号之间隔离；文件内容不上传，只在本机读取，不拿去训练、不给第三方；识别只提取表类型；全程不提取、不保存社保号，金额只来自你确认的证据数字；你可以一键删除自己的包和文件记录。仅匿名统计访问与点击（来源标记、事件类型），不含文件内容、不含金额。Transcript 对齐只做你自己上传版，不直连 IRS、不爬 IRS、不宣称一键提交。</p></details>
 
 
-<div id="bootCard" class="card"><p class="muted">正在载入你的清单…</p></div>
+
+<div id="bootCard" class="card"><div class="sk title"></div><div class="sk"></div><div class="sk short"></div><p class="muted small">正在载入你的清单…</p></div>
 <div id="authView" class="card hidden">
 <h2>注册 / 登录会员</h2>
 <p id="authWhy" class="notice hidden"></p>
@@ -195,12 +232,27 @@ select option{background:#0f141b;color:#e6edf3}
 </div>
 
 <div id="appView" class="hidden">
+<div class="card no-print" id="pageNav">
+<div class="nav-bar">
+<button id="navOrganize">整理</button>
+<span class="nav-spacer"></span>
+<button id="navSubscribe" class="secondary">订阅</button>
+<button id="navPay" class="secondary">支付</button>
+</div>
+</div>
+
+<div class="card no-print" id="startCard">
+<h2 class="start-title">把今年的报税材料，整理成一份能交出去的清单。</h2>
+<p class="start-sub">说一句今年变了什么，不用登录，3 分钟生成，导出 CSV / JSON / PDF。</p>
+<p><button id="btnStart" type="button">把今年的材料放进来</button> <button id="btnSee" class="secondary" type="button">看看要准备什么</button></p>
+</div>
+
 <div class="card no-print">
 <p id="whoLine" class="hidden"><b id="whoLabel">已登录：</b><span id="who"></span> · <span id="progressText"></span></p>
 <p id="accountRow" class="hidden"><button id="btnLogout" class="secondary">退出登录</button> <button id="btnDeletePacket" class="danger">一键删除我的包和文件记录</button></p>
 <p id="guestLine" class="small">不用登录也能整理和导出。进度只存这台浏览器。</p>
 <p><button id="btnSaveProgress" class="secondary hidden" type="button">保存进度 / 换设备继续</button></p>
-<p class="muted small hidden" id="guestNote">未登录整理中：进度只存这台浏览器，不会跨设备同步。登录后，未登录时做的包会自动带进你的账号。</p>
+<p class="muted small hidden" id="guestNote">登录后，未登录时做的包会自动带进你的账号。</p>
 <p class="muted small hidden" id="deleteNote">删除只删本账号的包（含清单、上传记录、transcript 对齐、导出记录），不影响其他账号。</p>
 </div>
 
@@ -211,15 +263,6 @@ select option{background:#0f141b;color:#e6edf3}
 </div>
 </div>
 <div id="progressToast" class="notice ok hidden" role="status" aria-live="polite"></div>
-
-<div class="card no-print" id="pageNav">
-<div class="row">
-<button id="navOrganize">整理</button>
-<button id="navSubscribe" class="secondary">订阅</button>
-<button id="navPay" class="secondary">支付</button>
-</div>
-<p class="muted small">整理流程：先建清单，再补材料，最后导出给会计师。订阅与支付是独立页面。</p>
-</div>
 
 <div class="journey-guide no-print hidden" id="journeyGuide">
 <div class="journey-copy"><strong>按步骤整理，今年的材料包一目了然</strong><p id="flowStepDescription">可以分几次完成；每次回来，从上次停下的地方继续。</p></div>
@@ -241,12 +284,10 @@ select option{background:#0f141b;color:#e6edf3}
 <p class="small muted">自己报税就按这三条核对；交给会计师就把这三条问清楚。</p>
 <p class="small muted">复核签字（会计师或本人）：________　日期：________</p>
 </div>
-<p><button type="button" id="btnCoverStart">开始整理</button> <span class="small muted">先看交付物，再动手。</span></p>
+<p class="small muted">先看交付物，再动手。</p>
 </div>
 
 <div class="card no-print" id="heroBox">
-<h2>把乱糟糟的报税材料，整理成一份清单。</h2>
-<p class="muted">用大白话说今年有什么变化，生成今年的材料清单。</p>
 <label for="heroText">今年有什么变化？</label>
 <textarea id="heroText" data-i18n-ph="例如：我今年卖房了，中国老家房产怎么报税？" placeholder="例如：我今年卖房了，中国老家房产怎么报税？"></textarea>
 <div class="hero-chips" id="heroExamples">
@@ -257,33 +298,7 @@ select option{background:#0f141b;color:#e6edf3}
 <button type="button" class="secondary" data-ex="我今年搬到了另一个州。">搬到另一个州</button>
 <button type="button" class="secondary" data-ex="我今年开始收房租了。">开始收房租</button>
 </div>
-<div class="row"><div><label for="heroState">在哪个州报税（选填）</label><select id="heroState"><option value="">不选（先不填）</option></select></div></div>
-<p><button id="btnHeroGenerate">生成今年清单</button> <span id="heroMsg" class="small"></span></p>
-<p class="muted small">不用登录 · 进度只存这台浏览器。只整理、不算税、不报税、不给税务结论；清单最后由你或会计师复核。</p>
-<div class="hero-3">
-<div><b>自己整理</b><span class="small">对着清单一项项备齐，缺什么一眼看到。</span></div>
-<div><b>交得出去</b><span class="small">自己报税直接导出，给会计师也能用。</span></div>
-<div><b>会计师提效</b><span class="small">清单、证据数字、待核对项已经排好了。</span></div>
-</div>
-<div class="sample-box no-print" id="sampleBox"><p class="small"><b>示例：清单长这样</b><span class="muted">（不是你的数据，只是样子）</span></p><div class="sample-row"><span>W-2 · 雇主 A</span><span>✓ 已备</span></div><div class="sample-row"><span>Schedule E · 出租房</span><span>✓ 已备</span></div><div class="sample-row"><span>1099-INT · 银行</span><span>○ 待补</span></div><p class="small muted">做完就是这样一份清单，缺什么一眼看到，导出给会计师。</p></div>
-</div>
-
-<div class="card no-print hidden" id="sampleCard">
-<h2>样例：整理好的清单长这样</h2>
-<p class="muted small">下面都是虚构数据，只看效果。不用注册也能导出；先按自己的情况生成清单，想保存进度再登录。</p>
-<table>
-<tr><th>要备的材料</th><th>付款方</th><th>状态</th><th>确认数字</th></tr>
-<tr><td>W-2 工资</td><td>雇主 A</td><td><span class="badge uploaded">已上传</span></td><td>$68,400.00</td></tr>
-<tr><td>1099-INT 利息</td><td>银行 B</td><td><span class="badge uploaded">已上传</span></td><td>$1,250.00</td></tr>
-<tr><td>Schedule E 房租</td><td>房产 C</td><td><span class="badge missing">缺</span></td><td>$24,000.00</td></tr>
-</table>
-<p class="small">3 项 · 已备 2 · 缺 1 · 预估合计 <b>$93,650.00</b>（草稿，非申报表；须 CPA 核对）</p>
-<p><button type="button" id="btnSampleStart" class="secondary">用我的情况生成清单</button></p>
-</div>
-
-<div class="card no-print" id="tagCard">
-<h2>勾选今年的情况</h2>
-<p class="muted">只选你今年有过的，不确定的就别选。点选后生成今年清单。</p>
+<p class="small muted">点选今年有过的，或直接写一句；不确定的别选。</p>
 <div class="tag-grid" id="tagGrid">
 <button type="button" class="tag-btn" data-form="W-2" data-phrase="我今年有工资。">有工资</button>
 <button type="button" class="tag-btn" data-form="1099-INT" data-phrase="我今年有银行利息。">银行利息</button>
@@ -296,12 +311,26 @@ select option{background:#0f141b;color:#e6edf3}
 <button type="button" class="tag-btn" data-form="" data-phrase="我今年搬到了另一个州。">换了州</button>
 <button type="button" class="tag-btn" data-form="1099-R" data-phrase="我今年领了退休金。">退休金</button>
 <button type="button" class="tag-btn" data-form="1098-T" data-phrase="我今年交了学费。">学费</button>
-</div>
+<button type="button" class="tag-btn" data-form="" data-phrase="我今年的申报身份变了。">申报身份变了</button><button type="button" class="tag-btn" data-form="" data-phrase="我今年的抚养人减少了。">抚养人减少</button><button type="button" class="tag-btn" data-form="" data-phrase="我今年没有变化。">没有变化</button></div>
+<div class="row"><div><label for="heroState">在哪个州报税（选填）</label><select id="heroState"><option value="">不选（先不填）</option></select></div></div>
 <p><button id="btnTagGenerate">生成今年清单</button> <span id="tagMsg" class="small"></span></p>
 </div>
 
+<div class="card no-print hidden" id="sampleCard">
+<h2>样例：整理好的清单长这样</h2>
+<p class="muted small">下面都是虚构数据，只看效果。不用注册也能导出；先按自己的情况生成清单，想保存进度再登录。</p>
+<table>
+<tr><th>要备的材料</th><th>付款方</th><th>状态</th><th>确认数字</th></tr>
+<tr><td>W-2 工资</td><td>雇主 A</td><td><span class="badge uploaded">已上传</span></td><td>$68,400.00</td></tr>
+<tr><td>1099-INT 利息</td><td>银行 B</td><td><span class="badge uploaded">已上传</span></td><td>$1,250.00</td></tr>
+<tr><td>Schedule E 房租</td><td>房产 C</td><td><span class="badge missing">缺</span></td><td>$24,000.00</td></tr>
+</table>
+<p class="small">3 项 · 已备 2 · 缺 1 · 预估合计 <b>$93,650.00</b>（草稿，非申报表；须 CPA 核对）</p>
+
+</div>
+
 <div id="appViewSections" role="tabpanel" aria-labelledby="flowStep1">
-<div class="card">
+<div class="card" id="changesCard">
 <div id="changesHead" class="chg-head"><h2>今年有什么变化？先问变化，没变的不展开 <span id="changesCheck" class="chg-check hidden">✓</span></h2><p id="changesSummary" class="muted small"></p></div>
 <div id="changesBody">
 <p class="muted small">打开后上下滚动勾选所有适用项，可多选；只勾选的项才会出现后续证明文件要求。选完本栏标题就会出现绿勾表示已确认；点“收好”可收起本栏。工具只列文件，不判断资格。</p>
@@ -310,7 +339,7 @@ select option{background:#0f141b;color:#e6edf3}
 </div>
 </div>
 
-<div class="card">
+<div class="card" id="stateCard">
 <h2>州税范围（先确认，本版只覆盖 10 个州）</h2>
 <p class="muted small">先确认你去年在哪个州报税。本版按人口前 10 的州：加州、得州、佛州、纽约州、宾州、伊利诺伊州、俄亥俄州、佐治亚州、北卡罗来纳州、密歇根州。其他州：选“其他州”，生成联邦清单（不含州税项），州税部分请手动另行整理。得州、佛州无州个人所得税，选州时后面有备注，选了也不生成州所得税清单项。</p>
 <div class="row">
@@ -604,6 +633,8 @@ select option{background:#0f141b;color:#e6edf3}
 </div>
 </div>
 
+<p class="small"><b>你的数据归你所有：</b>文件不上传，仅匿名统计访问与点击；账号内容加密存储、账号隔离、一键可删。</p><details><summary class="small">数据怎么处理</summary><p class="small">注册后，你的清单、上传记录与确认数字存在你的账号里，传输与存储加密，账号之间隔离；文件内容不上传，只在本机读取，不拿去训练、不给第三方；识别只提取表类型；全程不提取、不保存社保号，金额只来自你确认的证据数字；你可以一键删除自己的包和文件记录。仅匿名统计访问与点击（来源标记、事件类型），不含文件内容、不含金额。Transcript 对齐只做你自己上传版，不直连 IRS、不爬 IRS、不宣称一键提交。</p></details>
+
 <div id="printArea"></div>
 </main>
 <script src="api.js"></script>
@@ -653,6 +684,7 @@ Object.assign(I18N,{"季票只做三件事":{"en":"The season pass does three th
 Object.assign(I18N,{"列出你今年要交出去的报税材料清单。导出后自己核对，或请会计师复核。":{"en":"List the tax documents you'll hand over this year. After exporting, check them yourself or have your accountant review them.","es":"Enumere los documentos fiscales que entregará este año. Después de exportar, revíselos usted mismo o pida a su contador que los revise."},"交得出去":{"en":"Ready to hand over","es":"Listo para entregar"},"自己报税直接导出，给会计师也能用。":{"en":"Export it yourself for self-filing, or hand it to your accountant.","es":"Expórtelo para declarar por su cuenta o entréguelo a su contador."},"一页封面 + 明细 + 复核签字，自己报税直接导出，给会计师也能用，不用自己拼。":{"en":"A cover page, details, and a review signature — export it yourself for self-filing, or hand it to your accountant, without assembling anything.","es":"Una portada, el detalle y una firma de revisión: expórtelo para declarar por su cuenta o entréguelo a su contador, sin armar nada."},"导出：一份能交出去的清单":{"en":"Export: a checklist you can hand over","es":"Exportar: una lista lista para entregar"},"下载清单 PDF（交得出去）":{"en":"Download checklist PDF (ready to hand over)","es":"Descargar PDF de la lista (listo para entregar)"},"报税材料包 · 交得出去":{"en":"Tax packet · ready to hand over","es":"Paquete fiscal · listo para entregar"},"登录后可用：交得出去是季票功能，登录后解锁。":{"en":"Available after login: handing it over is a season-pass feature — log in to unlock it.","es":"Disponible tras iniciar sesión: entregar es una función del pase de temporada; inicie sesión para desbloquearla."},"购买季票后解锁：交得出去是季票功能。":{"en":"Unlocks after you buy the season pass: handing it over is a season-pass feature.","es":"Se desbloquea al comprar el pase: entregar es una función del pase de temporada."},"三件事：全包核对、交得出去、明年复用。内测期免费，1 月公布价格。功能照旧全解锁。":{"en":"Three things: full-packet check, ready to hand over, and reuse next year. Free during beta; pricing announced in January. All features still unlock.","es":"Tres cosas: verificación completa, listo para entregar y reutilización el próximo año. Gratis durante la beta; precios en enero. Todas las funciones siguen desbloqueándose."},"全包核对 · 交得出去 · 明年复用。内测期免费，1 月公布价格。":{"en":"Full-packet check · Ready to hand over · Reuse next year. Free during beta; pricing announced in January.","es":"Verificación completa · Listo para entregar · Reutilizar el próximo año. Gratis durante la beta; precios en enero."},"内测期免费，1 月公布价格。":{"en":"Free during beta; pricing announced in January.","es":"Gratis durante la beta; precios en enero."},"内测期免费，1 月公布价格。1 个包；同一账号第二个包可选。按季一次性、默认不自动续，有效期至当年 10 月 15 日延期截止日。":{"en":"Free during beta; pricing announced in January. 1 packet; a second packet on the same account is optional. One payment per season, no auto-renewal by default, valid until the October 15 extension deadline.","es":"Gratis durante la beta; precios en enero. 1 paquete; el segundo paquete en la misma cuenta es opcional. Un solo pago por temporada, sin renovación automática por defecto, válido hasta la fecha límite de prórroga del 15 de octubre."},"定位：干干净净把材料交出去。基础整理永久免费；订阅按季一次，内测期免费，1 月公布价格；1 个包，第二个包可选，不自动续，有效期至当年 10 月 15 日延期截止日。":{"en":"Positioning: hand over your materials cleanly. Basic organizing is free forever; the pass is billed once per season, free during beta, pricing announced in January; 1 packet, optional second packet, no auto-renewal, valid until the October 15 extension deadline.","es":"Enfoque: entregue sus materiales limpios. La organización básica es gratis para siempre; el pase se cobra una vez por temporada, gratis durante la beta, precios en enero; 1 paquete, segundo opcional, sin renovación automática, válido hasta la fecha límite de prórroga del 15 de octubre."},"要确认的三件事":{"en":"Three things to confirm","es":"Tres cosas que confirmar"},"自己报税就按这三条核对；交给会计师就把这三条问清楚。":{"en":"If you file yourself, check these three; if you hand it to your accountant, ask them these three.","es":"Si declara por su cuenta, revise estas tres; si se lo entrega a su contador, pregúntele estas tres."},"复核签字（会计师或本人）：________　日期：________":{"en":"Review signature (accountant or yourself): ________　Date: ________","es":"Firma de revisión (contador o usted): ________　Fecha: ________"},"1 个包":{"en":"1 packet","es":"1 paquete"},"2 个包（第二个包）":{"en":"2 packets (second packet)","es":"2 paquetes (segundo paquete)"}});
 Object.assign(I18N,{"不用登录 · 进度只存这台浏览器。只整理、不算税、不报税、不给税务结论；清单最后由你或会计师复核。":{"en":"No login needed · progress is stored only in this browser. We only organize — we don't calculate tax, file returns, or give tax advice; you or your accountant review the final checklist.","es":"No necesita iniciar sesión · el progreso se guarda solo en este navegador. Solo organizamos: no calculamos impuestos, no presentamos declaraciones ni damos asesoría fiscal; usted o su contador revisan la lista final."}});
 Object.assign(I18N,{"把今年报税要准备的材料整理成一份清单，导出后自己核对，或给会计师对照着填。只整理、不算税、不报税、不给税务结论；清单最后由你或会计师复核。":{"en":"It organizes the materials you need for this year's taxes into one checklist; export it to check yourself or give it to your accountant. We only organize — we don't calculate tax, file returns, or give tax advice; you or your accountant review the final checklist.","es":"Organiza los materiales que necesita para los impuestos de este año en una sola lista; expórtela para revisarla usted mismo o entregarla a su contador. Solo organizamos: no calculamos impuestos, no presentamos declaraciones ni damos asesoría fiscal; usted o su contador revisan la lista final."}});
+Object.assign(I18N,{"把今年的报税材料，整理成一份能交出去的清单。":{"en":"Turn this year's tax paperwork into a checklist you can hand over.","es":"Convierta los documentos fiscales de este año en una lista que pueda entregar."},"说一句今年变了什么，不用登录，3 分钟生成，导出 CSV / JSON / PDF。":{"en":"Describe what changed this year. No login, 3 minutes, export CSV / JSON / PDF.","es":"Describa qué cambió este año. Sin inicio de sesión, 3 minutos, exporte CSV / JSON / PDF."},"把今年的材料放进来":{"en":"Bring in this year's documents","es":"Traer los documentos de este año"},"看看要准备什么":{"en":"See what you'll need","es":"Ver qué necesitará"},"点选今年有过的，或直接写一句；不确定的别选。":{"en":"Tap what applies this year, or type one line; skip what you're unsure about.","es":"Toque lo que aplique este año o escriba una línea; omita lo que no esté seguro."},"申报身份变了":{"en":"Filing status changed","es":"Cambió el estado civil fiscal"},"抚养人减少":{"en":"Dependent removed","es":"Se quitó un dependiente"},"没有变化":{"en":"No changes","es":"Sin cambios"},"登录后，未登录时做的包会自动带进你的账号。":{"en":"After you log in, the packet you made while logged out is brought into your account.","es":"Después de iniciar sesión, el paquete que hizo sin sesión se traslada a su cuenta."}});
 var LANG="zh";
 function t(s){if(LANG==="zh")return s;var e=I18N[s];return (e&&e[LANG])?e[LANG]:s;}
 function tr(zh,en,es){return LANG==="en"?en:(LANG==="es"?es:zh);}
@@ -783,7 +815,7 @@ function rowNet(it){if(!it.figure)return null;return it.figure.cents-rowExpTotal
 function rowResolved(it){return it.status==="uploaded"||it.status==="na"||!!it.figure;}
 function unresolvedRows(){return (packet&&packet.checklist?packet.checklist:[]).filter(function(it){return !rowResolved(it);});}
 function taxYearLabel(){var now=new Date(),y=now.getFullYear();var fy=(now.getMonth()<3||(now.getMonth()===3&&now.getDate()<=15))?y:y+1;return (fy-1)+" 税年";}
-var lastResolvedCount=null,toastTimer=null;
+var lastResolvedCount=null,toastTimer=null,sampleOpen=false,coverOpen=true;
 function renderReturnState(){
   var el=$("returnBanner");if(!el||!packet)return;
   var has=packet.checklist.length>0;
@@ -1404,7 +1436,7 @@ function renderStickyProgress(){
   var rows=packet.checklist||[],total=rows.length,done=rows.filter(rowResolved).length;
   var pct=total?Math.round(done*100/total):0;
   var title=$("stickyProgressTitle"),text=$("stickyProgressText"),fill=$("stickyProgressFill"),action=$("stickyProgressAction");
-  var target="s3",label="建立今年清单",message="从去年表格或手头材料开始，先生成今年清单。";
+  var target="s3",label="建立今年清单",message="从去年表格或手头材料开始，先生成清单。";
   if(total>0&&done<total){target="s4";label="继续补齐材料";message="已完成 "+done+" / "+total+" 项 · 还有 "+(total-done)+" 项待处理。";}
   else if(total>0){target="s6";label="导出给会计师";message="全部 "+total+" 项已标记为已备或不适用，可以导出给 CPA。";}
   title.textContent=total>0&&done===total?"材料包已整理完成":"你的整理进度";
@@ -1416,8 +1448,9 @@ function renderHero(){
   var hero=$("heroBox");if(!hero||!packet)return;
   var show=currentPage===1&&!packet.checklist.length;
   hero.classList.toggle("hidden",!show);
-  var sample=$("sampleCard");if(sample)sample.classList.toggle("hidden",!(isGuest()&&currentPage===1&&!packet.checklist.length));
-  var cover=$("coverPreviewCard");if(cover)cover.classList.toggle("hidden",!(currentPage===1&&!packet.checklist.length));
+  var start=$("startCard");if(start)start.classList.toggle("hidden",!show);
+  var sample=$("sampleCard");if(sample)sample.classList.toggle("hidden",!(sampleOpen&&currentPage===1&&!packet.checklist.length));
+  var cover=$("coverPreviewCard");if(cover)cover.classList.toggle("hidden",!(coverOpen&&currentPage===1&&!packet.checklist.length));
   var cy=$("coverPreviewYear");if(cy){var ty=taxYearLabel().replace(" 税年","");cy.textContent=tr(ty+" 税年 · 报税材料包","Tax year "+ty+" · Tax packet","Año fiscal "+ty+" · Paquete fiscal");}
   var cq=$("coverPreviewQs");if(cq){var cqs=cpaQuestions();var cempty=tr("暂无，按你的情况补充","None yet — add your own","Aún no hay nada; añada su caso");var cqh=cqs.length?("<ol class='cover-qs small'>"+cqs.map(function(q){return "<li>"+esc(q)+"</li>";}).join("")+"</ol>"):"<p class='small'>"+cempty+"</p>";if(cqs.length&&cqs.length<3)cqh+="<p class='small'>"+cempty+"</p>";cq.innerHTML=cqh;}
   var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",currentPage!==1);
@@ -1430,8 +1463,8 @@ function renderHero(){
   var se=$("supEmail");if(se&&currentUser&&!se.value)se.value=currentUser;
   renderReturnState();
 }
-$("btnSampleStart").onclick=function(){var t=$("heroText");if(t){t.scrollIntoView({behavior:"smooth",block:"center"});t.focus();}};
-$("btnCoverStart").onclick=function(){var t=$("heroText");if(t){t.scrollIntoView({behavior:"smooth",block:"center"});t.focus();}};
+$("btnStart").onclick=function(){var t=$("heroText");if(t){t.scrollIntoView({behavior:"smooth",block:"center"});t.focus();}};
+$("btnSee").onclick=function(){sampleOpen=true;coverOpen=true;renderHero();var s=$("sampleCard");if(s){s.classList.remove("hidden");s.scrollIntoView({behavior:"smooth",block:"start"});}};
 function showPage(p){
   if((p===2||p===3)&&isGuest()){pendingPage=p;showAuth();return;}
   currentPage=p;
@@ -2066,31 +2099,6 @@ function detectStateInText(t){
 document.querySelectorAll("#heroExamples button").forEach(function(b){
   b.onclick=function(){var t=$("heroText");t.value=b.getAttribute("data-ex");t.focus();};
 });
-$("btnHeroGenerate").onclick=function(){
-  var text=$("heroText").value.trim();
-  var msg=$("heroMsg");if(msg)msg.textContent="";
-  if(!text){if(msg)msg.textContent="先写一句今年的变化，或点一个例子。";return;}
-  addUncertainDocs(text,isSaleText(text));
-  if(/(W-2|换工作|换了工作|新工作|入职|工资)/.test(text)){
-    if(!packet.lastYear.some(function(l){return l.form==="W-2";}))packet.lastYear.push({form:"W-2",payer:""});
-    generateFromLastYear();
-  }
-  if(!isSaleText(text)&&/(房租|出租|租金|收租|房东)/.test(text)){
-    if(!packet.lastYear.some(function(l){return l.form==="Schedule E";}))packet.lastYear.push({form:"Schedule E",payer:""});
-    generateFromLastYear();
-  }
-  if(/(孩子|出生|抚养|新生儿|二胎)/.test(text))applyChangeFromHero("抚养人","增加");
-  if(/(结婚|已婚|再婚|配偶)/.test(text))applyChangeFromHero("配偶");
-  if(/(搬家|搬到|新地址|地址变)/.test(text))applyChangeFromHero("地址");
-  var st=$("heroState").value||detectStateInText(text);
-  var stateMsg="";
-  if(st)stateMsg=addStateRow(st);
-  savePacket();renderAll();
-  var hs=$("heroState");if(hs&&st)hs.value=st;
-  trackGenerate();
-  if(packet.checklist.length){advanceAfterGenerate();if(st==="其他州"&&msg)msg.textContent=stateMsg;}
-  else if(msg)msg.textContent=stateMsg||"已记录。";
-};
 $("transFile").onchange=function(e){
   if(e.target.files&&e.target.files[0]){packet.transcript=e.target.files[0].name+"（只记文件名，未读内容）";packet.checklist.forEach(function(it){if(it.status==="not-started")it.status="pending";});savePacket();renderAll();}
 };
@@ -2494,9 +2502,23 @@ document.querySelectorAll("#tagGrid .tag-btn").forEach(function(b){
   b.addEventListener("click",function(){b.classList.toggle("on");});
 });
 $("btnTagGenerate").onclick=function(){
+  var text=$("heroText").value.trim();
   var sel=[];document.querySelectorAll("#tagGrid .tag-btn.on").forEach(function(b){sel.push(b);});
   var msg=$("tagMsg");
-  if(!sel.length){if(msg)msg.textContent=t("先点选一到多项今年的情况。");return;}
+  if(!text&&!sel.length){if(msg)msg.textContent=tr("先写一句，或点选今年的情况。","Write one line or tap this year's situations.","Escriba una línea o toque las situaciones de este año.");return;}
+  var st=$("heroState").value||(text?detectStateInText(text):"");
+  if(text){
+    addUncertainDocs(text,isSaleText(text));
+    if(/(W-2|换工作|换了工作|新工作|入职|工资)/.test(text)){
+      if(!packet.lastYear.some(function(l){return l.form==="W-2";}))packet.lastYear.push({form:"W-2",payer:""});
+    }
+    if(!isSaleText(text)&&/(房租|出租|租金|收租|房东)/.test(text)){
+      if(!packet.lastYear.some(function(l){return l.form==="Schedule E";}))packet.lastYear.push({form:"Schedule E",payer:""});
+    }
+    if(/(孩子|出生|抚养|新生儿|二胎)/.test(text))applyChangeFromHero("抚养人","增加");
+    if(/(结婚|已婚|再婚|配偶)/.test(text))applyChangeFromHero("配偶");
+    if(/(搬家|搬到|新地址|地址变)/.test(text))applyChangeFromHero("地址");
+  }
   var phrases=[];
   sel.forEach(function(b){
     var label=(b.textContent||"").trim();
@@ -2504,19 +2526,24 @@ $("btnTagGenerate").onclick=function(){
     var f=b.getAttribute("data-form");
     if(f){if(!packet.lastYear.some(function(l){return l.form===f;}))packet.lastYear.push({form:f,payer:""});}
     if(label==="孩子出生")applyChangeFromHero("抚养人","增加");
+    if(label==="抚养人减少")applyChangeFromHero("抚养人","减少");
     if(label==="结婚了")applyChangeFromHero("配偶");
     if(label==="换了州")applyChangeFromHero("地址");
+    if(label==="申报身份变了")applyChangeFromHero("申报身份");
+    if(label==="没有变化"){packet.changesNone=true;packet.changes={};packet.changesDir={};}
     if(label==="卖了房"){
       if(!packet.checklist.some(function(it){return it.form==="变化证明"&&it.payer==="卖房";}))
         packet.checklist.push({id:Date.now()+""+Math.random(),form:"变化证明",kind:null,title:"卖房",payer:"卖房",request:"卖房证明与成交文件（合同、过户记录、原值凭证）",status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:"",costs:[],moreCollapsed:true});
     }
   });
-  $("heroText").value=phrases.join("");
+  if(phrases.length)$("heroText").value=phrases.join("");
+  var stateMsg="";if(st)stateMsg=addStateRow(st);
   generateFromLastYear();
   savePacket();renderAll();
+  var hs=$("heroState");if(hs&&st)hs.value=st;
   trackGenerate();
-  if(msg)msg.textContent=t("已按点选的情况生成清单，请到“今年要准备的材料”一节逐项核对。");
-  showPage(1);
+  if(packet.checklist.length){if(msg)msg.textContent=tr("已生成 "+packet.checklist.length+" 项，下一步补材料。","Generated "+packet.checklist.length+" items — next, add materials.","Se generaron "+packet.checklist.length+" elementos; ahora añada materiales.")+(st==="其他州"?" "+stateMsg:"");advanceAfterGenerate();}
+  else if(msg)msg.textContent=stateMsg||tr("已记录，先补充一项材料。","Saved — add one material to continue.","Guardado; añada un material para continuar.");
 };
 
 $("btnAiGenerate").addEventListener("click",async function(){
@@ -2644,7 +2671,7 @@ updateStepTabs=function(){_updateStepTabs();updateStepPager();};
 $("btnStepPrev").onclick=function(){setOrganizeStep(currentOrganizeStep-1,true);};
 $("btnStepNext").onclick=function(){if(currentOrganizeStep>=3){goSub();}else{setOrganizeStep(currentOrganizeStep+1,true);}};
 
-[1,2,3].forEach(function(step){var tab=$("flowStep"+step);if(tab)tab.onclick=function(){if(step>1&&(!packet||!packet.checklist.length)){var hm=$("heroMsg");if(hm)hm.textContent=t("先选情况、生成今年清单，再去补材料。");var hb=$("heroBox");if(hb)hb.scrollIntoView({behavior:"smooth",block:"start"});return;}setOrganizeStep(step,true);};});
+[1,2,3].forEach(function(step){var tab=$("flowStep"+step);if(tab)tab.onclick=function(){if(step>1&&(!packet||!packet.checklist.length)){var hm=$("tagMsg");if(hm)hm.textContent=t("先选情况、生成今年清单，再去补材料。");var hb=$("heroBox");if(hb)hb.scrollIntoView({behavior:"smooth",block:"start"});return;}setOrganizeStep(step,true);};});
 var deferredInstallPrompt=null;
 window.addEventListener("beforeinstallprompt",function(event){event.preventDefault();deferredInstallPrompt=event;var installButton=$("installAppBtn");if(installButton)installButton.classList.remove("hidden");});
 var installButton=$("installAppBtn");if(installButton)installButton.onclick=function(){if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();deferredInstallPrompt.userChoice.then(function(){deferredInstallPrompt=null;installButton.classList.add("hidden");});};
