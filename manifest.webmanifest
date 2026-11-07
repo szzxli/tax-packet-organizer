@@ -1,14 +1,14 @@
 {
   "id": "./formal.html",
-  "name": "报税包整理器",
-  "short_name": "报税整理",
-  "description": "把报税材料按步骤整理成清单，跟踪缺项，并导出给会计师审核。",
+  "name": "ClearToFile 可交",
+  "short_name": "ClearToFile",
+  "description": "ClearToFile 可交：把报税材料按步骤整理成清单，跟踪缺项，导出前总核对，导出后自己核对或交给会计师复核。",
   "lang": "zh-CN",
   "start_url": "./formal.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f4f7f9",
-  "theme_color": "#16324f",
+  "background_color": "#F4F7F9",
+  "theme_color": "#0E2A47",
   "icons": [
     {
       "src": "./icons/icon-192.png",

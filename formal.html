@@ -3,11 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#16324f">
-<meta name="description" content="把报税材料按步骤整理成清单，跟踪缺项，导出后自己核对或交给会计师复核。">
+<meta name="theme-color" content="#0E2A47">
+<meta name="description" content="ClearToFile 可交：把报税材料按步骤整理成清单，跟踪缺项，导出前总核对，导出后自己核对或交给会计师复核。">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="apple-touch-icon" href="./icons/icon.svg">
-<title>报税包整理器</title>
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="./icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ClearToFile 可交 · 报税包整理器">
+<meta property="og:description" content="把今年的报税材料整理成一份能交出去的清单：建清单、补材料、导出前总核对，最后由自己或会计师复核。">
+<meta property="og:image" content="https://szzxli.github.io/tax-packet-organizer/icons/icon-512.png">
+<meta name="twitter:card" content="summary">
+<title>ClearToFile 可交 · 报税包整理器</title>
 <style>
 *{box-sizing:border-box} body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;margin:0;background:#eef1f4;color:#1a1a1a;line-height:1.6}
 header{background:linear-gradient(135deg,#16324f,#2a6db0);color:#fff;padding:20px 16px} header h1{margin:0;font-size:22px} header p{margin:6px 0 0;opacity:.92;font-size:13px}
@@ -198,13 +205,41 @@ header{position:relative;padding-right:150px}
  #pageNav button{flex:0 0 auto}
 }
 @media print{body{background:#fff;color:#000}.card{background:#fff;border-color:#ddd}h2,h3{color:#000}}
+/* ClearToFile / 可交 brand header */
+header.site-head{background:linear-gradient(115deg,#0A2137 0%,#0E2A47 58%,#17466F 100%);padding:18px max(16px,calc((100vw - 1000px)/2));display:flex;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:0 4px 18px rgba(10,33,55,.18)}
+.site-head .brand-row{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.site-head .brand-mark{width:42px;height:42px;border-radius:11px;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.16)}
+.site-head .brand-word{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.1;color:#fff;display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0}
+.site-head .brand-word .ctf-to{color:#A9BED2}
+.site-head .brand-word .ctf-file{color:#35C08B}
+.site-head .brand-word .brand-zh{font-size:12px;font-weight:700;letter-spacing:.12em;color:#8FE6BE;background:rgba(23,166,115,.16);border:1px solid rgba(53,192,139,.42);border-radius:999px;padding:3px 9px;line-height:1}
+html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{display:none}
+.site-head p{margin:5px 0 0;font-size:13px;color:rgba(255,255,255,.8);max-width:640px}
+.site-head .lang-switch{position:static;margin:0;background:rgba(255,255,255,.12);padding:3px 6px;border-radius:999px;flex:none}
+@media(max-width:600px){header.site-head{padding:12px 12px;gap:8px}.site-head .brand-row{flex:1 0 100%;gap:8px}.site-head .brand-word{font-size:20px}.site-head .brand-mark{width:34px;height:34px}.site-head .lang-switch{margin-left:auto}.site-head p{display:none}}
 </style>
 </head>
 <body>
 <!-- 正式版：邮件验证、加密存储、真实收款（测试模式）均已接通并实测；演示版见 index.html -->
-<header>
-<h1>报税包整理器</h1>
+<header class="site-head">
+<div class="brand-row">
+<svg class="brand-mark" viewBox="0 0 512 512" role="img" aria-label="ClearToFile 可交">
+<rect width="512" height="512" rx="116" fill="#0E2A47"/>
+<path d="M166 112 h116 l58 58 v182 a22 22 0 0 1 -22 22 H166 a22 22 0 0 1 -22 -22 V134 a22 22 0 0 1 22 -22 z" fill="#FFFFFF"/>
+<path d="M282 112 l58 58 v-58 z" fill="#C7D6E5"/>
+<g stroke="#93A6BC" stroke-width="13" stroke-linecap="round">
+<line x1="192" y1="212" x2="302" y2="212"/>
+<line x1="192" y1="252" x2="302" y2="252"/>
+<line x1="192" y1="292" x2="258" y2="292"/>
+</g>
+<circle cx="360" cy="368" r="72" fill="#17A673"/>
+<path d="M326 368 l23 25 l45 -54" fill="none" stroke="#FFFFFF" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+<div class="brand-copy">
+<h1 class="brand-word"><span>Clear<span class="ctf-to">To</span><span class="ctf-file">File</span></span><span class="brand-zh">可交</span></h1>
 <p>列出你今年要交出去的报税材料清单。导出后自己核对，或请会计师复核。</p>
+</div>
+</div>
 <div class="lang-switch no-print"><span class="lang-globe" aria-hidden="true">🌐</span><button type="button" data-lang-btn="zh" class="active">中文</button><button type="button" data-lang-btn="en">English</button><button type="button" data-lang-btn="es">Español</button></div>
 </header>
 <main>
@@ -710,8 +745,7 @@ function applyLang(lang){
   }
   var phs=document.querySelectorAll("[data-i18n-ph]");
   for(var i=0;i<phs.length;i++){var el=phs[i],k=el.getAttribute("data-i18n-ph");var en=I18N[k];el.setAttribute("placeholder",lang==="zh"?k:((en&&en[lang])||k));}
-  var te=I18N["报税包整理器"];
-  document.title=lang==="zh"?"报税包整理器":((te&&te[lang])||"报税包整理器");
+  document.title=lang==="zh"?"ClearToFile 可交 · 报税包整理器":(lang==="es"?"ClearToFile · Organizador de paquetes fiscales":"ClearToFile · Tax Packet Organizer");
   var btns=document.querySelectorAll("[data-lang-btn]");
   for(var j=0;j<btns.length;j++)btns[j].classList.toggle("active",btns[j].getAttribute("data-lang-btn")===lang);
 }
@@ -2377,7 +2411,7 @@ $("btnSupportSend").onclick=function(){if(isGuest()){showAuth();return;}
   packet.supportRequests.push({text:t,at:new Date().toLocaleString()});$("supportText").value="";savePacket();renderPriority();
 };
 $("btnExportJson").onclick=function(){
-  var data={tool:"报税包整理器 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,change_dir:packet.changesDir||{},last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||"",figure:it.figure?{category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||""}:null,voucher_checked:!!it.voucherChecked,form_amount_cents:it.formAmountCents!=null?it.formAmountCents:null,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it),kind:it.kind||null,costs:(it.costs||[]).map(function(e){return {label:e.custom?(e.customLabel||"其他"):e.label,amount_cents:e.cents,amount_display:e.cents==null?null:fmtMoney(e.cents)}})}}),draft_estimate:{lines:draftLines().map(function(it){return {form:it.form,payer:it.payer,category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||"",voucher_checked:!!it.voucherChecked,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),totals_by_category:(function(){var o={};var t=draftTotals();Object.keys(t.byCat).forEach(function(c){o[c]=fmtMoney(t.byCat[c]);});return o;})(),grand_total_display:fmtMoney(draftTotals().grand),counts:{figures:draftLines().length,voucher_checked:draftLines().filter(function(it){return it.voucherChecked}).length,form_matched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length,form_mismatched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length},label:"预估草稿，非申报表，须 CPA 对照凭证与表格数核对"},warnings:computeWarnings(),prior_cpa:packet.priorCpa||null,transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存你的账号，不进导出文件。发送记录由用户标记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。预估草稿金额为用户确认的证据数字，非申报表，须 CPA 对照凭证与表格数核对；IRS 对照提醒只作请核对提醒，不代表 IRS 已认定任何问题；工具不提取、不保存社保号。去年会计师信息由客户自填，平台不验证、不背书。收入填报数字为用户自填草稿，须CPA核对。"};
+  var data={tool:"ClearToFile 可交 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,change_dir:packet.changesDir||{},last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||"",figure:it.figure?{category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||""}:null,voucher_checked:!!it.voucherChecked,form_amount_cents:it.formAmountCents!=null?it.formAmountCents:null,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it),kind:it.kind||null,costs:(it.costs||[]).map(function(e){return {label:e.custom?(e.customLabel||"其他"):e.label,amount_cents:e.cents,amount_display:e.cents==null?null:fmtMoney(e.cents)}})}}),draft_estimate:{lines:draftLines().map(function(it){return {form:it.form,payer:it.payer,category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||"",voucher_checked:!!it.voucherChecked,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),totals_by_category:(function(){var o={};var t=draftTotals();Object.keys(t.byCat).forEach(function(c){o[c]=fmtMoney(t.byCat[c]);});return o;})(),grand_total_display:fmtMoney(draftTotals().grand),counts:{figures:draftLines().length,voucher_checked:draftLines().filter(function(it){return it.voucherChecked}).length,form_matched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length,form_mismatched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length},label:"预估草稿，非申报表，须 CPA 对照凭证与表格数核对"},warnings:computeWarnings(),prior_cpa:packet.priorCpa||null,transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存你的账号，不进导出文件。发送记录由用户标记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。预估草稿金额为用户确认的证据数字，非申报表，须 CPA 对照凭证与表格数核对；IRS 对照提醒只作请核对提醒，不代表 IRS 已认定任何问题；工具不提取、不保存社保号。去年会计师信息由客户自填，平台不验证、不背书。收入填报数字为用户自填草稿，须CPA核对。"};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tax-packet-checklist.json";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
   packet.exports.push(new Date().toLocaleString()+" 导出机器可读清单 JSON（"+packet.checklist.length+" 项）");savePacket();renderExports();
