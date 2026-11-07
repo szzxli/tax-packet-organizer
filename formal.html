@@ -1456,7 +1456,6 @@ function renderHero(){
   var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",currentPage!==1);
   var sc=$("subShowcase");if(sc)sc.classList.toggle("hidden",currentPage!==1||!packet.checklist.length||hasPass()||currentOrganizeStep!==3);
   var ai=$("aiCard");if(ai)ai.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==1);
-  var tg=$("tagCard");if(tg)tg.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==1||packet.checklist.length>0);
   var fq=$("faqCard");if(fq)fq.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==3);
   var sp=$("supportCard");if(sp)sp.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==3);
   var pg=$("stepPager");if(pg)pg.classList.toggle("hidden",currentPage!==1||!packet.checklist.length);
