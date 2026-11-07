@@ -33,7 +33,7 @@ const rows = [
   ['生成清单', counts.step2, pct(counts.step2)],
   ['进入补材料', counts.step3, pct(counts.step3)],
   ['看到导出区', counts.step4, pct(counts.step4)],
-  ['完成导出', counts.step5, pct(counts.step5)]
+  ['触发导出', counts.step5, pct(counts.step5)]
 ];
 const drops = [1, 2, 3, 4].map(n => ['第' + n + '步退出', counts['drop' + n], counts['step' + n] ? (100 * counts['drop' + n] / counts['step' + n]).toFixed(1) + '%' : '—']);
 console.log('# Flow funnel — ' + NS + ' / ' + DEV);
