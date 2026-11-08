@@ -100,6 +100,27 @@ async function sendSupportEmail(env, fromEmail, message) {
   }
   return { ok: false, error: "email_not_configured" };
 }
+// 运维告警：付款链路出问题必须有人知道。邮件服务未配置时静默失败，
+// 原始记录仍在 webhook_failures 表里，不因为告警发不出去而影响主流程。
+async function sendOpsAlert(env, subject, lines) {
+  const key = (env.RESEND_API_KEY || "").trim();
+  if (env.EMAIL_PROVIDER !== "resend" || !key) return { ok: false, error: "email_not_configured" };
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: (env.EMAIL_FROM || "报税包整理器 <noreply@ucplan.org>").trim(),
+        to: ["support@zhuanuc.com"],
+        subject: "[tax-packet 告警] " + subject,
+        text: [subject].concat(lines || []).join("\n") + "\n\n时间：" + new Date().toISOString(),
+      }),
+    });
+    return { ok: r.ok, status: r.status };
+  } catch (e) {
+    return { ok: false, error: "send_failed" };
+  }
+}
 // AI 清单生成：优先走 AI Gateway（AI_GATEWAY_URL + AI_PROVIDER_KEY + AI_MODEL），
 // 未配置时回落到 Workers AI 绑定（env.AI，Llama 3.1 8B）。描述不存服务器。
 function aiSystemPrompt(lang) {
@@ -203,7 +224,7 @@ export default {
       return bad("subscription_closed", 503);
     }
 
-    if (path === "/api/health" && req.method === "GET") return ok({ version: "tpo-api-1" });
+    if (path === "/api/health" && req.method === "GET") return ok({ version: "tpo-api-2", subscription_open: SUBSCRIPTION_OPEN });
 
     if (path === "/api/register" && req.method === "POST") {
       const b = await readJson(req);
@@ -370,6 +391,11 @@ export default {
 
     if (path === "/api/orders/checkout" && req.method === "POST") {
       if (!env.STRIPE_SECRET_KEY) return bad("stripe_not_configured", 500);
+      // 连点保护：2 分钟内同一账号已有未完成订单就直接拒绝，避免重复建 Stripe 会话、
+      // 重复扣款与多条 pending 订单。2 分钟足够挡住双击/回车连按，也不至于把
+      // 关掉支付页想重来的人关在门外。
+      const pending = await env.DB.prepare("SELECT 1 FROM orders WHERE account_id=? AND status='pending' AND created_at>?").bind(me.id, Date.now() - 2 * 60 * 1000).first();
+      if (pending) return bad("checkout_pending", 409);
       const b = await readJson(req);
       const packs = b?.packs === 2 ? 2 : 1;
       const amount = packs === 2 ? 7400 : 4900;
@@ -414,24 +440,48 @@ export default {
       const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(env.STRIPE_WEBHOOK_SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
       const mac = hex(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signed)));
       if (!v1.some((s) => safeEqualHex(mac, s))) return bad("bad_signature", 400);
-      const ev = JSON.parse(raw);
+      // 验签通过之后才解析/落库；解析失败按 400 退回，不写任何行、不吐堆栈。
+      let ev;
+      try { ev = JSON.parse(raw); } catch { return bad("bad_event", 400); }
+      if (!ev || typeof ev.id !== "string" || typeof ev.type !== "string") return bad("bad_event", 400);
       // 幂等（#77 3.3）：事件 id 先查 stripe_events，已处理过直接 200。
       // 事件落库 + 订单开通放同一个 D1 batch（原子），不允许先写订单再算权益分两次成功。
       // D1 写失败返回 5xx，Stripe 会自动重试；不返回 200，避免「扣了钱、/api/me 还是 0」的终态。
       const seen = await env.DB.prepare("SELECT 1 FROM stripe_events WHERE id=?").bind(ev.id).first();
       if (seen) return ok({ received: true, duplicate: true });
       const stmts = [env.DB.prepare("INSERT INTO stripe_events (id, type, received_at) VALUES (?,?,?)").bind(ev.id, ev.type, Date.now())];
-      if (ev.type === "checkout.session.completed") {
-        const sess = ev.data.object;
-        const packs = parseInt((sess.metadata && sess.metadata.packs) || "1", 10) || 1;
-        stmts.push(env.DB.prepare("INSERT INTO orders (id, account_id, packs, amount_cents, status, stripe_session_id, provider_event_id, entitlement_end, created_at) VALUES (?,?,?,?, 'paid', ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET status='paid', provider_event_id=excluded.provider_event_id, entitlement_end=excluded.entitlement_end")
-          .bind(sess.id, (sess.metadata && sess.metadata.account_id) || "", packs, sess.amount_total || 0, sess.id, ev.id, seasonEnd(), Date.now()));
+      // 拒付/隔离口径：缺账号、未真正付款这类事件重投也不会变好，所以落一条
+      // webhook_failures 给人看 + 发告警，然后回 200 让 Stripe 停止重试，
+      // 绝不凭一条不完整的事件开通权益。
+      let quarantine = null;
+      if (ev.type === "checkout.session.completed" || ev.type === "checkout.session.async_payment_succeeded") {
+        const sess = ev.data && ev.data.object;
+        if (!sess || typeof sess.id !== "string") return bad("bad_event", 400);
+        const accountId = (sess.metadata && sess.metadata.account_id) || "";
+        if (!accountId) quarantine = "missing_account_id";
+        else if (sess.payment_status && sess.payment_status !== "paid") quarantine = "unpaid_session:" + sess.payment_status;
+        else {
+          const packs = parseInt((sess.metadata && sess.metadata.packs) || "1", 10) || 1;
+          stmts.push(env.DB.prepare("INSERT INTO orders (id, account_id, packs, amount_cents, status, stripe_session_id, provider_event_id, entitlement_end, created_at) VALUES (?,?,?,?, 'paid', ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET status='paid', provider_event_id=excluded.provider_event_id, entitlement_end=excluded.entitlement_end")
+            .bind(sess.id, accountId, packs, sess.amount_total || 0, sess.id, ev.id, seasonEnd(), Date.now()));
+        }
+      } else if (ev.type === "checkout.session.expired") {
+        // 用户放弃付款：pending 订单标记 expired，避免 /api/orders 长期挂一笔待支付。
+        const sess = ev.data && ev.data.object;
+        if (sess && typeof sess.id === "string") stmts.push(env.DB.prepare("UPDATE orders SET status='expired' WHERE id=? AND status='pending'").bind(sess.id));
       }
+      if (quarantine) stmts.push(env.DB.prepare("INSERT INTO webhook_failures (event_id, error, created_at) VALUES (?,?,?)").bind(ev.id, quarantine.slice(0, 200), Date.now()));
       try {
         await env.DB.batch(stmts);
       } catch (e) {
-        try { await env.DB.prepare("INSERT INTO webhook_failures (event_id, error, created_at) VALUES (?,?,?)").bind(ev.id, String((e && e.message) || e).slice(0, 200), Date.now()).run(); } catch {}
+        const msg = String((e && e.message) || e).slice(0, 200);
+        try { await env.DB.prepare("INSERT INTO webhook_failures (event_id, error, created_at) VALUES (?,?,?)").bind(ev.id, msg, Date.now()).run(); } catch {}
+        await sendOpsAlert(env, "webhook_db_failed " + ev.type, [ev.id, msg]);
         return bad("webhook_db_failed", 500);
+      }
+      if (quarantine) {
+        await sendOpsAlert(env, "webhook_quarantined " + ev.type, [ev.id, quarantine]);
+        return ok({ received: true, quarantined: true });
       }
       return ok({ received: true });
     }
