@@ -179,10 +179,9 @@ s, b = call("POST", "/api/stripe/webhook", raw=raw, headers=h)
 check("退款事件被接收且不报错", s == 200, f"{s} {b[:120]}")
 end_after_refund = json.loads(me()[1])["entitlement_end"]
 if end_after_refund == end1:
-    warn("退款后权益未撤销（订阅前的既定行为）",
-         "退款口径未公布（formal.html：律师核过后写定）；如决定「全额退款即撤销」，"
-         "需在 webhook 里按 payment_intent 找到订单并置 status='refunded'、entitlement_end=0，"
-         "同时 orders 表要新增 payment_intent 列（迁移未做）")
+    warn("退款事件无匹配订单，权益不变（符合预期）",
+         "这条 charge.refunded 的 payment_intent 是 pi_acc，库里没有对应订单（历史订单未存 payment_intent），"
+         "所以不撤销权益。带 payment_intent 的全额退款回滚由 test_subscriptions.py 覆盖（已实测）。")
 
 # ---------- 7. 非法状态 ----------
 print("\n== 7 非法状态 ==")

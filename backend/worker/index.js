@@ -190,15 +190,58 @@ function seasonEnd() {
   const end = now.getTime() > endThis ? Date.UTC(y + 1, 9, 15) : endThis;
   return end;
 }
-// 权益唯一出口（#77 3.2）：orders 与 promo_claims 只在这里合并，其它地方不得自行判断。
-// 返回 { end, active, source }；end=0 表示从未开通。
+// 权益唯一出口（#77 3.2）：订阅、一次性订单、促销只在这里合并，其它地方不得自行判断。
+// 返回 { end, active, source }；end=0 表示从未开通。source 取到期时间最长的那一路。
 async function entitlementInfo(env, accountId) {
   const now = Date.now();
-  const o = await env.DB.prepare("SELECT MAX(entitlement_end) m FROM orders WHERE account_id=? AND status='paid' AND entitlement_end>=?").bind(accountId, now).first();
+  const s = await currentSubscription(env, accountId);
+  // 有订阅记录时以订阅为准：orders 只是收款记录，取消/退款后不能凭旧的 entitlement_end 继续放行。
+  // 没有订阅记录的存量账号仍按一次性订单计算（迁移不补历史行）。
+  const subEnd = s && ["active", "trialing", "past_due"].includes(s.status) && s.current_period_end > now ? s.current_period_end : 0;
+  const o = s ? { m: 0 } : await env.DB.prepare("SELECT MAX(entitlement_end) m FROM orders WHERE account_id=? AND status='paid' AND entitlement_end>=?").bind(accountId, now).first();
   const p = await env.DB.prepare("SELECT MAX(entitlement_end) m FROM promo_claims WHERE account_id=? AND entitlement_end>=?").bind(accountId, now).first();
   const orderEnd = o?.m || 0, promoEnd = p?.m || 0;
-  const end = Math.max(orderEnd, promoEnd);
-  return { end, active: end > now, source: end === 0 ? null : (orderEnd >= promoEnd ? "order" : "promo") };
+  const end = Math.max(subEnd, orderEnd, promoEnd);
+  const source = end === 0 ? null : end === subEnd ? "subscription" : end === orderEnd ? "order" : "promo";
+  return { end, active: end > now, source };
+}
+// 套餐与订阅（payments-spec v0.1 §1-§2）。价格唯一来源是 plans 表。
+async function getPlan(env, code) {
+  if (!code) return null;
+  return env.DB.prepare("SELECT code, name, price_cents, currency, period, auto_renew FROM plans WHERE code=? AND active=1").bind(code).first();
+}
+function planPeriodEnd(plan, fromMs) {
+  const from = fromMs || Date.now();
+  if (plan.period === "year") {
+    const d = new Date(from);
+    d.setUTCFullYear(d.getUTCFullYear() + 1);
+    return d.getTime();
+  }
+  return seasonEnd();
+}
+// 只允许 spec §2 的迁移；其余拒绝并留审计，不静默改写。
+const SUB_TRANSITIONS = {
+  none: ["active"],
+  active: ["active", "past_due", "canceled", "expired"],
+  past_due: ["active", "past_due", "expired", "canceled"],
+  canceled: ["active"],
+  expired: ["active"],
+};
+function subTransitionAllowed(from, to) {
+  return (SUB_TRANSITIONS[from || "none"] || []).includes(to);
+}
+async function currentSubscription(env, accountId) {
+  return env.DB.prepare("SELECT * FROM subscriptions WHERE account_id=?").bind(accountId).first();
+}
+async function subscriptionView(env, accountId) {
+  const s = await currentSubscription(env, accountId);
+  if (!s) return null;
+  const plan = await env.DB.prepare("SELECT auto_renew FROM plans WHERE code=?").bind(s.plan_code).first();
+  return { plan: s.plan_code, status: s.status, period_end: s.current_period_end, cancel_at_period_end: !!s.cancel_at_period_end, auto_renew: !!plan?.auto_renew };
+}
+function subEventStmt(env, sub, from, to, reason, at) {
+  return env.DB.prepare("INSERT INTO subscription_events (subscription_id, account_id, from_status, to_status, reason, created_at) VALUES (?,?,?,?,?,?)")
+    .bind(sub?.id || null, sub?.account_id || null, from || null, to, reason.slice(0, 120), at);
 }
 function safeEqualHex(a, b) {
   if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
@@ -224,7 +267,13 @@ export default {
       return bad("subscription_closed", 503);
     }
 
-    if (path === "/api/health" && req.method === "GET") return ok({ version: "tpo-api-2", subscription_open: SUBSCRIPTION_OPEN });
+    if (path === "/api/health" && req.method === "GET") return ok({ version: "tpo-api-3", subscription_open: SUBSCRIPTION_OPEN });
+
+    // 套餐公开可读：价格、周期、是否自动续费只有这一个来源。
+    if (path === "/api/plans" && req.method === "GET") {
+      const rows = await env.DB.prepare("SELECT code, name, price_cents, currency, period, auto_renew FROM plans WHERE active=1 ORDER BY sort").all();
+      return ok({ plans: (rows.results || []).map((p) => ({ ...p, auto_renew: !!p.auto_renew })) });
+    }
 
     if (path === "/api/register" && req.method === "POST") {
       const b = await readJson(req);
@@ -351,8 +400,29 @@ export default {
 
     if (path === "/api/me" && req.method === "GET") {
       const e = await entitlementInfo(env, me.id);
-      // entitlement_end 保留给现有前端；entitlement 是新增的结构化口径。
-      return ok({ email: me.email, entitlement_end: e.end, entitlement: e });
+      // entitlement_end 保留给现有前端；entitlement 是新增的结构化口径；
+      // subscription 只在有订阅记录时出现，页面据此显示有效期与是否续费。
+      return ok({ email: me.email, entitlement_end: e.end, entitlement: e, subscription: await subscriptionView(env, me.id) });
+    }
+    if (path === "/api/subscriptions/cancel" && req.method === "POST") {
+      // 取消 = 期末不再续费（spec §3 C），不立即收回当期权益。
+      const s = await currentSubscription(env, me.id);
+      if (!s) return bad("no_subscription", 404);
+      if (!s.provider_subscription_id || s.provider_subscription_id.startsWith("pass:")) return bad("not_recurring", 409);
+      if (!["active", "trialing", "past_due"].includes(s.status)) return bad("not_cancelable", 409);
+      if (!env.STRIPE_SECRET_KEY) return bad("stripe_not_configured", 500);
+      const r = await fetch((env.STRIPE_API_BASE || "https://api.stripe.com").replace(/\/$/, "") + "/v1/subscriptions/" + encodeURIComponent(s.provider_subscription_id), {
+        method: "POST",
+        headers: { Authorization: "Bearer " + env.STRIPE_SECRET_KEY, "Content-Type": "application/x-www-form-urlencoded" },
+        body: "cancel_at_period_end=true",
+      });
+      if (!r.ok) return bad("stripe_error", 502);
+      const now = Date.now();
+      await env.DB.batch([
+        env.DB.prepare("UPDATE subscriptions SET cancel_at_period_end=1, updated_at=? WHERE id=?").bind(now, s.id),
+        subEventStmt(env, s, s.status, s.status, "cancel_at_period_end", now),
+      ]);
+      return ok({ subscription: await subscriptionView(env, me.id), entitlement: await entitlementInfo(env, me.id) });
     }
     if (path === "/api/orders" && req.method === "GET") {
       const rows = await env.DB.prepare("SELECT stripe_session_id AS id, packs, amount_cents, status, entitlement_end, created_at FROM orders WHERE account_id=? ORDER BY created_at DESC LIMIT 20").bind(me.id).all();
@@ -398,18 +468,23 @@ export default {
       if (pending) return bad("checkout_pending", 409);
       const b = await readJson(req);
       const packs = b?.packs === 2 ? 2 : 1;
-      const amount = packs === 2 ? 7400 : 4900;
+      const planCode = (typeof b?.plan_code === "string" && b.plan_code) ? b.plan_code : (packs === 2 ? "season_2" : "season_1");
+      const plan = await getPlan(env, planCode);
+      if (!plan) return bad("bad_plan", 400);
+      // 金额只认 plans 表，不接受前端传价（spec §3 A）。
       const params = new URLSearchParams({
-        mode: "payment",
-        "line_items[0][price_data][currency]": "usd",
-        "line_items[0][price_data][product_data][name]": "报税季票",
-        "line_items[0][price_data][unit_amount]": String(amount),
+        mode: plan.auto_renew ? "subscription" : "payment",
+        "line_items[0][price_data][currency]": plan.currency,
+        "line_items[0][price_data][product_data][name]": plan.name,
+        "line_items[0][price_data][unit_amount]": String(plan.price_cents),
         "line_items[0][quantity]": "1",
         success_url: (env.FRONTEND_ORIGIN || "https://szzxli.github.io") + "/tax-packet-organizer/formal.html?paid=1",
         cancel_url: (env.FRONTEND_ORIGIN || "https://szzxli.github.io") + "/tax-packet-organizer/formal.html?canceled=1",
         "metadata[account_id]": me.id,
+        "metadata[plan_code]": plan.code,
         "metadata[packs]": String(packs),
       });
+      if (plan.auto_renew) params.set("line_items[0][price_data][recurring][interval]", plan.period === "year" ? "year" : "month");
       const r = await fetch("https://api.stripe.com/v1/checkout/sessions", {
         method: "POST",
         headers: { Authorization: "Bearer " + env.STRIPE_SECRET_KEY, "Content-Type": "application/x-www-form-urlencoded" },
@@ -417,7 +492,7 @@ export default {
       });
       const s = await r.json();
       if (!r.ok) return bad("stripe_error", 502);
-      await env.DB.prepare("INSERT INTO orders (id, account_id, packs, amount_cents, status, stripe_session_id, created_at) VALUES (?,?,?,?, 'pending', ?, ?)").bind(s.id, me.id, packs, amount, s.id, Date.now()).run();
+      await env.DB.prepare("INSERT INTO orders (id, account_id, packs, amount_cents, status, stripe_session_id, created_at) VALUES (?,?,?,?, 'pending', ?, ?)").bind(s.id, me.id, packs, plan.price_cents, s.id, Date.now()).run();
       return ok({ url: s.url });
     }
 
@@ -454,6 +529,8 @@ export default {
       // webhook_failures 给人看 + 发告警，然后回 200 让 Stripe 停止重试，
       // 绝不凭一条不完整的事件开通权益。
       let quarantine = null;
+      const now = Date.now();
+      const packOf = (code, packs) => code === "season_2" ? 2 : code === "annual_2" ? 2 : packs;
       if (ev.type === "checkout.session.completed" || ev.type === "checkout.session.async_payment_succeeded") {
         const sess = ev.data && ev.data.object;
         if (!sess || typeof sess.id !== "string") return bad("bad_event", 400);
@@ -462,13 +539,94 @@ export default {
         else if (sess.payment_status && sess.payment_status !== "paid") quarantine = "unpaid_session:" + sess.payment_status;
         else {
           const packs = parseInt((sess.metadata && sess.metadata.packs) || "1", 10) || 1;
-          stmts.push(env.DB.prepare("INSERT INTO orders (id, account_id, packs, amount_cents, status, stripe_session_id, provider_event_id, entitlement_end, created_at) VALUES (?,?,?,?, 'paid', ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET status='paid', provider_event_id=excluded.provider_event_id, entitlement_end=excluded.entitlement_end")
-            .bind(sess.id, accountId, packs, sess.amount_total || 0, sess.id, ev.id, seasonEnd(), Date.now()));
+          const planCode = (sess.metadata && sess.metadata.plan_code) || (packs === 2 ? "season_2" : "season_1");
+          const plan = await getPlan(env, planCode);
+          if (!plan) quarantine = "bad_plan:" + planCode;
+          else {
+            const sub = await currentSubscription(env, accountId);
+            const from = sub ? sub.status : "none";
+            if (!subTransitionAllowed(from, "active")) quarantine = "illegal_transition:" + from + "->active";
+            else {
+              const end = planPeriodEnd(plan, now);
+              stmts.push(env.DB.prepare("INSERT INTO orders (id, account_id, packs, amount_cents, status, stripe_session_id, provider_event_id, entitlement_end, payment_intent_id, created_at) VALUES (?,?,?,?, 'paid', ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET status='paid', provider_event_id=excluded.provider_event_id, entitlement_end=excluded.entitlement_end, payment_intent_id=excluded.payment_intent_id")
+                .bind(sess.id, accountId, packOf(plan.code, packs), sess.amount_total || plan.price_cents, sess.id, ev.id, end, sess.payment_intent || null, now));
+              // 订阅记录：一个账号一行；一次性季票也落一行，页面据此显示有效期。
+              const providerId = sess.subscription || ("pass:" + sess.id);
+              stmts.push(env.DB.prepare("INSERT INTO subscriptions (id, account_id, plan_code, status, current_period_start, current_period_end, cancel_at_period_end, provider_subscription_id, created_at, updated_at) VALUES (?,?,?, 'active', ?, ?, 0, ?, ?, ?) ON CONFLICT(account_id) DO UPDATE SET plan_code=excluded.plan_code, status='active', current_period_start=excluded.current_period_start, current_period_end=MAX(subscriptions.current_period_end, excluded.current_period_end), cancel_at_period_end=0, provider_subscription_id=CASE WHEN excluded.provider_subscription_id LIKE 'pass:%' THEN COALESCE(subscriptions.provider_subscription_id, excluded.provider_subscription_id) ELSE COALESCE(excluded.provider_subscription_id, subscriptions.provider_subscription_id) END, updated_at=excluded.updated_at")
+                .bind("sub_" + accountId, accountId, plan.code, now, end, providerId, now, now));
+              stmts.push(subEventStmt(env, { id: "sub_" + accountId, account_id: accountId }, from, "active", "checkout_completed:" + plan.code, now));
+            }
+          }
         }
       } else if (ev.type === "checkout.session.expired") {
         // 用户放弃付款：pending 订单标记 expired，避免 /api/orders 长期挂一笔待支付。
         const sess = ev.data && ev.data.object;
         if (sess && typeof sess.id === "string") stmts.push(env.DB.prepare("UPDATE orders SET status='expired' WHERE id=? AND status='pending'").bind(sess.id));
+      } else if (ev.type === "invoice.paid") {
+        // 续费（spec §3 B）：同一订阅只延期，不产生第二条订阅记录。
+        const inv = ev.data && ev.data.object;
+        const providerId = (inv && (inv.subscription || (inv.parent && inv.parent.subscription_details && inv.parent.subscription_details.subscription))) || "";
+        let sub = providerId ? await env.DB.prepare("SELECT * FROM subscriptions WHERE provider_subscription_id=?").bind(providerId).first() : null;
+        if (!sub) {
+          const accountId = (inv && inv.metadata && inv.metadata.account_id) || "";
+          if (accountId) sub = await currentSubscription(env, accountId);
+        }
+        if (!sub) quarantine = "unknown_subscription";
+        else if (!subTransitionAllowed(sub.status, "active")) quarantine = "illegal_transition:" + sub.status + "->active";
+        else {
+          const plan = await getPlan(env, sub.plan_code);
+          if (!plan) quarantine = "bad_plan:" + sub.plan_code;
+          else {
+            const newEnd = planPeriodEnd(plan, Math.max(sub.current_period_end || 0, now));
+            stmts.push(env.DB.prepare("UPDATE subscriptions SET status='active', current_period_start=?, current_period_end=?, cancel_at_period_end=0, updated_at=? WHERE id=?")
+              .bind(sub.current_period_end || now, Math.max(newEnd, sub.current_period_end || 0), now, sub.id));
+            stmts.push(subEventStmt(env, sub, sub.status, "active", "invoice_paid:" + ((inv && inv.id) || ""), now));
+            if (inv && inv.id) {
+              stmts.push(env.DB.prepare("INSERT INTO orders (id, account_id, packs, amount_cents, status, stripe_session_id, provider_event_id, entitlement_end, payment_intent_id, created_at) VALUES (?,?,?,?, 'paid', NULL, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING")
+                .bind("in_" + inv.id, sub.account_id, plan.code.endsWith("_2") ? 2 : 1, inv.amount_paid || plan.price_cents, ev.id, Math.max(newEnd, sub.current_period_end || 0), (inv.payment_intent || inv.charge || null), now));
+            }
+          }
+        }
+      } else if (ev.type === "invoice.payment_failed") {
+        const inv = ev.data && ev.data.object;
+        const providerId = (inv && (inv.subscription || (inv.parent && inv.parent.subscription_details && inv.parent.subscription_details.subscription))) || "";
+        const sub = providerId ? await env.DB.prepare("SELECT * FROM subscriptions WHERE provider_subscription_id=?").bind(providerId).first() : null;
+        if (!sub) quarantine = "unknown_subscription";
+        else if (!subTransitionAllowed(sub.status, "past_due")) quarantine = "illegal_transition:" + sub.status + "->past_due";
+        else {
+          stmts.push(env.DB.prepare("UPDATE subscriptions SET status='past_due', updated_at=? WHERE id=?").bind(now, sub.id));
+          stmts.push(subEventStmt(env, sub, sub.status, "past_due", "invoice_payment_failed:" + ((inv && inv.id) || ""), now));
+        }
+      } else if (ev.type === "customer.subscription.deleted") {
+        // 期末取消（spec §3 C）：立即删除的按现在失效，期末删除的按期末失效。
+        const obj = ev.data && ev.data.object;
+        const providerId = (obj && obj.id) || "";
+        const sub = providerId ? await env.DB.prepare("SELECT * FROM subscriptions WHERE provider_subscription_id=?").bind(providerId).first() : null;
+        if (!sub) quarantine = "unknown_subscription";
+        else if (!subTransitionAllowed(sub.status, "canceled")) quarantine = "illegal_transition:" + sub.status + "->canceled";
+        else {
+          const end = Math.min(sub.current_period_end || now, now);
+          stmts.push(env.DB.prepare("UPDATE subscriptions SET status='canceled', current_period_end=?, cancel_at_period_end=0, updated_at=? WHERE id=?").bind(end, now, sub.id));
+          stmts.push(subEventStmt(env, sub, sub.status, "canceled", "subscription_deleted", now));
+        }
+      } else if (ev.type === "charge.refunded") {
+        // 退款回滚（spec §4.7）：按 payment_intent 找到订单，全额退款才撤权益。
+        const ch = ev.data && ev.data.object;
+        const pi = (ch && ch.payment_intent) || "";
+        const o = pi ? await env.DB.prepare("SELECT id, account_id, amount_cents, status FROM orders WHERE payment_intent_id=? ORDER BY created_at DESC LIMIT 1").bind(pi).first() : null;
+        if (o) {
+          const full = ch.amount_refunded == null || ch.amount_refunded >= (o.amount_cents || 0);
+          if (full) {
+            stmts.push(env.DB.prepare("UPDATE orders SET status='refunded', entitlement_end=0 WHERE id=?").bind(o.id));
+            const sub = await currentSubscription(env, o.account_id);
+            if (sub && ["active", "past_due"].includes(sub.status)) {
+              if (subTransitionAllowed(sub.status, "expired")) {
+                stmts.push(env.DB.prepare("UPDATE subscriptions SET status='expired', current_period_end=0, updated_at=? WHERE id=?").bind(now, sub.id));
+                stmts.push(subEventStmt(env, sub, sub.status, "expired", "charge_refunded", now));
+              } else quarantine = "illegal_transition:" + sub.status + "->expired";
+            }
+          }
+        }
       }
       if (quarantine) stmts.push(env.DB.prepare("INSERT INTO webhook_failures (event_id, error, created_at) VALUES (?,?,?)").bind(ev.id, quarantine.slice(0, 200), Date.now()));
       try {

@@ -57,6 +57,8 @@
       return req("/api/orders/checkout", { method: "POST", body: { packs: packs } });
     },
     subscriptionOpen: function () { return SUBSCRIPTION_OPEN; },
+    plans: function () { return req("/api/plans"); },
+    cancelSubscription: function () { return req("/api/subscriptions/cancel", { method: "POST", body: {} }); },
     listOrders: function () { return req("/api/orders"); },
     support: function (email, message) { return req("/api/support", { method: "POST", body: { email: email, message: message } }); },
     aiChecklist: function (description, lang) { return req("/api/ai-checklist", { method: "POST", body: { description: description, lang: lang } }); },

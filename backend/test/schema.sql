@@ -23,7 +23,8 @@ CREATE TABLE orders (
   stripe_session_id TEXT,
   entitlement_end INTEGER,
   created_at INTEGER NOT NULL
-, provider_event_id TEXT);
+, provider_event_id TEXT, payment_intent_id TEXT);
+CREATE INDEX idx_orders_payment_intent ON orders(payment_intent_id);
 CREATE TABLE packets (
   account_id TEXT PRIMARY KEY,
   enc INTEGER NOT NULL,
@@ -60,3 +61,37 @@ CREATE TABLE webhook_failures (
 );;
 CREATE INDEX idx_orders_account ON orders(account_id);
 CREATE INDEX idx_sessions_account ON sessions(account_id);
+
+-- 订阅域（payments-spec v0.1 §1）：套餐、订阅、状态迁移审计。
+CREATE TABLE plans (
+  code TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  price_cents INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'usd',
+  period TEXT NOT NULL,          -- season | year
+  auto_renew INTEGER NOT NULL DEFAULT 0,
+  active INTEGER NOT NULL DEFAULT 1,
+  sort INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE subscriptions (
+  id TEXT PRIMARY KEY,
+  account_id TEXT NOT NULL UNIQUE,
+  plan_code TEXT NOT NULL,
+  status TEXT NOT NULL,          -- active | past_due | canceled | expired
+  current_period_start INTEGER NOT NULL,
+  current_period_end INTEGER NOT NULL,
+  cancel_at_period_end INTEGER NOT NULL DEFAULT 0,
+  provider_subscription_id TEXT,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+CREATE TABLE subscription_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  subscription_id TEXT,
+  account_id TEXT,
+  from_status TEXT,
+  to_status TEXT,
+  reason TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX idx_sub_events_account ON subscription_events(account_id);
