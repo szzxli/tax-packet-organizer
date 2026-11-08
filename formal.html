@@ -2575,7 +2575,7 @@ var STATES=[
 ["北卡罗来纳州","有州个人所得税","North Carolina","Carolina del Norte"],
 ["密歇根州","有州个人所得税","Michigan","Míchigan"]
 ];
-function stateLabel(st){return LANG==="zh"?st[0]:(LANG==="es"?st[3]:st[2])+(st[1]==="无州个人所得税"?t("（无州个人所得税）"):"");}
+function stateLabel(st){var name=LANG==="zh"?st[0]:(LANG==="es"?st[3]:st[2]);return name+(st[1]==="无州个人所得税"?t("（无州个人所得税）"):"");}
 function fillStateOptions(sel,withPlaceholder,withOther){
   if(!sel)return;
   var keep=sel.value;

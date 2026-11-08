@@ -167,6 +167,36 @@ check("applyLang 走 __tpoApplyMeta，placeholder 与 title 不再各写一份",
   assert.match(fn, /__tpoApplyMeta/);
 });
 
+check("州下拉三语标签：得州/佛州带“无州个人所得税”备注，中文不被丢掉", () => {
+  const start = html.indexOf("var STATES=[");
+  const end = html.indexOf("function fillStateOptions");
+  assert.ok(start > 0 && end > start, "STATES 与 stateLabel 块存在");
+  const dict = {
+    "（无州个人所得税）": { en: " (no state income tax)", es: " (sin impuesto estatal sobre la renta)" },
+  };
+  const sandbox = {
+    LANG: "zh",
+    t(s) {
+      if (sandbox.LANG === "zh") return s;
+      const e = dict[s];
+      return (e && e[sandbox.LANG]) || s;
+    },
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(html.slice(start, end), sandbox, { filename: "states.js" });
+
+  const tx = ["得州", "无州个人所得税", "Texas", "Texas"];
+  const ca = ["加州", "有州个人所得税", "California", "California"];
+  assert.equal(sandbox.stateLabel(tx), "得州（无州个人所得税）");
+  assert.equal(sandbox.stateLabel(ca), "加州");
+  sandbox.LANG = "en";
+  assert.equal(sandbox.stateLabel(tx), "Texas (no state income tax)");
+  assert.equal(sandbox.stateLabel(ca), "California");
+  sandbox.LANG = "es";
+  assert.equal(sandbox.stateLabel(tx), "Texas (sin impuesto estatal sobre la renta)");
+  assert.equal(sandbox.stateLabel(["纽约州", "有州个人所得税", "New York", "Nueva York"]), "Nueva York");
+});
+
 check("setLang 把 ?lang 写进地址栏，便于分享与渠道链接", () => {
   const body = html.slice(html.indexOf("function setLang("), html.indexOf("\nvar FORM_MAP"));
   assert.match(body, /searchParams\.set\("lang"/);
