@@ -24,7 +24,8 @@ function json(data, status = 200, extra = {}) {
 }
 function corsHeaders(req, env) {
   const origin = req.headers.get("Origin") || "";
-  const allowed = [env.FRONTEND_ORIGIN || "https://szzxli.github.io", "http://localhost:8787"];
+  // FRONTEND_ORIGIN 支持逗号分隔多个来源：换域名时新旧域名要并存在白名单里，否则新域名上登录与同步会被浏览器拦掉。
+  const allowed = (env.FRONTEND_ORIGIN || "https://szzxli.github.io").split(",").map((s) => s.trim()).filter(Boolean).concat(["http://localhost:8787"]);
   if (allowed.includes(origin)) return { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Headers": "content-type, authorization", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS" };
   return {};
 }
