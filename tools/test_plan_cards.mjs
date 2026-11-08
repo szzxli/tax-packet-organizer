@@ -236,6 +236,23 @@ check("未登录：卡 2 有输入与三个选项，卡 1/3/4 只出引导", () 
   assert.equal((out.match(/class='plan-lock'/g) || []).length, 3, "应只锁三张");
 });
 
+check("未登录：卡 1 / 卡 3 锁定态给预告句（只说填什么，不给结论）", () => {
+  const out = sandbox.planCardsHtml(state({}), false);
+  assert.ok(out.includes("要一行数：去年 1040 上的应税收入（第 15 行左右）。领票后在这里填，当场出结论。"), "卡 1 预告句缺失");
+  assert.ok(out.includes("要三行：今年的 401(k)、今年的 IRA、去年 1040 的 AGI（第 11 行左右）。领票后在这里填。"), "卡 3 预告句缺失");
+  assert.ok(out.includes("领取后在这里填写。"), "卡 4 应保留通用锁句");
+  for (const leak of ["% 档", "分界线是", "还差 $", "储户抵免", "多领的补贴"]) {
+    assert.ok(!out.includes(leak), "锁定态泄露结论：" + leak);
+  }
+});
+
+check("未登录：卡 1 / 卡 3 预告句有英文与西语", () => {
+  const en = (() => { sandbox.LANG = "en"; const v = sandbox.planCardsHtml(state({}), false); sandbox.LANG = "zh"; return v; })();
+  assert.ok(en.includes("One number: last year's taxable income on Form 1040"), en.slice(0, 0));
+  assert.ok(en.includes("Three lines: this year's 401(k)"), "卡 3 英文缺失");
+  assert.ok(!/[\u4e00-\u9fa5]/.test(en.replace(/卡 [1-4] · |你的位置|补贴会不会变|退休账户|今年变了什么/g, "")), "英文态仍夹中文");
+});
+
 check("未登录：卡 2 直接出结论（不拦结论）", () => {
   const out = sandbox.plan2Result(state({ marketplace: true, chgUp: true }));
   assert.ok(out.includes(C2_UP), out);
@@ -291,9 +308,13 @@ check("交接口径单：三行横线 + 「下面留给会计写」+ IRS 交接�
   assert.equal((out.match(/class='handoff-line'/g) || []).length, 3, "应有三行横线");
 });
 
-check("交接口径单：页脚口径 + github.io 落款，无 tax.ucplan.org", () => {
+check("交接口径单：页脚只留前两句（删「不构成建议」）+ github.io 落款，无 tax.ucplan.org", () => {
   const out = sandbox.planHandoffHtml(state({}));
-  assert.ok(out.includes("按 2026 税年口径 · 只标结构，不算税、不判资格，不构成建议"), out);
+  assert.ok(out.includes("按 2026 税年口径 · 只标结构，不算税、不判资格"), out);
+  assert.ok(!out.includes("不构成建议"), "打印页不应再出现「不构成建议」：" + out);
+  for (const banned of ["免责", "我们担责", "审核通过"]) {
+    assert.ok(!out.includes(banned), "打印页出现不该有的表述：" + banned);
+  }
   assert.ok(out.includes("https://szzxli.github.io/tax-packet-organizer/"), out);
   assert.ok(!out.includes("tax.ucplan.org"), out);
   assert.ok(!html.includes("tax.ucplan.org"), "formal.html 不应出现 tax.ucplan.org");
@@ -310,6 +331,12 @@ check("不出现算税额、退税额、调缴款建议", () => {
   for (const bad of ["你的税率是", "税额约", "退税金额", "多缴", "建议你调整缴款到", "最低价", "全网最便宜"]) {
     assert.ok(!all.includes(bad), "出现禁止表述：" + bad);
   }
+});
+
+check("页面级：网页侧的边界句仍是完整三句，一个字没动", () => {
+  assert.ok(html.includes("只标结构，不算税、不判资格、不构成建议。"), "网页侧边界句被改动");
+  const webBoundary = "只标结构，不算税、不判资格、不构成建议。";
+  assert.ok(html.split(webBoundary).length - 1 >= 1, "网页侧卡 1 边界句应保留完整三句");
 });
 
 check("页面级：单列“免费整理与导出永久免费”", () => {

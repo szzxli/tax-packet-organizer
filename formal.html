@@ -1002,6 +1002,9 @@ function planCardsHtml(state,unlocked){
   var html="";
   var guide=planLang("补贴这张卡免费看，不登录也能填：位置 → 补贴 → 退休 → 政策，另外三张在季票里（内测期免费）。领取后在下面直接填；免费整理与导出不受影响，随时可用。","The subsidy card is free for everyone — fill it in without logging in: where you stand → subsidy → retirement → policy; the other three come with the season pass (free during beta). Claim the pass and fill them in below; free organizing and export are not affected.","La tarjeta de subsidio es gratis: puede completarla sin iniciar sesión. Posición → subsidio → retiro → política; las otras tres vienen con el pase (gratis durante la beta). Reclame el pase y complételas abajo; organizar y exportar gratis no se ven afectados.");
   var lock=planLang("领取后在这里填写。","Fill this in after claiming the pass.","Complete esto después de reclamar el pase.");
+  // 锁定态只说「要填什么」，不给任何结论；卡 1 / 卡 3 用预告句，卡 4 仍是通用锁句。
+  var lock1=planLang("要一行数：去年 1040 上的应税收入（第 15 行左右）。领票后在这里填，当场出结论。","One number: last year's taxable income on Form 1040 (around line 15). Claim the pass, fill it in here, and you'll see the result right away.","Un dato: el ingreso gravable del Formulario 1040 del año pasado (alrededor de la línea 15). Reclame el pase, complételo aquí y verá el resultado al instante.");
+  var lock3=planLang("要三行：今年的 401(k)、今年的 IRA、去年 1040 的 AGI（第 11 行左右）。领票后在这里填。","Three lines: this year's 401(k), this year's IRA, and last year's AGI on Form 1040 (around line 11). Fill them in here after claiming the pass.","Tres datos: el 401(k) de este año, la IRA de este año y el AGI del Formulario 1040 del año pasado (alrededor de la línea 11). Complételos aquí después de reclamar el pase.");
   if(!unlocked)html+="<div class='plan-guide'><p class='small' style='margin-top:0'>"+esc(guide)+"</p><p><button type='button' id='btnPlanClaim'>"+esc(planLang("领取免费季票，解锁另外三张卡","Claim a free season pass to unlock the other three cards","Reclamar el pase gratuito para desbloquear las otras tres tarjetas"))+"</button> <span id='planClaimMsg' class='small'></span></p></div>";
   var privacy="<p class='plan-note' style='margin:0 0 10px'>"+esc(planLang("应税收入、AGI、401(k)/IRA 缴款、家庭人数只存在这台电脑的浏览器里，不进清单、不同步服务器；换设备要重填。","Taxable income, AGI, 401(k)/IRA contributions, and household size stay in this browser only — not in your packet, not synced to the server. Re-enter them on another device.","El ingreso gravable, el AGI, las aportaciones 401(k)/IRA y el tamaño del hogar quedan solo en este navegador: no entran en su paquete ni se sincronizan con el servidor. Vuelva a ingresarlos en otro dispositivo."))+"</p>";
   var body1;
@@ -1015,7 +1018,7 @@ function planCardsHtml(state,unlocked){
       "<div><label for='planIncome'>"+esc(planLang("去年 1040 的 Taxable income（应税收入，第 15 行左右）","Last year's Taxable income on Form 1040 (around line 15)","El Taxable income del Formulario 1040 del año pasado (alrededor de la línea 15)"))+"</label><input id='planIncome' inputmode='decimal' autocomplete='off' placeholder='"+esc(planLang("例如：150,000","e.g. 150,000","p. ej. 150,000"))+"' value='"+esc(state.income)+"'>"+
       "<p class='plan-note' style='margin:6px 0 0'>"+esc(planLang("这是去年的位置，用来定今年的方向。今年收入变动大，按你估的数填。","This is last year's figure — it sets the direction for this year. If this year's income moved a lot, use your estimate.","Este es el dato del año pasado: orienta el de este año. Si sus ingresos cambiaron mucho, use su estimación."))+"</p></div></div>"+
       "<div class='plan-out' id='plan1Out'></div>";
-  }else{body1="<p class='plan-lock'>"+esc(lock)+"</p>";}
+  }else{body1="<p class='plan-lock'>"+esc(lock1)+"</p>";}
   html+=planCard(planLang("卡 1 · 你的位置","Card 1 · Where you stand","Tarjeta 1 · Dónde está"),planLang("你的位置（税档）","Where you stand (tax bracket)","Dónde está (tramo de impuesto)"),planLang("我今年大概处在什么位置？","Roughly where do I stand this year?","¿Dónde estoy más o menos este año?"),body1,planLang("只标结构，不算税、不判资格、不构成建议。","Only the structure: no tax calculation, no eligibility decision, no advice.","Solo la estructura: sin calcular impuestos, sin decidir elegibilidad, sin asesoría."));
 
   // 卡 2 对所有人免费可见（未登录也能填、能出结论），另外三张仍挂在季票里。
@@ -1034,7 +1037,7 @@ function planCardsHtml(state,unlocked){
       "<div><label for='planAgi'>"+esc(planLang("去年 1040 的 AGI（第 11 行左右）","Last year's AGI on Form 1040 (around line 11)","El AGI del Formulario 1040 del año pasado (alrededor de la línea 11)"))+"</label><input id='planAgi' inputmode='decimal' autocomplete='off' placeholder='"+esc(planLang("例如：120,000","e.g. 120,000","p. ej. 120,000"))+"' value='"+esc(state.agi)+"'>"+
       "<p class='plan-note' style='margin:6px 0 0'>"+esc(planLang("去年的数，用来判断抵免方向。","Last year's figure — it sets the direction for the credit.","El dato del año pasado: orienta el crédito."))+"</p></div>"+
       "<div class='plan-out' id='plan3Out'></div>";
-  }else{body3="<p class='plan-lock'>"+esc(lock)+"</p>";}
+  }else{body3="<p class='plan-lock'>"+esc(lock3)+"</p>";}
   html+=planCard(planLang("卡 3 · 退休账户","Card 3 · Retirement accounts","Tarjeta 3 · Cuentas de retiro"),planLang("退休账户（401(k) / IRA）","Retirement accounts (401(k) / IRA)","Cuentas de retiro (401(k) / IRA)"),planLang("退休账户还能补多少、够不够格？","How much room is left in my retirement accounts?","¿Cuánto espacio me queda en las cuentas de retiro?"),body3,planLang("只核对上限，不算省多少税、不给缴款顺序。","Only a limit check: no tax-savings estimate, no contribution-order advice.","Solo verifica límites: sin estimar ahorro fiscal ni recomendar el orden de aportes."));
 
   var body4;
@@ -1109,7 +1112,7 @@ function planHandoffHtml(s){
     "<p class='small' style='margin-top:16px'>"+esc(planLang("IRS 问起来的时候，这张纸就是当时的交接记录，不用各说各话。","If the IRS asks, this sheet is the handoff record from that moment — no need for two different accounts.","Si el IRS pregunta, esta hoja es el registro de entrega de ese momento: no hace falta que cada uno cuente algo distinto."))+"</p>"+
     "<p class='small' style='margin-top:16px'>"+esc(planLang("下面留给会计写","For your accountant to fill in below","Para que su contador escriba abajo"))+"</p>"+
     "<div class='handoff-lines'><div class='handoff-line'></div><div class='handoff-line'></div><div class='handoff-line'></div></div>"+
-    "<p class='small'>按 2026 税年口径 · 只标结构，不算税、不判资格，不构成建议</p>"+
+    "<p class='small'>"+esc(planLang("按 2026 税年口径 · 只标结构，不算税、不判资格","2026 tax-year wording · structure only: no tax calculation, no eligibility decision","Criterio del año fiscal 2026 · solo la estructura: sin calcular impuestos, sin decidir elegibilidad"))+"</p>"+
     "<p class='small'>https://szzxli.github.io/tax-packet-organizer/</p>";
 }
 // PLAN_CARDS_LOGIC_END
