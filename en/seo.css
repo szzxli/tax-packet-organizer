@@ -1,0 +1,30 @@
+*{box-sizing:border-box}
+body{margin:0;background:#f6f8fa;color:#1b2733;font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:#14507e}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px}
+header.site{background:#16324f;color:#fff;padding:14px 0}
+header.site .wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:18px;color:#fff;text-decoration:none;letter-spacing:.2px}
+header.site nav{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;margin-left:auto}
+header.site nav a{color:#cfe0f0;text-decoration:none}
+header.site nav a:hover{color:#fff;text-decoration:underline}
+main{padding:32px 0 8px}
+h1{font-size:32px;line-height:1.25;margin:0 0 14px;color:#16324f;letter-spacing:-.2px}
+.lede{font-size:17px;color:#39485a;margin:0 0 26px}
+h2{font-size:20px;margin:30px 0 8px;color:#16324f}
+p{margin:0 0 12px}
+ul{margin:8px 0 14px;padding-left:20px}
+li{margin:5px 0}
+.note{background:#fff;border:1px solid #dde5ec;border-left:4px solid #2a6db0;border-radius:8px;padding:12px 14px;margin:18px 0;font-size:14px;color:#39485a}
+.cta{background:#16324f;color:#fff;border-radius:12px;padding:20px;margin:30px 0}
+.cta p{margin:0 0 12px;color:#d7e4f0;font-size:14px}
+.cta a.btn{display:inline-block;background:#fff;color:#16324f;font-weight:700;text-decoration:none;padding:11px 18px;border-radius:9px}
+footer.site{border-top:1px solid #dde5ec;margin-top:26px;padding:22px 0 40px;font-size:13px;color:#5a6b7d}
+footer.site p{margin:0 0 10px}
+footer.site a{color:#14507e}
+.cards{display:grid;gap:14px;margin:22px 0}
+.card{display:block;background:#fff;border:1px solid #dde5ec;border-radius:12px;padding:16px 18px;text-decoration:none}
+.card strong{display:block;color:#16324f;font-size:17px;margin-bottom:4px}
+.card span{color:#4a5a6b;font-size:14px}
+.card:hover{border-color:#2a6db0}
+@media(max-width:600px){h1{font-size:25px}main{padding:22px 0 0}}
