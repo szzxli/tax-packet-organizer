@@ -1,0 +1,15 @@
+name = "tax-packet-api"
+main = "index.js"
+compatibility_date = "2026-11-04"
+
+# 生产绑定：D1（DB）与 Workers AI（AI）。
+# 7 个密钥不写在这里，用 `wrangler secret put` 管理，值不进仓库：
+#   PACKET_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, RESEND_API_KEY,
+#   FRONTEND_ORIGIN, EMAIL_PROVIDER, EMAIL_FROM
+[[d1_databases]]
+binding = "DB"
+database_name = "tax-packet-db"
+database_id = "284751a8-9dc3-486f-a539-0436e6f8551b"
+
+[ai]
+binding = "AI"
