@@ -42,7 +42,8 @@ const LABEL_401 = "今年 401(k) 缴了多少";
 const LABEL_IRA = "今年 IRA 缴了多少";
 const LABEL_AGI = "去年 1040 的 AGI（第 11 行左右）";
 const HELP_AGI = "去年的数，用来判断抵免方向。";
-const NOTE_C4 = "打印这一页给会计，他会少问你三次。";
+const NOTE_C4 = "打印这一页给会计。你交了什么、还缺什么，纸上都写着——他替你出面的时候，手里有东西。";
+const HANDOFF_IRS = "IRS 问起来的时候，这张纸就是当时的交接记录，不用各说各话。";
 const BTN_PRINT = "生成交接口径单（打印 / 存 PDF）";
 
 const empty = { status: "", income: "", marketplace: false, chgUp: false, chgSize: false, chgSame: false, chgUnsure: false, household: "", k401: "", ira: "", agi: "" };
@@ -214,9 +215,11 @@ check("卡 4：三列文案与说明书逐字一致", () => {
   assert.ok(out.includes("<th>政策</th>") && out.includes("<th>谁受影响</th>") && out.includes("<th>现在要做什么</th>"), "列名不对");
 });
 
-check("卡 4 下面有「打印这一页给会计」与交接口径单按钮", () => {
+check("卡 4 下面有新的会计定位句与交接口径单按钮，旧的「少问你三次」已删", () => {
   const out = sandbox.planCardsHtml(state({}), true);
   assert.ok(out.includes(NOTE_C4), out);
+  assert.ok(!out.includes("少问你三次"), "旧句仍在：" + out);
+  assert.ok(!html.includes("少问你三次"), "旧句仍在文件里");
   assert.ok(out.includes(BTN_PRINT), out);
   assert.ok(out.indexOf(NOTE_C4) > out.indexOf("卡 4 · 今年变了什么"), "提示句应在卡 4 之后");
 });
@@ -277,9 +280,14 @@ check("交接口径单：空输入写「未填」，不编数", () => {
   assert.ok(!/\$\d/.test(figures), "空输入不应出现金额：" + figures);
 });
 
-check("交接口径单：三行横线 + 「下面留给会计写」", () => {
+check("交接口径单：三行横线 + 「下面留给会计写」+ IRS 交接记录句", () => {
   const out = sandbox.planHandoffHtml(state({}));
   assert.ok(out.includes("下面留给会计写"), out);
+  assert.ok(out.includes(HANDOFF_IRS), "缺 IRS 交接记录句");
+  assert.ok(out.indexOf(HANDOFF_IRS) < out.indexOf("下面留给会计写"), "该句应在线之上");
+  for (const bad of ["免责", "我们担责", "审核通过", "保证", "不承担"]) {
+    assert.ok(!out.includes(bad), "出现不该有的表述：" + bad);
+  }
   assert.equal((out.match(/class='handoff-line'/g) || []).length, 3, "应有三行横线");
 });
 

@@ -1043,7 +1043,7 @@ function planCardsHtml(state,unlocked){
       "<tr><td>"+esc(planLang(PLAN_C4_POLICY_ZH,PLAN_C4_POLICY_EN,PLAN_C4_POLICY_ES))+"</td><td>"+esc(planLang(PLAN_C4_WHO_ZH,PLAN_C4_WHO_EN,PLAN_C4_WHO_ES))+"</td><td>"+esc(planLang(PLAN_C4_TODO_ZH,PLAN_C4_TODO_EN,PLAN_C4_TODO_ES))+"</td></tr></table>";
   }else{body4="<p class='plan-lock'>"+esc(lock)+"</p>";}
   html+=planCard(planLang("卡 4 · 今年变了什么","Card 4 · What changed this year","Tarjeta 4 · Qué cambió este año"),planLang("今年变了什么（政策）","What changed this year (policy)","Qué cambió este año (política)"),planLang("今年有什么新规矩是我不知道的？","What new rule should I know about?","¿Qué regla nueva debería conocer?"),body4,planLang("只列政策口径，不承诺金额、不推荐机构。","Policy wording only: no promised amount, no institution recommendations.","Solo el texto de la política: sin prometer montos ni recomendar instituciones."));
-  html+="<p class='small muted'>"+esc(planLang("打印这一页给会计，他会少问你三次。","Print this page for your accountant — he'll ask you three fewer questions.","Imprima esta página para su contador: le hará tres preguntas menos."))+"</p>"+
+  html+="<p class='small muted'>"+esc(planLang("打印这一页给会计。你交了什么、还缺什么，纸上都写着——他替你出面的时候，手里有东西。","Print this page for your accountant. What you handed over and what's still missing is all on it — so when he speaks for you, he has something in hand.","Imprima esta página para su contador. Lo que entregó y lo que todavía falta está todo en ella: cuando él hable por usted, tendrá algo en la mano."))+"</p>"+
     "<p><button type='button' id='btnPlanPrint'>"+esc(planLang("生成交接口径单（打印 / 存 PDF）","Generate the handoff sheet (print / save PDF)","Generar la hoja de entrega (imprimir / guardar PDF)"))+"</button></p>";
   return privacy+html;
 }
@@ -1106,6 +1106,7 @@ function planHandoffHtml(s){
     "<tr><td>"+esc(planLang("卡 2 · 补贴要不要重新核","Card 2 · Whether the subsidy needs re-checking","Tarjeta 2 · Si el subsidio hay que revisarlo"))+"</td><td>"+esc(c2)+"</td></tr>"+
     "<tr><td>"+esc(planLang("卡 3 · 退休还差多少","Card 3 · How much retirement room is left","Tarjeta 3 · Cuánto falta en el retiro"))+"</td><td>"+esc(c3)+"</td></tr>"+
     "<tr><td>"+esc(planLang("卡 4 · 今年新规","Card 4 · This year's new rule","Tarjeta 4 · La regla nueva de este año"))+"</td><td>"+esc(c4)+"</td></tr></table>"+
+    "<p class='small' style='margin-top:16px'>"+esc(planLang("IRS 问起来的时候，这张纸就是当时的交接记录，不用各说各话。","If the IRS asks, this sheet is the handoff record from that moment — no need for two different accounts.","Si el IRS pregunta, esta hoja es el registro de entrega de ese momento: no hace falta que cada uno cuente algo distinto."))+"</p>"+
     "<p class='small' style='margin-top:16px'>"+esc(planLang("下面留给会计写","For your accountant to fill in below","Para que su contador escriba abajo"))+"</p>"+
     "<div class='handoff-lines'><div class='handoff-line'></div><div class='handoff-line'></div><div class='handoff-line'></div></div>"+
     "<p class='small'>按 2026 税年口径 · 只标结构，不算税、不判资格，不构成建议</p>"+
