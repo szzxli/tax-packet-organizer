@@ -308,16 +308,16 @@ check("交接口径单：三行横线 + 「下面留给会计写」+ IRS 交接�
   assert.equal((out.match(/class='handoff-line'/g) || []).length, 3, "应有三行横线");
 });
 
-check("交接口径单：页脚只留前两句（删「不构成建议」）+ github.io 落款，无 tax.ucplan.org", () => {
+check("交接口径单：页脚只留前两句（删「不构成建议」）+ 新域落款，无老域", () => {
   const out = sandbox.planHandoffHtml(state({}));
   assert.ok(out.includes("按 2026 税年口径 · 只标结构，不算税、不判资格"), out);
   assert.ok(!out.includes("不构成建议"), "打印页不应再出现「不构成建议」：" + out);
   for (const banned of ["免责", "我们担责", "审核通过"]) {
     assert.ok(!out.includes(banned), "打印页出现不该有的表述：" + banned);
   }
-  assert.ok(out.includes("https://szzxli.github.io/tax-packet-organizer/"), out);
-  assert.ok(!out.includes("tax.ucplan.org"), out);
-  assert.ok(!html.includes("tax.ucplan.org"), "formal.html 不应出现 tax.ucplan.org");
+  assert.ok(out.includes("https://tax.ucplan.org/"), out);
+  assert.ok(!out.includes("szzxli.github.io"), out);
+  assert.ok(!html.includes("szzxli.github.io"), "formal.html 不应出现老域 szzxli.github.io");
 });
 
 check("不出现算税额、退税额、调缴款建议", () => {
@@ -387,7 +387,7 @@ check("三语：卡 2 三个选项与三个辅助句都有英文与西语", () =
     const up = sandbox.plan2Result(state({ marketplace: true, chgUp: true }));
     assert.ok(!/[\u4e00-\u9fa5]/.test(up), lang + " 卡 2 结论夹中文：" + up);
     const sheet = sandbox.planHandoffHtml(state({}));
-    assert.ok(sheet.includes("https://szzxli.github.io/tax-packet-organizer/"), lang + " 落款丢网址");
+    assert.ok(sheet.includes("https://tax.ucplan.org/"), lang + " 落款丢网址");
   }
   sandbox.LANG = "zh";
 });

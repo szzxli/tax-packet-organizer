@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const BASE = "https://szzxli.github.io/tax-packet-organizer";
+const BASE = "https://tax.ucplan.org";
 const CJK = /[\u4e00-\u9fff]/;
 
 const DISCLAIMER = `"Ready to hand over" means the documents are complete enough to give your preparer for review. It does not mean the return is correct or ready to file. We check structure only: is the form there, are the numbers filled in, do the counts match, is there a receipt. We do not verify the numbers, compute tax, or judge eligibility.`;

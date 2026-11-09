@@ -22,9 +22,14 @@ function json(data, status = 200, extra = {}) {
     headers: { "content-type": "application/json", ...extra },
   });
 }
+// 站点主域固定在这里：付款回流地址不跟 FRONTEND_ORIGIN 走，避免旧密钥把用户送回老域。
+const SITE = "https://tax.ucplan.org";
+// 老域过渡期仍收：GitHub Pages 对老路径是 301，浏览器发来的 Origin 可能还是它。
+const LEGACY_SITE = "https://szzxli.github.io";
 function corsHeaders(req, env) {
   const origin = req.headers.get("Origin") || "";
-  const allowed = [env.FRONTEND_ORIGIN || "https://szzxli.github.io", "http://localhost:8787"];
+  const allowed = [SITE, LEGACY_SITE, "http://localhost:8787"];
+  if (env.FRONTEND_ORIGIN && !allowed.includes(env.FRONTEND_ORIGIN)) allowed.push(env.FRONTEND_ORIGIN);
   if (allowed.includes(origin)) return { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Headers": "content-type, authorization", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS" };
   return {};
 }
@@ -267,7 +272,7 @@ export default {
       return bad("subscription_closed", 503);
     }
 
-    if (path === "/api/health" && req.method === "GET") return ok({ version: "tpo-api-3", subscription_open: SUBSCRIPTION_OPEN });
+    if (path === "/api/health" && req.method === "GET") return ok({ version: "tpo-api-4", subscription_open: SUBSCRIPTION_OPEN });
 
     // 套餐公开可读：价格、周期、是否自动续费只有这一个来源。
     if (path === "/api/plans" && req.method === "GET") {
@@ -478,8 +483,8 @@ export default {
         "line_items[0][price_data][product_data][name]": plan.name,
         "line_items[0][price_data][unit_amount]": String(plan.price_cents),
         "line_items[0][quantity]": "1",
-        success_url: (env.FRONTEND_ORIGIN || "https://szzxli.github.io") + "/tax-packet-organizer/formal.html?paid=1",
-        cancel_url: (env.FRONTEND_ORIGIN || "https://szzxli.github.io") + "/tax-packet-organizer/formal.html?canceled=1",
+        success_url: SITE + "/formal.html?paid=1",
+        cancel_url: SITE + "/formal.html?canceled=1",
         "metadata[account_id]": me.id,
         "metadata[plan_code]": plan.code,
         "metadata[packs]": String(packs),
