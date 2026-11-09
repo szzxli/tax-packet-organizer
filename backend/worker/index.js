@@ -407,7 +407,8 @@ export default {
       const origin = req.headers.get("Origin") || "";
       if (origin && !cors["Access-Control-Allow-Origin"]) return bad("bad_origin", 403);
       const declared = parseInt(req.headers.get("content-length") || "0", 10) || 0;
-      if (declared > 32768) return bad("too_large", 413);
+      // 超长请求按 400 退回（不是 413）：前端不读这个响应，只要一个「整批不收」的明确结论。
+      if (declared > 32768) return bad("too_large", 400);
       const b = await readJson(req);
       if (b === null) return bad("bad_json");
       const list = Array.isArray(b) ? b : (Array.isArray(b && b.events) ? b.events : null);
