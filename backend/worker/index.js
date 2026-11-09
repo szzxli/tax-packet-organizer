@@ -28,7 +28,9 @@ const SITE = "https://tax.ucplan.org";
 const LEGACY_SITE = "https://szzxli.github.io";
 function corsHeaders(req, env) {
   const origin = req.headers.get("Origin") || "";
-  const allowed = [SITE, LEGACY_SITE, "http://localhost:8787"];
+  // 老 GitHub 链接 301 到的是 http://tax.ucplan.org（边缘没升级成 https），
+  // 那个 http 源必须放行，否则论坛来的访问全都 403、一个事件都收不到。
+  const allowed = [SITE, "http://tax.ucplan.org", LEGACY_SITE, "http://localhost:8787"];
   if (env.FRONTEND_ORIGIN && !allowed.includes(env.FRONTEND_ORIGIN)) allowed.push(env.FRONTEND_ORIGIN);
   if (allowed.includes(origin)) return { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Headers": "content-type, authorization", "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS" };
   return {};

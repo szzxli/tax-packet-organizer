@@ -793,7 +793,10 @@ function evFlush(){
 function evPush(name){
   if(!EV_NAMES[name])return;
   try{
-    EV_Q.push({name:name,ts:Date.now(),utm_source:SRC.utm_source||"",utm_medium:SRC.utm_medium||"",utm_campaign:SRC.utm_campaign||"",path:location.pathname,device:flowDev(),anon:String(anonId()).slice(0,16)});
+    // 论坛那篇只带 ?ref=moonbbs：ref 当渠道，medium 记 ref。显式 utm 优先，绝不覆盖。
+    var src=SRC.utm_source||"",med=SRC.utm_medium||"";
+    if(!src&&SRC.ref){src=SRC.ref;med="ref";}
+    EV_Q.push({name:name,ts:Date.now(),utm_source:src,utm_medium:med,utm_campaign:SRC.utm_campaign||"",path:location.pathname,device:flowDev(),anon:String(anonId()).slice(0,16)});
     if(EV_Q.length>=8){evFlush();return;}
     if(!EV_TIMER)EV_TIMER=setTimeout(function(){EV_TIMER=0;evFlush();},3000);
   }catch(e){}
