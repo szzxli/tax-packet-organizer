@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 验收：订阅页四张规划卡 + 交接口径单，文案与 11-08 逐字稿一致。
+// 验收：订阅页三张规划卡（补贴免费）+ 交接口径单，文案与 11-09 定稿一致。
 // 直接抽取 formal.html 里的 PLAN_CARDS_LOGIC 块执行，测的就是上线的那份代码。
 import fs from "node:fs";
 import path from "node:path";
@@ -232,7 +232,7 @@ check("未登录：卡 2 有输入与三个选项，卡 1/3/4 只出引导", () 
   assert.ok(!out.includes("id='planStatus'"), "卡 1 保持季票");
   assert.ok(!out.includes("id='plan401'"), "卡 3 保持季票");
   assert.ok(out.includes("btnPlanClaim"), "缺领取按钮");
-  assert.equal((out.match(/class='plan-tag'/g) || []).length, 4, "应仍是四张卡");
+  assert.equal((out.match(/class='plan-tag'/g) || []).length, 4, "页面上仍是四张卡（补贴一张免费）");
   assert.equal((out.match(/class='plan-lock'/g) || []).length, 3, "应只锁三张");
 });
 
@@ -279,7 +279,7 @@ check("交接口径单：去年/今年两栏分列，家庭人数在今年的数
   assert.ok(out.includes("家庭人数：3"), out);
 });
 
-check("交接口径单：四张卡各一行结论", () => {
+check("交接口径单：每张卡一行结论", () => {
   const out = sandbox.planHandoffHtml(state({ income: "150000", status: "mfj", k401: "10000", marketplace: true, chgUp: true }));
   for (const s of ["卡 1 · 位置（税档）", "卡 2 · 补贴要不要重新核", "卡 3 · 退休还差多少", "卡 4 · 今年新规"]) {
     assert.ok(out.includes(s), "缺 " + s);
@@ -293,7 +293,7 @@ check("交接口径单：四张卡各一行结论", () => {
 check("交接口径单：空输入写「未填」，不编数", () => {
   const out = sandbox.planHandoffHtml(state({}));
   assert.ok(out.includes("未填"), out);
-  const figures = out.slice(out.indexOf("我填的数"), out.indexOf("四张卡各一行结论"));
+  const figures = out.slice(out.indexOf("我填的数"), out.indexOf("每张卡一行结论"));
   assert.ok(!/\$\d/.test(figures), "空输入不应出现金额：" + figures);
 });
 
@@ -343,9 +343,13 @@ check("页面级：单列“免费整理与导出永久免费”", () => {
   assert.ok(html.includes("<p class=\"notice ok\"><b>免费整理与导出永久免费</b></p>"), "缺单列一行");
 });
 
-check("页面级：季票口径改为“四张卡 + 总核对”，旧的“只做两件事”已删", () => {
-  assert.ok(html.includes("<h3>季票给你四张卡，加上交付前总核对</h3>"), "缺新口径");
-  assert.ok(!html.includes("<h3>季票只做两件事</h3>"), "旧口径仍在页面上");
+check("页面级：季票口径统一为“三张规划卡 + 两件事”，旧口径已删", () => {
+  assert.ok(html.includes("<h3>季票给三张规划卡，再做两件事</h3>"), "缺新口径");
+  for (const old of ["<h3>季票只做两件事</h3>", "<h3>季票只做三件事</h3>", "四张", "全包核对", "自动提醒未接", "影响你的清单时通知你"]) {
+    assert.ok(!html.includes(old), "旧口径仍在页面上：" + old);
+  }
+  assert.ok(html.split("三张规划卡").length - 1 >= 3, "“三张规划卡”出现次数不足");
+  assert.ok(html.split("目前只在本页展示").length - 1 >= 6, "“目前只在本页展示”出现次数不足");
 });
 
 check("页面级：总核对标注“现在就能出结果”", () => {
@@ -364,13 +368,13 @@ check("i18n：新增静态文案均有英文与西语", () => {
   const i18n = vm.runInNewContext("(" + src + ")", {});
   const keys = [
     "免费整理与导出永久免费",
-    "季票给你四张卡，加上交付前总核对",
+    "季票给三张规划卡，再做两件事",
     "交付前总核对 · 现在就能出结果",
     "规划卡：补贴（1095-A / 8962）",
     "规划卡：税档 / 退休 / 政策",
-    "基础整理和导出永久免费；季票先给你四张卡看清位置，再在交付前核一遍，并全年盯住变化。",
-    "四张规划卡",
-    "税档、补贴、退休、政策；只标结构，不算税。",
+    "基础整理和导出永久免费；季票多给三张规划卡看清位置，交付前把整包核一遍，全年把时点盯住。",
+    "三张规划卡",
+    "税档、退休、政策；只标结构，不算税。医保补贴那张卡所有人都能用，不用领季票。",
     "可交 / 不可交 + 缺项表，可重跑，现在就能出结果。",
   ];
   for (const k of keys) {
