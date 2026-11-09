@@ -183,7 +183,7 @@ check("西语缺项表：同结构，无汉字", () => {
   sb.unresolvedRows = () => [{ form: "W-2", payer: "Acme", status: "not-started" }];
   const out = sb.missingTableHtml();
   const heads = [...out.matchAll(/<th>([^<]*)<\/th>/g)].map((m) => m[1]);
-  assert.equal(heads.length, 5);
+  assert.deepEqual(heads, ["Formulario", "Pagador", "Estado", "Qué falta", "Dónde obtenerlo"]);
   for (const c of [...out.matchAll(/<td>([^<]*)<\/td>/g)].map((m) => m[1])) {
     assert.ok(!CJK.test(c), "西语单元格含中文：" + c);
   }

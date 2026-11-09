@@ -3094,8 +3094,8 @@ function missingTableHtml(){
   if(LANG==="zh"){
     return "<table><tr><th>表</th><th>付款方</th><th>缺什么</th></tr>"+miss.map(function(it){return "<tr><td>"+esc(rowTitle(it))+"</td><td>"+esc(it.payer||"—")+"</td><td>"+esc(missingWhat(it))+"</td></tr>";}).join("")+"</table>";
   }
-  // 英文五列由市场定稿，逐字用；西语同结构。
-  return "<table><tr><th>Form</th><th>Payer</th><th>Status</th><th>What's missing</th><th>Where to get it</th></tr>"
+  // 英文五列由市场定稿，逐字用；西语同结构，表头按语言。
+  return "<table><tr><th>"+tr("表","Form","Formulario")+"</th><th>"+tr("付款方","Payer","Pagador")+"</th><th>"+tr("状态","Status","Estado")+"</th><th>"+tr("缺什么","What's missing","Qué falta")+"</th><th>"+tr("去哪拿 / 怎么补","Where to get it","Dónde obtenerlo")+"</th></tr>"
     +miss.map(function(it){return "<tr><td>"+esc(exRowTitle(it))+"</td><td>"+esc(exPayer(it.payer)||"—")+"</td><td>"+esc(statusText(it.status))+"</td><td>"+esc(missingWhat(it))+"</td><td>"+esc(whereFrom(it))+"</td></tr>";}).join("")
     +"</table>";
 }
