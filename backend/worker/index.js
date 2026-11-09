@@ -272,7 +272,7 @@ export default {
       return bad("subscription_closed", 503);
     }
 
-    if (path === "/api/health" && req.method === "GET") return ok({ version: "tpo-api-4", subscription_open: SUBSCRIPTION_OPEN });
+    if (path === "/api/health" && req.method === "GET") return ok({ version: "tpo-api-5", subscription_open: SUBSCRIPTION_OPEN });
 
     // 套餐公开可读：价格、周期、是否自动续费只有这一个来源。
     if (path === "/api/plans" && req.method === "GET") {
@@ -397,6 +397,48 @@ export default {
       if (!clean.length) return bad("ai_bad_response", 502);
       await env.DB.prepare("INSERT INTO ai_rate (ip_hash, created_at) VALUES (?,?)").bind(ipHash, Date.now()).run();
       return ok({ items: clean });
+    }
+
+    // 第一方埋点：只收页面动作，用来回答「人从哪来、有没有开始整理、有没有导出、有没有领季票」。
+    // 放在鉴权之前——推广期的主要人群是未登录访客，401 会把到达数全部丢掉。
+    // 隐私：不读 IP、不读 UA、不写 cookie、不收邮箱/账号/文件内容/金额；anon 只留随机 ID 前 16 位。
+    // 校验从严、整批退回：任一条不合格就 400 且一行不写，避免半批落库更难对账。
+    if (path === "/api/events" && req.method === "POST") {
+      const origin = req.headers.get("Origin") || "";
+      if (origin && !cors["Access-Control-Allow-Origin"]) return bad("bad_origin", 403);
+      const declared = parseInt(req.headers.get("content-length") || "0", 10) || 0;
+      if (declared > 32768) return bad("too_large", 413);
+      const b = await readJson(req);
+      if (b === null) return bad("bad_json");
+      const list = Array.isArray(b) ? b : (Array.isArray(b && b.events) ? b.events : null);
+      if (!list) return bad("bad_events");
+      if (list.length < 1 || list.length > 20) return bad("bad_batch");
+      const NAMES = ["open", "generate", "save", "export", "export_done", "pass_claimed", "flow-step1", "flow-step2", "flow-step3", "flow-step4", "flow-step5"];
+      const now = Date.now();
+      const text = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+      const rows = [];
+      for (const it of list) {
+        if (!it || typeof it !== "object" || Array.isArray(it)) return bad("bad_event");
+        if (typeof it.name !== "string" || !NAMES.includes(it.name)) return bad("bad_name");
+        const ts = Number(it.ts);
+        rows.push([
+          Number.isFinite(ts) && ts > 1e12 && ts < now + 3600000 ? Math.trunc(ts) : now,
+          it.name,
+          text(it.utm_source, 64),
+          text(it.utm_medium, 64),
+          text(it.utm_campaign, 64),
+          text(it.path, 200),
+          text(it.device, 20),
+          text(it.anon, 64).slice(0, 16),
+        ]);
+      }
+      try {
+        await env.DB.batch(rows.map((r) => env.DB.prepare("INSERT INTO events (ts, name, utm_source, utm_medium, utm_campaign, path, device, anon) VALUES (?,?,?,?,?,?,?,?)").bind(...r)));
+      } catch {
+        // 埋点写失败不向外抛细节：前端本来就不等这个响应，报错只会把噪音留在日志里。
+        return bad("write_failed", 500);
+      }
+      return ok({ stored: rows.length });
     }
 
     // 以下接口需要登录（Stripe 回调除外：它用 HMAC 签名验签，不带登录令牌）。

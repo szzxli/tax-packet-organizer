@@ -773,6 +773,29 @@ function track(name,props){
     function hit(k){try{fetch(COUNT_BASE+"/"+encodeURIComponent(k),{mode:"no-cors",keepalive:true}).catch(function(){});}catch(e){}}
     hit(key);
     if(SRC.ref||SRC.firm)hit(key+"__"+(SRC.ref||"-")+"__"+(SRC.firm||"-"));
+    evPush(name);
+  }catch(e){}
+}
+// 服务端落库：攒够 8 条或 3 秒发一次，页面要走时用 keepalive 再补一发。
+// 只发服务端白名单里的名字（与 Worker 的 NAMES 一致）；不在表里的动作仍只落本机与 abacus 计数。
+// 同站、无 cookie（credentials omit）、失败静默：埋点坏了也不许影响页面。
+var EV_NAMES={open:1,generate:1,save:1,export:1,export_done:1,pass_claimed:1,"flow-step1":1,"flow-step2":1,"flow-step3":1,"flow-step4":1,"flow-step5":1};
+var EV_Q=[],EV_TIMER=0;
+function evBase(){try{if(typeof TpoApi!=="undefined"&&TpoApi.base)return TpoApi.base;}catch(e){}return "https://tax-packet-api.szzxli711.workers.dev";}
+function evFlush(){
+  if(!EV_Q.length)return;
+  var batch=EV_Q.slice(0,20);EV_Q=EV_Q.slice(batch.length);
+  try{
+    // text/plain 是简单请求：不发预检，关页面时也少一次往返。
+    fetch(evBase()+"/api/events",{method:"POST",mode:"cors",credentials:"omit",keepalive:true,headers:{"content-type":"text/plain;charset=UTF-8"},body:JSON.stringify({events:batch})}).catch(function(){});
+  }catch(e){}
+}
+function evPush(name){
+  if(!EV_NAMES[name])return;
+  try{
+    EV_Q.push({name:name,ts:Date.now(),utm_source:SRC.utm_source||"",utm_medium:SRC.utm_medium||"",utm_campaign:SRC.utm_campaign||"",path:location.pathname,device:flowDev(),anon:String(anonId()).slice(0,16)});
+    if(EV_Q.length>=8){evFlush();return;}
+    if(!EV_TIMER)EV_TIMER=setTimeout(function(){EV_TIMER=0;evFlush();},3000);
   }catch(e){}
 }
 var FLOW_T0=0,FLOW_STEPS={},FLOW_EXPORTED=false,FLOW_ENDED=false,FLOW_HIDDEN_TIMER=null;
@@ -786,6 +809,7 @@ function flowMark(n){
   if(FLOW_STEPS[n])return;
   FLOW_STEPS[n]=1;flowSave();
   flowHit("flow-step"+n+"-"+flowDev());
+  evPush("flow-step"+n);
   if(n===1)flowHit("flow-start-"+flowDev());
 }
 function flowStart(){
@@ -813,8 +837,10 @@ function flowEnd(){
 }
 try{
   addEventListener("pagehide",flowEnd);
+  // 离开/切走时把攒着的事件补发出去（keepalive，页面关了也走得掉）。
+  addEventListener("pagehide",evFlush);
   document.addEventListener("visibilitychange",function(){
-    if(document.visibilityState==="hidden"){FLOW_HIDDEN_TIMER=setTimeout(flowEnd,30000);}
+    if(document.visibilityState==="hidden"){evFlush();FLOW_HIDDEN_TIMER=setTimeout(flowEnd,30000);}
     else{if(FLOW_HIDDEN_TIMER){clearTimeout(FLOW_HIDDEN_TIMER);FLOW_HIDDEN_TIMER=null;}}
   });
 }catch(e){}
