@@ -123,8 +123,14 @@ check("无参数 + 中文浏览器 → 中文", () => {
   assert.equal(run({ nav: "zh-CN" }).lang, "zh");
 });
 
-check("无参数 + 其他语言（fr）→ 回落中文", () => {
-  assert.equal(run({ nav: "fr-FR" }).lang, "zh");
+check("无参数 + 其他语言（fr）→ 回落英文（默认语言是英文）", () => {
+  const r = run({ nav: "fr-FR" });
+  assert.equal(r.lang, "en");
+  assert.ok(!CJK.test(r.title));
+});
+
+check("无参数 + 读不到浏览器语言 → 英文", () => {
+  assert.equal(run({ nav: "" }).lang, "en");
 });
 
 check("?lang 优先于本地记忆", () => {

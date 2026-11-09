@@ -19,6 +19,7 @@ const ORGANIZER = `${BASE}/formal.html?lang=en`;
 const PAGES = [
   {
     slug: "tax-document-checklist",
+    link: "Tax document checklist",
     title: "Tax Document Checklist: What You Need Before You File",
     desc: "The documents most people need before filing, in one checklist: last year's return, this year's income forms, what changed, and the proof behind each number.",
     h1: "Tax Document Checklist: What You Need Before You File",
@@ -64,6 +65,7 @@ const PAGES = [
   },
   {
     slug: "form-1095-a-and-8962",
+    link: "1095-A and 8962",
     title: "Form 1095-A and Form 8962: How They Pair Up",
     desc: "Form 1095-A comes from the health insurance Marketplace; Form 8962 reconciles the premium tax credit. Why they travel together, and what to do when one is missing.",
     h1: "Form 1095-A and Form 8962: How They Pair Up",
@@ -105,6 +107,7 @@ const PAGES = [
   },
   {
     slug: "1099-k-venmo-paypal-ebay",
+    link: "1099-K from payment platforms",
     title: "1099-K From Venmo, PayPal or eBay: What to Do With It",
     desc: "A 1099-K reports gross payment volume, not profit. What the form includes, what it leaves out, and which records to keep so the total makes sense to your preparer.",
     h1: "1099-K From Venmo, PayPal or eBay: What to Do With It",
@@ -143,6 +146,7 @@ const PAGES = [
   },
   {
     slug: "what-to-bring-to-your-cpa",
+    link: "CPA intake sheet",
     title: "What to Bring to Your CPA: A One-Page Intake Sheet",
     desc: "The one-page intake sheet a preparer can read in two minutes: identity, last year's return, income by source, what changed this year, and the questions you want answered.",
     h1: "What to Bring to Your CPA: A One-Page Intake Sheet",
@@ -181,13 +185,6 @@ const PAGES = [
   },
 ];
 
-const INDEX = {
-  title: "Tax document guides for US filers | ClearToFile",
-  desc: "Short, practical guides on tax documents: the pre-filing checklist, Form 1095-A and 8962, 1099-K from payment platforms, and the one-page sheet to bring to your CPA.",
-  h1: "Tax documents, in plain order",
-  lede: "Four guides, each answering one question about the paper you need before you file. No tax calculations, no eligibility calls — just what to gather and what is usually missing.",
-};
-
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 const CSS = `*{box-sizing:border-box}
@@ -219,12 +216,11 @@ footer.site a{color:#14507e}
 .card strong{display:block;color:#16324f;font-size:17px;margin-bottom:4px}
 .card span{color:#4a5a6b;font-size:14px}
 .card:hover{border-color:#2a6db0}
+.more{color:#5a6b7d}
+.more a{white-space:nowrap}
 @media(max-width:600px){h1{font-size:25px}main{padding:22px 0 0}}`;
 
-function head({ title, desc, canonical, alternates, cssPath }) {
-  const alts = alternates
-    .map((a) => `<link rel="alternate" hreflang="${a.lang}" href="${a.href}">`)
-    .join("\n");
+function head({ title, desc, canonical, cssPath }) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -233,7 +229,6 @@ function head({ title, desc, canonical, alternates, cssPath }) {
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="${canonical}">
-${alts}
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="ClearToFile">
 <meta property="og:title" content="${esc(title)}">
@@ -245,21 +240,22 @@ ${alts}
 </head>
 <body>
 <header class="site"><div class="wrap">
-<a class="brand" href="./">ClearToFile</a>
+<a class="brand" href="${ORGANIZER}">ClearToFile</a>
 <nav>
-<a href="./">All guides</a>
 <a href="${ORGANIZER}">Open the organizer</a>
-<a href="../formal.html?lang=zh" hreflang="zh-CN" lang="zh-CN">中文</a>
+<a href="./formal.html?lang=zh" lang="zh-CN">中文</a>
 </nav>
 </div></header>
 <main class="wrap">`;
 }
 
-function foot() {
+function foot(others) {
+  const list = others.map((p) => `<a href="./${p.slug}.html">${esc(p.link)}</a>`).join(" · ");
   return `</main>
 <footer class="site"><div class="wrap">
 <p>${DISCLAIMER}</p>
-<p>ClearToFile organizes documents into a checklist. It does not calculate tax, file a return, or give tax advice. <a href="${ORGANIZER}">Open the organizer</a> · <a href="./">All guides</a></p>
+<p class="more">More guides: ${list}</p>
+<p>ClearToFile organizes documents into a checklist. It does not calculate tax, file a return, or give tax advice. <a href="${ORGANIZER}">Open the organizer</a></p>
 </div></footer>
 </body>
 </html>
@@ -267,11 +263,7 @@ function foot() {
 }
 
 function renderPage(p) {
-  const canonical = `${BASE}/en/${p.slug}.html`;
-  const alternates = [
-    { lang: "en", href: canonical },
-    { lang: "x-default", href: canonical },
-  ];
+  const canonical = `${BASE}/${p.slug}.html`;
   const body = p.blocks
     .map((b) => {
       const list = b.list ? `\n<ul>\n${b.list.map((li) => `<li>${esc(li)}</li>`).join("\n")}\n</ul>` : "";
@@ -281,7 +273,8 @@ function renderPage(p) {
     .join("\n\n");
   const scope = p.scope ? `\n<p class="note">${esc(p.scope)}</p>\n` : "";
   const ref = `seo-${p.slug}`;
-  return `${head({ title: p.title, desc: p.desc, canonical, alternates, cssPath: "./seo.css" })}
+  const others = PAGES.filter((x) => x.slug !== p.slug);
+  return `${head({ title: p.title, desc: p.desc, canonical, cssPath: "./seo.css" })}
 <h1>${esc(p.h1)}</h1>
 <p class="lede">${esc(p.lede)}</p>
 
@@ -291,29 +284,7 @@ ${scope}
 <p>${esc(p.cta.note)}</p>
 <a class="btn" href="${ORGANIZER}&amp;ref=${ref}">${esc(p.cta.label)}</a>
 </div>
-${foot()}`;
-}
-
-function renderIndex() {
-  const canonical = `${BASE}/en/`;
-  const alternates = [
-    { lang: "en", href: canonical },
-    { lang: "x-default", href: canonical },
-  ];
-  const cards = PAGES.map(
-    (p) => `<a class="card" href="./${p.slug}.html"><strong>${esc(p.title)}</strong><span>${esc(p.desc)}</span></a>`
-  ).join("\n");
-  return `${head({ title: INDEX.title, desc: INDEX.desc, canonical, alternates, cssPath: "./seo.css" })}
-<h1>${esc(INDEX.h1)}</h1>
-<p class="lede">${esc(INDEX.lede)}</p>
-<div class="cards">
-${cards}
-</div>
-<div class="cta">
-<p>Build this year's document checklist on your device, free, no login. Export it as a printable one-pager for your preparer.</p>
-<a class="btn" href="${ORGANIZER}&amp;ref=seo-index">Open the organizer</a>
-</div>
-${foot()}`;
+${foot(others)}`;
 }
 
 function write(file, content) {
@@ -323,11 +294,10 @@ function write(file, content) {
   console.log("wrote " + file);
 }
 
-write("en/seo.css", CSS);
-write("en/index.html", renderIndex());
-for (const p of PAGES) write(`en/${p.slug}.html`, renderPage(p));
+write("seo.css", CSS);
+for (const p of PAGES) write(`${p.slug}.html`, renderPage(p));
 
-const urls = [`${BASE}/formal.html`, `${BASE}/en/`, ...PAGES.map((p) => `${BASE}/en/${p.slug}.html`)];
+const urls = [`${BASE}/formal.html`, ...PAGES.map((p) => `${BASE}/${p.slug}.html`)];
 write(
   "sitemap.xml",
   `<?xml version="1.0" encoding="UTF-8"?>
@@ -345,4 +315,4 @@ Sitemap: ${BASE}/sitemap.xml
 `
 );
 
-console.log(`\n${PAGES.length} guides + index, ${urls.length} sitemap URLs`);
+console.log(`\n${PAGES.length} guides, ${urls.length} sitemap URLs`);

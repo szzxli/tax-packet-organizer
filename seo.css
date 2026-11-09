@@ -27,4 +27,6 @@ footer.site a{color:#14507e}
 .card strong{display:block;color:#16324f;font-size:17px;margin-bottom:4px}
 .card span{color:#4a5a6b;font-size:14px}
 .card:hover{border-color:#2a6db0}
+.more{color:#5a6b7d}
+.more a{white-space:nowrap}
 @media(max-width:600px){h1{font-size:25px}main{padding:22px 0 0}}

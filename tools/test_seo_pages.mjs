@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-// 验收：/en/ 搜索页的收录要件（hreflang / canonical / sitemap / 口径 / 字数）。
-// 跑完顺手检查 hreflang 指向的每个 URL 都在仓库里真实存在 —— 指向 404 的 hreflang 会被判错。
+// 验收：根路径下的四篇英文搜索页（单语页面，不写 hreflang）。
 import fs from "node:fs";
 import path from "node:path";
 import assert from "node:assert/strict";
@@ -44,16 +43,22 @@ const visibleText = (html) =>
     .replace(/\s+/g, " ")
     .trim();
 
-check("四页 + 索引页 + 样式 + sitemap + robots 都在", () => {
-  for (const s of SLUGS) assert.ok(fs.existsSync(path.join(root, `en/${s}.html`)), `缺 en/${s}.html`);
-  for (const f of ["en/index.html", "en/seo.css", "sitemap.xml", "robots.txt"]) {
+check("四篇在根路径，样式、sitemap、robots 都在", () => {
+  for (const s of SLUGS) assert.ok(fs.existsSync(path.join(root, `${s}.html`)), `缺 ${s}.html`);
+  for (const f of ["seo.css", "sitemap.xml", "robots.txt"]) {
     assert.ok(fs.existsSync(path.join(root, f)), `缺 ${f}`);
   }
 });
 
+check("不再有语言目录与 hreflang", () => {
+  assert.ok(!fs.existsSync(path.join(root, "en")), "en/ 目录应已删除");
+  assert.ok(!fs.existsSync(path.join(root, "es")), "es/ 目录不该存在");
+  for (const s of SLUGS) assert.ok(!/hreflang/i.test(read(`${s}.html`)), `${s} 里还有 hreflang`);
+});
+
 for (const slug of SLUGS) {
-  const html = read(`en/${slug}.html`);
-  const url = `${BASE}/en/${slug}.html`;
+  const html = read(`${slug}.html`);
+  const url = `${BASE}/${slug}.html`;
   const body = visibleText(html);
 
   check(`${slug}: lang=en、单一 canonical 指向自己`, () => {
@@ -61,13 +66,6 @@ for (const slug of SLUGS) {
     const canon = [...html.matchAll(/<link rel="canonical" href="([^"]+)">/g)].map((m) => m[1]);
     assert.equal(canon.length, 1, "canonical 只能有一条");
     assert.equal(canon[0], url);
-  });
-
-  check(`${slug}: hreflang 自指 + x-default，且不含不存在的语言版本`, () => {
-    const alts = [...html.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)">/g)];
-    const langs = alts.map((m) => m[1]).sort();
-    assert.deepEqual(langs, ["en", "x-default"]);
-    for (const [, , href] of alts) assert.equal(href, url);
   });
 
   check(`${slug}: 页脚免责逐字一致`, () => {
@@ -95,41 +93,46 @@ for (const slug of SLUGS) {
 
 check("英文页不出现全国覆盖的说法，州税口径正确", () => {
   for (const slug of SLUGS) {
-    const html = read(`en/${slug}.html`);
+    const html = read(`${slug}.html`);
     assert.ok(!/nationwide/i.test(visibleText(html)), `${slug} 出现 nationwide`);
     assert.ok(!/\$\d/.test(visibleText(html)), `${slug} 出现金额`);
   }
-  assert.ok(/covers the 10 most populous states/i.test(read("en/tax-document-checklist.html")) || true);
-  assert.match(read("en/tax-document-checklist.html"), /state items for your state aren't covered in this version/);
+  assert.match(read("tax-document-checklist.html"), /state items for your state aren't covered in this version/);
 });
 
-check("sitemap 覆盖中文入口 + 英文四页 + 索引，且 URL 全部存在", () => {
+check("sitemap 只列中文入口与四篇英文页，URL 都有对应文件", () => {
   const xml = read("sitemap.xml");
   const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  assert.equal(locs.length, 6, `应有 6 条，实际 ${locs.length}`);
-  for (const u of locs) {
-    const rel = u.replace(BASE + "/", "");
-    const file = rel.endsWith("/") ? `${rel}index.html` : rel;
-    assert.ok(fs.existsSync(path.join(root, file)), `sitemap 里的 ${u} 在仓库里没有对应文件`);
-  }
-  assert.ok(locs.includes(`${BASE}/en/`));
-  for (const s of SLUGS) assert.ok(locs.includes(`${BASE}/en/${s}.html`));
+  assert.equal(locs.length, 5, `应有 5 条，实际 ${locs.length}`);
   assert.ok(locs.includes(`${BASE}/formal.html`));
+  for (const s of SLUGS) assert.ok(locs.includes(`${BASE}/${s}.html`), `sitemap 缺 ${s}`);
+  for (const u of locs) {
+    const file = u.replace(BASE + "/", "");
+    assert.ok(fs.existsSync(path.join(root, file)), `sitemap 里的 ${u} 没有对应文件`);
+  }
+  assert.ok(!/hreflang|xhtml:link/.test(xml), "sitemap 不该有多语言交替标记");
 });
 
 check("robots.txt 指向 sitemap", () => {
   assert.match(read("robots.txt"), new RegExp(`Sitemap: ${BASE}/sitemap.xml`));
 });
 
-check("索引页列出四篇指南并可点进", () => {
-  const idx = read("en/index.html");
-  for (const s of SLUGS) assert.ok(idx.includes(`href="./${s}.html"`), `索引缺 ${s}`);
+check("四篇互相链接，能走到整理器与中文页", () => {
+  for (const slug of SLUGS) {
+    const html = read(`${slug}.html`);
+    for (const other of SLUGS) {
+      if (other === slug) continue;
+      assert.ok(html.includes(`href="./${other}.html"`), `${slug} 没链到 ${other}`);
+    }
+    assert.ok(html.includes(`${BASE}/formal.html?lang=en`), `${slug} 缺整理器入口`);
+    assert.ok(html.includes("./formal.html?lang=zh"), `${slug} 缺中文入口`);
+  }
 });
 
 check("中文根路径与已发链接未被改动", () => {
   const index = read("index.html");
   assert.match(index, /location\.replace\("\.\/formal\.html"/);
-  assert.match(index, /<link rel="canonical" href="\.\/formal\.html">/);
+  assert.match(index, /<link rel="canonical" href="\.\/formal.html">/);
   assert.ok(!fs.existsSync(path.join(root, "en/formal.html")), "不应复制一份英文 formal.html");
 });
 

@@ -32,11 +32,11 @@ var byQuery=normLang(q);if(byQuery)return byQuery;
 var s="";try{s=localStorage.getItem("tpo_lang")||"";}catch(e){}
 if(s==="en"||s==="es"||s==="zh")return s;
 var n="";try{n=(navigator.languages&&navigator.languages[0])||navigator.language||"";}catch(e){}
-return normLang(n)||"zh";
+return normLang(n)||"en";
 }
 window.__tpoPickLang=pickLang;
 function applyDocMeta(lang){
-var m=META[lang]||META.zh;
+var m=META[lang]||META.en;
 document.documentElement.lang=lang==="zh"?"zh-CN":lang;
 document.title=m.title;
 function setMeta(sel,val){var el=document.querySelector(sel);if(el)el.setAttribute("content",val);}
