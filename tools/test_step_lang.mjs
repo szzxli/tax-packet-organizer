@@ -135,5 +135,29 @@ check("州名与表名在行标题里按语言显示", () => {
   assert.match(row, /esc\(exPayer\(it\.payer\)\)/, "付款方没用 exPayer");
 });
 
+// 静态 HTML 的文案不经过 JS 生成，applyLang 只按词典整节点替换，漏一条就整句留中文。
+const dictHas = (key) =>
+  new RegExp('"' + key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + '"\\s*:\\s*\\{\\s*"en"').test(html);
+
+check("第 3 步保存那句与按钮都在词典里", () => {
+  const line = html.match(/<p class="small hidden" id="saveToAccountLine">([\s\S]*?)<\/p>/)[1];
+  const btn = line.match(/id="btnSaveToAccount"[^>]*>([^<]+)</)[1].trim();
+  const sentence = line.replace(/<[^>]+>/g, "").split(btn)[0].trim();
+  assert.ok(dictHas(sentence), `句子没有词典条目：${sentence}`);
+  assert.ok(dictHas(btn), `按钮没有词典条目：${btn}`);
+});
+
+check("顶部与第 3 步的保存按钮逐字一致", () => {
+  const top = html.match(/id="btnSaveProgress"[^>]*>([^<]+)</)[1].trim();
+  const step3 = html.match(/id="btnSaveToAccount"[^>]*>([^<]+)</)[1].trim();
+  assert.equal(step3, top);
+});
+
+check("步骤栏 aria-label 走词典并随语言切换", () => {
+  assert.match(html, /class="journey-steps"[^>]*data-i18n-aria="整理步骤"/);
+  assert.ok(dictHas("整理步骤"));
+  assert.match(js, /querySelectorAll\("\[data-i18n-aria\]"\)/);
+});
+
 console.log("\n" + pass + " passed, " + fail + " failed");
 if (fail) process.exit(1);
