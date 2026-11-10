@@ -92,6 +92,16 @@ cd <repo> && python3 -m http.server 8000 --bind 127.0.0.1 &
 cd /tmp/tpo-test && npm i playwright-core && node check_mobile_gate.js
 ```
 
+## 季票权益验收（前端）
+
+`backend/test/check_entitlements.js`，同一个本地栈（8788 + 8000，`DEV_MODE=1`），31 项：
+
+```bash
+cd /tmp/tpo-test && node check_entitlements.js
+```
+
+覆盖：免费用户看到四项权益说明但拿不到结果（对比卡片有领取入口、按钮禁用、优先提交按钮不出现、CPA 交接只留说明、批量核对弹领取闸门）；有权益后 CPA 交接能标记已发送；有权益后批量归档核对给出的红/黄/绿与「不可交」、空清单不报「可交」、费用行覆盖数；多包与多年对比的每格状态（齐 / 还缺 n / 本版无）与「今年新增 X 项 / 今年没这项 Y 项」；优先工具支持真的把请求发到 `/api/support`（带【季票优先】与账号），失败时给已填好的邮件兜底而不谎称成功。
+
 ## 已知边界 / 开闸前必须处理
 
 1. **线上还是旧版本**：`/api/health` 现在回 `tpo-api-1`；订阅域（套餐、订阅状态机、取消、退款回滚）与本次硬化都还没部署。部署前先执行 `test/migrations/2026-11-08-subscriptions.sql`，再 `npx wrangler login` + `./backend/deploy.sh`，上线后应回 `tpo-api-3`。
