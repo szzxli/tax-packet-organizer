@@ -2567,7 +2567,7 @@ function procWarn(id, p) {
     return [2, tr("这笔把收入往上推；收入一变，医保补贴就要在 8962 上重新对账，越过那条线是整份没有，不是少一点。", "This pushes income up. Once income changes, the health-insurance subsidy has to be reconciled on Form 8962; crossing that line means losing all of it, not a little.", "Esto sube los ingresos. Si cambian, el subsidio del seguro médico se concilia en el Formulario 8962; cruzar esa línea significa perderlo todo, no solo un poco.")];
   }
   if (id === "ins") {
-    return [2, tr("保费要和全年收入对账：收入高一分，补贴就退回去一分。", "The premium is reconciled against full-year income: every bit of extra income sends part of the subsidy back.", "La prima se concilia con los ingresos del año: cada parte de ingreso extra devuelve parte del subsidio.")];
+    return [2, tr("保费要和全年收入在 8962 上对账：多拿的那部分可能要退回，退回有上限；越过那条线，整份没有。", "The premium is reconciled against full-year income on Form 8962: part of what you received may have to be repaid, up to a cap; cross that line and it is all gone.", "La prima se concilia con los ingresos del año en el Formulario 8962: parte de lo que recibió podría tener que devolverse, con un tope; cruzar esa línea significa perderlo todo.")];
   }
   if (id === "se") {
     return [1, tr("这笔同时进所得税和自雇税两条线，也会给退休分加分。", "This lands on both the income-tax and self-employment-tax lines, and it also adds retirement credits.", "Esto entra en la línea del impuesto sobre la renta y en la del trabajo por cuenta propia, y además suma créditos de retiro.")];
@@ -2632,15 +2632,16 @@ function procHtml(unlocked) {
     h += "<p class='proc-lock'>" + esc(tr("去年有房贷利息或自雇：这里只有有／没有，金额请填在下面「房贷利息 + 州税」那一项。", "You had mortgage interest or self-employment last year: this only records yes/no — put the amount in \"Mortgage interest + state tax\" below.", "El año pasado tuvo intereses hipotecarios o trabajo por cuenta propia: aquí solo se registra sí/no; ponga el monto en «Intereses hipotecarios + impuesto estatal» abajo.")) + "</p>";
   }
   h += "<div class='proc-rings'>";
-  h += "<div class='proc-ring'><span class='lab'>" + esc(tr("学费抵免", "Education credit", "Crédito educativo")) + "</span><span class='proc-cells'>" + procEduCells(used) + "</span>"
+  h += "<div class='proc-ring'><span class='lab'>" + esc(tr("学费抵免（按单个学生算）", "Education credit (per student)", "Crédito educativo (por estudiante)")) + "</span><span class='proc-cells'>" + procEduCells(used) + "</span>"
     + "<span class='proc-inline'>" + esc(tr("已用", "Used", "Usados")) + "</span><select id='procEduUsed' aria-label='" + esc(tr("已用几年", "Years already used", "Años ya usados")) + "'>";
   for (var y = 0; y <= PROC_EDU_MAX; y++) h += "<option value='" + y + "'" + (y === used ? " selected" : "") + ">" + y + "</option>";
   h += "</select><span class='proc-cap'>" + esc(procEduCap(used)) + "</span></div>";
-  h += "<div class='proc-ring'><span class='lab'>" + esc(tr("退休分", "Retirement credits", "Créditos de retiro")) + "</span>"
+  h += "<div class='proc-ring'><span class='lab'>" + esc(tr("退休分（按你本人算）", "Retirement credits (yours)", "Créditos de retiro (los suyos)")) + "</span>"
     + "<span class='proc-bar'><i style='width:" + Math.round(points / PROC_SS_TARGET * 100) + "%'></i></span>"
     + "<input class='proc-num' id='procSsPoints' inputmode='numeric' min='0' max='40' value='" + points + "' aria-label='" + esc(tr("累计几分", "Credits so far", "Créditos acumulados")) + "'>"
     + "<span class='proc-cap'>" + esc(procSsCap(points)) + "</span></div>";
   h += "</div>";
+  h += "<p class='proc-sub'>" + esc(tr("家里两个孩子在读：年数各算各的，这里填年数最少的那个。", "Two students: years count separately — enter the one with the fewest years left.", "Dos estudiantes: los años se cuentan por separado; ponga el que menos años tenga.")) + "</p>";
   h += "<p class='proc-src'>" + esc(tr("退休分：SSA 2026，每 $" + PROC_SS_POINT.toLocaleString("en-US") + " 记 1 分，一年最多 4 分，领退休金要 40 分（核于 " + PROC_CHECKED + "）。教育抵免：Pub 970 / Form 8863，每个学生最多 4 个税年（核于 " + PROC_CHECKED + "）。", "Retirement credits: SSA 2026 — $" + PROC_SS_POINT.toLocaleString("en-US") + " earns one credit, up to four a year, 40 needed for retirement benefits (checked " + PROC_CHECKED + "). Education credit: Pub 970 / Form 8863, at most four tax years per student (checked " + PROC_CHECKED + ").", "Créditos de retiro: SSA 2026 — $" + PROC_SS_POINT.toLocaleString("en-US") + " dan un crédito, hasta cuatro al año, se necesitan 40 para la jubilación (verificado el " + PROC_CHECKED + "). Crédito educativo: Pub 970 / Form 8863, como máximo cuatro años fiscales por estudiante (verificado el " + PROC_CHECKED + ").")) + "</p>";
 
   h += "<div class='proc-h' style='margin-top:16px'>" + esc(tr("今年随手记", "Log it as it happens", "Regístrelo sobre la marcha")) + "</div>";

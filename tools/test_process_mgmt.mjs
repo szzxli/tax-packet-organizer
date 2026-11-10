@@ -178,6 +178,32 @@ check("退休分年轮：40 分上限、一年最多 4 分", () => {
   assert.ok(sandbox.procHtml(false).includes("40 分已满"), "超过 40 分应被夹到上限");
 });
 
+// ---- 文案断言：8962 退回不是一比一，年轮按单个学生 / 按本人 ----
+check("ins 预警：说「退回有上限」，不出现上限金额、也不说一比一", () => {
+  resetProfile();
+  for (const lang of ["zh", "en", "es"]) {
+    sandbox.LANG = lang;
+    const w = sandbox.procCardHtml({ k: "ins" }, 0, true, p);
+    assert.ok(/上限|up to a cap|con un tope/.test(w), lang + " 缺「有上限」");
+    assert.ok(!/\$\s?\d/.test(w), lang + " 出现了金额");
+    assert.ok(!/一分|one for one|uno por uno/i.test(w), lang + " 仍是一比一说法");
+  }
+  sandbox.LANG = "zh";
+});
+check("年轮标签写明按单个学生 / 按本人，并给出两个孩子的填法", () => {
+  const out = sandbox.procHtml(true);
+  assert.ok(out.includes("学费抵免（按单个学生算）"), "学费抵免标签没写按单个学生");
+  assert.ok(out.includes("年数各算各的"), "缺两个孩子的填法提示");
+  assert.ok(out.includes("退休分（按你本人算）"), "退休分标签没写按本人");
+  sandbox.LANG = "en";
+  const en = sandbox.procHtml(true);
+  assert.ok(en.includes("Education credit (per student)") && en.includes("Retirement credits (yours)"), "en 标签不对");
+  sandbox.LANG = "es";
+  const es = sandbox.procHtml(true);
+  assert.ok(es.includes("Crédito educativo (por estudiante)") && es.includes("Créditos de retiro (los suyos)"), "es 标签不对");
+  sandbox.LANG = "zh";
+});
+
 // ---- 三语无兜底 ----
 check("三语：en/es 新模块 0 中文兜底", () => {
   resetProfile();
