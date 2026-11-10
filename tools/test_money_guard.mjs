@@ -76,6 +76,10 @@ check("季票态：区间 + 成立条件 + 依据 + 核实日期 同一屏", () 
   assert.ok(out.includes("2026-11-03"), "缺核实日期");
   assert.ok(out.includes("2027-04-15"), "缺最晚日期");
 });
+check("截止日按税年查表，不写死在可见句子里", () => {
+  assert.equal(sandbox.OUTLOOK_DEADLINE, sandbox.OUTLOOK_DEADLINE_BY_YEAR[sandbox.OUTLOOK_TAX_YEAR], "截止日没走税年表");
+  assert.equal(sandbox.OUTLOOK_DEADLINE, "2027-04-15");
+});
 check("季票态：三条推手只写命中的", () => {
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
   const only = sandbox.outlookHtml(true);
