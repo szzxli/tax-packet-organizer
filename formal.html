@@ -538,6 +538,10 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <button class="secondary" data-addsheet="generic" data-title="退休供款">＋退休供款</button></p>
 </details>
 <p class="small">去年表→类型对照：W-2→工资；Schedule E→房租；Schedule C / Schedule SE / 1099-NEC→自雇；1099-INT→利息；1099-DIV→股息；1099-R→退休金；SSA-1099→社保金；其余进“其他”。</p>
+<details><summary class="small">境外申报（不是所有人都要；只问有没有，不录余额、不录账号、不算金额）</summary>
+<p class="muted small">下面三问都只需三选一。答「有」或「不确定」会把对应的一项加进今年清单，答「没有」就不加。</p>
+<div id="foreignBox"></div>
+</details>
 <div id="mergedBox"></div>
 <div id="mergedSummary"></div>
 </div>
@@ -971,6 +975,11 @@ var EX_I18N={
 "今年 5498 / 供款确认":["This year's 5498 / contribution confirmation","5498 de este año / confirmación de aportes"],
 "今年 5498-SA":["This year's 5498-SA","5498-SA de este año"],
 "今年 1099-SA":["This year's 1099-SA","1099-SA de este año"],
+// FOREIGN_ROWS_START · 境外申报三行（单独回滚：删掉这三条 + FORM_MAP 三行 + FOREIGN_ROWS + PROBE_NOTES 三条即可）
+"今年 境外金融账户申报（FBAR / FinCEN 114）：过去一年任一时刻境外账户合计超过 $10,000 才需要；与联邦报税一起办，可自动延期至 10/15":["This year's foreign account report (FBAR / FinCEN 114): only needed if all your foreign accounts together exceeded $10,000 at any point last year; filed alongside your federal return, with an automatic extension to October 15","Reporte de cuentas en el extranjero de este año (FBAR / FinCEN 114): solo se necesita si todas sus cuentas en el extranjero sumaron más de $10,000 en algún momento del año pasado; se presenta junto con la declaración federal, con prórroga automática hasta el 15 de octubre"],
+"今年 Form 8938（境外金融资产）：是否需要报按申报身份不同，请会计师确认":["This year's Form 8938 (specified foreign financial assets): whether you must file depends on your filing status — please confirm with your accountant","Form 8938 de este año (activos financieros extranjeros especificados): si debe presentarse depende de su estado civil fiscal; confírmelo con su contador"],
+"今年 Form 8621（境外基金 / PFIC）：是否属于 PFIC 由会计师判断":["This year's Form 8621 (foreign funds / PFIC): whether a fund counts as a PFIC is for your accountant to judge","Form 8621 de este año (fondos extranjeros / PFIC): determinar si un fondo es PFIC corresponde a su contador"],
+// FOREIGN_ROWS_END
 "今年预估税缴款确认（联邦 + 覆盖 10 州中去年报过的州）":["This year's estimated tax payment confirmations (federal + any of the 10 covered states you filed in last year)","Confirmaciones de pagos de impuesto estimado de este año (federal + cualquiera de los 10 estados cubiertos donde declaró el año pasado)"],
 "今年延期缴款确认（如今年办延期）":["This year's extension payment confirmation (if you filed an extension)","Confirmación del pago de prórroga de este año (si presentó una prórroga)"],
 "今年收到的新通知（只上传，不解读）":["New notices you received this year (upload only — we don't interpret them)","Avisos nuevos que recibió este año (solo carga; no los interpretamos)"],
@@ -1093,7 +1102,8 @@ var FORM_MAP=[
 ["Schedule C","今年 Schedule C 记录：收入、分类支出收据、去年报过的居家办公/车辆记录"],["Schedule E","今年 Schedule E 记录（按房产）：租金、1098、税单、维修收据"],["Schedule F","今年 Schedule F 记录"],["Schedule SE","今年 Schedule SE 记录：自雇收入、自雇税缴款确认"],["Schedule K-1","今年 K-1（按去年每个实体）"],
 ["1098","今年 1098（按去年每个贷款方）"],["1098-E","今年 1098-E（按去年每个贷款方）"],["1098-T","今年 1098-T（按去年每个学校）"],["Form 2441","今年托育服务方证明"],["房产税单","今年各管辖区房产税单"],["医疗收据","今年医疗/牙科收据汇总（不含诊断）"],["捐赠收据","今年捐赠收据 / 确认函"],
 ["1095-A","今年 1095-A"],["1095-B/C","今年 1095-B / C（如收到）"],["5498","今年 5498 / 供款确认"],["5498-SA","今年 5498-SA"],["1099-SA","今年 1099-SA"],
-["预估税","今年预估税缴款确认（联邦 + 覆盖 10 州中去年报过的州）"],["延期缴款","今年延期缴款确认（如今年办延期）"],["IRS/州通知","今年收到的新通知（只上传，不解读）"]
+["预估税","今年预估税缴款确认（联邦 + 覆盖 10 州中去年报过的州）"],["延期缴款","今年延期缴款确认（如今年办延期）"],["IRS/州通知","今年收到的新通知（只上传，不解读）"],
+["FinCEN 114 (FBAR)","今年 境外金融账户申报（FBAR / FinCEN 114）：过去一年任一时刻境外账户合计超过 $10,000 才需要；与联邦报税一起办，可自动延期至 10/15"],["Form 8938","今年 Form 8938（境外金融资产）：是否需要报按申报身份不同，请会计师确认"],["Form 8621","今年 Form 8621（境外基金 / PFIC）：是否属于 PFIC 由会计师判断"]
 ];
 var CHANGES=[
 ["申报身份","申报身份证明文件（如适用）","结婚 / 离婚了"],["地址","新地址证明","搬家了"],["抚养人","新增抚养人证明（出生/收养记录等）","孩子出生了"],["配偶","婚姻记录（如适用）","配偶信息变了"]
@@ -1537,10 +1547,14 @@ function whereToGet(it){
   if(/1099-R|5498/.test(f))return tr("退休计划 / 账户","Retirement plan or account","Plan o cuenta de jubilación");
   if(/SSA-1099/.test(f))return tr("SSA 在线账户","SSA online account","Cuenta en línea de la SSA");
   if(/州税/.test(f))return tr("州税务局","State tax authority","Autoridad fiscal estatal");
+  if(/FinCEN 114|8938/.test(f))return tr("券商 / 银行年度对账单（或 FinCEN、IRS 官网表格）","Brokerage or bank annual statements (or the FinCEN / IRS forms site)","Estados de cuenta anuales del corredor o banco (o los formularios de FinCEN / IRS)");
+  if(/8621/.test(f))return tr("基金公司 / 券商的年度对账单与 PFIC 说明","Annual statements and PFIC information from the fund or broker","Estados de cuenta anuales y datos PFIC del fondo o corredor");
   return tr("付款方 / 去年报税文件","Payer or last year's return","Pagador o la declaración del año pasado");
 }
 function checkRow(it){
   if(it.status==="na")return {level:"green",label:tr("绿","Green","Verde"),why:tr("不适用","Not applicable","No aplica"),where:"—"};
+  // 只提示不填数字的项（境外申报三行）：有文件即算结构齐，不能永远停在“未填数字”。
+  if(it.noFigure)return it.fileName?{level:"green",label:tr("绿","Green","Verde"),why:tr("结构齐（本项无需填数字）","Complete (no figure needed for this item)","Completo (este elemento no requiere cifra)"),where:"—"}:{level:"red",label:tr("红","Red","Rojo"),why:tr("缺文件","Missing file","Falta archivo"),where:whereToGet(it)};
   var hasFile=!!it.fileName,hasNum=!!it.figure;
   if(!hasFile&&!hasNum)return {level:"red",label:tr("红","Red","Rojo"),why:tr("缺文件、缺数字","Missing file and figure","Falta archivo y cifra"),where:whereToGet(it)};
   if(!hasNum)return {level:"yellow",label:tr("黄","Yellow","Amarillo"),why:tr("有文件，未填数字","File present, figure missing","Hay archivo, falta la cifra"),where:tr("在“今年要准备的材料”里填确认数字","Enter the confirmed figure under “Materials to prepare this year”","Ingrese la cifra confirmada en «Materiales para preparar este año»")};
@@ -1877,6 +1891,11 @@ function renderWarnings(){
 }
 function figureMainArea(it){
   var wrap=document.createElement("div");wrap.style.marginTop="8px";
+  if(it.noFigure){
+    var nb=document.createElement("p");nb.className="small muted";
+    nb.textContent=tr("本项只提示要备什么，不需要填数字（也不收余额或账号）。","This item only tells you what to prepare; no figure is needed (no balances or account numbers either).","Este elemento solo indica qué preparar; no se necesita cifra (tampoco saldos ni números de cuenta).");
+    wrap.appendChild(nb);return wrap;
+  }
   var info=document.createElement("p");info.className="small";
   if(it.figure){
     info.innerHTML=tr("确认数字：","Confirmed figure: ","Cifra confirmada: ")+"<b>"+esc(it.figure.cat)+" "+fmtMoney(it.figure.cents)+"</b>"+tr("（来源："," (source: "," (fuente: ")+esc(it.figure.source||tr("手动","manual","manual"))+tr("）",")",")");
@@ -2062,7 +2081,7 @@ function renderFollowUp(){
   };
 }
 function applyOrganizeStep(){if(currentPage!==1)return;var wrap=$("appViewSections");if(!wrap)return;for(var i=0;i<wrap.children.length;i++){var c=wrap.children[i];if(c.className.indexOf("card")<0)continue;var showCard=c.id!=="subCard"&&Number(c.dataset.flowStep||0)===currentOrganizeStep;c.classList.toggle("hidden",!showCard);}}
-function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,applyCollapse];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
+function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,renderForeign,applyCollapse];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
 function secKeyFromH2(t){
   if(t.indexOf("州税范围")>=0)return "s3b";
   if(t.indexOf("去年有什么")>=0)return "s3";
@@ -3301,6 +3320,49 @@ $("btnAddNew").onclick=function(){
   packet.checklist.push({id:Date.now()+""+Math.random(),form:form,kind:_k,title:form,payer:payer,request:requestText(form),status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:"",costs:costsTemplate(_k),moreCollapsed:true});
   $("newPayer").value="";savePacket();renderAll();
 };
+// FOREIGN_ROWS_START · 境外申报三行：只问有没有、只加清单项、不录余额不录账号不算金额
+var FOREIGN_ROWS=[
+["fbar","FinCEN 114 (FBAR)",
+ ["境外金融账户：过去一年任一时刻，所有境外账户合计超过 $10,000 吗？","Foreign accounts: at any point last year, did all your foreign accounts together exceed $10,000?","Cuentas en el extranjero: ¿en algún momento del año pasado sus cuentas en el extranjero juntas sumaron más de $10,000?"],
+ ["只有合计过线才提示这一项；不录余额、不录账号、不算金额。","Asked only if the total crossed the line; we record no balances, no account numbers and compute no amounts.","Solo se pregunta si el total superó el límite; no se registran saldos ni números de cuenta y no se calculan montos."]],
+["8938","Form 8938",
+ ["有境外金融资产（境外存款、股票、基金、保险等）吗？","Do you hold foreign financial assets (foreign deposits, stocks, funds, insurance and similar)?","¿Tiene activos financieros en el extranjero (depósitos, acciones, fondos, seguros y similares)?"],
+ ["只提示可能需报 Form 8938；门槛按申报身份不同，这里不写门槛数字，请会计师确认。","We only note that Form 8938 may be required; the threshold depends on your filing status — we don't quote a number here, please confirm with your accountant.","Solo indicamos que puede requerirse el Form 8938; el umbral depende de su estado civil fiscal: aquí no damos cifras, confírmelo con su contador."]],
+["8621","Form 8621",
+ ["持有境外基金（境外共同基金、ETF 等）吗？","Do you hold foreign funds (foreign mutual funds, ETFs and similar)?","¿Tiene fondos extranjeros (fondos mutuos, ETF y similares)?"],
+ ["只提示 Form 8621；是否属于 PFIC 需会计师判断。","We only flag Form 8621; whether a fund counts as a PFIC is for your accountant to judge.","Solo señalamos el Form 8621; determinar si un fondo es PFIC corresponde a su contador."]]
+];
+function foreignHas(form){return (packet&&packet.checklist?packet.checklist:[]).some(function(it){return it.form===form;});}
+function foreignAns(key){return (packet&&packet.foreignAns&&packet.foreignAns[key])||"";}
+function foreignRow(form){
+  return {id:Date.now()+""+Math.random(),form:form,kind:null,title:form,payer:"",request:requestText(form),status:"not-started",reason:"",fileName:"",isNew:false,transcriptNote:"",costs:[],moreCollapsed:true,noFigure:true,foreign:true};
+}
+function renderForeign(){
+  var box=$("foreignBox");if(!box||!packet)return;
+  var head=tr("三问都只影响清单，不影响免费整理与导出。","All three only add checklist items; free organizing and export are unaffected.","Los tres solo agregan elementos a la lista; la organización y la exportación gratuitas no cambian.");
+  box.innerHTML="<p class='small muted'>"+esc(head)+"</p>"+FOREIGN_ROWS.map(function(r){
+    var ans=foreignAns(r[0]),added=foreignHas(r[1]);
+    function btn(k,label){return "<button class='secondary' type='button' data-foreign='"+r[0]+"' data-ans='"+k+"'"+(ans===k?" aria-pressed='true' style='border-color:#0E2A47;font-weight:600'":"")+">"+esc(label)+"</button>";}
+    return "<div style='margin:10px 0'>"
+      +"<p class='small' style='margin:0 0 4px'><b>"+esc(r[1])+"</b> · "+esc(tr(r[2][0],r[2][1],r[2][2]))+"</p>"
+      +"<p class='small muted' style='margin:0 0 6px'>"+esc(tr(r[3][0],r[3][1],r[3][2]))+"</p>"
+      +"<p style='margin:0'>"+btn("yes",tr("有","Yes","Sí"))+" "+btn("no",tr("没有","No","No"))+" "+btn("unsure",tr("不确定","Not sure","No estoy seguro"))+" "
+      +(added?"<span class='small'>"+esc(tr("已在今年清单里","Already in this year's checklist","Ya está en la lista de este año"))+"</span>":"")+"</p></div>";
+  }).join("");
+}
+$("foreignBox").onclick=function(e){
+  var b=e.target&&e.target.closest?e.target.closest("[data-foreign]"):null;if(!b)return;
+  var key=b.getAttribute("data-foreign"),ans=b.getAttribute("data-ans");
+  var r=FOREIGN_ROWS.filter(function(x){return x[0]===key})[0];if(!r)return;
+  packet.foreignAns=packet.foreignAns||{};packet.foreignAns[key]=ans;
+  if(ans==="no"){
+    savePacket();renderForeign();
+    return;
+  }
+  if(!foreignHas(r[1]))packet.checklist.push(foreignRow(r[1]));
+  savePacket();renderAll();
+};
+// FOREIGN_ROWS_END
 var STATES=[
 ["加州","有州个人所得税","California","California"],
 ["得州","无州个人所得税","Texas","Texas"],
@@ -3543,7 +3605,10 @@ var PROBE_NOTES=[
   {match:["1099-INT"],text:"利息相关：1099-INT 信息表口径变化会影响你的包。"},
   {match:["1099-DIV"],text:"股息相关：1099-DIV 信息表口径变化会影响你的包。"},
   {match:["1095-A"],text:"医保相关：1095-A 与保费税收抵免对账（Form 8962）口径变化会影响你的包。"},
-  {match:["W-2"],text:"工资相关：W-2 预扣与信息表口径变化会影响你的包。"}
+  {match:["W-2"],text:"工资相关：W-2 预扣与信息表口径变化会影响你的包。"},
+  {match:["FinCEN 114"],text:"境外账户相关：FBAR（FinCEN 114）只要任一时刻境外账户合计超过 $10,000 就要报，与联邦报税分开提交，可自动延期至 10/15；晚报/漏报的罚则按违规情形分档，金额由税务师判断。"},
+  {match:["8938"],text:"境外资产相关：Form 8938 的申报门槛按申报身份不同，是否需要报以税务师判断为准；这一项和 FBAR 是两套规则，要分开核。"},
+  {match:["8621"],text:"境外基金相关：Form 8621（PFIC）是否适用、按哪种方法申报、以及是否有默认申报的后果，都需税务师判断。"}
 ];
 function renderProbe(){
   var el=$("probeBox");if(!el||!packet)return;
@@ -3689,7 +3754,7 @@ $("btnSupportSend").onclick=function(){if(isGuest()){showAuth();return;}
   });
 };
 $("btnExportJson").onclick=function(){
-  var data={tool:"ClearToFile 可交 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,change_dir:packet.changesDir||{},last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||"",figure:it.figure?{category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||""}:null,voucher_checked:!!it.voucherChecked,form_amount_cents:it.formAmountCents!=null?it.formAmountCents:null,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it),kind:it.kind||null,costs:(it.costs||[]).map(function(e){return {label:e.custom?(e.customLabel||"其他"):e.label,amount_cents:e.cents,amount_display:e.cents==null?null:fmtMoney(e.cents)}})}}),draft_estimate:{lines:draftLines().map(function(it){return {form:it.form,payer:it.payer,category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||"",voucher_checked:!!it.voucherChecked,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),totals_by_category:(function(){var o={};var t=draftTotals();Object.keys(t.byCat).forEach(function(c){o[c]=fmtMoney(t.byCat[c]);});return o;})(),grand_total_display:fmtMoney(draftTotals().grand),counts:{figures:draftLines().length,voucher_checked:draftLines().filter(function(it){return it.voucherChecked}).length,form_matched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length,form_mismatched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length},label:"预估草稿，非申报表，须 CPA 对照凭证与表格数核对"},warnings:computeWarnings(),prior_cpa:packet.priorCpa||null,transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存你的账号，不进导出文件。发送记录由用户标记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。预估草稿金额为用户确认的证据数字，非申报表，须 CPA 对照凭证与表格数核对；IRS 对照提醒只作请核对提醒，不代表 IRS 已认定任何问题；工具不提取、不保存社保号。去年会计师信息由客户自填，平台不验证、不背书。收入填报数字为用户自填草稿，须CPA核对。"};
+  var data={tool:"ClearToFile 可交 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,change_dir:packet.changesDir||{},last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,form_display:exRowTitle(it),request_display:requestLabel(it.request),status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||"",figure:it.figure?{category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||""}:null,voucher_checked:!!it.voucherChecked,form_amount_cents:it.formAmountCents!=null?it.formAmountCents:null,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it),kind:it.kind||null,costs:(it.costs||[]).map(function(e){return {label:e.custom?(e.customLabel||"其他"):e.label,amount_cents:e.cents,amount_display:e.cents==null?null:fmtMoney(e.cents)}})}}),draft_estimate:{lines:draftLines().map(function(it){return {form:it.form,payer:it.payer,category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||"",voucher_checked:!!it.voucherChecked,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),totals_by_category:(function(){var o={};var t=draftTotals();Object.keys(t.byCat).forEach(function(c){o[c]=fmtMoney(t.byCat[c]);});return o;})(),grand_total_display:fmtMoney(draftTotals().grand),counts:{figures:draftLines().length,voucher_checked:draftLines().filter(function(it){return it.voucherChecked}).length,form_matched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length,form_mismatched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length},label:"预估草稿，非申报表，须 CPA 对照凭证与表格数核对"},warnings:computeWarnings(),prior_cpa:packet.priorCpa||null,transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存你的账号，不进导出文件。发送记录由用户标记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。预估草稿金额为用户确认的证据数字，非申报表，须 CPA 对照凭证与表格数核对；IRS 对照提醒只作请核对提醒，不代表 IRS 已认定任何问题；工具不提取、不保存社保号。去年会计师信息由客户自填，平台不验证、不背书。收入填报数字为用户自填草稿，须CPA核对。"};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tax-packet-checklist.json";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
   packet.exports.push(new Date().toLocaleString()+" 导出机器可读清单 JSON（"+packet.checklist.length+" 项）");savePacket();renderExports();
@@ -3747,6 +3812,8 @@ function exPayer(p){
 }
 function missingWhat(it){
   if(it.status==="pending")return tr("等 transcript","Awaiting transcript","Pendiente de transcript");
+  // 境外申报三行不填数字：缺项只报缺文件，不能引导用户去填余额。
+  if(it.noFigure)return tr("缺文件","Missing file","Falta archivo");
   var nf=!it.fileName,nn=!it.figure;
   if(nf&&nn)return tr("缺文件、缺数字","Missing file and figure","Falta archivo y cifra");
   if(nf)return tr("缺文件","Missing file","Falta archivo");
@@ -3770,7 +3837,10 @@ var WHERE_MAP={
 "5498":["Plan administrator","Administrador del plan"],
 "1099-NEC":["Client who paid you","Cliente que le pagó"],
 "1099-MISC":["Payer on the form","Pagador del formulario"],
-"州税":["State tax authority","Autoridad fiscal estatal"]
+"州税":["State tax authority","Autoridad fiscal estatal"],
+"FinCEN 114 (FBAR)":["Brokerage or bank statements (or FinCEN's filing site)","Estados de cuenta del corredor o banco (o el sitio de presentación de FinCEN)"],
+"Form 8938":["Brokerage, bank or insurer annual statements","Estados de cuenta anuales del corredor, banco o aseguradora"],
+"Form 8621":["Fund or broker annual statement (PFIC details)","Estado de cuenta anual del fondo o corredor (datos PFIC)"]
 };
 function whereFrom(it){
   if(LANG==="zh")return "";
