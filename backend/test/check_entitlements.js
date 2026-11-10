@@ -129,6 +129,17 @@ const SNAP_2025 = [{
     const sendHidden = await page.locator("#btnSupportSend").isHidden();
     check("免费用户：看不到可点的提交按钮（不做假交互）", sendHidden);
 
+    // CPA 交接工作台在线上曾经整块被 CSS 隐藏，这里按免费用户看到的样子验
+    const handoffVisible = await page.locator("#handoffSection").isVisible();
+    check("免费用户：CPA 交接工作台可见（不再被 CSS 隐藏）", handoffVisible);
+    const handoffGate = await page.locator("#handoffGate").innerText();
+    check("免费用户：交接工作台写明是季票功能", handoffGate.includes("季票功能"), handoffGate.slice(0, 60));
+    const cpaBtnHidden = await page.locator("#btnCpaReview").isHidden();
+    check("免费用户：标记已发送按钮不出现", cpaBtnHidden);
+    const priorVisible = await page.locator("#priorCpaCard").isVisible();
+    const priorEditable = await page.locator("#priorCpaName").isEditable().catch(() => false);
+    check("免费用户：去年会计师卡可见且可填", priorVisible && priorEditable);
+
     await page.locator("#btnCheck").click();
     await page.waitForTimeout(300);
     const claim = await page.locator("#checkReport").innerText().catch(() => "");
@@ -159,6 +170,13 @@ const SNAP_2025 = [{
     await page.waitForTimeout(200);
     const empty = await page.locator("#checkReport").innerText();
     check("批量核对：空清单不报可交", empty.includes("还没有清单") && !/^\s*可交/.test(empty.split("\n")[0]), empty.split("\n")[0]);
+    // 有权益：交接工作台可操作，标记后留记录
+    const cpaVisible = await page.locator("#btnCpaReview").isVisible();
+    check("有权益：标记已发送按钮可点", cpaVisible);
+    await page.locator("#btnCpaReview").click();
+    await page.waitForTimeout(300);
+    const cpaText = await page.locator("#cpaReviewText").innerText();
+    check("有权益：标记后显示已发送给会计师", cpaText.includes("已发送给会计师"), cpaText.slice(0, 60));
     check("批量核对：无 JS 报错", errors.length === 0, errors.slice(0, 2).join(" | "));
     await page.close();
   }

@@ -238,7 +238,7 @@ header{position:relative;padding-right:150px}
 #bootCard .sk.short{width:60%}
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
 #changesCard,#stateCard{display:none!important}
-#handoffSection,#priorCpaCard,#payView{display:none!important}
+#payView{display:none!important}
 .chk-red,.chk-yellow,.chk-green{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .chk-red{background:#c0392b}.chk-yellow{background:#d39e00}.chk-green{background:#1e7a4c}
 #checkPanel{background:#f8fbfd}
@@ -584,6 +584,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <p class="small" id="handoverText"></p>
 <p class="small" id="cpaReviewText">暂无发送记录。发送记录仅表示你已把清单发给会计师，不代表 CPA 已签字确认。</p>
 <p><button id="btnCpaReview">标记为已发送给会计师</button> <button id="btnCpaClear" class="secondary">清除发送记录</button></p>
+<p class="small hidden" id="handoffGate"></p>
 <p class="small" id="exportCpaLine"></p>
 </div>
 <ul id="exportLog"></ul>
@@ -1427,7 +1428,8 @@ function renderCpa(){
   // signed-in subscriber opened the CPA handoff step, preventing the rest of
   // the UI refresh from completing.
   var reviewText=$("cpaReviewText");
-  var b1=$("btnCpaReview"),b2=$("btnCpaClear");if(b1)b1.style.display="";if(b2)b2.style.display="";
+  var b1=$("btnCpaReview"),b2=$("btnCpaClear");
+  var gate=$("handoffGate");
   if(packet.cpaReview){reviewText.innerHTML="<span class='badge uploaded'>"+tr("已发送给会计师","Sent to your accountant","Enviado a su contador")+"</span> "+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · "+esc(packet.cpaReview.note):"");}
   else{reviewText.textContent=t("暂无发送记录。发送记录仅表示你已把清单发给会计师，不代表 CPA 已签字确认。");}
   var h=$("handoverText");
@@ -1438,6 +1440,17 @@ function renderCpa(){
     var missing=packet.checklist.filter(function(it){return !rowResolved(it);}).map(function(it){return rowTitle(it);});
     h.textContent=tr("收件会计师：","Prepared for: ")+cpa+tr(" · 清单进度："," · checklist progress: ")+done+"/"+total+tr(" 项已解决"," resolved")+(missing.length?tr(" · 缺项："," · missing: ")+missing.map(function(m){return requestLabel(m);}).join(tr("、",", ","; ")):tr(" · 无缺项"," · nothing missing"," · nada faltante"));
   }
+  if(!hasPass()){
+    // CPA 交接工作台是季票权益：没开通就不给能点的按钮，改成一句说明 + 一条领取路径。
+    // 上面的收件人与进度照常显示，用户知道自己离交付还差什么。
+    if(b1)b1.classList.add("hidden");
+    if(b2)b2.classList.add("hidden");
+    if(gate){gate.classList.remove("hidden");gate.innerHTML=isGuest()?t("登录后可领取季票（内测期免费）。"):(tr("CPA 交接工作台是季票功能：内测期免费，领取后可标记已发送、留发送记录。","The CPA handoff workbench is a season-pass feature; free during the beta — with the pass you can mark the packet as sent and keep a sent record.","La mesa de entrega al CPA es una función del pase; es gratis en la beta: con el pase puede marcar el paquete como enviado y guardar el registro.")+" <button type='button' class='secondary' onclick='goSub()'>"+tr("去领取免费季票","Claim the free pass","Reclamar el pase gratis")+"</button>");}
+    return;
+  }
+  if(b1){b1.classList.remove("hidden");b1.style.display="";}
+  if(b2){b2.classList.remove("hidden");b2.style.display="";}
+  if(gate){gate.classList.add("hidden");gate.innerHTML="";}
 }
 function loadPacket(email){
   function normalize(){if(packet.changesCollapsed===undefined)packet.changesCollapsed=true;if(!packet.mergedV2){backfillRows();migrateSheets();packet.mergedV2=true;savePacket();}}
@@ -2975,11 +2988,12 @@ $("btnExportCsv").onclick=function(){
   track("export",{format:"csv"});track("export_done",{format:"csv"});flowExport("csv");showExportGuide();
 };
 $("btnCpaReview").onclick=function(){if(isGuest()){showAuth();return;}
+  if(!hasPass()){if($("handoffGate"))$("handoffGate").classList.remove("hidden");goSub();return;}
   var d=new Date().toLocaleDateString();
   packet.cpaReview={date:d,note:""};savePacket();renderCpa();
   packet.exports.push(new Date().toLocaleString()+" 已发送给会计师（"+d+"）");savePacket();renderExports();
 };
-$("btnCpaClear").onclick=function(){if(isGuest()){showAuth();return;}packet.cpaReview=null;packet.exports=packet.exports.filter(function(e){return e.indexOf("已发送给会计师")<0;});savePacket();renderCpa();renderExports();};
+$("btnCpaClear").onclick=function(){if(isGuest()){showAuth();return;}if(!hasPass()){goSub();return;}packet.cpaReview=null;packet.exports=packet.exports.filter(function(e){return e.indexOf("已发送给会计师")<0;});savePacket();renderCpa();renderExports();};
 function fmtD(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);}
 function dayLabel(d){var t=new Date();t.setHours(0,0,0,0);var x=new Date(d);x.setHours(0,0,0,0);var n=Math.round((x-t)/86400000);if(n<0)return "已过";if(n===0)return "今天";if(n<=30)return n+" 天后";return "待办";}
 function renderReminders(){
