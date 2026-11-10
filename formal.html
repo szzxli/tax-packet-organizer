@@ -561,6 +561,8 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div id="reminderBox"></div>
 </div>
 
+<div class="card hidden" id="outlookCard"></div>
+
 <div class="card">
 <h2>导出：一份能交出去的清单</h2>
 <p class="muted small">没做完也能先导出，缺项会列在清单里，导出后继续补。三份导出均含你确认的证据数字与核对状态，均不含社保号，均不锁任何一家报税软件：<b>CSV</b> 是通用表格，可直接用 Excel / Google Sheets 打开，也可导入会计师自己的报税软件，含确认数字与核对列；<b>JSON</b> 是机器可读清单，含预估草稿汇总与 IRS 对照提醒；<b>PDF</b> 是打印版，汇总在前、清单在后，末尾带会计师审核签字栏。导出的是清单与确认数字，文件原件由你另外经会计师门户 / 邮件发给会计师。会计师的工作只是审核确认并签字（以打印版签字栏手签为准），平台不抽报税费、不替代签字；发送记录由你标记，不代表 CPA 已确认。</p>
@@ -2205,6 +2207,168 @@ function renderStickyProgress(){
   action.onclick=function(){navigateToSection(target);};
   bar.classList.remove("hidden");
 }
+// OUTLOOK_LOGIC_START
+// 今年大致退还是补：只用来安排现金，不算税、不打表、不判资格。
+// 依据：与本页卡 1 同一张 2026 联邦档位表（核于 2026-11-03）；截止日取页面既有的
+// 「2026 税年申报截止 2027-04-15」（同日核）。缺一项就再加宽区间并写明缺什么，不猜数。
+var OUTLOOK_KEY = "tpo_outlook";
+var OUTLOOK_CHECKED = "2026-11-03";
+var OUTLOOK_DEADLINE = "2027-04-15";
+var OUTLOOK_FIELDS = ["status", "dep", "income", "withheld", "tuition", "retire", "mkt", "premium", "mortgage"];
+function outlookLoad() {
+  var d = { status: "single", dep: "", income: "", withheld: "", tuition: "", retire: "", mkt: "", premium: "", mortgage: "" };
+  try {
+    var o = JSON.parse(localStorage.getItem(OUTLOOK_KEY) || "{}") || {};
+    OUTLOOK_FIELDS.forEach(function (k) { if (o[k] != null) d[k] = String(o[k]); });
+  } catch (e) {}
+  return d;
+}
+function outlookSave(s) { try { localStorage.setItem(OUTLOOK_KEY, JSON.stringify(s)); } catch (e) {} }
+function outlookNum(v) {
+  var n = parseFloat(String(v == null ? "" : v).replace(/[,\s$]/g, ""));
+  return isFinite(n) && n > 0 ? n : 0;
+}
+function outlookTax(status, taxable) {
+  var rows = (typeof PLAN_BRACKETS_2026 !== "undefined" && PLAN_BRACKETS_2026[status]) || PLAN_BRACKETS_2026.single;
+  var t = 0, lo = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var hi = rows[i][0], r = rows[i][1];
+    if (taxable > lo) t += (Math.min(taxable, hi) - lo) * r / 100;
+    lo = hi;
+    if (taxable <= hi) break;
+  }
+  return Math.round(t);
+}
+// 差额 = 应缴 − 已预扣：负=退、正=补。±250 以内算持平，避免把噪声说成结论。
+function outlookEstimate(s) {
+  var income = outlookNum(s.income), withheld = outlookNum(s.withheld), retire = outlookNum(s.retire);
+  var taxable = Math.max(0, income - retire);
+  var tax = outlookTax(s.status || "single", taxable);
+  var gap = tax - withheld;
+  var dir = gap <= -250 ? "refund" : (gap < 250 ? "even" : "owe");
+  var width = 500, whys = [];
+  if (outlookNum(s.tuition) > 0) { width += 250; whys.push("tuition"); }
+  if (outlookNum(s.mkt) > 0) { width += 250; whys.push("marketplace"); }
+  if (outlookNum(s.dep) > 0) { width += 250; whys.push("dependents"); }
+  if (outlookNum(s.mortgage) > 0) { width += 250; whys.push("itemized"); }
+  var base = Math.round(gap / 50) * 50;
+  return {
+    dir: dir, gap: gap, low: base - width, high: base + width,
+    tax: tax, taxable: taxable, income: income, withheld: withheld,
+    whys: whys, filled: (income > 0 || withheld > 0)
+  };
+}
+function outlookMoney(n) { return "$" + Math.round(Math.abs(n)).toLocaleString("en-US"); }
+function outlookRangeText(e) {
+  var a = Math.min(Math.abs(e.low), Math.abs(e.high));
+  var b = Math.max(Math.abs(e.low), Math.abs(e.high));
+  if (e.dir === "even") {
+    return tr("在 ±" + outlookMoney(b) + " 以内，基本持平", "within ±" + outlookMoney(b) + " — close to even", "dentro de ±" + outlookMoney(b) + ": casi parejo");
+  }
+  var lo = outlookMoney(a), hi = outlookMoney(b);
+  if (e.dir === "refund") {
+    return tr("退 " + lo + " 到 " + hi, "a refund of " + lo + " to " + hi, "una devolución de " + lo + " a " + hi);
+  }
+  return tr("补 " + lo + " 到 " + hi, lo + " to " + hi + " owed", lo + " a " + hi + " por pagar");
+}
+function outlookWhyText(whys) {
+  var zh = [], en = [], es = [];
+  whys.forEach(function (k) {
+    if (k === "tuition") { zh.push("学费单"); en.push("the tuition form"); es.push("el formulario de matrícula"); }
+    if (k === "marketplace") { zh.push("医保补贴对账"); en.push("the subsidy reconciliation"); es.push("el ajuste del subsidio"); }
+    if (k === "dependents") { zh.push("被抚养人"); en.push("dependents"); es.push("las personas a cargo"); }
+    if (k === "itemized") { zh.push("房贷利息和州税"); en.push("mortgage interest and state tax"); es.push("los intereses hipotecarios y el impuesto estatal"); }
+  });
+  return { zh: zh, en: en, es: es };
+}
+function outlookOutHtml(unlocked) {
+  var e = outlookEstimate(outlookLoad());
+  if (!e.filled) {
+    return "<p class=\"small\">" + esc(tr("先填两行就能看方向：今年要报的收入、工资里已经扣掉的税。", "Two lines are enough to see the direction: this year's income and the tax already taken out of your pay.", "Con dos líneas ya ve la dirección: sus ingresos de este año y el impuesto que ya le descontaron.")) + "</p>";
+  }
+  var dirZh = { refund: "退税", even: "基本持平", owe: "补税" }[e.dir];
+  var dirEn = { refund: "a refund", even: "close to even", owe: "tax owed" }[e.dir];
+  var dirEs = { refund: "una devolución", even: "casi parejo", owe: "impuesto por pagar" }[e.dir];
+  var h = "<p class=\"small\">" + esc(tr("按你现在交的材料，今年大概是退还、持平，还是补税。", "Based on what you have gathered so far, here is whether this year looks like a refund, close to even, or tax owed.", "Con lo que ya reunió, así se ve este año: devolución, casi parejo o impuesto por pagar.")) + "</p>";
+  h += "<p><b>" + esc(tr("现在看：大概是" + dirZh + "。", "Right now: " + dirEn + ".", "Por ahora: " + dirEs + ".")) + "</b></p>";
+  if (!unlocked) {
+    h += "<p class=\"small\">" + esc(tr("想知道大概多少、是哪几项在推、哪天之前还能改，要先把季票领了（内测期免费）。", "To see roughly how much, what is driving it, and the last day to change it, claim the season pass first (free during beta).", "Para ver cuánto, qué lo está moviendo y hasta qué día puede cambiarlo, reclame primero el pase (gratis en la beta).")) + "</p>";
+    return h;
+  }
+  // 这一行必须同时说清「算什么、没算什么」，否则区间就是个孤零零的数。
+  var condZh = "；还没算学费单、医保对账、被抚养人、房贷利息和州税，所以范围比实际宽";
+  var condEn = "; the tuition form, the subsidy reconciliation, dependents, mortgage interest and state tax are not in it yet, so the range is wider than the real one";
+  var condEs = "; aún no incluye el formulario de matrícula, el ajuste del subsidio, las personas a cargo, los intereses hipotecarios ni el impuesto estatal, así que el rango es más amplio que el real";
+  h += "<p>" + esc(tr("大概范围：", "Rough range: ", "Rango aproximado: ")) + "<b>" + esc(outlookRangeText(e)) + "</b>" + esc(tr(condZh + "。", condEn + ".", condEs + ".")) + "</p>";
+  h += "<p class=\"small muted\">" + esc(tr("依据：2026 年联邦档位表（与本页卡 1 同一张，核于 " + OUTLOOK_CHECKED + "）。", "Basis: the 2026 federal bracket table (same one as card 1 on this page, checked " + OUTLOOK_CHECKED + ").", "Base: la tabla federal de tramos de 2026 (la misma de la tarjeta 1, verificada el " + OUTLOOK_CHECKED + ").")) + "</p>";
+  h += "<p class=\"small\"><b>" + esc(tr("是哪几项在推这个结果", "What is driving this", "Qué está moviendo esto")) + "</b></p><ul class=\"small\">";
+  if (e.withheld > 0) h += "<li>" + esc(tr("工资里已经扣掉的税 " + outlookMoney(e.withheld) + "：先把它从这个数里减掉。", "Tax already taken out of your pay, " + outlookMoney(e.withheld) + ": subtracted first.", "El impuesto ya descontado de su pago, " + outlookMoney(e.withheld) + ": se resta primero.")) + "</li>";
+  if (outlookNum(outlookLoad().tuition) > 0) h += "<li>" + esc(tr("学校寄来的学费单：会让这个数变小，能少多少要看你在读年限和收入，这里先按不抵算。", "The tuition form from the school: it lowers this number, by how much depends on your years enrolled and income — not counted here yet.", "El formulario de matrícula de la escuela: baja este número, cuánto depende de sus años inscrito y de sus ingresos; aquí todavía no se cuenta.")) + "</li>";
+  if (outlookNum(outlookLoad().mkt) > 0) h += "<li>" + esc(tr("医保补贴：要和 1095-A 对账，可能加回来一部分，这里没算。", "The health-insurance subsidy: it has to be reconciled with Form 1095-A and part may come back — not counted here.", "El subsidio del seguro médico: hay que conciliarlo con el Formulario 1095-A y parte puede volver; aquí no se cuenta.")) + "</li>";
+  h += "</ul>";
+  h += "<p class=\"small\">" + esc(tr("今年还能改的：退休账户补缴、少扣的税补回来；最晚 " + OUTLOOK_DEADLINE + "（2026 税年联邦申报截止，核于 " + OUTLOOK_CHECKED + "）。", "What you can still change: catch-up retirement contributions and topping up under-withheld tax; the last day is " + OUTLOOK_DEADLINE + " (2026 federal filing deadline, checked " + OUTLOOK_CHECKED + ").", "Lo que aún puede cambiar: aportes adicionales al retiro y completar el impuesto que le retuvieron de menos; el último día es " + OUTLOOK_DEADLINE + " (fecha límite federal del año fiscal 2026, verificada el " + OUTLOOK_CHECKED + ").")) + "</p>";
+  return h;
+}
+function outlookInputsHtml(s) {
+  function num(id, zh, en, es, ph) {
+    return "<div><label for=\"ol_" + id + "\">" + esc(tr(zh, en, es)) + "</label><input id=\"ol_" + id + "\" inputmode=\"decimal\" autocomplete=\"off\" placeholder=\"" + esc(ph) + "\"></div>";
+  }
+  var opts = "";
+  PLAN_STATUS_ORDER.forEach(function (code) {
+    var lab = PLAN_STATUS_LABEL[code];
+    opts += "<option value=\"" + code + "\">" + esc(tr(lab[0], lab[1], lab[2])) + "</option>";
+  });
+  return "<details class=\"small\" id=\"outlookInputs\"><summary>" + esc(tr("填这 9 项（只存这台浏览器）", "Fill these 9 fields (saved only in this browser)", "Llene estos 9 campos (solo en este navegador)")) + "</summary>"
+    + "<div class=\"row\"><div><label for=\"ol_status\">" + esc(tr("报税身份", "Filing status", "Estado civil fiscal")) + "</label><select id=\"ol_status\">" + opts + "</select></div></div>"
+    + "<div class=\"row\">"
+    + num("dep", "被抚养人数", "People you support", "Personas a su cargo", "0")
+    + num("income", "今年要报的收入（W-2、1099 加起来）", "Income to report this year (W-2 and 1099 combined)", "Ingresos a declarar este año (W-2 y 1099 juntos)", "例如 85000")
+    + "</div><div class=\"row\">"
+    + num("withheld", "全年已经被扣掉的税（W-2 上的联邦预扣）", "Tax already taken out all year (federal withholding on your W-2)", "Impuesto ya descontado todo el año (retención federal de su W-2)", "例如 9000")
+    + num("tuition", "学费（一年实付，学校单子上的数）", "Tuition (what you actually paid this year)", "Matrícula (lo que pagó este año)", "例如 12000")
+    + "</div><div class=\"row\">"
+    + num("retire", "今年放进退休账户的钱", "Money put into retirement accounts this year", "Dinero aportado a cuentas de retiro este año", "例如 5000")
+    + num("mkt", "医保 Marketplace 覆盖了几个月", "Months covered by Marketplace insurance", "Meses cubiertos por el seguro del Marketplace", "例如 12")
+    + "</div><div class=\"row\">"
+    + num("premium", "1095-A 上的全年保费", "Full-year premium on Form 1095-A", "Prima anual del Formulario 1095-A", "例如 8400")
+    + num("mortgage", "房贷利息 + 州税（一年合计）", "Mortgage interest + state tax (yearly total)", "Intereses hipotecarios + impuesto estatal (total del año)", "例如 14000")
+    + "</div></details>";
+}
+function outlookHtml(unlocked) {
+  var s = outlookLoad();
+  var h = "<h2>" + esc(tr("整理完先看这一屏：今年大概退还是补", "Before you export: does this year look like a refund or tax owed", "Antes de exportar: ¿este año se ve como devolución o impuesto por pagar")) + "</h2>";
+  h += "<p class=\"muted small\">" + esc(tr("按你现在填的数和材料估的；只用来安排现金，不算税、不打表。", "Estimated from the numbers and papers you have so far; only for planning cash — no tax calculation, no return.", "Estimado con sus números y papeles actuales; solo para planear efectivo: sin calcular impuestos, sin declaración.")) + "</p>";
+  h += "<div id=\"outlookOut\">" + outlookOutHtml(unlocked) + "</div>";
+  h += outlookInputsHtml(s);
+  h += "<p class=\"small\"><b>" + esc(tr("这是估算，不是申报；最终以你的会计师与 IRS 核算为准。", "This is an estimate, not a filing; your accountant and the IRS have the final word.", "Esto es una estimación, no una declaración; la última palabra la tienen su contador y el IRS.")) + "</b></p>";
+  return h;
+}
+function renderOutlook() {
+  var el = $("outlookCard");
+  if (!el) return;
+  var show = currentPage === 1 && packet && packet.checklist && packet.checklist.length && currentOrganizeStep === 3;
+  el.classList.toggle("hidden", !show);
+  if (!show) return;
+  el.innerHTML = outlookHtml(hasPass());
+  var s = outlookLoad(), touched = false;
+  OUTLOOK_FIELDS.forEach(function (k) {
+    var i = $("ol_" + k);
+    if (!i) return;
+    i.value = s[k];
+    var handler = function () {
+      s[k] = i.value;
+      touched = true;
+      outlookSave(s);
+      var out = $("outlookOut");
+      if (out) out.innerHTML = outlookOutHtml(hasPass());
+    };
+    i.oninput = handler;
+    i.onchange = handler;
+  });
+  var det = $("outlookInputs");
+  if (det && (touched || !outlookEstimate(s).filled)) det.open = true;
+}
+// OUTLOOK_LOGIC_END
 function renderHero(){
   var hero=$("heroBox");if(!hero||!packet)return;
   var show=currentPage===1&&!packet.checklist.length;
@@ -2215,6 +2379,7 @@ function renderHero(){
   var cy=$("coverPreviewYear");if(cy){var ty=taxYearLabel().replace(" 税年","");cy.textContent=tr(ty+" 税年 · 报税材料包","Tax year "+ty+" · Tax packet","Año fiscal "+ty+" · Paquete fiscal");}
   var cq=$("coverPreviewQs");if(cq){var cqs=cpaQuestions();var cempty=tr("暂无，按你的情况补充","None yet — add your own","Aún no hay nada; añada su caso");var cqh=cqs.length?("<ol class='cover-qs small'>"+cqs.map(function(q){return "<li>"+esc(q)+"</li>";}).join("")+"</ol>"):"<p class='small'>"+cempty+"</p>";if(cqs.length&&cqs.length<3)cqh+="<p class='small'>"+cempty+"</p>";cq.innerHTML=cqh;}
   var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",currentPage!==1);
+  renderOutlook();
   var sc=$("subShowcase");if(sc)sc.classList.toggle("hidden",currentPage!==1||!packet.checklist.length||hasPass()||currentOrganizeStep!==3);
   var ai=$("aiCard");if(ai){var showAi=ai.dataset.open==="1"&&currentPage===1&&currentOrganizeStep===1;ai.classList.toggle("hidden",!showAi);}
   var fq=$("faqCard");if(fq)fq.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==3);
