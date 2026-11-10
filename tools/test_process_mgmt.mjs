@@ -192,15 +192,19 @@ check("ins 预警：说「退回有上限」，不出现上限金额、也不说
 });
 check("年轮标签写明按单个学生 / 按本人，并给出两个孩子的填法", () => {
   const out = sandbox.procHtml(true);
-  assert.ok(out.includes("学费抵免（按单个学生算）"), "学费抵免标签没写按单个学生");
+  assert.ok(out.includes("AOTC 前四年（按单个学生算）"), "年轮标签没写 AOTC 前四年");
   assert.ok(out.includes("年数各算各的"), "缺两个孩子的填法提示");
   assert.ok(out.includes("退休分（按你本人算）"), "退休分标签没写按本人");
+  assert.ok(out.includes("LLC（终生学习抵免）没有年数上限"), "来源行没写 LLC 无年限");
+  assert.ok(!/教育抵免：Pub 970 \/ Form 8863，每个学生最多 4 个税年/.test(out), "来源行仍像所有教育抵免都只有 4 年");
   sandbox.LANG = "en";
   const en = sandbox.procHtml(true);
-  assert.ok(en.includes("Education credit (per student)") && en.includes("Retirement credits (yours)"), "en 标签不对");
+  assert.ok(en.includes("AOTC's first four years (per student)") && en.includes("Retirement credits (yours)"), "en 标签不对");
+  assert.ok(en.includes("the LLC (lifetime learning credit) has no year limit"), "en 来源行没写 LLC 无年限");
   sandbox.LANG = "es";
   const es = sandbox.procHtml(true);
-  assert.ok(es.includes("Crédito educativo (por estudiante)") && es.includes("Créditos de retiro (los suyos)"), "es 标签不对");
+  assert.ok(es.includes("Los primeros cuatro años del AOTC (por estudiante)") && es.includes("Créditos de retiro (los suyos)"), "es 标签不对");
+  assert.ok(es.includes("el LLC (crédito de aprendizaje permanente) no tiene límite de años"), "es 来源行没写 LLC 无年限");
   sandbox.LANG = "zh";
 });
 

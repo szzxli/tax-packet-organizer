@@ -4,6 +4,7 @@
 // 或者必须包在 tr(zh,en,es) / t(key) 里。数据比较用的中文（如 form==="州税"）不算。
 import fs from "node:fs";
 import path from "node:path";
+import vm from "node:vm";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 
@@ -121,10 +122,89 @@ check("关键控件文案已走 tr()（抽查 12 处）", () => {
   }
 });
 
-check("进度条与节摘要不再输出中文（三种语言都有第二、三参）", () => {
-  const body = js.slice(js.indexOf("function renderStickyProgress"), js.indexOf("function renderHero"));
-  const stripped = body.replace(/tr\([^;]*?\)/g, "").replace(/t\("[^"]*"\)/g, "");
-  assert.ok(!CJK.test(stripped), "进度条里还有裸中文");
+// tr(zh,en,es) 少一个参，西语用户看到的就是 undefined；按源码数参数太脆，直接渲染。
+function fnSource(src, name) {
+  const at = src.indexOf("function " + name + "(");
+  assert.ok(at >= 0, "找不到函数 " + name);
+  let depth = 0, quote = null;
+  for (let i = src.indexOf("{", at); i < src.length; i++) {
+    const c = src[i];
+    if (quote) {
+      if (c === "\\") { i++; continue; }
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === "`") { quote = c; continue; }
+    if (c === "{") depth++;
+    else if (c === "}") { depth--; if (!depth) return src.slice(at, i + 1); }
+  }
+  throw new Error("函数 " + name + " 没有闭合");
+}
+
+function trCallArity(src) {
+  const bad = [];
+  let i = 0;
+  while ((i = src.indexOf("tr(", i)) >= 0) {
+    const before = src.slice(Math.max(0, i - 12), i);
+    if (/function\s*$/.test(before) || /[\w$.]/.test(src[i - 1] || "")) { i += 3; continue; }
+    const line = src.slice(0, i).split("\n").length;
+    let depth = 1, quote = null, commas = 0;
+    for (let j = i + 3; j < src.length; j++) {
+      const c = src[j];
+      if (quote) {
+        if (c === "\\") { j++; continue; }
+        if (c === quote) quote = null;
+        continue;
+      }
+      if (c === '"' || c === "'" || c === "`") { quote = c; continue; }
+      if (c === "(" || c === "[" || c === "{") depth++;
+      else if (c === ")" || c === "]" || c === "}") { depth--; if (!depth) break; }
+      else if (c === "," && depth === 1) commas++;
+    }
+    if (commas + 1 !== 3) bad.push("第 " + line + " 行有 " + (commas + 1) + " 个参数：" + src.slice(i, i + 90).split("\n")[0]);
+    i += 3;
+  }
+  return bad;
+}
+
+function stickyText(lang, doneCount, total) {
+  const el = () => ({ classList: { add() {}, remove() {}, toggle() {} }, style: {}, textContent: "", onclick: null });
+  const els = { stickyProgress: el(), stickyProgressTitle: el(), stickyProgressText: el(), stickyProgressFill: el(), stickyProgressAction: el() };
+  const rows = Array.from({ length: total }, (_, k) => ({ ok: k < doneCount }));
+  const sandbox = {
+    Math,
+    LANG: lang,
+    $: (id) => els[id],
+    packet: { checklist: rows },
+    currentPage: 1,
+    rowResolved: (r) => !!r.ok,
+    navigateToSection() {},
+    tr: (zh, en, es) => (lang === "en" ? en : lang === "es" ? es : zh),
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(fnSource(js, "renderStickyProgress"), sandbox, { filename: "sticky.js" });
+  sandbox.renderStickyProgress();
+  return els.stickyProgressText.textContent;
+}
+
+check("所有 tr() 调用都是三参（少一个西语就会显示 undefined）", () => {
+  const bad = trCallArity(js);
+  assert.deepEqual(bad, [], "少参的 tr()：\n" + bad.join("\n"));
+});
+
+check("进度条三语渲染：不出现 undefined / null / 中文", () => {
+  for (const lang of ["zh", "en", "es"]) {
+    for (const [done, total] of [[0, 3], [1, 3], [3, 3]]) {
+      const text = stickyText(lang, done, total);
+      assert.ok(!/undefined|null/.test(text), lang + " " + done + "/" + total + " 渲染出空值：" + text);
+      if (lang !== "zh") assert.ok(!CJK.test(text), lang + " " + done + "/" + total + " 渲染出中文：" + text);
+      assert.ok(text.trim().length > 0, lang + " " + done + "/" + total + " 是空串");
+    }
+  }
+  assert.equal(stickyText("es", 1, 3), "Hecho: 1 / 3 · 2 aún por resolver.");
+  assert.match(stickyText("es", 3, 3), /^Los 3 elementos están marcados/);
+  assert.equal(stickyText("zh", 1, 3), "已完成 1 / 3 项 · 还有 2 项待处理。");
+  assert.equal(stickyText("en", 1, 3), "Done: 1 / 3 · 2 still to handle.");
 });
 
 check("州名与表名在行标题里按语言显示", () => {

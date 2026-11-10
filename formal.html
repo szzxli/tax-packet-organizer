@@ -1487,7 +1487,7 @@ function renderCpa(){
     var total=packet.checklist.length;
     var done=packet.checklist.filter(rowResolved).length;
     var missing=packet.checklist.filter(function(it){return !rowResolved(it);}).map(function(it){return rowTitle(it);});
-    h.textContent=tr("收件会计师：","Prepared for: ")+cpa+tr(" · 清单进度："," · checklist progress: ")+done+"/"+total+tr(" 项已解决"," resolved")+(missing.length?tr(" · 缺项："," · missing: ")+missing.map(function(m){return requestLabel(m);}).join(tr("、",", ","; ")):tr(" · 无缺项"," · nothing missing"," · nada faltante"));
+    h.textContent=tr("收件会计师：","Prepared for: ","Preparado para: ")+cpa+tr(" · 清单进度："," · checklist progress: "," · progreso de la lista: ")+done+"/"+total+tr(" 项已解决"," resolved"," resueltos")+(missing.length?tr(" · 缺项："," · missing: "," · faltan: ")+missing.map(function(m){return requestLabel(m);}).join(tr("、",", ","; ")):tr(" · 无缺项"," · nothing missing"," · nada faltante"));
   }
 }
 function loadPacket(email){
@@ -1670,7 +1670,7 @@ function renderChanges(){
   var none=!!packet.changesNone;
   var collapsed=!!packet.changesCollapsed;
   var sum=$("changesSummary"),check=$("changesCheck"),body=$("changesBody");
-  sum.textContent=none?tr("无变化","No changes","Sin cambios"):selected.length?tr("已选：","Selected: ")+selected.map(function(k){return k==="抚养人"?((packet.changesDir[k]==="减少"?tr("抚养人减少了","Dependent removed","Se quitó un dependiente"):changeLabel(k))+(packet.changesDir[k]?"":tr("（请选增加或减少）"," (choose added or removed)"," (elija agregado o quitado)"))):changeLabel(k);}).join(tr("、",", ","; ")):tr("未选","None selected","Nada seleccionado");
+  sum.textContent=none?tr("无变化","No changes","Sin cambios"):selected.length?tr("已选：","Selected: ","Seleccionado: ")+selected.map(function(k){return k==="抚养人"?((packet.changesDir[k]==="减少"?tr("抚养人减少了","Dependent removed","Se quitó un dependiente"):changeLabel(k))+(packet.changesDir[k]?"":tr("（请选增加或减少）"," (choose added or removed)"," (elija agregado o quitado)"))):changeLabel(k);}).join(tr("、",", ","; ")):tr("未选","None selected","Nada seleccionado");
   if(collapsed)body.classList.add("hidden");else body.classList.remove("hidden");
   if(none||(selected.length&&resolved))check.classList.remove("hidden");else check.classList.add("hidden");
   $("changesHead").onclick=function(){packet.changesCollapsed=!packet.changesCollapsed;savePacket();renderAll();};
@@ -1815,7 +1815,7 @@ function renderDraft(){
   var v=lines.filter(function(it){return it.voucherChecked}).length;
   var m=lines.filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length;
   var d=lines.filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length;
-  box.innerHTML="<table><tr><th>"+tr("表","Form","Formulario")+"</th><th>"+tr("付款方","Payer","Pagador")+"</th><th>"+tr("确认数字","Confirmed figure","Cifra confirmada")+"</th><th>"+tr("来源证据","Source evidence","Evidencia de origen")+"</th><th>"+tr("凭证核对","Receipt check","Verificación del comprobante")+"</th><th>"+tr("表格数","Form figure","Cifra del formulario")+"</th><th>"+tr("核对结果","Result","Resultado")+"</th></tr>"+rows+"</table><p class='small'><b>"+tr("合计：","Total: ","Total: ")+cats+tr(" · 预估合计 "," · estimated total "," · total estimado ")+fmtMoney(tot.grand)+"</b>"+tr("（草稿，非申报表）"," (draft, not a tax return)"," (borrador, no es una declaración)")+"</p><p class='small'>"+tr("凭证已核对 ","Receipts checked ")+v+"/"+lines.length+tr(" · 表格一致 "," · forms matching ")+m+tr(" · 差异 "," · differences ")+d+tr(" · 未核对表格数 "," · form figures unchecked ")+(lines.length-m-d)+tr("。数字在“今年要准备的材料”一节各项目里改。",". Edit the figures in each item under “Materials to prepare this year”.",". Edite las cifras en cada elemento de «Materiales para preparar este año».")+"</p>"+(missing.length?"<p class='small'>"+tr("另有 ","Another ","Otros ")+missing.length+tr(" 项未录数字（【待填】），在“今年要准备的材料”一节各项目里补。"," items have no figure yet ([to fill]). Add them in each item under “Materials to prepare this year”."," elementos aún no tienen cifra ([por completar]). Agréguelas en cada elemento de «Materiales para preparar este año».")+"</p>":"");
+  box.innerHTML="<table><tr><th>"+tr("表","Form","Formulario")+"</th><th>"+tr("付款方","Payer","Pagador")+"</th><th>"+tr("确认数字","Confirmed figure","Cifra confirmada")+"</th><th>"+tr("来源证据","Source evidence","Evidencia de origen")+"</th><th>"+tr("凭证核对","Receipt check","Verificación del comprobante")+"</th><th>"+tr("表格数","Form figure","Cifra del formulario")+"</th><th>"+tr("核对结果","Result","Resultado")+"</th></tr>"+rows+"</table><p class='small'><b>"+tr("合计：","Total: ","Total: ")+cats+tr(" · 预估合计 "," · estimated total "," · total estimado ")+fmtMoney(tot.grand)+"</b>"+tr("（草稿，非申报表）"," (draft, not a tax return)"," (borrador, no es una declaración)")+"</p><p class='small'>"+tr("凭证已核对 ","Receipts checked ","Comprobantes verificados ")+v+"/"+lines.length+tr(" · 表格一致 "," · forms matching "," · formularios coinciden ")+m+tr(" · 差异 "," · differences "," · diferencias ")+d+tr(" · 未核对表格数 "," · form figures unchecked "," · formularios sin verificar ")+(lines.length-m-d)+tr("。数字在“今年要准备的材料”一节各项目里改。",". Edit the figures in each item under “Materials to prepare this year”.",". Edite las cifras en cada elemento de «Materiales para preparar este año».")+"</p>"+(missing.length?"<p class='small'>"+tr("另有 ","Another ","Otros ")+missing.length+tr(" 项未录数字（【待填】），在“今年要准备的材料”一节各项目里补。"," items have no figure yet ([to fill]). Add them in each item under “Materials to prepare this year”."," elementos aún no tienen cifra ([por completar]). Agréguelas en cada elemento de «Materiales para preparar este año».")+"</p>":"");
 }
 function computeWarnings(){
   var w=[];
@@ -1833,7 +1833,7 @@ function computeWarnings(){
   });
   packet.lastYear.forEach(function(l){
     if(!packet.checklist.some(function(it){return it.form===l.form&&it.payer===l.payer})){
-      w.push({kind:"lastyear",text:tr("去年有 "+l.form+(l.payer?"（"+l.payer+"）":"")+"，今年清单没有对应项。","You had "+l.form+(l.payer?" ("+exPayer(l.payer)+")":"")+" last year; this year's checklist has no matching item."),action:tr("雇主/付款方也会向 IRS 报送同类信息表，漏表是常见比对差异原因；请确认今年是否确实没有该项，如有请补入清单。","Employers and payers also report the same information returns to the IRS, so a missing form is a common reason for a mismatch notice. Confirm whether you really have no such item this year; if you do, add it to the checklist.","Los empleadores y pagadores también informan al IRS, así que un formulario faltante es una causa común de avisos por discrepancia. Confirme si este año realmente no tiene ese concepto; si lo tiene, agréguelo a la lista.")});
+      w.push({kind:"lastyear",text:tr("去年有 "+l.form+(l.payer?"（"+l.payer+"）":"")+"，今年清单没有对应项。","You had "+l.form+(l.payer?" ("+exPayer(l.payer)+")":"")+" last year; this year's checklist has no matching item.","El año pasado tuvo "+l.form+(l.payer?" ("+exPayer(l.payer)+")":"")+"; la lista de este año no tiene un elemento que corresponda."),action:tr("雇主/付款方也会向 IRS 报送同类信息表，漏表是常见比对差异原因；请确认今年是否确实没有该项，如有请补入清单。","Employers and payers also report the same information returns to the IRS, so a missing form is a common reason for a mismatch notice. Confirm whether you really have no such item this year; if you do, add it to the checklist.","Los empleadores y pagadores también informan al IRS, así que un formulario faltante es una causa común de avisos por discrepancia. Confirme si este año realmente no tiene ese concepto; si lo tiene, agréguelo a la lista.")});
     }
   });
   return w;
@@ -1849,7 +1849,7 @@ function figureMainArea(it){
   var wrap=document.createElement("div");wrap.style.marginTop="8px";
   var info=document.createElement("p");info.className="small";
   if(it.figure){
-    info.innerHTML=tr("确认数字：","Confirmed figure: ")+"<b>"+esc(it.figure.cat)+" "+fmtMoney(it.figure.cents)+"</b>"+tr("（来源："," (source: ")+esc(it.figure.source||tr("手动","manual","manual"))+tr("）",")",")");
+    info.innerHTML=tr("确认数字：","Confirmed figure: ","Cifra confirmada: ")+"<b>"+esc(it.figure.cat)+" "+fmtMoney(it.figure.cents)+"</b>"+tr("（来源："," (source: "," (fuente: ")+esc(it.figure.source||tr("手动","manual","manual"))+tr("）",")",")");
   } else {
     info.textContent=tr("未录数字。电子档上传后会即时提数候选、由你确认；或手动输入。","No figure yet. A digital file is read right away for figure candidates you confirm; or type the figure yourself.","Aún no hay cifra. Un archivo digital se lee al instante para proponer cifras que usted confirma; o escríbala usted mismo.");
     if(it.fileName&&it.fileName.indexOf("拍照")>=0)info.textContent+=tr("（拍照件不支持提数。）"," (photos are not read for figures.)"," (las fotos no se leen para extraer cifras).");
@@ -1870,7 +1870,7 @@ function figureMainArea(it){
   var mrow=document.createElement("div");mrow.className="row";mrow.style.marginTop="6px";
   var amt=document.createElement("input");amt.placeholder=tr("今年总数（例如 1234.56）","This year's total (e.g. 1234.56)","Total de este año (p. ej. 1234.56)");amt.inputMode="decimal";amt.value=it.figure?(it.figure.cents/100):"";
   var save=document.createElement("button");save.textContent=it.figure?tr("改数字","Change figure","Cambiar cifra"):tr("保存数字","Save figure","Guardar cifra");save.className="secondary";
-  save.onclick=function(){var c=parseAmountToCents(amt.value.trim());if(c==null||c<=0){alert(tr("请输入有效金额","Please enter a valid amount","Ingrese un monto válido"));return}it.figure={cat:it.figure?it.figure.cat:kindCat(it.kind),cents:c,source:it.fileName?tr("手动（证据：","manual (evidence: ")+it.fileName+tr("）",")",")"):tr("手动","manual","manual")};it.pendingCandidates=null;savePacket();renderAll();};
+  save.onclick=function(){var c=parseAmountToCents(amt.value.trim());if(c==null||c<=0){alert(tr("请输入有效金额","Please enter a valid amount","Ingrese un monto válido"));return}it.figure={cat:it.figure?it.figure.cat:kindCat(it.kind),cents:c,source:it.fileName?tr("手动（证据：","manual (evidence: ","manual (evidencia: ")+it.fileName+tr("）",")",")"):tr("手动","manual","manual")};it.pendingCandidates=null;savePacket();renderAll();};
   mrow.appendChild(amt);mrow.appendChild(save);
   wrap.appendChild(mrow);
   return wrap;
@@ -1879,7 +1879,7 @@ function figureMoreArea(it){
   var wrap=document.createElement("div");wrap.style.marginTop="8px";
   if(!it.figure){var p=document.createElement("p");p.className="small";p.textContent=tr("核对（有数字后出现）：先对照凭证核对，再与表格数核对。","Verification (appears once a figure is entered): first check it against the receipt, then against the form figure.","Verificación (aparece cuando hay una cifra): primero contra el comprobante, luego contra la cifra del formulario.");wrap.appendChild(p);return wrap;}
   var info=document.createElement("p");info.className="small";
-  info.innerHTML=tr("凭证核对：","Receipt check: ")+(it.voucherChecked?tr("已核对 ✓","checked ✓","verificado ✓"):tr("未核对","not checked","sin verificar"))+tr(" · 表格核对："," · form check: "," · verificación del formulario: ")+esc(matchStatus(it));
+  info.innerHTML=tr("凭证核对：","Receipt check: ","Verificación de comprobantes: ")+(it.voucherChecked?tr("已核对 ✓","checked ✓","verificado ✓"):tr("未核对","not checked","sin verificar"))+tr(" · 表格核对："," · form check: "," · verificación del formulario: ")+esc(matchStatus(it));
   wrap.appendChild(info);
   var mrow=document.createElement("div");mrow.className="row";
   var vbtn=document.createElement("button");vbtn.textContent=it.voucherChecked?tr("取消凭证核对","Uncheck receipt check","Desmarcar comprobante"):tr("已对照凭证核对","Checked against receipt","Comprobante verificado");vbtn.className="secondary";
@@ -1909,7 +1909,7 @@ function costRow(e){
     };
     row.appendChild(lab);row.appendChild(linp);row.appendChild(ainp);
   }else{
-    var lab2=document.createElement("span");lab2.className="small";lab2.textContent=tr("可抵扣成本 · ","Deductible cost · ")+(exText(e.label)||e.label)+tr("：",": ",": ");
+    var lab2=document.createElement("span");lab2.className="small";lab2.textContent=tr("可抵扣成本 · ","Deductible cost · ","Costo deducible · ")+(exText(e.label)||e.label)+tr("：",": ",": ");
     var ainp2=document.createElement("input");ainp2.type="text";ainp2.inputMode="decimal";ainp2.value=e.cents==null?"":(e.cents/100);ainp2.style.width="160px";ainp2.placeholder=tr("只填数字","Numbers only","Solo números");
     ainp2.onchange=function(){
       var v=ainp2.value.trim();
@@ -1964,7 +1964,7 @@ function renderMerged(){
       var ch=document.createElement("p");ch.className="small";ch.textContent=tr("成本明细（可选，点开填；小计只是填报数字之和、非申报表，抵扣资格与比例由 CPA 确认）：","Cost details (optional; the subtotal is only the sum of what you typed, not a tax form — your CPA confirms deductibility and the share):","Detalle de costos (opcional; el subtotal es solo la suma de lo que ingresó, no un formulario fiscal: su CPA confirma la deducibilidad y la proporción):");more.appendChild(ch);
       it.costs.forEach(function(e){more.appendChild(costRow(e));});
       var foot=document.createElement("p");foot.className="small";
-      foot.innerHTML=tr("成本合计 ","Costs ")+fmtMoney(rowExpTotal(it))+tr(" · 小计 "," · subtotal ")+(rowNet(it)==null?"—":fmtMoney(rowNet(it)))+tr("（草稿）"," (draft)"," (borrador)");
+      foot.innerHTML=tr("成本合计 ","Costs ","Costos ")+fmtMoney(rowExpTotal(it))+tr(" · 小计 "," · subtotal "," · subtotal ")+(rowNet(it)==null?"—":fmtMoney(rowNet(it)))+tr("（草稿）"," (draft)"," (borrador)");
       more.appendChild(foot);
     }
     more.appendChild(figureMoreArea(it));
@@ -1983,14 +1983,14 @@ function renderMerged(){
     box.appendChild(div);
   });
   var done=packet.checklist.filter(rowResolved).length;
-  $("progressText").textContent=packet.checklist.length?tr("清单进度：","Checklist progress: ")+done+"/"+packet.checklist.length+tr(" 项已解决"," resolved"," resueltos"):tr("清单进度：暂无清单","Checklist progress: no checklist yet","Progreso: aún no hay lista");
+  $("progressText").textContent=packet.checklist.length?tr("清单进度：","Checklist progress: ","Progreso de la lista: ")+done+"/"+packet.checklist.length+tr(" 项已解决"," resolved"," resueltos"):tr("清单进度：暂无清单","Checklist progress: no checklist yet","Progreso: aún no hay lista");
   var sum=$("mergedSummary");if(sum){
     var filled=packet.checklist.filter(function(x){return !!x.figure;}).length;
     var inc=0,exp=0,netT=0;
     packet.checklist.forEach(function(x){if(x.figure){inc+=x.figure.cents;exp+=rowExpTotal(x);netT+=rowNet(x);}});
     var missNum=packet.checklist.filter(function(x){return !x.figure;});
     var missEv=packet.checklist.filter(function(x){return !x.fileName;});
-    sum.innerHTML="<p class='small'>"+tr("填报小计（草稿）：","Entered subtotal (draft): ")+filled+"/"+packet.checklist.length+tr(" 项已填数字 · 收入合计 "," items with a figure · total income ")+fmtMoney(inc)+tr(" · 成本合计 "," · total costs ")+fmtMoney(exp)+tr(" · 小计合计 "," · net subtotal ")+fmtMoney(netT)+tr("。小计为填报数字之和，非申报表；抵扣资格与比例由持证税务师确认。",". The subtotal is the sum of what you typed, not a tax form; your licensed tax professional confirms deductibility and the share.",". El subtotal es la suma de lo que ingresó, no un formulario fiscal; su profesional fiscal con licencia confirma la deducibilidad y la proporción.")+"</p><p class='small'>"+tr("还差什么（去见税务师前先补齐）：","Still missing (gather before you see your tax professional): ","Aún falta (reúnalo antes de ver a su profesional fiscal): ")+(missNum.length?(tr("缺数字：","missing figure: ","falta cifra: ")+missNum.map(function(x){return esc(exRowTitle(x))+(x.payer?tr("（"," ("," (")+esc(exPayer(x.payer))+tr("）",")",")"):"")}).join(tr("、",", ","; "))):tr("数字已齐","figures complete","cifras completas"))+tr("；","; ","; ")+(missEv.length?(tr("缺凭证（可选，不挡数字）：","missing receipt (optional, does not block the figure): ","falta comprobante (opcional, no bloquea la cifra): ")+missEv.map(function(x){return esc(exRowTitle(x))+(x.payer?tr("（"," ("," (")+esc(exPayer(x.payer))+tr("）",")",")"):"")}).join(tr("、",", ","; "))):tr("凭证已齐","receipts complete","comprobantes completos"))+tr("。","." ,".")+"</p>";
+    sum.innerHTML="<p class='small'>"+tr("填报小计（草稿）：","Entered subtotal (draft): ","Subtotal ingresado (borrador): ")+filled+"/"+packet.checklist.length+tr(" 项已填数字 · 收入合计 "," items with a figure · total income "," elementos con cifra · total de ingresos ")+fmtMoney(inc)+tr(" · 成本合计 "," · total costs "," · total de costos ")+fmtMoney(exp)+tr(" · 小计合计 "," · net subtotal "," · subtotal neto ")+fmtMoney(netT)+tr("。小计为填报数字之和，非申报表；抵扣资格与比例由持证税务师确认。",". The subtotal is the sum of what you typed, not a tax form; your licensed tax professional confirms deductibility and the share.",". El subtotal es la suma de lo que ingresó, no un formulario fiscal; su profesional fiscal con licencia confirma la deducibilidad y la proporción.")+"</p><p class='small'>"+tr("还差什么（去见税务师前先补齐）：","Still missing (gather before you see your tax professional): ","Aún falta (reúnalo antes de ver a su profesional fiscal): ")+(missNum.length?(tr("缺数字：","missing figure: ","falta cifra: ")+missNum.map(function(x){return esc(exRowTitle(x))+(x.payer?tr("（"," ("," (")+esc(exPayer(x.payer))+tr("）",")",")"):"")}).join(tr("、",", ","; "))):tr("数字已齐","figures complete","cifras completas"))+tr("；","; ","; ")+(missEv.length?(tr("缺凭证（可选，不挡数字）：","missing receipt (optional, does not block the figure): ","falta comprobante (opcional, no bloquea la cifra): ")+missEv.map(function(x){return esc(exRowTitle(x))+(x.payer?tr("（"," ("," (")+esc(exPayer(x.payer))+tr("）",")",")"):"")}).join(tr("、",", ","; "))):tr("凭证已齐","receipts complete","comprobantes completos"))+tr("。","." ,".")+"</p>";
   }
 }
 function renderExports(){
@@ -2080,16 +2080,16 @@ function secSummary(key){
   if(key==="s3")return packet.lastYear.length?tr("已加 "+packet.lastYear.length+" 项去年表",packet.lastYear.length+" forms added",packet.lastYear.length+" formularios agregados"):t("未加");
   if(key==="s3b"){var sts=packet.checklist.filter(function(it){return it.form==="州税"}).map(function(it){return exPayer(it.payer)});return sts.length?tr("已加州税：","State added: ","Estado agregado: ")+sts.join(tr("、",", ","; ")):tr("未选州","No state selected","Sin estado seleccionado");}
   if(key==="s4"){if(!packet.checklist.length)return tr("暂无清单","No checklist yet","Aún no hay lista");var d=packet.checklist.filter(rowResolved).length;return d+"/"+packet.checklist.length+tr(" 项已解决"," resolved"," resueltos");}
-  if(key==="s4b")return packet.uncertain&&packet.uncertain.length?(tr("已录 ","Recorded: ")+packet.uncertain.length+tr(" 项不确定事项"," uncertain items"," asuntos inciertos")):tr("无","None","Ninguno");
-  if(key==="s5")return packet.transcript?(tr("已记录：","Recorded: ")+packet.transcript):tr("未上传","Not uploaded","Sin cargar");
+  if(key==="s4b")return packet.uncertain&&packet.uncertain.length?(tr("已录 ","Recorded: ","Registrados: ")+packet.uncertain.length+tr(" 项不确定事项"," uncertain items"," asuntos inciertos")):tr("无","None","Ninguno");
+  if(key==="s5")return packet.transcript?(tr("已记录：","Recorded: ","Registrado: ")+packet.transcript):tr("未上传","Not uploaded","Sin cargar");
   if(key==="s5b")return tr("IRS 更新提醒已开启","IRS update alerts are on","Las alertas del IRS están activadas");
-  if(key==="s5c"){var ls=draftLines();if(!ls.length)return tr("未录","None entered","Sin capturar");var tot=draftTotals();var v=ls.filter(function(it){return it.voucherChecked}).length;var m=ls.filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length;return tr("已录 ","Entered: ")+ls.length+tr(" 项数字，预估合计 "," figures, estimated total "," cifras, total estimado ")+fmtMoney(tot.grand)+tr("（凭证已核对 "," (receipts checked "," (comprobantes verificados ")+v+tr(" · 表格一致 "," · forms matching "," · formularios coincidentes ")+m+tr("）",")",")");}
+  if(key==="s5c"){var ls=draftLines();if(!ls.length)return tr("未录","None entered","Sin capturar");var tot=draftTotals();var v=ls.filter(function(it){return it.voucherChecked}).length;var m=ls.filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length;return tr("已录 ","Entered: ","Ingresados: ")+ls.length+tr(" 项数字，预估合计 "," figures, estimated total "," cifras, total estimado ")+fmtMoney(tot.grand)+tr("（凭证已核对 "," (receipts checked "," (comprobantes verificados ")+v+tr(" · 表格一致 "," · forms matching "," · formularios coincidentes ")+m+tr("）",")",")");}
   if(key==="s5d"){var w=computeWarnings();if(!w.length)return tr("暂无提醒","No reminders","Sin recordatorios");var d=w.filter(function(x){return x.kind==="mismatch"}).length;var m=w.filter(function(x){return x.kind==="missing"||x.kind==="pending"}).length;return w.length+tr(" 条提醒（差异 "," reminders (differences "," recordatorios (diferencias ")+d+tr(" · 缺项 "," · missing "," · faltantes ")+m+tr("）",")",")");}
   if(key==="s5e")return tr("按日期查看全年提醒","Year-round reminders by date","Recordatorios del año por fecha");
   if(key==="s6c")return tr("跨年份清单摘要对照","Cross-year checklist comparison","Comparación de listas entre años");
   if(key==="s6b")return (packet.priorCpa&&packet.priorCpa.name)?(tr("已指定：","Set: ","Definido: ")+packet.priorCpa.name):tr("未指定","Not set","Sin definir");
-  if(key==="s6"){var n=packet.exports.filter(function(e){return e.indexOf("用户自记")<0&&e.indexOf("已发送给会计师")<0}).length;var s=n?tr("已导出 ","Exported ")+n+tr(" 次"," times"," veces"):tr("未导出","Not exported","Sin exportar");if(packet.cpaReview)s+=tr(" · 已发送给会计师"," · sent to your accountant"," · enviado a su contador");return s;}
-  if(key==="sub"){var os=displayOrders();return os.length?(tr("订单 ","Orders: ")+os.length+tr(" 笔","","")):tr("免费版","Free version","Versión gratuita");}
+  if(key==="s6"){var n=packet.exports.filter(function(e){return e.indexOf("用户自记")<0&&e.indexOf("已发送给会计师")<0}).length;var s=n?tr("已导出 ","Exported ","Exportados ")+n+tr(" 次"," times"," veces"):tr("未导出","Not exported","Sin exportar");if(packet.cpaReview)s+=tr(" · 已发送给会计师"," · sent to your accountant"," · enviado a su contador");return s;}
+  if(key==="sub"){var os=displayOrders();return os.length?(tr("订单 ","Orders: ","Pedidos: ")+os.length+tr(" 笔","","")):tr("免费版","Free version","Versión gratuita");}
   if(key==="safe")return tr("数据保护","Data protection","Protección de datos");
   return "";
 }
@@ -2249,8 +2249,8 @@ function renderStickyProgress(){
   var pct=total?Math.round(done*100/total):0;
   var title=$("stickyProgressTitle"),text=$("stickyProgressText"),fill=$("stickyProgressFill"),action=$("stickyProgressAction");
   var target="s3",label=tr("建立今年清单","Build this year's checklist","Crear la lista de este año"),message=tr("从去年表格或手头材料开始，先生成清单。","Start from last year's forms or the papers you have, and generate the checklist first.","Empiece con los formularios del año pasado o los papeles que tenga y genere primero la lista.");
-  if(total>0&&done<total){target="s4";label=tr("继续补齐材料","Keep gathering","Seguir reuniendo");message=tr("已完成 ","Done: ")+done+" / "+total+tr(" 项 · 还有 "," · ")+(total-done)+tr(" 项待处理。"," still to handle."," aún por resolver.");}
-  else if(total>0){target="s6";label=tr("导出给会计师","Export to your accountant","Exportar a su contador");message=tr("全部 ","All ")+total+tr(" 项已标记为已备或不适用，可以导出给 CPA。"," items are marked ready or not applicable — you can export to your CPA."," elementos están marcados como listos o no aplicables: puede exportar a su CPA.");}
+  if(total>0&&done<total){target="s4";label=tr("继续补齐材料","Keep gathering","Seguir reuniendo");message=tr("已完成 ","Done: ","Hecho: ")+done+" / "+total+tr(" 项 · 还有 "," · "," · ")+(total-done)+tr(" 项待处理。"," still to handle."," aún por resolver.");}
+  else if(total>0){target="s6";label=tr("导出给会计师","Export to your accountant","Exportar a su contador");message=tr("全部 ","All ","Los ")+total+tr(" 项已标记为已备或不适用，可以导出给 CPA。"," items are marked ready or not applicable — you can export to your CPA."," elementos están marcados como listos o no aplicables: puede exportar a su CPA.");}
   title.textContent=total>0&&done===total?tr("材料包已整理完成","Packet complete","Paquete completo"):tr("你的整理进度","Your progress","Su progreso");
   text.textContent=message;fill.style.width=pct+"%";action.textContent=label;
   action.onclick=function(){navigateToSection(target);};
@@ -2534,7 +2534,7 @@ function procEduCells(used) {
 }
 function procEduCap(used) {
   if (used >= PROC_EDU_MAX) {
-    return tr("4 年已用完 · 不可逆", "All four years used — irreversible", "Los cuatro años usados: irreversible");
+    return tr("AOTC 四年已用完 · 不可逆", "All four AOTC years used — irreversible", "Los cuatro años del AOTC usados: irreversible");
   }
   return tr(
     "已用 " + used + " 年 · 今年第 " + (used + 1) + " 年，还剩 " + (PROC_EDU_MAX - used - 1) + " 年",
@@ -2556,12 +2556,12 @@ function procWarn(id, p) {
   if (id === "edu") {
     var used = procInt(p.eduUsed, 0);
     if (used >= PROC_EDU_MAX) {
-      return [3, tr("教育抵免 4 年已经用完，这一笔不再增加这条线。", "The education credit's four years are used up; this payment no longer adds to that line.", "Los cuatro años del crédito educativo ya se usaron; este pago ya no suma a esa línea.")];
+      return [3, tr("AOTC 四年已经用完，这一笔不再增加这条线；LLC 没有年数上限。", "The AOTC's four years are used up; this payment no longer adds to that line — the LLC has no year limit.", "Los cuatro años del AOTC ya se usaron; este pago ya no suma a esa línea: el LLC no tiene límite de años.")];
     }
     if (used === PROC_EDU_MAX - 1) {
-      return [3, tr("今年是第 4 年，最后一次；今年不付，这条线就用完了。", "This is year four — the last one. If it is not paid this year, the line is used up.", "Este es el cuarto año, el último. Si no se paga este año, la línea se agota.")];
+      return [3, tr("今年是 AOTC 第 4 年，最后一次；今年不付，这条线就用完了。", "This is the AOTC's year four — the last one. If it is not paid this year, the line is used up.", "Este es el cuarto año del AOTC, el último. Si no se paga este año, la línea se agota.")];
     }
-    return [2, tr("今年是第 " + (used + 1) + " 年，4 年上限还剩 " + (PROC_EDU_MAX - used - 1) + " 年。", "This is year " + (used + 1) + "; " + (PROC_EDU_MAX - used - 1) + " of the four years are left.", "Este es el año " + (used + 1) + "; quedan " + (PROC_EDU_MAX - used - 1) + " de los cuatro años.")];
+    return [2, tr("今年是 AOTC 第 " + (used + 1) + " 年，4 年上限还剩 " + (PROC_EDU_MAX - used - 1) + " 年。", "This is AOTC year " + (used + 1) + "; " + (PROC_EDU_MAX - used - 1) + " of the four years are left.", "Este es el año " + (used + 1) + " del AOTC; quedan " + (PROC_EDU_MAX - used - 1) + " de los cuatro años.")];
   }
   if (id === "job" || id === "gain") {
     return [2, tr("这笔把收入往上推；收入一变，医保补贴就要在 8962 上重新对账，越过那条线是整份没有，不是少一点。", "This pushes income up. Once income changes, the health-insurance subsidy has to be reconciled on Form 8962; crossing that line means losing all of it, not a little.", "Esto sube los ingresos. Si cambian, el subsidio del seguro médico se concilia en el Formulario 8962; cruzar esa línea significa perderlo todo, no solo un poco.")];
@@ -2632,7 +2632,7 @@ function procHtml(unlocked) {
     h += "<p class='proc-lock'>" + esc(tr("去年有房贷利息或自雇：这里只有有／没有，金额请填在下面「房贷利息 + 州税」那一项。", "You had mortgage interest or self-employment last year: this only records yes/no — put the amount in \"Mortgage interest + state tax\" below.", "El año pasado tuvo intereses hipotecarios o trabajo por cuenta propia: aquí solo se registra sí/no; ponga el monto en «Intereses hipotecarios + impuesto estatal» abajo.")) + "</p>";
   }
   h += "<div class='proc-rings'>";
-  h += "<div class='proc-ring'><span class='lab'>" + esc(tr("学费抵免（按单个学生算）", "Education credit (per student)", "Crédito educativo (por estudiante)")) + "</span><span class='proc-cells'>" + procEduCells(used) + "</span>"
+  h += "<div class='proc-ring'><span class='lab'>" + esc(tr("AOTC 前四年（按单个学生算）", "AOTC's first four years (per student)", "Los primeros cuatro años del AOTC (por estudiante)")) + "</span><span class='proc-cells'>" + procEduCells(used) + "</span>"
     + "<span class='proc-inline'>" + esc(tr("已用", "Used", "Usados")) + "</span><select id='procEduUsed' aria-label='" + esc(tr("已用几年", "Years already used", "Años ya usados")) + "'>";
   for (var y = 0; y <= PROC_EDU_MAX; y++) h += "<option value='" + y + "'" + (y === used ? " selected" : "") + ">" + y + "</option>";
   h += "</select><span class='proc-cap'>" + esc(procEduCap(used)) + "</span></div>";
@@ -2642,7 +2642,7 @@ function procHtml(unlocked) {
     + "<span class='proc-cap'>" + esc(procSsCap(points)) + "</span></div>";
   h += "</div>";
   h += "<p class='proc-sub'>" + esc(tr("家里两个孩子在读：年数各算各的，这里填年数最少的那个。", "Two students: years count separately — enter the one with the fewest years left.", "Dos estudiantes: los años se cuentan por separado; ponga el que menos años tenga.")) + "</p>";
-  h += "<p class='proc-src'>" + esc(tr("退休分：SSA 2026，每 $" + PROC_SS_POINT.toLocaleString("en-US") + " 记 1 分，一年最多 4 分，领退休金要 40 分（核于 " + PROC_CHECKED + "）。教育抵免：Pub 970 / Form 8863，每个学生最多 4 个税年（核于 " + PROC_CHECKED + "）。", "Retirement credits: SSA 2026 — $" + PROC_SS_POINT.toLocaleString("en-US") + " earns one credit, up to four a year, 40 needed for retirement benefits (checked " + PROC_CHECKED + "). Education credit: Pub 970 / Form 8863, at most four tax years per student (checked " + PROC_CHECKED + ").", "Créditos de retiro: SSA 2026 — $" + PROC_SS_POINT.toLocaleString("en-US") + " dan un crédito, hasta cuatro al año, se necesitan 40 para la jubilación (verificado el " + PROC_CHECKED + "). Crédito educativo: Pub 970 / Form 8863, como máximo cuatro años fiscales por estudiante (verificado el " + PROC_CHECKED + ").")) + "</p>";
+  h += "<p class='proc-src'>" + esc(tr("退休分：SSA 2026，每 $" + PROC_SS_POINT.toLocaleString("en-US") + " 记 1 分，一年最多 4 分，领退休金要 40 分（核于 " + PROC_CHECKED + "）。教育抵免：AOTC 每个学生最多 4 个税年，且只限前四年本科阶段；LLC（终生学习抵免）没有年数上限（Pub 970 / Form 8863，核于 " + PROC_CHECKED + "）。", "Retirement credits: SSA 2026 — $" + PROC_SS_POINT.toLocaleString("en-US") + " earns one credit, up to four a year, 40 needed for retirement benefits (checked " + PROC_CHECKED + "). Education credit: the AOTC runs at most four tax years per student and only in the first four years of college; the LLC (lifetime learning credit) has no year limit (Pub 970 / Form 8863, checked " + PROC_CHECKED + ").", "Créditos de retiro: SSA 2026 — $" + PROC_SS_POINT.toLocaleString("en-US") + " dan un crédito, hasta cuatro al año, se necesitan 40 para la jubilación (verificado el " + PROC_CHECKED + "). Crédito educativo: el AOTC dura como máximo cuatro años fiscales por estudiante y solo en los primeros cuatro años de universidad; el LLC (crédito de aprendizaje permanente) no tiene límite de años (Pub 970 / Form 8863, verificado el " + PROC_CHECKED + ").")) + "</p>";
 
   h += "<div class='proc-h' style='margin-top:16px'>" + esc(tr("今年随手记", "Log it as it happens", "Regístrelo sobre la marcha")) + "</div>";
   h += "<p class='proc-sub'>" + esc(tr("点一下就行，不用懂税。不填金额，只记类型；记多少笔都一样。", "One tap is enough — no tax knowledge needed. No amounts, just the type; any number of entries is the same.", "Basta un toque, sin saber de impuestos. Sin montos, solo el tipo; cualquier número de entradas cuesta lo mismo.")) + "</p>";
@@ -3128,7 +3128,7 @@ function renderRecognizePreview(forms,text){
       items.push({form:cb.dataset.form,payer:inp?inp.value.trim():""});
     });
     var r=addToLastYear(items);
-    if($("recognizeMsg"))$("recognizeMsg").textContent=tr("已加入 ","Added ")+r.added+tr(" 项；到上面点“生成今年清单”。"," items; tap “Generate this year's checklist” above."," elementos; toque «Generar la lista de este año» arriba.");
+    if($("recognizeMsg"))$("recognizeMsg").textContent=tr("已加入 ","Added ","Añadidos ")+r.added+tr(" 项；到上面点“生成今年清单”。"," items; tap “Generate this year's checklist” above."," elementos; toque «Generar la lista de este año» arriba.");
     hideQuickPick();
     var b=$("btnMake");if(b)b.scrollIntoView({behavior:"smooth",block:"center"});
   };
@@ -3189,7 +3189,7 @@ $("btnRecognize").onclick=async function(){
   try{
     var text=await extractReturnText(file);
     var forms=detectForms(text);
-    if(forms.length){renderRecognizePreview(forms,text);$("recognizeMsg").textContent=tr("识别出 ","Recognized ")+forms.length+tr(" 种表，请核对后加入。"," form types — check them, then add."," tipos de formulario; revíselos y agréguelos.");}
+    if(forms.length){renderRecognizePreview(forms,text);$("recognizeMsg").textContent=tr("识别出 ","Recognized ","Reconocidos ")+forms.length+tr(" 种表，请核对后加入。"," form types — check them, then add."," tipos de formulario; revíselos y agréguelos.");}
     else if(!text||text.replace(/\s/g,"").length<20){$("recognizeMsg").textContent=tr("未能从该文件中读出文字（只读到 ","Couldn't read text from that file (only ","No se pudo leer texto de ese archivo (solo ")+text.replace(/\s/g,"").length+tr(" 个非空字符，可能是扫描件或加密文件），"+t("请走路径二手动输入。")+""," non-empty characters — possibly a scan or an encrypted file). Please use option 2 and type the form types."," caracteres no vacíos; quizá un escaneo o un archivo cifrado). Use la opción 2 y escriba los tipos de formulario.");$("recognizeBox").innerHTML="";}
     else{renderRecognizePreview(forms,text);$("recognizeMsg").textContent="";}
   }catch(e){
@@ -3569,12 +3569,12 @@ function renderSnaps(){
   function cell(f){if(!f)return "—";return f.done+"/"+f.total+" 已解决";}
   var head="<tr><th>表 / 项目</th><th>当前包</th>"+snaps.map(function(s){return "<th>"+esc(s.name)+(s.year?"（"+esc(s.year)+"）":"")+"</th>";}).join("")+"</tr>";
   var body=titles.map(function(t){return "<tr><td>"+esc(t)+"</td><td>"+cell(cur[t])+"</td>"+snaps.map(function(s){return "<td>"+cell((s.forms||{})[t])+"</td>";}).join("")+"</tr>";}).join("");
-  el.innerHTML="<p class='small'>"+tr("各版进度：当前包 ","Progress by version: current packet ")+packet.checklist.filter(rowResolved).length+"/"+packet.checklist.length+tr(" 项已解决；"," resolved; "," resueltos; ")+snaps.map(function(s){return esc(s.name)+" "+s.done+"/"+s.total;}).join(tr("；","; ","; "))+tr("。",".",". ")+"</p><table>"+head+body+"</table>";
+  el.innerHTML="<p class='small'>"+tr("各版进度：当前包 ","Progress by version: current packet ","Progreso por versión: paquete actual ")+packet.checklist.filter(rowResolved).length+"/"+packet.checklist.length+tr(" 项已解决；"," resolved; "," resueltos; ")+snaps.map(function(s){return esc(s.name)+" "+s.done+"/"+s.total;}).join(tr("；","; ","; "))+tr("。",".",". ")+"</p><table>"+head+body+"</table>";
 }
 function renderPriority(){
   var el=$("priorityStatus");if(!el||!packet)return;
   var reqs=packet.supportRequests||[];
-  el.innerHTML=(packet.prioritySupport?"<span class='badge uploaded'>"+t("优先工具支持已开启（预览）")+"</span>":"<span class='small'>"+t("优先工具支持未开启。")+"</span>")+"<span class='small'>"+tr(" 已提交优先请求 "," Priority requests submitted: ")+reqs.length+tr(" 条（只存你的账号；也可发邮件到 "," (stored only in your account; you can also email "," (guardadas solo en su cuenta; también puede escribir a ")+"<a href='mailto:support@zhuanuc.com'>support@zhuanuc.com</a>"+tr("）。",").",").")+"</span>";
+  el.innerHTML=(packet.prioritySupport?"<span class='badge uploaded'>"+t("优先工具支持已开启（预览）")+"</span>":"<span class='small'>"+t("优先工具支持未开启。")+"</span>")+"<span class='small'>"+tr(" 已提交优先请求 "," Priority requests submitted: "," Solicitudes prioritarias enviadas: ")+reqs.length+tr(" 条（只存你的账号；也可发邮件到 "," (stored only in your account; you can also email "," (guardadas solo en su cuenta; también puede escribir a ")+"<a href='mailto:support@zhuanuc.com'>support@zhuanuc.com</a>"+tr("）。",").",").")+"</span>";
   var bp=$("btnPriority");if(bp)bp.textContent=packet.prioritySupport?"关闭优先支持标记":"开启优先支持标记";
   var sl=$("supportList");if(sl)sl.innerHTML=reqs.length?("<ul class='small'>"+reqs.map(function(r){return "<li>"+esc(r.at)+" · "+esc(r.text)+"</li>";}).join("")+"</ul>"):"";
 }
