@@ -238,7 +238,7 @@ header{position:relative;padding-right:150px}
 #bootCard .sk.short{width:60%}
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
 #changesCard,#stateCard{display:none!important}
-#handoffSection,#priorCpaCard,#snapCard,#priorityDetails,#payView{display:none!important}
+#handoffSection,#priorCpaCard,#payView{display:none!important}
 .chk-red,.chk-yellow,.chk-green{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .chk-red{background:#c0392b}.chk-yellow{background:#d39e00}.chk-green{background:#1e7a4c}
 #checkPanel{background:#f8fbfd}
@@ -702,11 +702,11 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <label for="supMsg">遇到的问题</label>
 <textarea id="supMsg" placeholder="例如：登录后清单不见了……"></textarea>
 <p><button id="btnSupportSubmit">提交请求</button> <span id="supMsg2" class="small"></span></p>
-<details id="priorityDetails"><summary class="small">优先工具支持（季票权益，仍可用）</summary>
+<details id="priorityDetails"><summary class="small">优先工具支持（季票权益）</summary>
 <p class="small" id="priorityStatus"></p>
-<label for="supportText">优先支持请求（只存你的账号；也可直接发邮件到 <a href="mailto:support@zhuanuc.com">support@zhuanuc.com</a>）</label>
+<label for="supportText">优先支持请求（提交后标「季票优先」发给支持，回复到你登录的邮箱）</label>
 <textarea id="supportText" rows="2" style="width:100%;font-size:15px;padding:9px 10px;border-radius:8px;border:1px solid #bbb" placeholder="例如：清单里 Schedule E 的凭证核对卡住了"></textarea>
-<p><button id="btnPriority" class="secondary">开启优先支持标记</button> <button id="btnSupportSend" class="secondary">提交优先请求（本地保存）</button></p>
+<p><button id="btnPriority" class="secondary">开启优先支持标记</button> <button id="btnSupportSend" class="secondary">提交优先请求</button> <span id="prioritySendMsg" class="small"></span></p>
 <div id="supportList"></div>
 </details>
 </div>
@@ -1492,6 +1492,23 @@ function checkStats(){
   r.unchecked=r.red+r.yellow;
   return r;
 }
+// 空清单不能报「可交」：没有可核的东西，结论只能是「还没清单」。
+function checkVerdict(st){
+  if(!st.total)return {level:"warn",label:tr("还没有清单，先建清单","No checklist yet — build one first","Aún no hay lista: cree una primero")};
+  return st.unchecked?{level:"warn",label:tr("不可交","Not ready","No listo")}:{level:"ok",label:tr("可交","Ready","Listo")};
+}
+// 费用行不在主核对表里，但导出会带金额；这里给出覆盖数，避免「以为核过」。
+function checkExpenseLine(){
+  var rows=((packet&&packet.checklist)||[]).filter(function(it){return it.costs&&it.costs.length;});
+  if(!rows.length)return "";
+  var filled=0,total=0;
+  rows.forEach(function(it){(it.costs||[]).forEach(function(e){
+    if(e.custom&&!String(e.customLabel||"").trim())return;
+    total++;if(e.cents!=null)filled++;
+  });});
+  if(!total)return "";
+  return "<p class='small'>"+tr("费用行：已填 "+filled+" / 共 "+total+" 条；未填的行不算错，但不会进导出金额。","Expense lines: "+filled+" of "+total+" filled; blank lines are not errors, but they carry no amount into the export.","Líneas de gastos: "+filled+" de "+total+" completadas; las vacías no son un error, pero no llevan importe a la exportación.")+"</p>";
+}
 function renderCheckSummary(){
   var el=$("checkSummary");if(!el||!packet)return;
   var st=checkStats();
@@ -1504,16 +1521,16 @@ function checkReportTableHtml(st){
 function runCheckReport(){
   var el=$("checkReport");if(!el)return;
   var st=checkStats();
-  var verdict=st.unchecked?tr("不可交","Not ready","No listo"):tr("可交","Ready","Listo");
-  el.innerHTML="<div class='notice "+(st.unchecked?"warn":"ok")+"'><b>"+verdict+"</b>"+tr(" · 共 "," · total "," · total ")+st.total+tr(" 项 · 红 "," items · red "," elementos · rojo ")+st.red+tr(" · 黄 "," · yellow "," · amarillo ")+st.yellow+tr(" · 绿 "," · green "," · verde ")+st.green+"</div>"+"<p class='small muted'>"+tr("可交 = 材料齐了，可以交会计师复核；不代表税务正确，也不代表可以直接申报。","Ready = the materials are complete and can go to your accountant for review; it does not mean the tax treatment is correct, and it does not mean you can file directly.","Listo = los materiales están completos y pueden enviarse a su contador para revisión; no significa que el tratamiento fiscal sea correcto ni que pueda presentar la declaración directamente.")+"</p>"+checkReportTableHtml(st)+"<p class='small muted'>"+tr("只查结构：表在不在、数字填没填、表数对不对、凭证有没有；不判断数字真伪、不算税。","Structure only: is the form there, is the figure filled in, do the counts match, is there a receipt. We do not verify the figures and we do not calculate tax.","Solo la estructura: si el formulario está, si la cifra está ingresada, si los conteos coinciden, si hay comprobante. No verificamos las cifras ni calculamos impuestos.")+"</p><p><button type='button' id='btnPrintCheck' class='secondary'>"+tr("打印 / 存 PDF","Print / save PDF","Imprimir / guardar PDF")+"</button></p>";
+  var v=checkVerdict(st);
+  el.innerHTML="<div class='notice "+(v.level==="ok"?"ok":"warn")+"'><b>"+v.label+"</b>"+(st.total?tr(" · 共 "," · total "," · total ")+st.total+tr(" 项 · 红 "," items · red "," elementos · rojo ")+st.red+tr(" · 黄 "," · yellow "," · amarillo ")+st.yellow+tr(" · 绿 "," · green "," · verde ")+st.green:"")+"</div>"+"<p class='small muted'>"+tr("可交 = 材料齐了，可以交会计师复核；不代表税务正确，也不代表可以直接申报。","Ready = the materials are complete and can go to your accountant for review; it does not mean the tax treatment is correct, and it does not mean you can file directly.","Listo = los materiales están completos y pueden enviarse a su contador para revisión; no significa que el tratamiento fiscal sea correcto ni que pueda presentar la declaración directamente.")+"</p>"+checkReportTableHtml(st)+checkExpenseLine()+"<p class='small muted'>"+tr("只查结构：表在不在、数字填没填、表数对不对、凭证有没有；不判断数字真伪、不算税。","Structure only: is the form there, is the figure filled in, do the counts match, is there a receipt. We do not verify the figures and we do not calculate tax.","Solo la estructura: si el formulario está, si la cifra está ingresada, si los conteos coinciden, si hay comprobante. No verificamos las cifras ni calculamos impuestos.")+"</p><p><button type='button' id='btnPrintCheck' class='secondary'>"+tr("打印 / 存 PDF","Print / save PDF","Imprimir / guardar PDF")+"</button></p>";
   var pb=$("btnPrintCheck");if(pb)pb.onclick=printCheckReport;
   if($("checkMsg"))$("checkMsg").textContent=t("已重跑，报告在上方。");
   renderCheckSummary();
 }
 function printCheckReport(){
   var st=checkStats();
-  var verdict=st.unchecked?tr("不可交","Not ready","No listo"):tr("可交","Ready","Listo");
-  $("printArea").innerHTML="<h1>"+tr("交付前总核对报告","Pre-delivery check report","Informe de verificación previa a la entrega")+"</h1><p>"+tr("生成时间：","Generated: ","Generado: ")+esc(new Date().toLocaleString())+tr(" · 共 "," · total "," · total ")+st.total+tr(" 项 · 红 "," items · red "," elementos · rojo ")+st.red+tr(" · 黄 "," · yellow "," · amarillo ")+st.yellow+tr(" · 绿 "," · green "," · verde ")+st.green+"</p><p><b>"+verdict+"</b></p>"+"<p class='small'>"+tr("可交 = 材料齐了，可以交会计师复核；不代表税务正确，也不代表可以直接申报。","Ready = the materials are complete and can go to your accountant for review; it does not mean the tax treatment is correct, and it does not mean you can file directly.","Listo = los materiales están completos y pueden enviarse a su contador para revisión; no significa que el tratamiento fiscal sea correcto ni que pueda presentar la declaración directamente.")+"</p>"+checkReportTableHtml(st)+"<p class='small'>"+tr("只查结构：表在不在、数字填没填、表数对不对、凭证有没有；不判断数字真伪、不算税。","Structure only: is the form there, is the figure filled in, do the counts match, is there a receipt. We do not verify the figures and we do not calculate tax.","Solo la estructura: si el formulario está, si la cifra está ingresada, si los conteos coinciden, si hay comprobante. No verificamos las cifras ni calculamos impuestos.")+"</p>";
+  var v=checkVerdict(st);
+  $("printArea").innerHTML="<h1>"+tr("交付前总核对报告","Pre-delivery check report","Informe de verificación previa a la entrega")+"</h1><p>"+tr("生成时间：","Generated: ","Generado: ")+esc(new Date().toLocaleString())+(st.total?tr(" · 共 "," · total "," · total ")+st.total+tr(" 项 · 红 "," items · red "," elementos · rojo ")+st.red+tr(" · 黄 "," · yellow "," · amarillo ")+st.yellow+tr(" · 绿 "," · green "," · verde ")+st.green:"")+"</p><p><b>"+v.label+"</b></p>"+"<p class='small'>"+tr("可交 = 材料齐了，可以交会计师复核；不代表税务正确，也不代表可以直接申报。","Ready = the materials are complete and can go to your accountant for review; it does not mean the tax treatment is correct, and it does not mean you can file directly.","Listo = los materiales están completos y pueden enviarse a su contador para revisión; no significa que el tratamiento fiscal sea correcto ni que pueda presentar la declaración directamente.")+"</p>"+checkReportTableHtml(st)+checkExpenseLine()+"<p class='small'>"+tr("只查结构：表在不在、数字填没填、表数对不对、凭证有没有；不判断数字真伪、不算税。","Structure only: is the form there, is the figure filled in, do the counts match, is there a receipt. We do not verify the figures and we do not calculate tax.","Solo la estructura: si el formulario está, si la cifra está ingresada, si los conteos coinciden, si hay comprobante. No verificamos las cifras ni calculamos impuestos.")+"</p>";
   var oldTitle=document.title;document.title=tr("report_zh","report_en","report_es");
   window.print();
   setTimeout(function(){document.title=oldTitle;},0);
@@ -3038,8 +3055,18 @@ function snapForms(){
 }
 function renderSnaps(){
   var el=$("snapList");if(!el||!packet)return;
-  if(!currentUser)return;
   var sn2=$("snapName"),sy2=$("snapYear"),sb2=$("btnSnapSave"),sm2=$("snapMsg");
+  if(!currentUser){
+    if(sn2)sn2.disabled=true;if(sy2)sy2.disabled=true;if(sb2)sb2.disabled=true;
+    el.innerHTML="<p class='small'>"+tr("登录后可把清单存成版本，按年份对比进度。","Log in to save versions and compare progress across years.","Inicie sesión para guardar versiones y comparar el avance entre años.")+"</p>";
+    return;
+  }
+  if(!hasPass()){
+    // 季票权益：没权益时按钮不撒谎，给一条去领取的路。
+    if(sn2)sn2.disabled=true;if(sy2)sy2.disabled=true;if(sb2)sb2.disabled=true;
+    el.innerHTML="<p class='small'>"+tr("多包与多年对比是季票功能：内测期免费，领取后就能存版本、按表对比。","Multi-packet &amp; multi-year compare is a season-pass feature; it is free during the beta — claim it to save versions and compare form by form.","La comparación entre paquetes y años es una función del pase de temporada; es gratis en la beta: reclámelo para guardar versiones y comparar formulario por formulario.")+"</p><p><button type='button' class='secondary' onclick='goSub()'>"+tr("去领取免费季票","Claim the free pass","Reclamar el pase gratis")+"</button></p>";
+    return;
+  }
   if(sn2)sn2.disabled=false;if(sy2)sy2.disabled=false;if(sb2)sb2.disabled=false;
   if(sm2&&sm2.textContent.indexOf("季票功能")>=0)sm2.textContent="";
   var snaps=load(snapKey(),[]);
@@ -3047,31 +3074,86 @@ function renderSnaps(){
   if(!snaps.length){el.innerHTML="<p class='small'>"+tr("还没存过版本。上面写个版本名和年份，把当前包存成一版，就能和以后各版对比。","No versions saved yet. Enter a version name and year above to save the current packet, then compare it with later versions.","Aún no hay versiones guardadas. Escriba arriba un nombre y un año para guardar el paquete actual y compararlo con versiones posteriores.")+"</p>";return;}
   var titles=[];function addT(t){if(titles.indexOf(t)<0)titles.push(t);}
   Object.keys(cur).forEach(addT);snaps.forEach(function(s){Object.keys(s.forms||{}).forEach(addT);});
-  function cell(f){if(!f)return "—";return f.done+"/"+f.total+" 已解决";}
-  var head="<tr><th>表 / 项目</th><th>当前包</th>"+snaps.map(function(s){return "<th>"+esc(s.name)+(s.year?"（"+esc(s.year)+"）":"")+"</th>";}).join("")+"</tr>";
+  // 每一格给可判定的状态，不让人自己数：齐 / 还缺 n / 本版无。
+  function cell(f){
+    if(!f)return "<span class='small muted'>"+tr("本版无","Not in this version","No está en esta versión")+"</span>";
+    if(f.done>=f.total)return "<span class='badge uploaded'>"+tr("齐","Ready","Listo")+"</span>";
+    return "<span class='badge missing'>"+tr("还缺 ","Still missing ","Faltan ")+(f.total-f.done)+"</span>";
+  }
+  var head="<tr><th>"+tr("表 / 项目","Form / item","Formulario / elemento")+"</th><th>"+tr("当前包","Current packet","Paquete actual")+"</th>"+snaps.map(function(s){return "<th>"+esc(s.name)+(s.year?"（"+esc(s.year)+"）":"")+"</th>";}).join("")+"</tr>";
   var body=titles.map(function(t){return "<tr><td>"+esc(t)+"</td><td>"+cell(cur[t])+"</td>"+snaps.map(function(s){return "<td>"+cell((s.forms||{})[t])+"</td>";}).join("")+"</tr>";}).join("");
-  el.innerHTML="<p class='small'>"+tr("各版进度：当前包 ","Progress by version: current packet ")+packet.checklist.filter(rowResolved).length+"/"+packet.checklist.length+tr(" 项已解决；"," resolved; "," resueltos; ")+snaps.map(function(s){return esc(s.name)+" "+s.done+"/"+s.total;}).join(tr("；","; ","; "))+tr("。",".",". ")+"</p><table>"+head+body+"</table>";
+  // 和最近一版比，直接说出「今年新增 / 今年没这项」，这才是多年对比要回答的问题。
+  var last=snaps[snaps.length-1],lastForms=last.forms||{};
+  var added=Object.keys(cur).filter(function(t){return !lastForms[t];});
+  var gone=Object.keys(lastForms).filter(function(t){return !cur[t];});
+  var delta="<p class='small'><b>"+tr("和「","vs “","frente a «")+esc(last.name)+tr("」比：","”: ","»: ")+"</b>"+
+    (added.length?tr("今年新增 ","new this year ","nuevos este año ")+added.length+tr(" 项（"," (", " (")+added.slice(0,5).map(esc).join(tr("、",", ","; "))+(added.length>5?"…":"")+"）":tr("今年没有新增项","nothing new this year","nada nuevo este año"))+"；"+
+    (gone.length?tr("今年没这项 ","not in this year's packet: ","no están en el paquete de este año: ")+gone.length+tr(" 项（"," (", " (")+gone.slice(0,5).map(esc).join(tr("、",", ","; "))+(gone.length>5?"…":"")+"）":tr("去年的项今年都还在","every form from last year is still here","todos los formularios del año pasado siguen aquí"))+"。</p>";
+  el.innerHTML="<p class='small'>"+tr("各版进度：当前包 ","Progress by version: current packet ")+packet.checklist.filter(rowResolved).length+"/"+packet.checklist.length+tr(" 项已解决；"," resolved; "," resueltos; ")+snaps.map(function(s){return esc(s.name)+" "+s.done+"/"+s.total;}).join(tr("；","; ","; "))+tr("。",".",". ")+"</p>"+delta+"<table>"+head+body+"</table>";
 }
 function renderPriority(){
   var el=$("priorityStatus");if(!el||!packet)return;
   var reqs=packet.supportRequests||[];
-  el.innerHTML=(packet.prioritySupport?"<span class='badge uploaded'>"+t("优先工具支持已开启（预览）")+"</span>":"<span class='small'>"+t("优先工具支持未开启。")+"</span>")+"<span class='small'>"+tr(" 已提交优先请求 "," Priority requests submitted: ")+reqs.length+tr(" 条（只存你的账号；也可发邮件到 "," (stored only in your account; you can also email "," (guardadas solo en su cuenta; también puede escribir a ")+"<a href='mailto:support@zhuanuc.com'>support@zhuanuc.com</a>"+tr("）。",").",").")+"</span>";
-  var bp=$("btnPriority");if(bp)bp.textContent=packet.prioritySupport?"关闭优先支持标记":"开启优先支持标记";
-  var sl=$("supportList");if(sl)sl.innerHTML=reqs.length?("<ul class='small'>"+reqs.map(function(r){return "<li>"+esc(r.at)+" · "+esc(r.text)+"</li>";}).join("")+"</ul>"):"";
+  var sl=$("supportList");
+  if(!hasPass()){
+    // 未开通时不给可点的假按钮：说明权益，给一条领取路径。
+    el.innerHTML="<span class='small'>"+tr("优先工具支持是季票功能：内测期免费，领取后请求标「季票优先」直接进支持队列。","Priority tool support is a season-pass feature; free during the beta. With the pass, requests are tagged “season-pass priority” and go straight into the support queue.","El soporte prioritario es una función del pase; es gratis en la beta. Con el pase, las solicitudes se marcan como «prioridad del pase» y entran directamente a la cola de soporte.")+"</span><p><button type='button' class='secondary' onclick='goSub()'>"+tr("去领取免费季票","Claim the free pass","Reclamar el pase gratis")+"</button></p>";
+    var bp0=$("btnPriority");if(bp0)bp0.classList.add("hidden");
+    var bs0=$("btnSupportSend");if(bs0)bs0.classList.add("hidden");
+    if(sl)sl.innerHTML="";
+    return;
+  }
+  var bp=$("btnPriority");if(bp)bp.classList.remove("hidden");
+  var bs=$("btnSupportSend");if(bs)bs.classList.remove("hidden");
+  var sent=reqs.filter(function(r){return r.state==="sent";}).length;
+  var failed=reqs.filter(function(r){return r.state==="failed";}).length;
+  el.innerHTML=(packet.prioritySupport?"<span class='badge uploaded'>"+tr("优先工具支持已开启","Priority support is on","Soporte prioritario activado")+"</span>":"<span class='small'>"+tr("优先工具支持未开启。","Priority support is off.","El soporte prioritario está desactivado.")+"</span>")+
+    "<span class='small'>"+tr(" 已提交 "," Submitted: ")+sent+tr(" 条","","")+(failed?tr("，失败 "," · failed ")+failed+tr(" 条","",""):"")+tr("；请求标「季票优先」发到支持邮箱，回复到你登录的邮箱。","; requests are tagged “season-pass priority” and sent to the support inbox, with the reply to your login email.","; las solicitudes se marcan como «prioridad del pase» y se envían al buzón de soporte, con respuesta a su correo de inicio de sesión.")+"</span>";
+  if(bp)bp.textContent=packet.prioritySupport?tr("关闭优先支持标记","Turn off the priority flag","Desactivar la marca prioritaria"):tr("开启优先支持标记","Turn on the priority flag","Activar la marca prioritaria");
+  if(sl)sl.innerHTML=reqs.length?("<ul class='small'>"+reqs.map(function(r){
+    var tag=r.state==="sent"?tr("已提交","sent","enviada"):(r.state==="failed"?tr("提交失败","failed","falló"):tr("本地记录","local record","registro local"));
+    return "<li>"+esc(r.at)+" · "+esc(r.text)+(r.ticket?" · "+tr("工单 ","ticket ","ticket ")+esc(r.ticket):"")+" · <span class='small'>"+tag+"</span></li>";
+  }).join("")+"</ul>"):"";
 }
 $("btnSnapSave").onclick=function(){if(isGuest()){showAuth();return;}
   if(!packet||!currentUser)return;
+  if(!hasPass()){if($("snapMsg"))$("snapMsg").textContent=tr("多包与多年对比是季票功能，先领取免费季票。","Multi-packet compare is a season-pass feature; claim the free pass first.","La comparación es una función del pase; reclame el pase gratis primero.");goSub();return;}
   var name=$("snapName").value.trim();var year=$("snapYear").value.trim();
   if(!name){alert("请先写版本名。");return;}
   var snaps=load(snapKey(),[]);
   snaps.push({id:Date.now()+""+Math.random(),name:name,year:year,at:new Date().toLocaleString(),total:packet.checklist.length,done:packet.checklist.filter(rowResolved).length,forms:snapForms()});
   save(snapKey(),snaps);$("snapMsg").textContent=tr("已保存一版：","Version saved: ","Versión guardada: ")+name;renderSnaps();
 };
-$("btnPriority").onclick=function(){if(isGuest()){showAuth();return;}if(!packet)return;packet.prioritySupport=!packet.prioritySupport;savePacket();renderPriority();};
+$("btnPriority").onclick=function(){if(isGuest()){showAuth();return;}if(!packet)return;
+  if(!hasPass()){if($("prioritySendMsg"))$("prioritySendMsg").textContent=tr("季票功能，先领取免费季票。","Season-pass feature; claim the free pass first.","Función del pase; reclame el pase gratis primero.");goSub();return;}
+  packet.prioritySupport=!packet.prioritySupport;savePacket();renderPriority();};
 $("btnSupportSend").onclick=function(){if(isGuest()){showAuth();return;}
-  if(!packet)return;var t=$("supportText").value.trim();if(!t){alert("请先写请求内容。");return;}
+  if(!packet)return;
+  var out=$("prioritySendMsg"),box=$("supportText");
+  if(!hasPass()){if(out)out.textContent=tr("季票功能，先领取免费季票。","Season-pass feature; claim the free pass first.","Función del pase; reclame el pase gratis primero.");goSub();return;}
+  var text=box?box.value.trim():"";
+  if(!text){if(out)out.textContent=tr("先写一句遇到的问题。","Write the issue first.","Escriba primero el problema.");return;}
+  if(text.length>1800){if(out)out.textContent=tr("太长了，压到 1800 字以内。","Too long — keep it under 1800 characters.","Demasiado largo: máximo 1800 caracteres.");return;}
+  var btn=this;btn.disabled=true;if(out)out.textContent=tr("正在提交…","Submitting…","Enviando…");
+  var rec={text:text,at:new Date().toLocaleString(),state:"sending"};
+  packet.prioritySupport=true; // 提交了优先请求，标记就该是开的，不能一边说未开启一边进优先队列
   if(!packet.supportRequests)packet.supportRequests=[];
-  packet.supportRequests.push({text:t,at:new Date().toLocaleString()});$("supportText").value="";savePacket();renderPriority();
+  packet.supportRequests.push(rec);savePacket();
+  var msg="【季票优先】"+text+"\n\n-- 账号："+currentUser+(packet.prioritySupport?"（已开启优先支持标记）":"");
+  function mailto(prefix){
+    var ml="mailto:support@zhuanuc.com?subject="+encodeURIComponent("【季票优先】工具问题")+"&body="+encodeURIComponent(text);
+    if(out)out.innerHTML=prefix+"<a href='"+ml+"'>"+tr("改用邮件发送（已填好）","send it by email instead (pre-filled)","envíelo por correo (ya rellenado)")+"</a>"+tr("。","", ".");
+  }
+  function settle(state){
+    rec.state=state;savePacket();btn.disabled=false;renderPriority();
+    if(out)out.textContent=state==="sent"?tr("已提交，会优先处理。","Submitted — prioritised.","Enviada, con prioridad."):"";
+  }
+  if(!apiOn()){settle("failed");mailto(tr("后端未接通，","Backend not reachable — ","Servidor no disponible: "));return;}
+  TpoApi.support(currentUser,msg).then(function(){settle("sent");}).catch(function(e){
+    settle("failed");
+    var c=(e&&e.code)||"";
+    mailto(c==="too_many"?tr("提交太频繁，稍后再试，或","Too many submissions — try later, or ","Demasiados envíos; inténtelo más tarde o "):tr("提交没成功，","Could not submit — ","No se pudo enviar: "));
+  });
 };
 $("btnExportJson").onclick=function(){
   var data={tool:"ClearToFile 可交 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,change_dir:packet.changesDir||{},last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||"",figure:it.figure?{category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||""}:null,voucher_checked:!!it.voucherChecked,form_amount_cents:it.formAmountCents!=null?it.formAmountCents:null,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it),kind:it.kind||null,costs:(it.costs||[]).map(function(e){return {label:e.custom?(e.customLabel||"其他"):e.label,amount_cents:e.cents,amount_display:e.cents==null?null:fmtMoney(e.cents)}})}}),draft_estimate:{lines:draftLines().map(function(it){return {form:it.form,payer:it.payer,category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||"",voucher_checked:!!it.voucherChecked,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),totals_by_category:(function(){var o={};var t=draftTotals();Object.keys(t.byCat).forEach(function(c){o[c]=fmtMoney(t.byCat[c]);});return o;})(),grand_total_display:fmtMoney(draftTotals().grand),counts:{figures:draftLines().length,voucher_checked:draftLines().filter(function(it){return it.voucherChecked}).length,form_matched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length,form_mismatched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length},label:"预估草稿，非申报表，须 CPA 对照凭证与表格数核对"},warnings:computeWarnings(),prior_cpa:packet.priorCpa||null,transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存你的账号，不进导出文件。发送记录由用户标记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。预估草稿金额为用户确认的证据数字，非申报表，须 CPA 对照凭证与表格数核对；IRS 对照提醒只作请核对提醒，不代表 IRS 已认定任何问题；工具不提取、不保存社保号。去年会计师信息由客户自填，平台不验证、不背书。收入填报数字为用户自填草稿，须CPA核对。"};
