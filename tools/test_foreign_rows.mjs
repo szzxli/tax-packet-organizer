@@ -186,6 +186,35 @@ check("可单独回滚：两处标记齐全且成对", () => {
   assert.equal(html.split("FOREIGN_ROWS_START · 境外申报三行（单独回滚").length - 1, 1, "回滚说明只写在对照表处");
 });
 
+// 这条钉住作用域：宽松判定（有文件即绿）只准落在 noFigure 行，普通行必须还是「缺数字就黄/红」。
+check("宽松判定不外溢：普通行缺数字仍按黄/红算，缺项表仍写「缺文件、缺数字」", () => {
+  for (const lang of ["zh", "en"]) {
+    const sb = sandbox(lang);
+    vm.runInContext('var STATES=[["加州","有州个人所得税","California","California"]];', sb);
+    vm.runInContext(html.match(/function statusText\(s\)\{[^\n]*\}/)[0], sb);
+    vm.runInContext(slice("function whereToGet(it)", "function checkStats()"), sb);
+
+    const plainFileOnly = sb.checkRow({ form: "W-2", title: "W-2", status: "uploaded", fileName: "w2.pdf" });
+    assert.equal(plainFileOnly.level, "yellow", lang + " 普通行只有文件、没数字，应仍为黄：" + plainFileOnly.level);
+    const plainNothing = sb.checkRow({ form: "W-2", title: "W-2", status: "not-started" });
+    assert.equal(plainNothing.level, "red", lang + " 普通行什么都没有，应为红：" + plainNothing.level);
+
+    vm.runInContext(slice("function exRowTitle(it)", "function coverHtml(){"), sb);
+    sb.rowTitle = (it) => it.title || it.form;
+    sb.unresolvedRows = () => [
+      { form: "W-2", title: "W-2", payer: "", status: "not-started" },
+      { form: "Form 8938", title: "Form 8938", payer: "", status: "not-started", noFigure: true },
+    ];
+    const out = sb.missingTableHtml();
+    const wantZh = /缺文件、缺数字/;
+    const wantEn = /Missing file and figure/;
+    assert.ok(lang === "zh" ? wantZh.test(out) : wantEn.test(out), lang + " 普通行缺项表应仍写「缺文件、缺数字」");
+    // 同一张表里：普通行报两个缺，境外行只报缺文件
+    const cells = [...out.matchAll(/<td>([^<]*)<\/td>/g)].map((m) => m[1]);
+    assert.ok(cells.some((c) => /^(缺文件|Missing file)$/.test(c)), lang + " 境外行应只报缺文件");
+  }
+});
+
 // —— 下面三条跑的是页面里真实函数，用来拿「页面上到底出什么字」的原文 ——
 function panelSb(lang, checklist, ans) {
   const sb = sandbox(lang);
@@ -264,6 +293,28 @@ check("英文/西语缺项表的「去哪拿」三行都有专门文案", () => 
     const hit = sb.WHERE_MAP[f];
     assert.ok(hit && hit.length === 2, f + " 缺 WHERE_MAP 条目");
     for (const t of hit) assert.ok(t && t.trim() && !CJK.test(t), f + " 的去哪拿不是英文/西语：" + t);
+  }
+});
+
+check("对外文案只留「要备什么 / 是否需报找会计师」：无罚则数字、无第二个金额、无门槛数字", () => {
+  // 三条清单文案 + 三条探针文案，是这功能所有对外的字
+  const notes = PROBE_NOTES.filter((n) => /FinCEN 114|8938|8621/.test(n.match.join(" "))).map((n) => n.text);
+  assert.equal(notes.length, 3, "应正好三条探针文案");
+  const rowTexts = FORMS.map((f) => FORM_MAP.find((x) => x[0] === f)[1]);
+  // 清单文案一处、探针文案一处：同一句触发条件各写一次，其它任何金额都不许有
+  const rowHits = rowTexts.join(" ").match(/\$[\d,]+/g) || [];
+  const noteHits = notes.join(" ").match(/\$[\d,]+/g) || [];
+  assert.deepEqual([...rowHits], ["$10,000"], "清单文案只允许 FBAR 的 $10,000，实际：" + rowHits.join(","));
+  assert.deepEqual([...noteHits], ["$10,000"], "探针文案只允许 FBAR 的 $10,000，实际：" + noteHits.join(","));
+  const all = [...rowTexts, ...notes];
+  for (const t of all) {
+    assert.ok(!/\d+%/.test(t), "不许出现百分比例：" + t);
+    assert.ok(!/罚[款金].*\$|罚款.*\d/.test(t), "不许出现罚则金额：" + t);
+  }
+  // 8938 / 8621 的文案绝对不能带门槛数字
+  for (const f of ["Form 8938", "Form 8621"]) {
+    const t = FORM_MAP.find((x) => x[0] === f)[1];
+    assert.ok(!/\$|\d{4,}/.test(t.replace(f, "")), f + " 带了金额或门槛数字：" + t);
   }
 });
 
