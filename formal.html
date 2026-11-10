@@ -210,6 +210,53 @@ select option{background:#0f141b;color:#e6edf3}
 .plan-opts{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 2px}
 .plan-opts label{display:inline-flex;align-items:center;gap:6px;font-size:14px}
 .plan-note{font-size:12px;color:#93a3b5;margin:8px 0 0}
+/* 过程管理：画像 + 随手记（与 9 项输入同屏） */
+.proc-block{margin:16px 0 0;padding-top:14px;border-top:1px solid #232e3a}
+.proc-h{margin:0 0 4px;font-size:15px;font-weight:700;color:#e6edf3}
+.proc-sub{margin:0 0 10px;font-size:12px;color:#93a3b5;line-height:1.7}
+.proc-prof{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.proc-prof>div{min-width:0}
+.proc-prof label{display:block;font-size:12px;color:#93a3b5;margin:0 0 4px}
+.proc-prof select,.proc-prof input{width:100%;box-sizing:border-box;background:#0f141b;color:#e6edf3;border:1px solid #2a3441;border-radius:9px;padding:8px 10px;font-size:13px;font-family:inherit}
+.proc-prof select:focus,.proc-prof input:focus{outline:none;border-color:#2fd6a3}
+.proc-save{margin:10px 0 0}
+.proc-msg{font-size:12px;color:#2fd6a3;margin-left:8px}
+.proc-rings{margin:12px 0 0;padding-top:12px;border-top:1px solid #232e3a;display:grid;gap:9px}
+.proc-ring{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.proc-ring .lab{font-size:12px;color:#9fb0c0;width:64px;flex:none}
+.proc-ring select{width:auto;flex:none;min-width:58px;background:#0f141b;color:#e6edf3;border:1px solid #2a3441;border-radius:8px;padding:6px 8px;font-size:13px;font-family:inherit}
+.proc-inline{font-size:11.5px;color:#6f7d8d;flex:none}
+.proc-cells{display:flex;gap:4px}
+.proc-cell{width:34px;height:24px;border:1px solid #232e3a;border-radius:5px;background:#171e27;color:#5f6b7a;font-size:10px;display:flex;align-items:center;justify-content:center}
+.proc-cell.used{background:rgba(70,102,138,.22);border-color:#3d5a7a;color:#b7c9dd}
+.proc-cell.now{background:rgba(47,214,163,.14);border-color:#2fd6a3;color:#7ff0c8}
+.proc-cell.gone{background:#121820;color:#3d4657;text-decoration:line-through}
+.proc-bar{position:relative;flex:1;min-width:110px;height:10px;border:1px solid #232e3a;border-radius:99px;background:#171e27;overflow:hidden}
+.proc-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,#2f6b8f,#2fd6a3)}
+.proc-num{width:64px;flex:none;background:#0f141b;color:#e6edf3;border:1px solid #2a3441;border-radius:8px;padding:6px 8px;font-size:13px;text-align:center;font-family:inherit}
+.proc-cap{font-size:11.5px;color:#93a3b5;line-height:1.6;flex-basis:100%}
+.proc-cap b{color:#e6edf3;font-weight:600}
+.proc-src{margin:9px 0 0;font-size:11px;color:#6f7d8d;line-height:1.7}
+.proc-ways{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0}
+.proc-way{font-size:12.5px;color:#cfd9e4;background:#151d27;border:1px dashed #2c3849;border-radius:99px;padding:7px 12px;cursor:pointer;font-family:inherit;transition:.15s}
+.proc-way:hover{border-color:#2fd6a3;color:#fff}
+.proc-way.unknown{border-style:dotted;color:#93a3b5}
+.proc-records{margin:12px 0 0}
+.proc-rec{position:relative;border:1px solid #232e3a;border-left:3px solid #46668a;border-radius:10px;background:#0f141b;padding:10px 12px;margin:0 0 8px}
+.proc-rec.s2{border-left-color:#e0a23c}
+.proc-rec.s3{border-left-color:#e06464}
+.proc-rec .what{font-size:13px;color:#e6edf3;line-height:1.6;padding-right:38px}
+.proc-rec .what b{color:#fff;font-weight:600}
+.proc-rec .kv{display:flex;gap:8px;margin:5px 0 0;font-size:12px;color:#93a3b5;line-height:1.6}
+.proc-rec .kv span{flex:none;width:64px;color:#6f7d8d}
+.proc-rec .kv b{color:#cfd9e4;font-weight:500}
+.proc-rec .kv b.when{color:#e0a23c}
+.proc-del{position:absolute;right:10px;top:9px;font-size:11px;color:#4b5868;cursor:pointer;background:none;border:0;padding:0;font-family:inherit}
+.proc-del:hover{color:#93a3b5}
+.proc-warn{margin:7px 0 0;padding:7px 9px;border-radius:8px;background:rgba(224,64,64,.08);border:1px solid rgba(224,64,64,.28);font-size:12px;color:#f0b4b4;line-height:1.6}
+.proc-warn.s2{background:rgba(224,162,60,.09);border-color:rgba(224,162,60,.3);color:#f0d0a0}
+.proc-lock{margin:6px 0 0;font-size:11.5px;color:#6f7d8d;line-height:1.6}
+@media(max-width:600px){.proc-prof{grid-template-columns:1fr}.proc-rec .kv span{width:56px}}
 #planCards .plan-guide{border:1px dashed #2a3441;border-radius:14px;padding:14px 16px;background:#0f141b}
 .plan-lock{margin-top:8px;font-size:13px;color:#93a3b5}
 #planCards table th,#planCards table td{color:#e6edf3;border-color:#232e3a}
@@ -2346,6 +2393,7 @@ function outlookHtml(unlocked) {
   h += "<p class=\"muted small\">" + esc(tr("按你现在填的数和材料估的；只用来安排现金，不算税、不打表。", "Estimated from the numbers and papers you have so far; only for planning cash — no tax calculation, no return.", "Estimado con sus números y papeles actuales; solo para planear efectivo: sin calcular impuestos, sin declaración.")) + "</p>";
   h += "<div id=\"outlookOut\">" + outlookOutHtml(unlocked) + "</div>";
   h += outlookInputsHtml(s);
+  h += "<div id=\"procBlock\"></div>";
   h += "<p class=\"small\"><b>" + esc(tr("这是估算，不是申报；最终以你的会计师与 IRS 核算为准。", "This is an estimate, not a filing; your accountant and the IRS have the final word.", "Esto es una estimación, no una declaración; la última palabra la tienen su contador y el IRS.")) + "</b></p>";
   return h;
 }
@@ -2356,6 +2404,7 @@ function renderOutlook() {
   el.classList.toggle("hidden", !show);
   if (!show) return;
   el.innerHTML = outlookHtml(hasPass());
+  renderProcess();
   var s = outlookLoad(), touched = false;
   OUTLOOK_FIELDS.forEach(function (k) {
     var i = $("ol_" + k);
@@ -2375,6 +2424,304 @@ function renderOutlook() {
   if (det && (touched || !outlookEstimate(s).filled)) det.open = true;
 }
 // OUTLOOK_LOGIC_END
+// PROCESS_LOGIC_START
+// 过程管理：去年那张表预填画像 + 今年 6 类随手记 + 两条年轮。
+// 与上面 9 项输入同屏；每笔只给位置、方向、截止日，不给金额。
+var PROC_PROFILE_KEY = "tpo_profile_v1";
+var PROC_FRAGS_KEY = "tpo_frags_v1";
+var PROC_CHECKED = "2026-11-10";
+var PROC_EDU_MAX = 4;
+var PROC_SS_POINT = 1890;      // SSA 2026：每 $1,890 记 1 分（核于 2026-11-10）
+var PROC_SS_MAX_YEAR = 4;      // SSA：一年最多 4 分
+var PROC_SS_TARGET = 40;       // SSA：领退休金要 40 分
+var PROC_STATUS_OPTIONS = ["single", "mfj", "mfs", "hoh"];
+var PROC_FLASH = "";
+
+// 6 类可点 + 1 个待归类。每项只放四行：我记成什么 / 动了哪条线 / 最晚哪天 / 明年表上哪一行。
+var PROC_TYPES = {
+  edu: {
+    sev: 2,
+    btn: ["交学费", "Paid tuition", "Pagué matrícula"],
+    as: ["学费一笔（今年的在读费用）", "A tuition payment (this year's enrollment costs)", "Un pago de matrícula (gastos de inscripción de este año)"],
+    line: ["教育抵免 · 在读年限", "Education credit · years enrolled", "Crédito educativo · años inscrito"],
+    when: ["12/31 前付出去", "Pay it before 12/31", "Páguelo antes del 31/12"],
+    row: ["Form 8863", "Form 8863", "Formulario 8863"]
+  },
+  job: {
+    sev: 3,
+    btn: ["换工作或涨薪", "New job or raise", "Nuevo empleo o aumento"],
+    as: ["换工作或涨薪（W-2 工资变了）", "A job change or raise (W-2 wages changed)", "Cambio de empleo o aumento (cambió el salario del W-2)"],
+    line: ["收入线 · 医保补贴对账", "Income line · subsidy reconciliation", "Línea de ingresos · conciliación del subsidio"],
+    when: ["这笔已发生，只能往下压收入", "Already happened — only lowering income is left", "Ya ocurrió: solo queda bajar los ingresos"],
+    row: ["1040 + Form 8962", "1040 + Form 8962", "1040 + Formulario 8962"]
+  },
+  gain: {
+    sev: 2,
+    btn: ["卖出股票", "Sold stock", "Vendí acciones"],
+    as: ["卖出一笔股票（资本利得）", "A stock sale (capital gain)", "Una venta de acciones (ganancia de capital)"],
+    line: ["收入线 · 资本利得", "Income line · capital gain", "Línea de ingresos · ganancia de capital"],
+    when: ["12/31 前可以卖亏冲抵", "Sell a loss before 12/31 to offset", "Venda una pérdida antes del 31/12 para compensar"],
+    row: ["Schedule D", "Schedule D", "Anexo D"]
+  },
+  se: {
+    sev: 1,
+    btn: ["收到自雇收入", "Self-employment income", "Ingreso por cuenta propia"],
+    as: ["一笔自雇收入", "A self-employment payment", "Un pago por cuenta propia"],
+    line: ["自雇收入 · 退休分", "Self-employment income · retirement credits", "Ingreso por cuenta propia · créditos de retiro"],
+    when: ["12/31 前发生", "It happens before 12/31", "Ocurre antes del 31/12"],
+    row: ["Schedule C + Schedule SE", "Schedule C + Schedule SE", "Anexo C + Anexo SE"]
+  },
+  ins: {
+    sev: 2,
+    btn: ["自己买医保", "Bought my own insurance", "Compré mi seguro"],
+    as: ["自己买医保（保费一笔）", "Paying for my own coverage (one premium)", "Pago mi propio seguro (una prima)"],
+    line: ["医保对账 · 补贴", "Coverage reconciliation · subsidy", "Conciliación del seguro · subsidio"],
+    when: ["1/31 前拿到 1095-A", "Get Form 1095-A by 1/31", "Obtenga el Formulario 1095-A antes del 31/1"],
+    row: ["Form 8962", "Form 8962", "Formulario 8962"]
+  },
+  k401: {
+    sev: 1,
+    btn: ["往退休账户多放钱", "Put more into retirement", "Aporté más al retiro"],
+    as: ["往退休账户多放一笔", "An extra retirement contribution", "Una aportación extra al retiro"],
+    line: ["收入往下压 · 退休分", "Lowers income · retirement credits", "Baja los ingresos · créditos de retiro"],
+    when: ["12/31 前扣款（IRA 可到 4/15）", "Contribute before 12/31 (IRA can go to 4/15)", "Aporte antes del 31/12 (la IRA puede ir hasta el 15/4)"],
+    row: ["W-2 第 12 栏", "W-2 box 12", "W-2 casilla 12"]
+  }
+};
+
+function procProfileLoad() {
+  var d = { status: "", income: "", college: "", ins1095a: "", mortgage: "", eduUsed: "0", ssPoints: "0" };
+  try {
+    var o = JSON.parse(localStorage.getItem(PROC_PROFILE_KEY) || "{}") || {};
+    for (var k in d) { if (Object.prototype.hasOwnProperty.call(d, k) && o[k] != null) d[k] = String(o[k]); }
+  } catch (e) {}
+  return d;
+}
+function procProfileSave(p) { try { localStorage.setItem(PROC_PROFILE_KEY, JSON.stringify(p)); } catch (e) {} }
+function procFragsLoad() {
+  try { var a = JSON.parse(localStorage.getItem(PROC_FRAGS_KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+}
+function procFragsSave(a) { try { localStorage.setItem(PROC_FRAGS_KEY, JSON.stringify(a)); } catch (e) {} }
+function procInt(v, d) {
+  var n = parseInt(String(v == null ? "" : v).replace(/[^0-9]/g, ""), 10);
+  return isFinite(n) ? Math.max(0, n) : d;
+}
+// 画像只预填 9 项里的 5 项；房贷/自雇是「有/没有」，金额留给用户自己填。
+function procPrefill(p) {
+  var out = {};
+  if (p.status) out.status = p.status;
+  var inc = String(p.income == null ? "" : p.income).replace(/[^0-9.]/g, "");
+  if (inc !== "") out.income = inc;
+  if (p.college === "yes") out.dep = "1"; else if (p.college === "no") out.dep = "0";
+  if (p.ins1095a === "yes") out.mkt = "12"; else if (p.ins1095a === "no") out.mkt = "0";
+  if (p.mortgage === "no") out.mortgage = "0";
+  return out;
+}
+function procApplyPrefill(p) {
+  var add = procPrefill(p);
+  var s = outlookLoad();
+  for (var k in add) { if (Object.prototype.hasOwnProperty.call(add, k)) s[k] = add[k]; }
+  outlookSave(s);
+  return add;
+}
+function procEduCells(used) {
+  var h = "";
+  for (var i = 1; i <= PROC_EDU_MAX; i++) {
+    var cls = i <= used ? "used" : (i === used + 1 ? "now" : "gone");
+    h += "<span class='proc-cell " + cls + "'>" + i + "</span>";
+  }
+  return h;
+}
+function procEduCap(used) {
+  if (used >= PROC_EDU_MAX) {
+    return tr("4 年已用完 · 不可逆", "All four years used — irreversible", "Los cuatro años usados: irreversible");
+  }
+  return tr(
+    "已用 " + used + " 年 · 今年第 " + (used + 1) + " 年，还剩 " + (PROC_EDU_MAX - used - 1) + " 年",
+    used + " used · this is year " + (used + 1) + ", " + (PROC_EDU_MAX - used - 1) + " left",
+    used + " usados · este es el año " + (used + 1) + ", quedan " + (PROC_EDU_MAX - used - 1)
+  );
+}
+function procSsCap(points) {
+  var left = Math.max(0, PROC_SS_TARGET - points);
+  if (!left) return tr("40 分已满", "40 credits reached", "40 créditos completos");
+  return tr(
+    "现在 " + points + "/40 · 今年还能拿 " + Math.min(PROC_SS_MAX_YEAR, left) + " 分",
+    points + " of 40 now · up to " + Math.min(PROC_SS_MAX_YEAR, left) + " more this year",
+    points + " de 40 ahora · hasta " + Math.min(PROC_SS_MAX_YEAR, left) + " más este año"
+  );
+}
+// 季票才看得到：越线预警 + 不可逆项。待归类不产生任何一条。
+function procWarn(id, p) {
+  if (id === "edu") {
+    var used = procInt(p.eduUsed, 0);
+    if (used >= PROC_EDU_MAX) {
+      return [3, tr("教育抵免 4 年已经用完，这一笔不再增加这条线。", "The education credit's four years are used up; this payment no longer adds to that line.", "Los cuatro años del crédito educativo ya se usaron; este pago ya no suma a esa línea.")];
+    }
+    if (used === PROC_EDU_MAX - 1) {
+      return [3, tr("今年是第 4 年，最后一次；今年不付，这条线就用完了。", "This is year four — the last one. If it is not paid this year, the line is used up.", "Este es el cuarto año, el último. Si no se paga este año, la línea se agota.")];
+    }
+    return [2, tr("今年是第 " + (used + 1) + " 年，4 年上限还剩 " + (PROC_EDU_MAX - used - 1) + " 年。", "This is year " + (used + 1) + "; " + (PROC_EDU_MAX - used - 1) + " of the four years are left.", "Este es el año " + (used + 1) + "; quedan " + (PROC_EDU_MAX - used - 1) + " de los cuatro años.")];
+  }
+  if (id === "job" || id === "gain") {
+    return [2, tr("这笔把收入往上推；收入一变，医保补贴就要在 8962 上重新对账，越过那条线是整份没有，不是少一点。", "This pushes income up. Once income changes, the health-insurance subsidy has to be reconciled on Form 8962; crossing that line means losing all of it, not a little.", "Esto sube los ingresos. Si cambian, el subsidio del seguro médico se concilia en el Formulario 8962; cruzar esa línea significa perderlo todo, no solo un poco.")];
+  }
+  if (id === "ins") {
+    return [2, tr("保费要和全年收入对账：收入高一分，补贴就退回去一分。", "The premium is reconciled against full-year income: every bit of extra income sends part of the subsidy back.", "La prima se concilia con los ingresos del año: cada parte de ingreso extra devuelve parte del subsidio.")];
+  }
+  if (id === "se") {
+    return [1, tr("这笔同时进所得税和自雇税两条线，也会给退休分加分。", "This lands on both the income-tax and self-employment-tax lines, and it also adds retirement credits.", "Esto entra en la línea del impuesto sobre la renta y en la del trabajo por cuenta propia, y además suma créditos de retiro.")];
+  }
+  if (id === "k401") {
+    return [1, tr("这是今年少数能主动把收入往下压的动作；退休分一年最多 4 分。", "This is one of the few moves this year that actively lowers income; retirement credits are capped at four a year.", "Es uno de los pocos movimientos del año que bajan los ingresos de forma activa; los créditos de retiro tienen un tope de cuatro al año.")];
+  }
+  return null;
+}
+function procYesNo(id, val) {
+  return "<select id='" + id + "'>"
+    + "<option value=''>" + esc(tr("未填", "Not set", "Sin definir")) + "</option>"
+    + "<option value='yes'" + (val === "yes" ? " selected" : "") + ">" + esc(tr("有", "Yes", "Sí")) + "</option>"
+    + "<option value='no'" + (val === "no" ? " selected" : "") + ">" + esc(tr("没有", "No", "No")) + "</option>"
+    + "</select>";
+}
+function procCardHtml(f, idx, unlocked, p) {
+  var del = "<button type='button' class='proc-del' data-del='" + idx + "'>" + esc(tr("删除", "Delete", "Borrar")) + "</button>";
+  if (!f || f.k === "unknown" || !PROC_TYPES[f.k]) {
+    return "<div class='proc-rec'>" + del
+      + "<div class='what'>" + esc(tr("我记成：", "Logged as: ", "Registrado como: ")) + "<b>" + esc(tr("先存着，还没归到哪条线", "Saved for now — not sorted into a line", "Guardado por ahora, sin clasificar")) + "</b></div>"
+      + "<p class='proc-lock'>" + esc(tr("待归类不产生任何线，也不进预警；等单据或你补一句再定。", "A sort-later entry creates no line and no alert; it waits for a receipt or one more word from you.", "Una entrada sin clasificar no crea ninguna línea ni alerta; espera un recibo o una palabra más suya.")) + "</p></div>";
+  }
+  var t = PROC_TYPES[f.k];
+  var h = "<div class='proc-rec s" + t.sev + "'>" + del;
+  h += "<div class='what'>" + esc(tr("我记成：", "Logged as: ", "Registrado como: ")) + "<b>" + esc(tr(t.as[0], t.as[1], t.as[2])) + "</b></div>";
+  if (unlocked) {
+    h += "<div class='kv'><span>" + esc(tr("动了哪条线", "Line it moves", "Línea que mueve")) + "</span><b>" + esc(tr(t.line[0], t.line[1], t.line[2])) + "</b></div>";
+    h += "<div class='kv'><span>" + esc(tr("最晚哪天", "Last day", "Último día")) + "</span><b class='when'>" + esc(tr(t.when[0], t.when[1], t.when[2])) + "</b></div>";
+    h += "<div class='kv'><span>" + esc(tr("明年表上", "Next year's form", "Formulario del próximo año")) + "</span><b>" + esc(tr(t.row[0], t.row[1], t.row[2])) + "</b></div>";
+    var w = procWarn(f.k, p);
+    if (w) h += "<div class='proc-warn s" + w[0] + "'>" + esc(w[1]) + "</div>";
+  } else {
+    h += "<p class='proc-lock'>" + esc(tr("动了哪条线、最晚哪天、明年表上哪一行，在季票里（内测期免费）。", "The line it moves, the last day, and next year's form come with the season pass (free during beta).", "La línea que mueve, el último día y el formulario del próximo año vienen con el pase de temporada (gratis durante la beta).")) + "</p>";
+  }
+  return h + "</div>";
+}
+function procHtml(unlocked) {
+  var p = procProfileLoad();
+  var frags = procFragsLoad();
+  var flash = PROC_FLASH;
+  PROC_FLASH = "";
+  var used = procInt(p.eduUsed, 0);
+  var points = Math.min(PROC_SS_TARGET, procInt(p.ssPoints, 0));
+  var h = "<div class='proc-block'>";
+  h += "<div class='proc-h'>" + esc(tr("去年那张表：先把画像填上", "Last year's return: start with your profile", "La declaración del año pasado: empiece con su perfil")) + "</div>";
+  h += "<p class='proc-sub'>" + esc(tr("一次录入，明年接着用。只用来预填下面 9 项里的 5 项，随时可改。", "Enter it once and reuse it next year. It only prefills five of the nine fields below; you can change them anytime.", "Se ingresa una vez y se reutiliza el próximo año. Solo prellena cinco de los nueve campos de abajo; puede cambiarlos cuando quiera.")) + "</p>";
+  h += "<div class='proc-prof'>";
+  var opts = "<option value=''>" + esc(tr("请选择", "Select", "Seleccione")) + "</option>";
+  for (var i = 0; i < PROC_STATUS_OPTIONS.length; i++) {
+    var code = PROC_STATUS_OPTIONS[i], lab = PLAN_STATUS_LABEL[code];
+    opts += "<option value='" + code + "'" + (p.status === code ? " selected" : "") + ">" + esc(tr(lab[0], lab[1], lab[2])) + "</option>";
+  }
+  h += "<div><label for='procStatus'>" + esc(tr("报法", "Filing status", "Estado civil fiscal")) + "</label><select id='procStatus'>" + opts + "</select></div>";
+  h += "<div><label for='procIncome'>" + esc(tr("去年收入", "Last year's income", "Ingresos del año pasado")) + "</label><input id='procIncome' inputmode='decimal' autocomplete='off' value='" + esc(p.income) + "' placeholder='" + esc(tr("例如 75000", "e.g. 75000", "p. ej. 75000")) + "'></div>";
+  h += "<div><label for='procCollege'>" + esc(tr("有在读大学生（被抚养人）", "A college student you support", "Un estudiante universitario a su cargo")) + "</label>" + procYesNo("procCollege", p.college) + "</div>";
+  h += "<div><label for='procIns'>" + esc(tr("有 1095-A", "Has Form 1095-A", "Tiene el Formulario 1095-A")) + "</label>" + procYesNo("procIns", p.ins1095a) + "</div>";
+  h += "<div><label for='procMortgage'>" + esc(tr("有房贷利息或自雇", "Mortgage interest or self-employment", "Intereses hipotecarios o trabajo por cuenta propia")) + "</label>" + procYesNo("procMortgage", p.mortgage) + "</div>";
+  h += "</div>";
+  h += "<p class='proc-save'><button type='button' id='procSave'>" + esc(tr("保存画像并预填这 5 项", "Save profile and prefill these five", "Guardar el perfil y prellenar estos cinco")) + "</button><span class='proc-msg' id='procSaveMsg'>" + esc(flash) + "</span></p>";
+  if (p.mortgage === "yes") {
+    h += "<p class='proc-lock'>" + esc(tr("去年有房贷利息或自雇：这里只有有／没有，金额请填在下面「房贷利息 + 州税」那一项。", "You had mortgage interest or self-employment last year: this only records yes/no — put the amount in \"Mortgage interest + state tax\" below.", "El año pasado tuvo intereses hipotecarios o trabajo por cuenta propia: aquí solo se registra sí/no; ponga el monto en «Intereses hipotecarios + impuesto estatal» abajo.")) + "</p>";
+  }
+  h += "<div class='proc-rings'>";
+  h += "<div class='proc-ring'><span class='lab'>" + esc(tr("学费抵免", "Education credit", "Crédito educativo")) + "</span><span class='proc-cells'>" + procEduCells(used) + "</span>"
+    + "<span class='proc-inline'>" + esc(tr("已用", "Used", "Usados")) + "</span><select id='procEduUsed' aria-label='" + esc(tr("已用几年", "Years already used", "Años ya usados")) + "'>";
+  for (var y = 0; y <= PROC_EDU_MAX; y++) h += "<option value='" + y + "'" + (y === used ? " selected" : "") + ">" + y + "</option>";
+  h += "</select><span class='proc-cap'>" + esc(procEduCap(used)) + "</span></div>";
+  h += "<div class='proc-ring'><span class='lab'>" + esc(tr("退休分", "Retirement credits", "Créditos de retiro")) + "</span>"
+    + "<span class='proc-bar'><i style='width:" + Math.round(points / PROC_SS_TARGET * 100) + "%'></i></span>"
+    + "<input class='proc-num' id='procSsPoints' inputmode='numeric' min='0' max='40' value='" + points + "' aria-label='" + esc(tr("累计几分", "Credits so far", "Créditos acumulados")) + "'>"
+    + "<span class='proc-cap'>" + esc(procSsCap(points)) + "</span></div>";
+  h += "</div>";
+  h += "<p class='proc-src'>" + esc(tr("退休分：SSA 2026，每 $" + PROC_SS_POINT.toLocaleString("en-US") + " 记 1 分，一年最多 4 分，领退休金要 40 分（核于 " + PROC_CHECKED + "）。教育抵免：Pub 970 / Form 8863，每个学生最多 4 个税年（核于 " + PROC_CHECKED + "）。", "Retirement credits: SSA 2026 — $" + PROC_SS_POINT.toLocaleString("en-US") + " earns one credit, up to four a year, 40 needed for retirement benefits (checked " + PROC_CHECKED + "). Education credit: Pub 970 / Form 8863, at most four tax years per student (checked " + PROC_CHECKED + ").", "Créditos de retiro: SSA 2026 — $" + PROC_SS_POINT.toLocaleString("en-US") + " dan un crédito, hasta cuatro al año, se necesitan 40 para la jubilación (verificado el " + PROC_CHECKED + "). Crédito educativo: Pub 970 / Form 8863, como máximo cuatro años fiscales por estudiante (verificado el " + PROC_CHECKED + ").")) + "</p>";
+
+  h += "<div class='proc-h' style='margin-top:16px'>" + esc(tr("今年随手记", "Log it as it happens", "Regístrelo sobre la marcha")) + "</div>";
+  h += "<p class='proc-sub'>" + esc(tr("点一下就行，不用懂税。不填金额，只记类型；记多少笔都一样。", "One tap is enough — no tax knowledge needed. No amounts, just the type; any number of entries is the same.", "Basta un toque, sin saber de impuestos. Sin montos, solo el tipo; cualquier número de entradas cuesta lo mismo.")) + "</p>";
+  h += "<div class='proc-ways'>";
+  for (var id in PROC_TYPES) {
+    if (!Object.prototype.hasOwnProperty.call(PROC_TYPES, id)) continue;
+    var t = PROC_TYPES[id];
+    h += "<button type='button' class='proc-way' data-proc='" + id + "'>" + esc(tr(t.btn[0], t.btn[1], t.btn[2])) + "</button>";
+  }
+  h += "<button type='button' class='proc-way unknown' data-proc='unknown'>" + esc(tr("待归类", "Sort later", "Clasificar luego")) + "</button>";
+  h += "</div>";
+  h += "<div class='proc-records'>";
+  if (!frags.length) {
+    h += "<p class='proc-lock'>" + esc(tr("还没有记。点上面任意一项，下面就会出现一张卡。", "Nothing logged yet. Tap any type above and a card appears below.", "Todavía no hay nada. Toque un tipo arriba y aparecerá una tarjeta abajo.")) + "</p>";
+  } else {
+    for (var j = 0; j < frags.length; j++) h += procCardHtml(frags[j], j, unlocked, p);
+  }
+  h += "</div>";
+  h += "</div>";
+  return h;
+}
+function renderProcess() {
+  var box = $("procBlock");
+  if (!box) return;
+  box.innerHTML = procHtml(hasPass());
+  procBind();
+}
+function procBind() {
+  var box = $("procBlock");
+  if (!box) return;
+  var p = procProfileLoad();
+  function readForm() {
+    function v(id) { var el = $(id); return el ? el.value : ""; }
+    return {
+      status: v("procStatus"), income: v("procIncome"), college: v("procCollege"),
+      ins1095a: v("procIns"), mortgage: v("procMortgage"),
+      eduUsed: v("procEduUsed") || p.eduUsed, ssPoints: v("procSsPoints") || p.ssPoints
+    };
+  }
+  var save = $("procSave");
+  if (save) save.onclick = function () {
+    var np = readForm();
+    procProfileSave(np);
+    procApplyPrefill(np);
+    PROC_FLASH = tr("已保存：下面这 5 项已按画像填好，随时可改。", "Saved: the five fields below now follow your profile; change them anytime.", "Guardado: los cinco campos de abajo ya siguen su perfil; cámbielos cuando quiera.");
+    renderOutlook();
+    var det = $("outlookInputs");
+    if (det) det.open = true;
+  };
+  function ringSave(id, key) {
+    var el = $(id);
+    if (!el) return;
+    el.onchange = function () {
+      var np = procProfileLoad();
+      var v = el.value;
+      if (key === "ssPoints") v = String(Math.min(PROC_SS_TARGET, procInt(v, 0)));
+      if (key === "eduUsed") v = String(Math.min(PROC_EDU_MAX, procInt(v, 0)));
+      np[key] = v;
+      procProfileSave(np);
+      renderProcess();
+    };
+  }
+  ringSave("procEduUsed", "eduUsed");
+  ringSave("procSsPoints", "ssPoints");
+  var ways = box.querySelectorAll("[data-proc]");
+  for (var i = 0; i < ways.length; i++) ways[i].onclick = function () {
+    var a = procFragsLoad();
+    a.push({ k: this.getAttribute("data-proc"), t: Date.now() });
+    procFragsSave(a);
+    renderProcess();
+  };
+  var dels = box.querySelectorAll("[data-del]");
+  for (var j = 0; j < dels.length; j++) dels[j].onclick = function () {
+    var a = procFragsLoad();
+    a.splice(parseInt(this.getAttribute("data-del"), 10), 1);
+    procFragsSave(a);
+    renderProcess();
+  };
+}
+// PROCESS_LOGIC_END
 function renderHero(){
   var hero=$("heroBox");if(!hero||!packet)return;
   var show=currentPage===1&&!packet.checklist.length;
