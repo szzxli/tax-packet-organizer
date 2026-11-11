@@ -37,6 +37,7 @@ const sandbox = {
 };
 sandbox.window = sandbox;
 vm.createContext(sandbox);
+sandbox.RULES = JSON.parse(fs.readFileSync(new URL("../rules/graph.json", import.meta.url), "utf8"));
 
 // 页面里的身份表与 9 项字段，从正式页面取，避免测试自带一份会漂移的定义。
 const labelSrc = html.match(/var PLAN_STATUS_LABEL=\{[\s\S]*?\n\};/);
