@@ -393,7 +393,7 @@ export default {
       const items = normalizeAiItems(res.text);
       if (!items) return bad("ai_bad_response", 502);
       // 表清单白名单 + 禁用词：模型编的表、带「符合/能拿/保证」的条目不进用户清单。
-      const clean = sanitizeAiItems(items);
+      const clean = sanitizeAiItems(items, desc);
       if (!clean.length) return bad("ai_bad_response", 502);
       await env.DB.prepare("INSERT INTO ai_rate (ip_hash, created_at) VALUES (?,?)").bind(ipHash, Date.now()).run();
       return ok({ items: clean });

@@ -317,11 +317,11 @@ check("规则图：400% 每行都带两个年度字段、出处与核实日", ()
   }
   for (const r of rows) assert.equal(r.limit, r.fpl * 4, "400% = 贫困线 ×4");
 });
-check("sw：图进了 APP_SHELL，缓存版本随图改动升到 v7", () => {
+check("sw：图进了 APP_SHELL，缓存版本随图改动升到 v8", () => {
   const sw = fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8");
   assert.ok(sw.includes('"./rules/graph.json"'), "APP_SHELL 缺规则图");
   // 图是缓存优先；改了图不升版本，老用户会一直读到旧图（这轮就少了 brackets）。
-  assert.ok(sw.includes('"tax-packet-shell-v7"'), "改了规则图却没升 CACHE_NAME，旧图会被缓存盖住");
+  assert.ok(sw.includes('"tax-packet-shell-v8"'), "改了规则图却没升 CACHE_NAME，旧图会被缓存盖住");
   assert.ok(!sw.includes('"tax-packet-shell-v3"'), "CACHE_NAME 还停在 v3");
 });
 check("AI 文案进 DOM 前换成中性句，正常文案不动", () => {
@@ -553,7 +553,8 @@ check("空态：只给一句提示 + 去填按钮，不出金额、不出标题�
     const paid = sandbox.outlookHtml(true), free = sandbox.outlookHtml(false);
     for (const out of [paid, free]) {
       assert.ok(!/\$[\d]/.test(out), lang + " 空态出现金额：" + out.slice(0, 160));
-      assert.ok(out.includes('id="btnOutlookGo"'), lang + " 空态缺「去填」按钮");
+      assert.ok(!out.includes('id="btnOutlookGo"'), lang + " 空态还渲染了多余的主按钮");
+      assert.ok(out.includes('id="outlookInputs"'), lang + " 空态没有输入区");
       assert.ok(!out.includes('id="outlookMain"'), lang + " 空态还把估算那块渲染出来了");
       assert.ok(!out.includes("<h2>"), lang + " 空态还出了 h2");
       assert.ok(!out.includes("outlookMap"), lang + " 空态还渲染了地图容器");
@@ -601,6 +602,20 @@ check("全页除限流提示外，没有别的分钟数承诺", () => {
   const hits = [...html.matchAll(/.{0,70}\d+\s*(?:分钟|minutes?|minutos).{0,50}/gi)].map((x) => x[0]);
   const bad = hits.filter((t) => !/发送太频繁|wait 1 minute|1 minuto/.test(t));
   assert.deepEqual(bad, [], "还有时间承诺：" + bad.join(" | "));
+});
+
+// ---- AI 清单失败路径：给出路，不是只说「稍后再试」 ----
+check("AI 失败路径三语都有出路（换说法 / 自己按表名加）", () => {
+  const zh = "这次没生成出来。换个说法再说一遍，或者直接在下面自己按表名加。";
+  const used = html.split('t("' + zh + '")').length - 1;
+  assert.ok(used >= 3, "失败分支没都换成有出路的句子：" + used);
+  const m = html.match(new RegExp('"' + zh + '": \\{"en": "([^"]+)", "es": "([^"]+)"\\}'));
+  assert.ok(m, "i18n 里没有这句（key 没同步会回退中文）");
+  assert.ok(/another way/i.test(m[1]) && /forms yourself|add the forms/i.test(m[1]), "英文没给两个出口：" + m[1]);
+  assert.ok(/otra forma/i.test(m[2]) && /añada/i.test(m[2]), "西语没给两个出口：" + m[2]);
+  assert.ok(!/[\u4e00-\u9fff]/.test(m[1] + m[2]), "en/es 里夹了中文");
+  assert.equal(html.indexOf("AI 未接通，请稍后再试"), -1, "旧句还在");
+  assert.equal(html.indexOf("AI 暂时没生成出来，请稍后再试"), -1, "旧句还在");
 });
 
 // ---- 输出 ----
