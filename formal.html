@@ -726,7 +726,11 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div class="sticky-copy"><strong id="stickyProgressTitle">继续整理</strong><p id="stickyProgressText"></p><div class="progress-track" aria-hidden="true"><span id="stickyProgressFill"></span></div></div>
 <button id="stickyProgressAction" type="button">继续</button>
 </div>
-<div class="card no-print hidden" id="stepPager"><div class="row" style="justify-content:space-between"><button id="btnStepPrev" class="secondary" type="button">← 上一步</button><button id="btnStepNext" type="button">下一步 →</button></div></div>
+<div class="flow-bar no-print hidden" id="stepPager" role="navigation" aria-label="步骤进度">
+<span class="flow-bar-step" id="stepPagerStep">第 1 步 / 共 3 步</span>
+<button id="btnStepPrev" class="secondary flow-bar-prev" type="button">← 上一步</button>
+<button id="btnStepNext" class="flow-bar-next" type="button">去把材料放进来</button>
+</div>
 
 <div class="card no-print hidden" id="subShowcase"><h2>免费版帮你整理材料，季票帮你减少遗漏</h2><p class="muted small">基础整理和导出永久免费；季票多给三张规划卡看清位置，交付前把整包核一遍，全年把时点盯住。</p><div class="sub-three"><div class="sub-three-item" onclick="goSub()"><b>三张规划卡</b><span>税档、退休、政策；只标结构，不算税。医保补贴那张卡所有人都能用，不用领季票。</span></div><div class="sub-three-item" onclick="goSub()"><b>交付前总核对</b><span>可交 / 不可交 + 缺项表，可重跑，现在就能出结果。</span></div><div class="sub-three-item" onclick="goSub()"><b>全年盯梢 <span class="badge pending">内测中</span></b><span>缺项、规则变化、截止日；目前只在本页展示，不发邮件、不推送。</span></div></div><p class="small">内测期免费，1 月公布价格。登录后领取免费季票。</p><p><button onclick="goSub()">去看季票</button></p></div>
 <div class="card no-print" id="aiCard">
@@ -3230,7 +3234,8 @@ function renderHero(){
   var ai=$("aiCard");if(ai){var showAi=ai.dataset.open==="1"&&currentPage===1&&currentOrganizeStep===1;ai.classList.toggle("hidden",!showAi);}
   var fq=$("faqCard");if(fq)fq.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==3);
   var sp=$("supportCard");if(sp)sp.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==3);
-  var pg=$("stepPager");if(pg)pg.classList.toggle("hidden",currentPage!==1||!packet.checklist.length);
+  var pg=$("stepPager");
+  if(pg){var showBar=currentPage===1;pg.classList.toggle("hidden",!showBar);document.body.classList.toggle("has-flowbar",showBar);}
   var se=$("supEmail");if(se&&currentUser&&!se.value)se.value=currentUser;
   renderReturnState();
 }
@@ -3711,6 +3716,22 @@ function addToLastYear(items){
   });
   savePacket();renderLast();
   return {added:added,skipped:skipped};
+}
+// 「今年没什么变化」是最常见的起点：不能给 0 项，否则用户被丢进一个空的第 2 步。
+// 只放两样几乎人人都会有的东西，其余留给他按手头证据自己加。
+function seedBaseChecklist(){
+  if(!packet)return 0;
+  if(packet.checklist&&packet.checklist.length)return 0;
+  var made=0;
+  [["wages","W-2"],["interest","1099-INT"]].forEach(function(x){
+    try{
+      if(packet.checklist.some(function(it){return it.kind===x[0];}))return;
+      var row=newRowFromKind(x[0],"");
+      if(x[1]&&row&&!row.form)row.form=x[1];
+      packet.checklist.push(row);made++;
+    }catch(e){}
+  });
+  return made;
 }
 function generateFromLastYear(){
   var added=0;var fresh=[];
@@ -4386,17 +4407,17 @@ $("btnMake").onclick=function(){
   }
   var phrases=[];
   sel.forEach(function(b){
-    var label=(b.textContent||"").trim();
-    var ph=b.getAttribute("data-phrase");if(ph)phrases.push(ph);
+    var ph=b.getAttribute("data-phrase")||"";
+    if(ph)phrases.push(ph);
     var f=b.getAttribute("data-form");
     if(f){if(!packet.lastYear.some(function(l){return l.form===f;}))packet.lastYear.push({form:f,payer:""});}
-    if(label==="孩子出生")applyChangeFromHero("抚养人","增加");
-    if(label==="抚养人减少")applyChangeFromHero("抚养人","减少");
-    if(label==="结婚了")applyChangeFromHero("配偶");
-    if(label==="换了州")applyChangeFromHero("地址");
-    if(label==="申报身份变了")applyChangeFromHero("申报身份");
-    if(label==="没有变化"){packet.changesNone=true;packet.changes={};packet.changesDir={};}
-    if(label==="卖了房"){
+    if(ph.indexOf("孩子出生")>=0)applyChangeFromHero("抚养人","增加");
+    if(ph.indexOf("抚养人减少")>=0)applyChangeFromHero("抚养人","减少");
+    if(ph.indexOf("结婚")>=0)applyChangeFromHero("配偶");
+    if(ph.indexOf("搬到另一个州")>=0)applyChangeFromHero("地址");
+    if(ph.indexOf("申报身份变了")>=0)applyChangeFromHero("申报身份");
+    if(ph.indexOf("没有变化")>=0){packet.changesNone=true;packet.changes={};packet.changesDir={};}
+    if(ph.indexOf("卖房")>=0){
       if(!packet.checklist.some(function(it){return it.form==="变化证明"&&it.payer==="卖房";}))
         packet.checklist.push({id:Date.now()+""+Math.random(),form:"变化证明",kind:null,title:"卖房",payer:"卖房",request:"卖房证明与成交文件（合同、过户记录、原值凭证）",status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:"",costs:[],moreCollapsed:true});
     }
@@ -4404,6 +4425,7 @@ $("btnMake").onclick=function(){
   if(phrases.length)$("heroText").value=phrases.join("");
   var stateMsg="";if(st)stateMsg=addStateRow(st);
   generateFromLastYear();
+  if(!packet.checklist.length&&(packet.changesNone||packet.changesSkip))seedBaseChecklist();
   savePacket();renderAll();
   var hs=$("heroState");if(hs&&st)hs.value=st;
   trackGenerate();
@@ -4547,15 +4569,39 @@ $("btnClearPriorCpa").onclick=function(){
 document.querySelectorAll('input[name="subPacks"]').forEach(function(r){
   r.onchange=function(){ if(!packet) return; packet.payPacks=parseInt(r.value,10)||1; savePacket(); renderOrders(); renderSubStatus(); };
 });
+function pendingMaterials(){
+  if(!packet||!packet.checklist)return 0;
+  var n=0;
+  packet.checklist.forEach(function(it){try{if(!rowResolved(it))n++;}catch(e){n++;}});
+  return n;
+}
 function updateStepPager(){
-  var prev=$("btnStepPrev"),next=$("btnStepNext");if(!prev||!next)return;
+  var bar=$("stepPager"),prev=$("btnStepPrev"),next=$("btnStepNext"),lab=$("stepPagerStep");
+  if(!bar||!prev||!next)return;
+  if(lab)lab.textContent=tr("第 "+currentOrganizeStep+" 步 / 共 3 步","Step "+currentOrganizeStep+" of 3","Paso "+currentOrganizeStep+" de 3");
   prev.classList.toggle("hidden",currentOrganizeStep<=1);
-  next.textContent=currentOrganizeStep>=3?t("去看季票"):t("下一步 →");
+  if(currentOrganizeStep===1){
+    var n=pendingMaterials();
+    next.textContent=n
+      ?tr("去补 "+n+" 项材料","Go gather "+n+" items","A reunir "+n+" elementos")
+      :tr("去把材料放进来","Bring the materials in","Traiga los materiales");
+  }else if(currentOrganizeStep===2){
+    next.textContent=tr("交之前核一遍","Check it before handing over","Revísalo antes de entregar");
+  }else{
+    next.textContent=tr("导出 PDF","Export PDF","Exportar PDF");
+  }
 }
 var _updateStepTabs=updateStepTabs;
 updateStepTabs=function(){_updateStepTabs();updateStepPager();};
 $("btnStepPrev").onclick=function(){setOrganizeStep(currentOrganizeStep-1,true);};
-$("btnStepNext").onclick=function(){if(currentOrganizeStep>=3){goSub();}else{setOrganizeStep(currentOrganizeStep+1,true);}};
+$("btnStepNext").onclick=function(){
+  if(currentOrganizeStep>=3){
+    var b=$("btnPrint");
+    if(b){b.scrollIntoView({behavior:"smooth",block:"center"});b.click();}
+    return;
+  }
+  setOrganizeStep(currentOrganizeStep+1,true);
+};
 
 [1,2,3].forEach(function(step){var tab=$("flowStep"+step);if(tab)tab.onclick=function(){if(step>1&&(!packet||!packet.checklist.length)){var hm=$("tagMsg");if(hm)hm.textContent=t("先选情况、生成今年清单，再去补材料。");var hb=$("heroBox");if(hb)hb.scrollIntoView({behavior:"smooth",block:"start"});return;}setOrganizeStep(step,true);};});
 var deferredInstallPrompt=null;
@@ -4600,6 +4646,16 @@ try{captureZh();var _sl=window.__TPO_LANG||null;if(!_sl){try{_sl=localStorage.ge
 body{background:var(--p-bg);-webkit-font-smoothing:antialiased;letter-spacing:.005em}
 .one-thing{border-left:3px solid var(--p-accent);background:rgba(47,212,160,.07);border-radius:8px;padding:7px 10px;margin:0 0 10px;max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 .one-thing p{margin:1px 0;overflow-wrap:anywhere;word-break:break-word}
+
+/* 底部步骤条：常驻、随步骤换主按钮文案，避开 iOS 安全区 */
+.flow-bar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;align-items:center;gap:8px;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(11,17,24,.96);border-top:1px solid var(--p-line)}
+.flow-bar.hidden{display:none}
+.flow-bar-step{font-size:13px;color:var(--p-sub);flex:0 0 auto;white-space:nowrap}
+.flow-bar-prev{flex:0 0 auto}
+.flow-bar-next{margin-left:auto;flex:0 1 auto}
+body.has-flowbar{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+@media print{.flow-bar{display:none!important}}
+
 .one-thing .one-thing-lead{font-size:1em;line-height:1.3}
 .one-badge{display:inline-block;background:var(--p-accent);color:var(--p-accent-ink);border-radius:4px;padding:0 6px;margin-right:6px;font-size:.78em;vertical-align:1px;font-weight:600}
 .policy-timeline{margin:4px 0 0;padding-left:18px}
