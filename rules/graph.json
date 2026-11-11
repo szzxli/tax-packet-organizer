@@ -15,6 +15,24 @@
     "mfs": [[12400, 10], [50400, 12], [105700, 22], [201775, 24], [256225, 32], [384350, 35], [null, 37]],
     "hoh": [[17700, 10], [67450, 12], [105700, 22], [201775, 24], [256200, 32], [640600, 35], [null, 37]]
   },
+  "events": [
+    {
+      "id": "ssa-per-credit-2027",
+      "line": "credits",
+      "pointer": "/credits/ssa/per_credit_usd",
+      "unit": "usd",
+      "before": 1890,
+      "after": 1970,
+      "effective_tax_year": 2027,
+      "filed_in_year": 2028,
+      "announced": "2026-11-11",
+      "source_published": "2026-10-26",
+      "source": "FR 2026-21796",
+      "source_url": "https://www.federalregister.gov/documents/2026/10/26/2026-21796/cost-of-living-increase-and-other-determinations-for-2027",
+      "checked": "2026-10-26",
+      "note": "announced 是这条变化第一次进本页的日期（角标按它算 14 天）；source_published 是原文发布日，两者别混。"
+    }
+  ],
   "poverty_lines": {
     "program": "HHS poverty guidelines, 48 contiguous states + DC",
     "effective_tax_year": 2025,
