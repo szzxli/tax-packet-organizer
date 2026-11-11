@@ -141,8 +141,11 @@ check("地图：季票态四条线 × 四格，位置/联动/未来/截止日都
   // FAFSA 只写「两年」，不点名没发布的学年
   assert.ok(/两年/.test(out), "教育线未来格缺「两年」口径");
   assert.ok(!/2028|2029/.test(out), "教育线出现了没发布的学年");
-  assert.ok(out.includes("40 分最多到 38"), "40 分未来格缺上限口吻的走向");
-  assert.ok(!/今年能拿 [0-9]+ 分/.test(out), "40 分仍写「今年能拿 N 分」");
+  assert.ok(out.includes("工资／自雇"), "40 分未来格没写只按工资／自雇算");
+  // 「一年最多 4 分」是规则，不算估分；要拦的是「今年能拿 N 分」「40 分最多到 X」「从 x 走到 y」
+  assert.ok(!/今年能拿 [0-9]+ 分/.test(out), "仍按总收入报「今年能拿 N 分」");
+  assert.ok(!/40 分最多到 [0-9]+/.test(out), "仍给「40 分最多到 X」的推进");
+  assert.ok(!/40 分从 [0-9]+ 走到/.test(out), "仍给「从 x 走到 y」");
   assert.ok(out.includes("studentaid.gov"), "来源行缺 FAFSA 出处");
   // 400% 线按家庭人数折算：2 人 = 4 × ($15,650 + $5,500) = $84,600；
   // AGI = 85,000 − 5,000 = 80,000，离这条线还有约 $4,600
@@ -211,7 +214,9 @@ check("70,000 + 退休 10,000 + 1 人：400% 判未越线", () => {
   assert.equal(sandbox.outlookEstimate(st).agi, 60000, "AGI 应为 60,000（减去退休缴款、不扣标准扣除）");
   const out = sandbox.outlookMapHtml(true);
   assert.ok(!out.includes("已越过约"), "仍判成越过");
-  assert.ok(out.includes("就在线边上") || out.includes("离这条线还有约"), "未越线但也没给距线说法");
+  assert.ok(out.includes("离这条线还有约 $2,600"), "没给出「离线 2,600」");
+  assert.ok(!out.includes("越过约 $7,400"), "仍按毛收入算出越过 7,400");
+  assert.ok(out.includes("就在线边上"), "近线没给出提示");
 });
 check("7 万全是 1099-INT：40 分不许写死 4 分，只给上限与「只有工资/自雇算」", () => {
   const st = state({ status: "single", dep: "", income: "70000", withheld: "8000" });
@@ -221,6 +226,19 @@ check("7 万全是 1099-INT：40 分不许写死 4 分，只给上限与「只�
   assert.ok(!/从 \d+ 走到/.test(out), "仍给精确推进");
   assert.ok(/最多 \d+ 分/.test(out), "缺「最多 N 分」上限口吻");
   assert.ok(out.includes("工资／自雇"), "没写明只有工资/自雇那份算");
+});
+
+check("100,000/12,000 的补税额落在区间内（center ± 宽度）", () => {
+  const st = state({ status: "single", dep: "", income: "100000", withheld: "12000" });
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(st));
+  const e = sandbox.outlookEstimate(st);
+  assert.equal(e.dir, "owe");
+  assert.ok(e.low <= 1170 && 1170 <= e.high, "1,170 不在区间 [" + e.low + "," + e.high + "] 内");
+});
+check("页面里没有直接吃毛收入的写法（e.income - line400 / e.income / ssPoint）", () => {
+  assert.equal(html.split("e.income - line400").length - 1, 0, "还有 e.income - line400");
+  assert.equal(html.split("e.income / ssPoint").length - 1, 0, "还有 e.income / ssPoint");
+  assert.ok(html.includes("e.agi - line400"), "400% 应改用 e.agi");
 });
 
 // ---- 规则图与运行时扫描 ----

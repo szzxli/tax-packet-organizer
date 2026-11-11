@@ -2524,14 +2524,13 @@ function outlookMapHtml(unlocked) {
   } catch (err) { points = 0; eduUsed = -1; }
   var ssPoint = R.credits.ssa.per_credit_usd, ssMax = R.credits.ssa.max_per_year, ssTarget = R.credits.ssa.target;
   var eduMax = R.credits.aotc.max_tax_years_per_student;
-  var creditsYr = Math.min(ssMax, Math.floor(e.income / ssPoint));
   var hhSize = 1 + Math.max(0, Math.round(outlookNum(s.dep)));
   var line400 = mapFpl400(hhSize), overLine = e.agi - line400;
   var gate = tr("领季票后看", "see it with the pass", "se ve con el pase");
   var money = outlookMoney;
 
   var pos1 = unlocked
-    ? tr("应税收入 " + money(e.taxable) + "，落在 " + b.rate + "% 档", "Taxable income " + money(e.taxable) + " — " + b.rate + "% bracket", "Ingreso gravable " + money(e.taxable) + ": tramo del " + b.rate + "%")
+    ? tr("应税收入 " + money(e.taxable) + "（AGI − 标准扣除 " + money(e.std) + "），落在 " + b.rate + "% 档", "Taxable income " + money(e.taxable) + " (AGI minus the standard deduction of " + money(e.std) + ") — " + b.rate + "% bracket", "Ingreso gravable " + money(e.taxable) + " (AGI menos la deducción estándar de " + money(e.std) + "): tramo del " + b.rate + "%")
       + (b.toNext != null
         ? tr("；离 " + b.next + "% 档还有 " + money(b.toNext), "; " + money(b.toNext) + " below the " + b.next + "% bracket", "; faltan " + money(b.toNext) + " para el tramo del " + b.next + "%")
         : tr("；这是最高档", "; this is the top bracket", "; es el tramo más alto"))
@@ -2547,9 +2546,9 @@ function outlookMapHtml(unlocked) {
 
   var pos2 = unlocked
     ? (mkt > 0
-      ? tr("Marketplace 覆盖 " + mkt + " 个月，全年保费 " + money(prem) + "；按 " + hhSize + " 人算，400% 线约 " + money(line400) + "，你填的收入减退休缴款约 " + money(e.agi) + (Math.abs(overLine) < 3000 ? "，就在线边上，以你表上的 AGI 为准" : (overLine > 0 ? "，已越过约 " + money(overLine) : "，离这条线还有约 " + money(-overLine))) + "；在 8962 上对账",
-           "Marketplace coverage for " + mkt + " months, full-year premium " + money(prem) + "; for a household of " + hhSize + " the 400% line is about " + money(line400) + ", your income minus retirement about " + money(e.agi) + (Math.abs(overLine) < 3000 ? ", right at the line — go by the AGI on your return" : (overLine > 0 ? ", about " + money(overLine) + " above it" : ", about " + money(-overLine) + " below it")) + "; reconciled on Form 8962",
-           "Cobertura del Marketplace por " + mkt + " meses, prima anual " + money(prem) + "; para " + hhSize + " personas la línea del 400% es de unos " + money(line400) + ", su ingreso menos aportes al retiro unos " + money(e.agi) + (Math.abs(overLine) < 3000 ? ", justo en la línea: guíese por el AGI de su declaración" : (overLine > 0 ? ", unos " + money(overLine) + " por encima" : ", unos " + money(-overLine) + " por debajo")) + "; se concilia en el Formulario 8962")
+      ? tr("Marketplace 覆盖 " + mkt + " 个月，全年保费 " + money(prem) + "；按 " + hhSize + " 人算，400% 线约 " + money(line400) + "（按 AGI 比线，不减标准扣除）；你填的收入减退休缴款约 " + money(e.agi) + "，" + (overLine > 0 ? "已越过约 " + money(overLine) : "离这条线还有约 " + money(-overLine)) + (Math.abs(overLine) < 3000 ? "（就在线边上，以你表上的 AGI 为准）" : "") + "；在 8962 上对账",
+           "Marketplace coverage for " + mkt + " months, full-year premium " + money(prem) + "; for a household of " + hhSize + " the 400% line is about " + money(line400) + " (compared on AGI, before the standard deduction); your income minus retirement about " + money(e.agi) + ", " + (overLine > 0 ? "about " + money(overLine) + " above it" : "about " + money(-overLine) + " below it") + (Math.abs(overLine) < 3000 ? " (right at the line — go by the AGI on your return)" : "") + "; reconciled on Form 8962",
+           "Cobertura del Marketplace por " + mkt + " meses, prima anual " + money(prem) + "; para " + hhSize + " personas la línea del 400% es de unos " + money(line400) + " (comparado con el AGI, antes de la deducción estándar); su ingreso menos aportes al retiro unos " + money(e.agi) + ", " + (overLine > 0 ? "unos " + money(overLine) + " por encima" : "unos " + money(-overLine) + " por debajo") + (Math.abs(overLine) < 3000 ? " (justo en la línea: guíese por el AGI de su declaración)" : "") + "; se concilia en el Formulario 8962")
       : tr("你填了 0 个月覆盖，这条线今年不动", "You entered 0 months of coverage, so this line does not move this year", "Ingresó 0 meses de cobertura, así que esta línea no se mueve este año"))
     : (mkt > 0
       ? (Math.abs(overLine) < 3000 ? tr("就在线边上", "right at the line", "justo en la línea") : (overLine > 0 ? tr("已越过那条线", "above that line", "por encima de esa línea") : (e.agi > line400 * 0.9 ? tr("接近那条线", "close to that line", "cerca de esa línea") : tr("离那条线还远", "well below that line", "lejos de esa línea"))))
@@ -2594,7 +2593,7 @@ function outlookMapHtml(unlocked) {
     ? tr("只改今年这张表；2027 年的缴款额度按当年公布值走，这里不猜。", "It only changes this year's return; the 2027 contribution limit follows the figure published for that year — not guessed here.", "Solo cambia la declaración de este año; el límite de aportes de 2027 sigue el valor publicado para ese año: aquí no se adivina.")
     : tr("只改今年这张表，明年的额度按当年公布", "changes only this year's return; next year's limit is the one published then", "solo cambia la declaración de este año; el límite del próximo se publica en su momento");
   var f4b = unlocked
-    ? tr("按你填的总收入估算，今年最多 " + creditsYr + " 分（每 " + money(ssPoint) + " 记 1 分、一年最多 " + ssMax + " 分）；只有工资／自雇那份真算，40 分最多到 " + Math.min(ssTarget, points + creditsYr) + "。分越高，退休后月付的方向往上——具体按 SSA 当年表，这里不给金额。", "On the total income you entered, at most " + creditsYr + " credits this year (one per " + money(ssPoint) + ", at most " + ssMax + " a year); only the wage/self-employment part really counts, so the 40-credit count tops out at " + Math.min(ssTarget, points + creditsYr) + ". More credits means a higher monthly benefit direction — the amount follows SSA's table for the year and is not shown here.", "Con el ingreso total que ingresó, como máximo " + creditsYr + " créditos este año (uno por cada " + money(ssPoint) + ", máximo " + ssMax + " al año); solo cuenta la parte de salarios o trabajo por cuenta propia, así que la cuenta de 40 llega como máximo a " + Math.min(ssTarget, points + creditsYr) + ". Más créditos apuntan a una mensualidad mayor: el monto sigue la tabla del SSA del año y aquí no se muestra.")
+    ? tr("这一年只按工资／自雇那份往上走，一年最多 " + ssMax + " 分；你填的这份收入里如果没有工资／自雇，分就不动。分越高，退休后月付的方向往上——具体按 SSA 当年表，这里不给金额。", "Only the wage/self-employment part moves this count, at most " + ssMax + " credits a year; if none of the income you entered is wages or self-employment, the count does not move. More credits means a higher monthly benefit direction — the amount follows SSA's table for the year and is not shown here.", "Solo la parte de salarios o trabajo por cuenta propia sube esta cuenta, como máximo " + ssMax + " créditos al año; si nada de su ingreso es salario o trabajo por cuenta propia, la cuenta no se mueve. Más créditos apuntan a una mensualidad mayor: el monto sigue la tabla del SSA del año y aquí no se muestra.")
     : tr("分往前走，退休后月付的方向往上", "Credits move forward, so the monthly benefit direction rises", "Los créditos avanzan y la mensualidad apunta hacia arriba");
 
   var when1 = unlocked ? tr("12/31 前 401(k) 缴款到账；4/15 前 IRA 还能补", "401(k) deferrals must land by 12/31; IRA contributions can still be made by 4/15", "Las aportaciones al 401(k) deben entrar antes del 31/12; al IRA aún puede aportar hasta el 15/4") : gate;
