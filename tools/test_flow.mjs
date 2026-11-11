@@ -130,6 +130,23 @@ await withChrome(async (cdp) => {
       const tag = lang + " " + w + "×" + h;
       await freshLoad(cdp, lang);
 
+      // 1b) 首屏副行：三语真渲染，不含分钟数、不夹中文
+      const hero = await cdp.eval(`(() => {
+        const subs = Array.from(document.querySelectorAll('.start-sub'));
+        const el = subs[subs.length-1];
+        return el ? el.textContent.trim() : "";
+      })()`);
+      check("首屏副行三语读得通、无分钟数：" + tag, () => {
+        assert.ok(hero.length > 0, "没取到首屏副行");
+        assert.ok(!/\d+\s*(分钟|minutes?|minutos)/i.test(hero), "副行还有分钟数：" + hero);
+        if (lang === "zh") assert.ok(hero.includes("先给你一份基础的"), "中文没写「先给一份基础的」：" + hero);
+        if (lang === "en") assert.ok(/basic list first/i.test(hero), "英文没写「先给一份基础的」：" + hero);
+        if (lang === "es") {
+          assert.ok(/lista básica/i.test(hero), "西语没写「先给一份基础的」：" + hero);
+          assert.ok(!/[\u4e00-\u9fff]/.test(hero), "西语回退成中文了：" + hero);
+        }
+      });
+
       // 2) 第 1 步无清单：底部条可见 + 文案 + 按钮
       const empty = await cdp.eval(`(() => {
         const bar = document.getElementById('stickyProgress');

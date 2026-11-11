@@ -584,6 +584,25 @@ check("第 1 步三个默认选项：都在、都有三语、跳过会记一笔"
   assert.ok(/packet\.changesSkip=true/.test(html), "跳过没有记录状态");
 });
 
+// ---- 首屏不写死时间承诺 ----
+check("首屏副行不再承诺分钟数，三语都改成「先给一份基础的」", () => {
+  assert.equal(html.indexOf("3 分钟生成"), -1, "还有「3 分钟生成」");
+  assert.equal(html.indexOf("3 minutes"), -1, "还有「3 minutes」");
+  assert.equal(html.indexOf("3 minutos"), -1, "还有「3 minutos」");
+  const zh = "说一句今年变了什么，不用登录。先给你一份基础的，答完几句就变成你自己的。";
+  assert.ok(html.includes(zh), "首屏没有新副行");
+  const m = html.match(new RegExp('"' + zh + '":\\{"en":"([^"]+)","es":"([^"]+)"\\}'));
+  assert.ok(m, "i18n 里没有这条（key 没同步就会回退中文）");
+  assert.ok(/basic list first/i.test(m[1]), "英文没写「先给一份基础的」：" + m[1]);
+  assert.ok(/lista básica/i.test(m[2]), "西语没写「先给一份基础的」：" + m[2]);
+  assert.ok(!/[\u4e00-\u9fff]/.test(m[2]), "西语里夹了中文：" + m[2]);
+});
+check("全页除限流提示外，没有别的分钟数承诺", () => {
+  const hits = [...html.matchAll(/.{0,70}\d+\s*(?:分钟|minutes?|minutos).{0,50}/gi)].map((x) => x[0]);
+  const bad = hits.filter((t) => !/发送太频繁|wait 1 minute|1 minuto/.test(t));
+  assert.deepEqual(bad, [], "还有时间承诺：" + bad.join(" | "));
+});
+
 // ---- 输出 ----
 let bad = 0;
 for (const [tag, msg] of results) {
