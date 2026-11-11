@@ -141,7 +141,8 @@ check("地图：季票态四条线 × 四格，位置/联动/未来/截止日都
   // FAFSA 只写「两年」，不点名没发布的学年
   assert.ok(/两年/.test(out), "教育线未来格缺「两年」口径");
   assert.ok(!/2028|2029/.test(out), "教育线出现了没发布的学年");
-  assert.ok(out.includes("40 分从 34 走到 38"), "退休线未来格缺 40 分走向");
+  assert.ok(out.includes("40 分最多到 38"), "40 分未来格缺上限口吻的走向");
+  assert.ok(!/今年能拿 [0-9]+ 分/.test(out), "40 分仍写「今年能拿 N 分」");
   assert.ok(out.includes("studentaid.gov"), "来源行缺 FAFSA 出处");
   // 400% 线按家庭人数折算：2 人 = 4 × ($15,650 + $5,500) = $84,600；
   // AGI = 85,000 − 5,000 = 80,000，离这条线还有约 $4,600
@@ -195,6 +196,31 @@ check("400%：单身 70,000 用 AGI 比线，越过 7,400（不是拿应税收�
   assert.equal(sandbox.outlookEstimate(s).agi, 70000);
   const out = sandbox.outlookMapHtml(true);
   assert.ok(out.includes("已越过约 $7,400"), "400% 距离没用 AGI 算");
+});
+
+check("单身 70,000/8,000 必须出「退」，不许说「补」", () => {
+  const st = state({ status: "single", dep: "", income: "70000", withheld: "8000" });
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(st));
+  const out = sandbox.outlookOutHtml(true);
+  assert.ok(/退税/.test(out), "没判成退税");
+  assert.ok(!/大概是补税/.test(out), "方向判成了补税");
+});
+check("70,000 + 退休 10,000 + 1 人：400% 判未越线", () => {
+  const st = state({ status: "single", dep: "", income: "70000", withheld: "8000", retire: "10000", mkt: "12", premium: "8400" });
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(st));
+  assert.equal(sandbox.outlookEstimate(st).agi, 60000, "AGI 应为 60,000（减去退休缴款、不扣标准扣除）");
+  const out = sandbox.outlookMapHtml(true);
+  assert.ok(!out.includes("已越过约"), "仍判成越过");
+  assert.ok(out.includes("就在线边上") || out.includes("离这条线还有约"), "未越线但也没给距线说法");
+});
+check("7 万全是 1099-INT：40 分不许写死 4 分，只给上限与「只有工资/自雇算」", () => {
+  const st = state({ status: "single", dep: "", income: "70000", withheld: "8000" });
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(st));
+  const out = sandbox.outlookMapHtml(true);
+  assert.ok(!/今年能拿 [0-9]+ 分/.test(out), "仍把总收入当劳动收入算分");
+  assert.ok(!/从 \d+ 走到/.test(out), "仍给精确推进");
+  assert.ok(/最多 \d+ 分/.test(out), "缺「最多 N 分」上限口吻");
+  assert.ok(out.includes("工资／自雇"), "没写明只有工资/自雇那份算");
 });
 
 // ---- 规则图与运行时扫描 ----
