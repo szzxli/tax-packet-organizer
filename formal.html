@@ -458,6 +458,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div class="card">
 <h2>今年要准备的材料（文件＋数字，一页）</h2>
 <p class="muted small">每行一项收入或一张表：先传证据、再填一个总数；成本、核对、不适用都收在“更多”里。全部“已备或不适用”就是整理完；没做完也能先导出，缺项会列在清单里。上传资料可以是电子档，也可以拍照上传：每行都有“上传文件”和“拍照上传”两个入口，手机上点拍照会直接调相机；电子档（PDF、.txt、.docx、.xlsx）上传后会即时读文字提数候选、由你确认后才记数字，并显示文件预览；拍照上传只预览、不提数，数字手动输入。老格式 .doc、.xls 不支持。同一笔收入只出现一次，不要重复填。</p>
+<div id="commuteRules" class="commute-rules small"></div>
 <p class="small muted">文件在你电脑上读取，不上传；账号里只存清单和你确认过的数字，不存原件、不提取 SSN。可一键删除。</p>
 <div class="row">
 <div><label for="newForm">新增今年项目：表类型</label><select id="newForm"></select></div>
@@ -1795,6 +1796,19 @@ function computeWarnings(){
   });
   return w;
 }
+// 交通与通勤：员工与自雇两套规则差别最大的一块，必须显式列出「不能抵」的那一半。
+function renderCommuteRules(){
+  var el=$("commuteRules");if(!el)return;
+  var rows=[
+    ["x",tr("家 ↔ 固定工作地点：不能抵。通勤是个人费用，路上打电话、顺路谈工作也不改变这一点（IRS Pub 463）。","Home ↔ your regular workplace: not deductible. Commuting is a personal expense; phone calls or business talk during the trip do not change that (IRS Pub. 463).","Casa ↔ su lugar de trabajo habitual: no deducible. El traslado es un gasto personal; llamar o hablar de trabajo durante el trayecto no lo cambia (IRS Pub. 463).")],
+    ["v",tr("一天跑两处工作地点：两处之间的路费能抵（同上）。","Two workplaces in one day: the cost of getting from one to the other is deductible (same source).","Dos lugares de trabajo en un día: el costo de ir de uno a otro es deducible (misma fuente).")],
+    ["v",tr("自雇业务用车：能抵，但要有里程记录；费率查 IRS 标准里程费率页，本页不写数字。","Business use of a car when self-employed: deductible, but keep a mileage log; check the IRS standard mileage rate page — this page does not print a rate.","Uso comercial del automóvil si trabaja por cuenta propia: deducible, pero lleve un registro de millas; consulte la página de tarifas estándar del IRS: esta página no imprime una tarifa.")],
+    ["x",tr("W-2 员工未报销的交通、差旅、通勤：2026 税年仍然不能抵（26 U.S.C. §67(h)；Pub. L. 119-21 删掉了 2025 年的截止日）。","Unreimbursed transportation, travel, and commuting for W-2 employees: still not deductible for tax year 2026 (26 U.S.C. §67(h); Pub. L. 119-21 removed the 2025 end date).","Transporte, viajes y traslados no reembolsados de empleados W-2: siguen sin ser deducibles para el año fiscal 2026 (26 U.S.C. §67(h); la Pub. L. 119-21 eliminó la fecha límite de 2025).")]
+  ];
+  el.innerHTML="<div class='notice'><b>"+esc(tr("交通与通勤：能不能抵","Transportation and commuting: what is deductible","Transporte y traslados: qué es deducible"))+"</b><ul style='margin:6px 0 4px 18px;padding:0'>"+
+    rows.map(function(r){return "<li>"+(r[0]==="v"?"✓ ":"✕ ")+esc(r[1])+"</li>";}).join("")+
+    "</ul><span class='muted'>"+esc(tr("来源：IRS Pub. 463；26 U.S.C. §67(h)；核对 2026-11-11。只列规则，不算你能抵多少。","Sources: IRS Pub. 463; 26 U.S.C. §67(h); checked 2026-11-11. Rules only — this does not compute what you can deduct.","Fuentes: IRS Pub. 463; 26 U.S.C. §67(h); verificado 2026-11-11. Solo reglas: no calcula cuánto puede deducir."))+"</span></div>";
+}
 function renderWarnings(){
   if(!packet)return;
   var box=$("warnBox");if(!box)return;
@@ -1989,7 +2003,7 @@ function renderFollowUp(){
   };
 }
 function applyOrganizeStep(){if(currentPage!==1)return;var wrap=$("appViewSections");if(!wrap)return;for(var i=0;i<wrap.children.length;i++){var c=wrap.children[i];if(c.className.indexOf("card")<0)continue;var showCard=c.id!=="subCard"&&Number(c.dataset.flowStep||0)===currentOrganizeStep;c.classList.toggle("hidden",!showCard);}}
-function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,applyCollapse];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
+function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderCommuteRules,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,applyCollapse];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
 function secKeyFromH2(t){
   if(t.indexOf("州税范围")>=0)return "s3b";
   if(t.indexOf("去年有什么")>=0)return "s3";
