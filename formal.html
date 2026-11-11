@@ -1111,6 +1111,16 @@ var PLAN_BRACKETS_2026={
   mfs:[[12400,10],[50400,12],[105700,22],[201775,24],[256225,32],[384350,35],[Infinity,37]],
   hoh:[[17700,10],[67450,12],[105700,22],[201775,24],[256200,32],[640600,35],[Infinity,37]]
 };
+// 2027 档位：Rev. Proc. 2026-35 §3.01（2026-11-11 核对）。用途仅标结构，不参与算税之外的判断。
+var PLAN_BRACKETS_2027={
+  single:[[12800,10],[52025,12],[109125,22],[208325,24],[264550,32],[661375,35],[Infinity,37]],
+  mfj:[[25600,10],[104050,12],[218250,22],[416650,24],[529100,32],[793650,35],[Infinity,37]],
+  mfs:[[12800,10],[52025,12],[109125,22],[208325,24],[264550,32],[396825,35],[Infinity,37]],
+  hoh:[[18250,10],[69650,12],[109100,22],[208300,24],[264550,32],[661350,35],[Infinity,37]]
+};
+// 税年按日历年自动切换：2027-01-01 起用 2027 表；没有更新的表之前一直用最新一张。
+var PLAN_TAX_YEAR=Math.max(2026,Math.min(2027,new Date().getFullYear()));
+var PLAN_BRACKETS=PLAN_TAX_YEAR>=2027?PLAN_BRACKETS_2027:PLAN_BRACKETS_2026;
 var PLAN_STATUS_LABEL={
   single:["单身","Single","Soltero(a)"],
   mfj:["已婚合并申报","Married filing jointly","Casados que declaran conjuntamente"],
@@ -1118,15 +1128,15 @@ var PLAN_STATUS_LABEL={
   hoh:["户主","Head of household","Cabeza de familia"]
 };
 var PLAN_STATUS_ORDER=["single","mfj","mfs","hoh"];
-var PLAN_C1_TEXT="你的应税收入落在 {r}% 档（2026 年 · {s}，{lo}–{hi}）。退到 {lower}% 档的分界线是 {lo}，跨进 {higher}% 档的分界线是 {hi}。这里只标档位和分界线，不是建议你调整缴款，也不算税额。";
-var PLAN_C1_TOP="你的应税收入落在 {r}% 档（2026 年 · {s}，{lo} 以上）。退到 {lower}% 档的分界线是 {lo}；{lo} 以上是最高档。这里只标档位和分界线，不是建议你调整缴款，也不算税额。";
-var PLAN_C1_LOW="你的应税收入落在 {r}% 档（2026 年 · {s}，$0–{hi}）。这是最低档；跨进 {higher}% 档的分界线是 {hi}。这里只标档位和分界线，不是建议你调整缴款，也不算税额。";
-var PLAN_C1_EN="Your taxable income falls in the {r}% bracket (2026 · {s}, {lo}–{hi}). The line back down to {lower}% is {lo}; the line up into {higher}% is {hi}. This only marks the bracket and the lines — it is not advice to change your withholding, and it is not a tax amount.";
-var PLAN_C1_EN_TOP="Your taxable income falls in the {r}% bracket (2026 · {s}, {lo} and above). The line back down to {lower}% is {lo}; {lo} and above is the top bracket. This only marks the bracket and the lines — it is not advice to change your withholding, and it is not a tax amount.";
-var PLAN_C1_EN_LOW="Your taxable income falls in the {r}% bracket (2026 · {s}, $0–{hi}). This is the lowest bracket; the line up into {higher}% is {hi}. This only marks the bracket and the lines — it is not advice to change your withholding, and it is not a tax amount.";
-var PLAN_C1_ES="Su ingreso gravable está en el tramo del {r}% (2026 · {s}, {lo}–{hi}). La línea para bajar al {lower}% es {lo}; la línea para subir al {higher}% es {hi}. Esto solo marca el tramo y las líneas: no es una recomendación de cambiar sus pagos y no es un monto de impuesto.";
-var PLAN_C1_ES_TOP="Su ingreso gravable está en el tramo del {r}% (2026 · {s}, {lo} o más). La línea para bajar al {lower}% es {lo}; desde {lo} es el tramo más alto. Esto solo marca el tramo y las líneas: no es una recomendación de cambiar sus pagos y no es un monto de impuesto.";
-var PLAN_C1_ES_LOW="Su ingreso gravable está en el tramo del {r}% (2026 · {s}, $0–{hi}). Es el tramo más bajo; la línea para subir al {higher}% es {hi}. Esto solo marca el tramo y las líneas: no es una recomendación de cambiar sus pagos y no es un monto de impuesto.";
+var PLAN_C1_TEXT="你的应税收入落在 {r}% 档（{y} 年 · {s}，{lo}–{hi}）。退到 {lower}% 档的分界线是 {lo}，跨进 {higher}% 档的分界线是 {hi}。这里只标档位和分界线，不是建议你调整缴款，也不算税额。";
+var PLAN_C1_TOP="你的应税收入落在 {r}% 档（{y} 年 · {s}，{lo} 以上）。退到 {lower}% 档的分界线是 {lo}；{lo} 以上是最高档。这里只标档位和分界线，不是建议你调整缴款，也不算税额。";
+var PLAN_C1_LOW="你的应税收入落在 {r}% 档（{y} 年 · {s}，$0–{hi}）。这是最低档；跨进 {higher}% 档的分界线是 {hi}。这里只标档位和分界线，不是建议你调整缴款，也不算税额。";
+var PLAN_C1_EN="Your taxable income falls in the {r}% bracket ({y} · {s}, {lo}–{hi}). The line back down to {lower}% is {lo}; the line up into {higher}% is {hi}. This only marks the bracket and the lines — it is not advice to change your withholding, and it is not a tax amount.";
+var PLAN_C1_EN_TOP="Your taxable income falls in the {r}% bracket ({y} · {s}, {lo} and above). The line back down to {lower}% is {lo}; {lo} and above is the top bracket. This only marks the bracket and the lines — it is not advice to change your withholding, and it is not a tax amount.";
+var PLAN_C1_EN_LOW="Your taxable income falls in the {r}% bracket ({y} · {s}, $0–{hi}). This is the lowest bracket; the line up into {higher}% is {hi}. This only marks the bracket and the lines — it is not advice to change your withholding, and it is not a tax amount.";
+var PLAN_C1_ES="Su ingreso gravable está en el tramo del {r}% ({y} · {s}, {lo}–{hi}). La línea para bajar al {lower}% es {lo}; la línea para subir al {higher}% es {hi}. Esto solo marca el tramo y las líneas: no es una recomendación de cambiar sus pagos y no es un monto de impuesto.";
+var PLAN_C1_ES_TOP="Su ingreso gravable está en el tramo del {r}% ({y} · {s}, {lo} o más). La línea para bajar al {lower}% es {lo}; desde {lo} es el tramo más alto. Esto solo marca el tramo y las líneas: no es una recomendación de cambiar sus pagos y no es un monto de impuesto.";
+var PLAN_C1_ES_LOW="Su ingreso gravable está en el tramo del {r}% ({y} · {s}, $0–{hi}). Es el tramo más bajo; la línea para subir al {higher}% es {hi}. Esto solo marca el tramo y las líneas: no es una recomendación de cambiar sus pagos y no es un monto de impuesto.";
 var PLAN_C2_TEXT_ZH="报税要用 Form 8962 和你的保费补贴对账；收入或家庭人数一变，补贴就要重新核。具体补多少、退多少，请用官方估算器或让会计师确认——本页不估算补贴。";
 var PLAN_C2_TEXT_EN="Your return needs Form 8962 to reconcile your premium tax credit; if your income or household size changes, the credit has to be re-checked. For the exact amount you owe back or receive, use the official estimator or ask your accountant — this page does not estimate the credit.";
 var PLAN_C2_TEXT_ES="Su declaración necesita el Formulario 8962 para conciliar el crédito por prima de seguro; si cambian sus ingresos o el tamaño del hogar, hay que revisar el crédito. Para saber cuánto debe devolver o recibir, use el estimador oficial o consulte a su contador: esta página no estima el crédito.";
@@ -1172,7 +1182,7 @@ function planStatusLabel(key){var s=PLAN_STATUS_LABEL[key];return s?planLang(s[0
 function planMoney(n){return "$"+Math.round(n).toLocaleString("en-US");}
 function planAmount(v){var s=String(v==null?"":v).replace(/[^0-9.]/g,"");if(!s)return null;var n=parseFloat(s);return isFinite(n)?n:null;}
 function planBracket(status,income){
-  var rows=PLAN_BRACKETS_2026[status];if(!rows||income==null||income<0)return null;
+  var rows=PLAN_BRACKETS[status];if(!rows||income==null||income<0)return null;
   var lo=0;
   for(var i=0;i<rows.length;i++){
     var hi=rows[i][0],rate=rows[i][1];
@@ -1187,22 +1197,22 @@ function planTierText(status,income){
   var lo=planMoney(b.lo),s=planStatusLabel(status);
   if(b.hi===Infinity){
     return planLang(
-      planFill(PLAN_C1_TOP,{r:b.rate,s:s,lo:lo,lower:b.lower}),
-      planFill(PLAN_C1_EN_TOP,{r:b.rate,s:s,lo:lo,lower:b.lower}),
-      planFill(PLAN_C1_ES_TOP,{r:b.rate,s:s,lo:lo,lower:b.lower})
+      planFill(PLAN_C1_TOP,{r:b.rate,s:s,lo:lo,lower:b.lower,y:PLAN_TAX_YEAR}),
+      planFill(PLAN_C1_EN_TOP,{r:b.rate,s:s,lo:lo,lower:b.lower,y:PLAN_TAX_YEAR}),
+      planFill(PLAN_C1_ES_TOP,{r:b.rate,s:s,lo:lo,lower:b.lower,y:PLAN_TAX_YEAR})
     );
   }
   if(!b.lower){
     return planLang(
-      planFill(PLAN_C1_LOW,{r:b.rate,s:s,hi:planMoney(b.hi),higher:b.higher}),
-      planFill(PLAN_C1_EN_LOW,{r:b.rate,s:s,hi:planMoney(b.hi),higher:b.higher}),
-      planFill(PLAN_C1_ES_LOW,{r:b.rate,s:s,hi:planMoney(b.hi),higher:b.higher})
+      planFill(PLAN_C1_LOW,{r:b.rate,s:s,hi:planMoney(b.hi),higher:b.higher,y:PLAN_TAX_YEAR}),
+      planFill(PLAN_C1_EN_LOW,{r:b.rate,s:s,hi:planMoney(b.hi),higher:b.higher,y:PLAN_TAX_YEAR}),
+      planFill(PLAN_C1_ES_LOW,{r:b.rate,s:s,hi:planMoney(b.hi),higher:b.higher,y:PLAN_TAX_YEAR})
     );
   }
   return planLang(
-    planFill(PLAN_C1_TEXT,{r:b.rate,s:s,lo:lo,hi:planMoney(b.hi),lower:b.lower,higher:b.higher}),
-    planFill(PLAN_C1_EN,{r:b.rate,s:s,lo:lo,hi:planMoney(b.hi),lower:b.lower,higher:b.higher}),
-    planFill(PLAN_C1_ES,{r:b.rate,s:s,lo:lo,hi:planMoney(b.hi),lower:b.lower,higher:b.higher})
+    planFill(PLAN_C1_TEXT,{r:b.rate,s:s,lo:lo,hi:planMoney(b.hi),lower:b.lower,higher:b.higher,y:PLAN_TAX_YEAR}),
+    planFill(PLAN_C1_EN,{r:b.rate,s:s,lo:lo,hi:planMoney(b.hi),lower:b.lower,higher:b.higher,y:PLAN_TAX_YEAR}),
+    planFill(PLAN_C1_ES,{r:b.rate,s:s,lo:lo,hi:planMoney(b.hi),lower:b.lower,higher:b.higher,y:PLAN_TAX_YEAR})
   );
 }
 function planRetireGap(contributed,limit){
@@ -2239,7 +2249,7 @@ function outlookNum(v) {
   return isFinite(n) && n > 0 ? n : 0;
 }
 function outlookTax(status, taxable) {
-  var rows = (typeof PLAN_BRACKETS_2026 !== "undefined" && PLAN_BRACKETS_2026[status]) || PLAN_BRACKETS_2026.single;
+  var rows = (typeof PLAN_BRACKETS !== "undefined" && PLAN_BRACKETS[status]) || PLAN_BRACKETS.single;
   var t = 0, lo = 0;
   for (var i = 0; i < rows.length; i++) {
     var hi = rows[i][0], r = rows[i][1];

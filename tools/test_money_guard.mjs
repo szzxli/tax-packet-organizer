@@ -32,10 +32,12 @@ const sandbox = {
 vm.createContext(sandbox);
 // 档位表与身份表来自页面本身，和卡 1 用同一份
 const bracketsSrc = html.match(/var PLAN_BRACKETS_2026=\{[\s\S]*?\n\};/);
+const brackets27Src = html.match(/var PLAN_BRACKETS_2027=\{[\s\S]*?\n\};/);
+const yearSrc = html.match(/var PLAN_TAX_YEAR=[^\n]*\nvar PLAN_BRACKETS=[^\n]*/);
 const statusSrc = html.match(/var PLAN_STATUS_LABEL=\{[\s\S]*?\n\};/);
 const orderSrc = html.match(/var PLAN_STATUS_ORDER=\[[^\]]*\];/);
-assert.ok(bracketsSrc && statusSrc && orderSrc, "缺档位/身份表");
-vm.runInContext(bracketsSrc[0] + statusSrc[0] + orderSrc[0], sandbox);
+assert.ok(bracketsSrc && brackets27Src && yearSrc && statusSrc && orderSrc, "缺档位/身份表或年度选择");
+vm.runInContext(bracketsSrc[0] + brackets27Src[0] + yearSrc[0] + statusSrc[0] + orderSrc[0], sandbox);
 vm.runInContext(html.slice(start, end), sandbox);
 
 const results = [];
