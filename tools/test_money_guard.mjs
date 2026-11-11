@@ -335,8 +335,12 @@ check("免责句在折叠之外", () => {
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
   const out = sandbox.outlookHtml(true);
   const i = out.indexOf("这是估算，不是申报");
-  const detailsEnd = out.lastIndexOf("</details>");
-  assert.ok(i > detailsEnd, "免责句落在折叠块里了");
+  assert.ok(i > 0, "找不到免责句");
+  // 判据：免责句不在任何 <details> 里面（前面打开的比关掉的多，就是被折进去了）
+  const before = out.slice(0, i);
+  const opened = (before.match(/<details/g) || []).length;
+  const closed = (before.match(/<\/details>/g) || []).length;
+  assert.equal(opened, closed, "免责句落在折叠块里了");
 });
 
 // ---- 卡 4：Saver's Match 不点不存在的表号 ----

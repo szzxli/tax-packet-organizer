@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// 窄屏闸门：375×812 真浏览器（真 Chrome 调试口设视口），量三件事：
+// 窄屏闸门：375×812 真浏览器（真 Chrome 调试口设视口），量四件事：
 //   1) documentElement.scrollWidth <= clientWidth（整页不许横向滚动）
-//   2) #policyBar / #outlookOneThing 的实测高度不超过目标
-//   3) 长 token 兜底：.one-thing 里塞一个超长 URL 也不许撑宽（防止 URL 再犯）
-// 三种状态 × 三语：付费+事件 / 免费+命中 / 免费+未命中；另加长 token 一格。
+//   2) 付费态两块合计 ≤220px、免费态 ≤120px
+//   3) 空态不出现任何算出来的金额（0 个 $ 数字）
+//   4) 长 token 兜底：.one-thing 里塞超长 URL 也不许撑宽
+// 三种状态 × 三语：付费有输入 / 免费有输入 / 空态；另加长 token 一格。
 // 跑法：node tools/test_narrow.mjs
 import fs from "node:fs";
 import os from "node:os";
@@ -28,7 +29,6 @@ if (!CHROME) {
   process.exit(2);
 }
 
-// ---- 用页面自己的函数渲染 ----
 const store = {};
 const sandbox = {
   LANG: "zh", packet: null, console, Math, Number, String, Object, Array, JSON,
@@ -47,32 +47,29 @@ vm.runInContext(slice("// OUTLOOK_LOGIC_START", "// OUTLOOK_LOGIC_END"), sandbox
 const STYLES = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
 assert.ok(STYLES.includes(".one-thing"), "没抽到 .one-thing 的样式");
 
-const STATE = { status: "single", dep: "1", income: "85000", withheld: "9000", tuition: "20000", retire: "", mkt: "", premium: "", mortgage: "" };
+const FILLED = { status: "single", dep: "1", income: "85000", withheld: "9000", tuition: "20000", retire: "", mkt: "", premium: "", mortgage: "" };
+const EMPTY = { status: "single", dep: "", income: "", withheld: "", tuition: "", retire: "", mkt: "", premium: "", mortgage: "" };
 
-function barsHtml(lang, unlocked, profile) {
+function cardHtml(lang, unlocked, profile, state) {
   sandbox.LANG = lang;
   sandbox.procProfileLoad = () => profile;
-  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(STATE));
-  const out = sandbox.outlookHtml(unlocked);
-  return out.slice(0, out.indexOf("<h2>"));
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state));
+  return sandbox.outlookHtml(unlocked);
 }
-// 长 token 兜底：URL 这一类连续 token 不许把容器撑宽（2026-11-11 真实踩过）
 function longTokenHtml() {
   const url = "https://www.federalregister.gov/documents/2026/10/26/2026-21796/cost-of-living-increase-and-other-determinations-for-2027";
   return '<div id="policyBar" class="one-thing"><p class="small muted">' + url + "</p></div>";
 }
-
-function pageFor(bars) {
+function pageFor(inner) {
   return `<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>${STYLES}</style>
 <style>html,body{margin:0;padding:0}</style>
 </head><body>
-<div style="padding:0 12px"><div class="card" style="padding:12px;box-sizing:border-box">${bars}</div></div>
+<div style="padding:0 12px"><div class="card" style="padding:12px;box-sizing:border-box">${inner}</div></div>
 </body></html>`;
 }
 
-// ---- 最小调试口客户端 ----
 class Cdp {
   constructor(url) { this.url = url; this.id = 0; this.waiting = new Map(); }
   open() {
@@ -130,9 +127,9 @@ async function withChrome(fn) {
   }
 }
 
-async function measure(cdp, bars) {
+async function measure(cdp, inner) {
   const file = path.join(os.tmpdir(), "narrow-" + Math.random().toString(36).slice(2) + ".html");
-  fs.writeFileSync(file, pageFor(bars), "utf8");
+  fs.writeFileSync(file, pageFor(inner), "utf8");
   await cdp.send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true });
   await cdp.send("Page.enable");
   await cdp.send("Page.navigate", { url: "file://" + file });
@@ -143,8 +140,13 @@ async function measure(cdp, bars) {
       const d = document.documentElement;
       const one = document.getElementById("outlookOneThing");
       const bar = document.getElementById("policyBar");
+      const main = document.getElementById("outlookMain");
       const h = (el) => el ? Math.round(el.getBoundingClientRect().height) : null;
-      return JSON.stringify({ sw: d.scrollWidth, cw: d.clientWidth, hBar: h(bar), hOne: h(one) });
+      return JSON.stringify({
+        sw: d.scrollWidth, cw: d.clientWidth,
+        hBar: h(bar), hOne: h(one),
+        mainHidden: main ? main.classList.contains("hidden") : null
+      });
     })()`,
   });
   fs.rmSync(file, { force: true });
@@ -152,9 +154,9 @@ async function measure(cdp, bars) {
 }
 
 const CASES = [
-  { key: "paid", name: "付费+事件", unlocked: true, profile: { ssPoints: "34", eduUsed: "1" } },
-  { key: "freeHit", name: "免费+命中", unlocked: false, profile: { ssPoints: "34", eduUsed: "1" } },
-  { key: "freeMiss", name: "免费+未命中", unlocked: false, profile: { ssPoints: "", eduUsed: "1" } },
+  { key: "paid", name: "付费有输入", unlocked: true, profile: { ssPoints: "34", eduUsed: "1" }, state: FILLED },
+  { key: "free", name: "免费有输入", unlocked: false, profile: { ssPoints: "34", eduUsed: "1" }, state: FILLED },
+  { key: "empty", name: "空态", unlocked: true, profile: { ssPoints: "", eduUsed: "" }, state: EMPTY },
 ];
 const LANGS = ["zh", "en", "es"];
 
@@ -162,12 +164,10 @@ const got = await withChrome(async (cdp) => {
   const out = [];
   for (const lang of LANGS) {
     for (const c of CASES) {
-      const bars = barsHtml(lang, c.unlocked, c.profile);
-      assert.ok(bars.includes("outlookOneThing"), lang + "/" + c.name + " 没渲染出常驻结论条");
-      assert.ok(bars.includes('id="policyBar"'), lang + "/" + c.name + " 没渲染出事件条");
-      out.push({ lang, case: c, box: await measure(cdp, bars) });
+      const inner = cardHtml(lang, c.unlocked, c.profile, c.state);
+      out.push({ lang, case: c, inner, box: await measure(cdp, inner) });
     }
-    out.push({ lang, case: { key: "long", name: "长 token 兜底", unlocked: true }, box: await measure(cdp, longTokenHtml()) });
+    out.push({ lang, case: { key: "long", name: "长 token 兜底" }, inner: longTokenHtml(), box: await measure(cdp, longTokenHtml()) });
   }
   return out;
 });
@@ -185,16 +185,25 @@ for (const r of got) {
     assert.ok(r.box.sw <= r.box.cw, "整页被撑宽：scrollWidth=" + r.box.sw + " > clientWidth=" + r.box.cw);
   });
   if (r.case.key === "paid") {
-    check("高度 ≤110：#policyBar（" + r.lang + "）", () => {
-      assert.ok(r.box.hBar != null && r.box.hBar <= 110, "实测 " + r.box.hBar + "px > 110px");
-    });
-    check("高度 ≤110：#outlookOneThing（" + r.lang + "）", () => {
-      assert.ok(r.box.hOne != null && r.box.hOne <= 110, "实测 " + r.box.hOne + "px > 110px");
+    check("付费两块合计 ≤220px：" + r.lang, () => {
+      const sum = (r.box.hBar || 0) + (r.box.hOne || 0);
+      assert.ok(r.box.hBar != null && r.box.hOne != null, "没量到两块高度");
+      assert.ok(sum <= 220, "实测 " + r.box.hBar + " + " + r.box.hOne + " = " + sum + "px > 220px");
     });
   }
-  if (r.case.key === "freeHit" || r.case.key === "freeMiss") {
-    check("高度 ≤80：#outlookOneThing（" + r.lang + " " + r.case.name + "）", () => {
-      assert.ok(r.box.hOne != null && r.box.hOne <= 80, "实测 " + r.box.hOne + "px > 80px");
+  if (r.case.key === "free") {
+    check("免费两块合计 ≤120px：" + r.lang, () => {
+      const sum = (r.box.hBar || 0) + (r.box.hOne || 0);
+      assert.ok(sum <= 120, "实测 " + r.box.hBar + " + " + r.box.hOne + " = " + sum + "px > 120px");
+    });
+  }
+  if (r.case.key === "empty") {
+    check("空态不出算出来的金额：" + r.lang, () => {
+      assert.ok(!/\$[\d]/.test(r.inner), "空态出现金额：" + r.inner.slice(0, 200));
+      assert.ok(r.inner.includes('id="btnOutlookGo"'), "空态缺「去填」按钮");
+      assert.equal(r.box.mainHidden, true, "空态没把估算/地图那块藏起来");
+      assert.equal(r.box.hBar, null, "空态还渲染了事件条");
+      assert.equal(r.box.hOne, null, "空态还渲染了常驻结论条");
     });
   }
 }
@@ -203,7 +212,8 @@ let bad = 0;
 for (const [tag, msg] of results) { if (tag !== "ok  ") bad++; console.log(tag, msg); }
 console.log("\n实测高度：");
 for (const r of got) {
-  console.log("  " + (r.lang + " · " + r.case.name).padEnd(22) + " policyBar=" + String(r.box.hBar).padStart(4) + "px  outlookOneThing=" + String(r.box.hOne).padStart(4) + "px  " + r.box.sw + "/" + r.box.cw);
+  const sum = (r.box.hBar || 0) + (r.box.hOne || 0);
+  console.log("  " + (r.lang + " · " + r.case.name).padEnd(20) + " policyBar=" + String(r.box.hBar).padStart(4) + "px  结论条=" + String(r.box.hOne).padStart(4) + "px  合计=" + String(sum).padStart(4) + "px  " + r.box.sw + "/" + r.box.cw);
 }
 console.log(`\n${results.length - bad} passed, ${bad} failed`);
 process.exit(bad ? 1 : 0);
