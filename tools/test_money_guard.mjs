@@ -113,6 +113,34 @@ check("免费态：只有方向，没有金额/区间/推手/时点", () => {
   sandbox.LANG = "zh";
 });
 
+// ---- 今年这张地图（四条线 × 三格）----
+check("地图：季票态四条线 × 三格，位置/联动/截止日都在", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "12000", mkt: "12", premium: "8400", retire: "5000" })));
+  const out = sandbox.outlookMapHtml(true);
+  for (const k of ["收入 / 税档", "医保补贴（1095-A / 8962）", "教育（AOTC / LLC）", "退休"]) assert.ok(out.includes(k), "缺这一行：" + k);
+  assert.equal((out.match(/<tr>/g) || []).length, 5, "应为表头 1 + 四条线 4 行");
+  assert.ok(out.includes("% 档"), "缺档位");
+  assert.ok(out.includes("$12,000"), "缺学费位置");
+  assert.ok(out.includes("12/31"), "缺 12/31 类截止日");
+  assert.ok(out.includes("4/15"), "缺 4/15 类截止日");
+  assert.ok(out.includes("400%"), "缺 400% 那条线");
+  assert.ok(out.includes("LLC 没有年数上限"), "缺 LLC 无年限口径");
+  assert.ok(out.includes("26 U.S.C. §36B(c)(1)(A)") && out.includes("2026 税年恢复"), "来源行缺 400% 线的出处与恢复年份");
+  assert.ok(out.includes("核于 2026-11-10") && out.includes("核于 2026-11-03"), "来源行缺核实日期");
+});
+check("地图：免费态只给方向，没有金额、没有截止日", () => {
+  for (const lang of ["zh", "en", "es"]) {
+    sandbox.LANG = lang;
+    const out = sandbox.outlookMapHtml(false);
+    assert.ok(out.length > 0, lang + " 免费态地图是空的");
+    assert.ok(!/\$[\d]/.test(out), lang + " 免费态出现金额：" + out.slice(0, 140));
+    assert.ok(!/12\/31|4\/15|1\/31|2027-04-15/.test(out), lang + " 免费态出现截止日");
+    assert.ok(!/undefined|null/.test(out), lang + " 免费态出现空值");
+    assert.ok(/偏低|中间|接近上限|最高档|low|middle|near the top|top bracket|bajo|medio|cerca del tope|tramo más alto/.test(out), lang + " 缺方向词");
+  }
+  sandbox.LANG = "zh";
+});
+
 // ---- 免责在可见正文（不在 details 里）----
 check("免责句在折叠之外", () => {
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));

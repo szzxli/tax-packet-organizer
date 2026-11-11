@@ -261,6 +261,11 @@ select option{background:#0f141b;color:#e6edf3}
 .plan-lock{margin-top:8px;font-size:13px;color:#93a3b5}
 #planCards table th,#planCards table td{color:#e6edf3;border-color:#232e3a}
 @media(max-width:600px){#planCards table{display:table;white-space:normal;width:100%}#planCards table th,#planCards table td{padding:5px;font-size:12px;overflow-wrap:anywhere}}
+.map-wrap{overflow-x:auto;margin:10px 0 8px}
+.map-table{width:100%;border-collapse:collapse;font-size:13px;min-width:660px}
+.map-table th,.map-table td{border:1px solid #2a3441;padding:8px;text-align:left;vertical-align:top;color:#e6edf3;overflow-wrap:anywhere}
+.map-table thead th{background:#0f141b;font-weight:600;font-size:12px;color:#93a3b5}
+.map-table tbody th{width:20%;background:#0f141b;font-weight:600}
 #startCard{background:linear-gradient(160deg,#16324f,#2a6db0);color:#fff;border:none;padding:26px 24px}
 #startCard .start-kicker{margin:0 0 8px;font-size:12px;letter-spacing:.12em;opacity:.8}
 #startCard .start-title{margin:0 0 10px;font-size:30px;line-height:1.25;color:#fff}
@@ -2436,11 +2441,107 @@ function outlookInputsHtml(s) {
     + num("mortgage", "房贷利息 + 州税（一年合计）", "Mortgage interest + state tax (yearly total)", "Intereses hipotecarios + impuesto estatal (total del año)", "例如 14000")
     + "</div></details>";
 }
+// 「今年这张地图」：四条线 × 三格（你现在的位置 / 这个数推得动哪一条 / 最晚哪天还能改）。
+// 只用这 9 项输入与页面已有常量；免费态只给方向词和「有／没有」，不给金额、不给日期。
+// 依据：2026 档位表（核于 2026-11-03）；26 U.S.C. §36B(c)(1)(A) 与 IRS IR-2025-127（核于 2026-11-10）；
+// Pub 970 / Form 8863（核于 2026-11-10）；SSA 2026 每 $1,890 记 1 分（核于 2026-11-10）。
+var MAP_CHECKED = "2026-11-10";
+var MAP_SS_POINT = (typeof PROC_SS_POINT === "number") ? PROC_SS_POINT : 1890;
+var MAP_SS_TARGET = 40, MAP_SS_MAX_YEAR = 4;
+function outlookBracket(status, taxable) {
+  var rows = (typeof PLAN_BRACKETS_2026 !== "undefined" && PLAN_BRACKETS_2026[status]) || PLAN_BRACKETS_2026.single;
+  var lo = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var hi = rows[i][0], rate = rows[i][1];
+    if (taxable <= hi) {
+      return {
+        rate: rate,
+        pos: hi === Infinity ? 1 : (taxable - lo) / Math.max(1, hi - lo),
+        lower: i > 0 ? rows[i - 1][1] : null,
+        next: rows[i + 1] ? rows[i + 1][1] : null,
+        toLower: i > 0 ? taxable - lo : null,
+        toNext: rows[i + 1] ? hi - taxable : null
+      };
+    }
+    lo = hi;
+  }
+}
+function outlookMapRow(head, pos, push, when) {
+  return "<tr><th>" + esc(head) + "</th><td>" + esc(pos) + "</td><td>" + esc(push) + "</td><td>" + esc(when) + "</td></tr>";
+}
+function outlookMapHtml(unlocked) {
+  var s = outlookLoad(), e = outlookEstimate(s);
+  if (!e.filled) return "";
+  var b = outlookBracket(s.status || "single", e.taxable);
+  var mkt = outlookNum(s.mkt), prem = outlookNum(s.premium);
+  var tuition = outlookNum(s.tuition), retire = outlookNum(s.retire);
+  var points = 0;
+  try {
+    if (typeof procProfileLoad === "function") points = Math.min(MAP_SS_TARGET, parseInt(String(procProfileLoad().ssPoints || "0").replace(/[^0-9]/g, ""), 10) || 0);
+  } catch (err) { points = 0; }
+  var gate = tr("领季票后看", "see it with the pass", "se ve con el pase");
+  var money = outlookMoney;
+
+  var pos1 = unlocked
+    ? tr("应税收入 " + money(e.taxable) + "，落在 " + b.rate + "% 档", "Taxable income " + money(e.taxable) + " — " + b.rate + "% bracket", "Ingreso gravable " + money(e.taxable) + ": tramo del " + b.rate + "%")
+      + (b.toNext != null
+        ? tr("；离 " + b.next + "% 档还有 " + money(b.toNext), "; " + money(b.toNext) + " below the " + b.next + "% bracket", "; faltan " + money(b.toNext) + " para el tramo del " + b.next + "%")
+        : tr("；这是最高档", "; this is the top bracket", "; es el tramo más alto"))
+    : (b.rate === 37
+      ? tr("最高档", "top bracket", "tramo más alto")
+      : (b.pos < 0.34 ? tr("偏低", "low", "bajo") : (b.pos < 0.67 ? tr("中间", "middle", "medio") : tr("接近上限", "near the top", "cerca del tope"))));
+
+  var push1 = tr("退休缴款先压低应税收入", "Retirement contributions lower taxable income first", "Los aportes al retiro bajan primero el ingreso gravable")
+    + (unlocked && retire > 0 ? tr("（今年 " + money(retire) + "）", " (" + money(retire) + " this year)", " (" + money(retire) + " este año)") : "")
+    + (unlocked && b.toLower != null
+      ? tr("；再多放 " + money(b.toLower) + " 以上才落到 " + b.lower + "% 档（这是档位界线，不是缴款建议）", "; over " + money(b.toLower) + " more drops you to the " + b.lower + "% bracket (that is a boundary, not contribution advice)", "; más de " + money(b.toLower) + " lo baja al tramo del " + b.lower + "% (es un límite, no una recomendación de aporte)")
+      : (unlocked ? tr("；已经在最低档", "; already in the lowest bracket", "; ya está en el tramo más bajo") : ""));
+
+  var pos2 = unlocked
+    ? (mkt > 0
+      ? tr("Marketplace 覆盖 " + mkt + " 个月，全年保费 " + money(prem) + "；这条线在 8962 上对账", "Marketplace coverage for " + mkt + " months, full-year premium " + money(prem) + "; reconciled on Form 8962", "Cobertura del Marketplace por " + mkt + " meses, prima anual " + money(prem) + "; se concilia en el Formulario 8962")
+      : tr("你填了 0 个月覆盖，这条线今年不动", "You entered 0 months of coverage, so this line does not move this year", "Ingresó 0 meses de cobertura, así que esta línea no se mueve este año"))
+    : (mkt > 0 ? tr("有这条线", "this line is in play", "esta línea cuenta") : tr("今年没有这条线", "not in play this year", "este año no cuenta"));
+  var push2 = tr("收入越高、或家里人数越少，越可能越过 400% 那条线；越过就是整份没有（2026 税年）", "The higher the income, or the smaller the household, the closer you get to the 400% line; cross it and the credit is gone entirely (tax year 2026)", "Cuanto más alto el ingreso o más pequeña la familia, más cerca queda la línea del 400%; al cruzarla, el crédito desaparece por completo (año fiscal 2026)");
+
+  var pos3 = unlocked
+    ? (tuition > 0
+      ? tr("今年实付学费 " + money(tuition), "Tuition actually paid this year: " + money(tuition), "Matrícula pagada este año: " + money(tuition))
+      : tr("没填学费单，这条线今年不动", "No tuition form entered, so this line does not move this year", "No ingresó matrícula, así que esta línea no se mueve este año"))
+    : (tuition > 0 ? tr("有学费单", "there is a tuition form", "hay formulario de matrícula") : tr("今年没有学费单", "no tuition form this year", "este año no hay matrícula"));
+  var push3 = tr("AOTC 每个学生最多 4 个税年、只限本科前四年；LLC 没有年数上限；同一年同一学生只能选一个", "The AOTC runs at most four tax years per student and only in the first four years of college; the LLC has no year limit; one student, one credit per year", "El AOTC dura como máximo cuatro años fiscales por estudiante y solo en los primeros cuatro años de universidad; el LLC no tiene límite de años; un estudiante, un crédito por año");
+
+  var pos4 = unlocked
+    ? tr("今年放了 " + money(retire) + " 进退休账户", "Put " + money(retire) + " into retirement accounts this year", "Aportó " + money(retire) + " a cuentas de retiro este año")
+      + (points > 0 ? tr("；40 分进度 " + points + "/40", "; " + points + " of 40 credits", "; " + points + " de 40 créditos") : tr("；40 分进度还没填", "; credits not entered yet", "; créditos aún sin llenar"))
+    : (retire > 0 ? tr("今年有存", "something was put in", "este año aportó") : tr("今年没存", "nothing put in", "este año no aportó"));
+  var push4 = tr("这笔同时压低应税收入、又在攒 40 分", "It lowers taxable income and builds credits at the same time", "Baja el ingreso gravable y acumula créditos a la vez")
+    + (unlocked ? tr("；一年最多 " + MAP_SS_MAX_YEAR + " 分，每 " + money(MAP_SS_POINT) + " 记 1 分", "; at most " + MAP_SS_MAX_YEAR + " a year, one credit per " + money(MAP_SS_POINT), "; como máximo " + MAP_SS_MAX_YEAR + " al año, un crédito por cada " + money(MAP_SS_POINT)) : "");
+
+  var when1 = unlocked ? tr("12/31 前 401(k) 缴款到账；4/15 前 IRA 还能补", "401(k) deferrals must land by 12/31; IRA contributions can still be made by 4/15", "Las aportaciones al 401(k) deben entrar antes del 31/12; al IRA aún puede aportar hasta el 15/4") : gate;
+  var when2 = unlocked ? tr("1/31 前拿到 1095-A；4/15 报税时在 8962 上对账", "Get Form 1095-A by 1/31; reconcile on Form 8962 when you file by 4/15", "Obtenga el Formulario 1095-A antes del 31/1; concilie en el Formulario 8962 al declarar antes del 15/4") : gate;
+  var when3 = unlocked ? tr("12/31 前付出去的学费算今年；4/15 报税时用 Form 8863", "Tuition paid by 12/31 counts for this year; claimed on Form 8863 when you file by 4/15", "La matrícula pagada antes del 31/12 cuenta para este año; se declara en el Formulario 8863 antes del 15/4") : gate;
+  var when4 = unlocked ? tr("12/31 前 401(k) 缴款到账；4/15 前 IRA 还能补", "401(k) deferrals must land by 12/31; IRA contributions can still be made by 4/15", "Las aportaciones al 401(k) deben entrar antes del 31/12; al IRA aún puede aportar hasta el 15/4") : gate;
+
+  var h = "<h3>" + esc(tr("今年这张地图：改一个数，看它推得动哪几条", "This year's map: change one number, see which lines it moves", "El mapa de este año: cambie un número y vea qué líneas mueve")) + "</h3>";
+  h += "<p class=\"muted small\">" + esc(tr("四条线都只用你上面填的数；不新增输入。", "All four lines use only the numbers you already filled in — nothing new to enter.", "Las cuatro líneas usan solo los números que ya llenó: nada nuevo que ingresar.")) + "</p>";
+  h += "<div class=\"map-wrap\"><table class=\"map-table\"><thead><tr><th></th><th>" + esc(tr("你现在的位置", "Where you stand", "Dónde está")) + "</th><th>" + esc(tr("这个数推得动哪一条", "What this number moves", "Qué mueve este número")) + "</th><th>" + esc(tr("最晚哪天还能改", "Last day to change it", "Último día para cambiarlo")) + "</th></tr></thead><tbody>";
+  h += outlookMapRow(tr("收入 / 税档", "Income / bracket", "Ingresos / tramo"), pos1, push1, when1);
+  h += outlookMapRow(tr("医保补贴（1095-A / 8962）", "Subsidy (1095-A / 8962)", "Subsidio (1095-A / 8962)"), pos2, push2, when2);
+  h += outlookMapRow(tr("教育（AOTC / LLC）", "Education (AOTC / LLC)", "Educación (AOTC / LLC)"), pos3, push3, when3);
+  h += outlookMapRow(tr("退休", "Retirement", "Retiro"), pos4, push4, when4);
+  h += "</tbody></table></div>";
+  h += unlocked
+    ? "<p class=\"small muted\">" + esc(tr("依据：2026 年联邦档位表（核于 2026-11-03）；400% 线见 26 U.S.C. §36B(c)(1)(A)（2026 税年恢复；核于 " + MAP_CHECKED + "）；AOTC / LLC 见 Pub 970 / Form 8863（核于 " + MAP_CHECKED + "）；SSA 2026 每 " + money(MAP_SS_POINT) + " 记 1 分（核于 " + MAP_CHECKED + "）。只标位置与联动，不判资格、不算税。", "Basis: 2026 federal bracket table (checked 2026-11-03); the 400% line is 26 U.S.C. §36B(c)(1)(A), restored from tax year 2026 (checked " + MAP_CHECKED + "); AOTC / LLC per Pub 970 / Form 8863 (checked " + MAP_CHECKED + "); SSA 2026 — one credit per " + money(MAP_SS_POINT) + " (checked " + MAP_CHECKED + "). It only marks positions and links: no eligibility decision, no tax calculation.", "Base: tabla federal de tramos de 2026 (verificada el 03-11-2026); la línea del 400% es 26 U.S.C. §36B(c)(1)(A), restablecida desde el año fiscal 2026 (verificado el " + MAP_CHECKED + "); AOTC / LLC según Pub 970 / Form 8863 (verificado el " + MAP_CHECKED + "); SSA 2026 — un crédito por cada " + money(MAP_SS_POINT) + " (verificado el " + MAP_CHECKED + "). Solo marca posiciones y enlaces: no decide elegibilidad ni calcula impuestos.")) + "</p>"
+    : "<p class=\"small muted\">" + esc(tr("只标位置与联动，不判资格、不算税；每行的依据和日期在季票里。", "It only marks positions and links: no eligibility decision, no tax calculation; the sources and dates for each line come with the pass.", "Solo marca posiciones y enlaces: no decide elegibilidad ni calcula impuestos; las fuentes y fechas de cada línea vienen con el pase.")) + "</p>";
+  return h;
+}
 function outlookHtml(unlocked) {
   var s = outlookLoad();
   var h = "<h2>" + esc(tr("整理完先看这一屏：今年大概退还是补", "Before you export: does this year look like a refund or tax owed", "Antes de exportar: ¿este año se ve como devolución o impuesto por pagar")) + "</h2>";
   h += "<p class=\"muted small\">" + esc(tr("按你现在填的数和材料估的；只用来安排现金，不算税、不打表。", "Estimated from the numbers and papers you have so far; only for planning cash — no tax calculation, no return.", "Estimado con sus números y papeles actuales; solo para planear efectivo: sin calcular impuestos, sin declaración.")) + "</p>";
   h += "<div id=\"outlookOut\">" + outlookOutHtml(unlocked) + "</div>";
+  h += "<div id=\"outlookMap\">" + outlookMapHtml(unlocked) + "</div>";
   h += outlookInputsHtml(s);
   h += "<div id=\"procBlock\"></div>";
   h += "<p class=\"small\"><b>" + esc(tr("这是估算，不是申报；最终以你的会计师与 IRS 核算为准。", "This is an estimate, not a filing; your accountant and the IRS have the final word.", "Esto es una estimación, no una declaración; la última palabra la tienen su contador y el IRS.")) + "</b></p>";
@@ -2465,6 +2566,8 @@ function renderOutlook() {
       outlookSave(s);
       var out = $("outlookOut");
       if (out) out.innerHTML = outlookOutHtml(hasPass());
+      var mp = $("outlookMap");
+      if (mp) mp.innerHTML = outlookMapHtml(hasPass());
     };
     i.oninput = handler;
     i.onchange = handler;
