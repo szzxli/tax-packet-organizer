@@ -3738,7 +3738,7 @@ function seedBaseChecklist(){
     rows=[
       {kind:"wages",form:"W-2",payer:"",title:tr("工资单（公司发的年度工资表，W-2）","Pay statement (the yearly wage form from your employer, W-2)","Comprobante de sueldo (el resumen anual del empleador, W-2)")},
       {kind:"interest",form:"1099-INT",payer:"",title:tr("银行或券商的年度利息/分红单（1099-INT / 1099-DIV）","Yearly interest or dividend statement from your bank or broker (1099-INT / 1099-DIV)","Resumen anual de intereses o dividendos del banco o correduría (1099-INT / 1099-DIV)")},
-      {kind:"generic",form:"去年报税表",payer:"",title:tr("去年的报税表（没有就空着，别编）","Last year's tax return (leave it blank if you do not have one — do not make it up)","La declaración del año pasado (si no la tiene, déjela en blanco; no la invente)")}
+      {kind:"generic",payer:"",form:tr("去年的报税表（没有就空着，别编）","Last year's tax return (leave it blank if you do not have one — do not make it up)","La declaración del año pasado (si no la tiene, déjela en blanco; no la invente)"),title:tr("去年的报税表（没有就空着，别编）","Last year's tax return (leave it blank if you do not have one — do not make it up)","La declaración del año pasado (si no la tiene, déjela en blanco; no la invente)")}
     ];
   }
   var made=0;
