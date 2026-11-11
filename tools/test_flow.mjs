@@ -168,12 +168,54 @@ await withChrome(async (cdp) => {
         assert.ok(/先生成今年清单|checklist first|lista de este año/i.test(empty.text), "说明文案不对：" + empty.text);
       });
 
+      // 2b) 底栏只有一条；左边那行写步骤；第 1 步主入口只有一个
+      await freshLoad(cdp, lang);
+      const ui = await cdp.eval(`(() => {
+        const vis = (sel) => Array.from(document.querySelectorAll(sel)).filter(el => el.offsetParent !== null);
+        const bars = ['stickyProgress','stepPager'].filter(id => document.getElementById(id));
+        const startBtns = vis('#startCard button');
+        const startPrimary = startBtns.filter(b => !b.classList.contains('secondary')).length;
+        const barBtn = document.getElementById('stickyProgressAction');
+        const barPrimary = barBtn && !barBtn.classList.contains('secondary') ? 1 : 0;
+        const inView = Array.from(document.querySelectorAll('button')).filter(b => {
+          if (b.offsetParent === null) return false;
+          const r = b.getBoundingClientRect();
+          return r.bottom > 0 && r.top < innerHeight;
+        });
+        const title = document.getElementById('stickyProgressTitle').textContent.trim();
+        const seeTag = (document.getElementById('btnSee') || {}).tagName || '';
+        const stepTitles = [];
+        for (const st of [1,2,3]) { setOrganizeStep(st,false); stepTitles.push(document.getElementById('stickyProgressTitle').textContent.trim()); }
+        setOrganizeStep(1,false);
+        return { bars, startBtns: startBtns.length, startPrimary, barPrimary, inView: inView.length,
+                 title, seeTag, stepTitles };
+      })()`);
+      check("底栏只有一条（stickyProgress 和 stepPager 不同时在）：" + tag, () => {
+        assert.equal(ui.bars.length, 1, "还在两条底栏：" + ui.bars.join(","));
+        assert.equal(ui.bars[0], "stickyProgress", "留下的不是 stickyProgress");
+      });
+      check("底栏左边那行写第几步：" + tag, () => {
+        for (let i = 0; i < 3; i++) {
+          assert.ok(ui.stepTitles[i].includes(String(i + 1)), "第 " + (i + 1) + " 步标题不对：" + ui.stepTitles[i]);
+        }
+      });
+      check("第 1 步只有一个主入口：" + tag, () => {
+        assert.equal(ui.startBtns, 1, "首卡里还有别的按钮：" + ui.startBtns);
+        assert.equal(ui.startPrimary, 0, "首卡里还有主按钮样式的按钮");
+        assert.equal(ui.barPrimary, 1, "底栏那颗不是唯一主按钮");
+        assert.equal(ui.seeTag, "A", "「看看要准备什么」没降成文字链接：" + ui.seeTag);
+        assert.ok(ui.inView <= 7, "首屏可见按钮超过 7 个：" + ui.inView);
+        assert.ok(ui.inView >= 5, "首屏按钮少得离谱，可能整块没渲染：" + ui.inView);
+      });
+
       // 4a) 选「没有变化」→ ≥3 项
       await freshLoad(cdp, lang);
       const none = await cdp.eval(`(() => {
         const t = document.querySelector('#tagGrid .tag-btn[data-phrase="我今年没有变化。"]');
         t.click(); document.getElementById('btnMake').click();
-        return {len:(window.packet.checklist||[]).length, titles:(window.packet.checklist||[]).map(x=>x.title||x.form||"")};
+        return {len:(window.packet.checklist||[]).length,
+                titles:(window.packet.checklist||[]).map(x=>x.title||x.form||""),
+                rows:(window.packet.checklist||[]).map(x=>[x.form,x.title,x.request].join(" "))};
       })()`);
       check("选「没有变化」拿到 ≥3 项：" + tag, () => {
         assert.ok(none.len >= 3, "只有 " + none.len + " 项");
@@ -182,6 +224,12 @@ await withChrome(async (cdp) => {
           assert.ok(!/^(W-2|1099|Schedule)/.test(t), "标题以表号打头：" + t);
         }
       });
+      if (lang !== "zh") {
+        check("基础清单在 " + lang + " 下不夹中文：" + tag, () => {
+          const bad = none.rows.filter((r) => /[\u4e00-\u9fff]/.test(r));
+          assert.deepEqual(bad, [], "生成的条目里有中文：" + bad.join(" | "));
+        });
+      }
 
       // 4b) 选「先跳过」→ ≥3 项
       await freshLoad(cdp, lang);

@@ -200,7 +200,8 @@ for (const r of got) {
   if (r.case.key === "empty") {
     check("空态不出算出来的金额：" + r.lang, () => {
       assert.ok(!/\$[\d]/.test(r.inner), "空态出现金额：" + r.inner.slice(0, 200));
-      assert.ok(r.inner.includes('id="btnOutlookGo"'), "空态缺「去填」按钮");
+      assert.ok(!r.inner.includes('id="btnOutlookGo"'), "空态还渲染了多余的主按钮");
+      assert.ok(r.inner.includes('id="outlookInputs"'), "空态没有输入区");
       assert.equal(r.box.mainHidden, null, "空态还把估算/地图那块渲染出来了");
       assert.equal(r.box.hBar, null, "空态还渲染了事件条");
       assert.equal(r.box.hOne, null, "空态还渲染了常驻结论条");

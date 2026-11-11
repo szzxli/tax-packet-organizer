@@ -553,7 +553,8 @@ check("空态：只给一句提示 + 去填按钮，不出金额、不出标题�
     const paid = sandbox.outlookHtml(true), free = sandbox.outlookHtml(false);
     for (const out of [paid, free]) {
       assert.ok(!/\$[\d]/.test(out), lang + " 空态出现金额：" + out.slice(0, 160));
-      assert.ok(out.includes('id="btnOutlookGo"'), lang + " 空态缺「去填」按钮");
+      assert.ok(!out.includes('id="btnOutlookGo"'), lang + " 空态还渲染了多余的主按钮");
+      assert.ok(out.includes('id="outlookInputs"'), lang + " 空态没有输入区");
       assert.ok(!out.includes('id="outlookMain"'), lang + " 空态还把估算那块渲染出来了");
       assert.ok(!out.includes("<h2>"), lang + " 空态还出了 h2");
       assert.ok(!out.includes("outlookMap"), lang + " 空态还渲染了地图容器");

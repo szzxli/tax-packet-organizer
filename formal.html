@@ -390,7 +390,8 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <h2 class="start-title">把今年的报税材料，整理成一份能交出去的清单。</h2>
 <p class="start-sub start-lead">不少人报完才发现，一年差了几百到上千美元。可能是多交，也可能少交——填完才知道你是哪一种。</p>
 <p class="start-sub">说一句今年变了什么，不用登录。先给你一份基础的，答完几句就变成你自己的。</p>
-<p><button id="btnStart" type="button">把今年的材料放进来</button> <button id="btnSee" class="secondary" type="button">看看要准备什么</button></p>
+<p><button id="btnStart" class="secondary" type="button">把今年的材料放进来</button></p>
+<p class="small"><a href="#" id="btnSee">看看要准备什么</a></p>
 </div>
 
 <div class="card no-print">
@@ -2317,7 +2318,7 @@ function renderStickyProgress(){
   if(!packet||currentPage!==1){bar.classList.add("hidden");return;}
   var rows=packet.checklist||[],total=rows.length,done=rows.filter(rowResolved).length;
   if(!total){
-    $("stickyProgressTitle").textContent=tr("第 1 步 / 共 3 步","Step 1 of 3","Paso 1 de 3");
+    $("stickyProgressTitle").textContent=tr("第 "+currentOrganizeStep+" 步 / 共 3 步","Step "+currentOrganizeStep+" of 3","Paso "+currentOrganizeStep+" de 3");
     $("stickyProgressText").textContent=tr("先生成今年清单","Generate this year\u2019s checklist first","Genere primero la lista de este año");
     $("stickyProgressFill").style.width="0%";
     var onlyAction=$("stickyProgressAction");
@@ -2331,7 +2332,7 @@ function renderStickyProgress(){
   var target="s3",label=tr("建立今年清单","Build this year's checklist","Crear la lista de este año"),message=tr("从去年表格或手头材料开始，先生成清单。","Start from last year's forms or the papers you have, and generate the checklist first.","Empiece con los formularios del año pasado o los papeles que tenga y genere primero la lista.");
   if(total>0&&done<total){target="s4";label=tr("继续补齐材料","Keep gathering","Seguir reuniendo");message=tr("已完成 ","Done: ","Hecho: ")+done+" / "+total+tr(" 项 · 还有 "," · "," · ")+(total-done)+tr(" 项待处理。"," still to handle."," aún por resolver.");}
   else if(total>0){target="s6";label=tr("导出给会计师","Export to your accountant","Exportar a su contador");message=tr("全部 ","All ","Los ")+total+tr(" 项已标记为已备或不适用，可以导出给 CPA。"," items are marked ready or not applicable — you can export to your CPA."," elementos están marcados como listos o no aplicables: puede exportar a su CPA.");}
-  title.textContent=total>0&&done===total?tr("材料包已整理完成","Packet complete","Paquete completo"):tr("你的整理进度","Your progress","Su progreso");
+  title.textContent=tr("第 "+currentOrganizeStep+" 步 / 共 3 步","Step "+currentOrganizeStep+" of 3","Paso "+currentOrganizeStep+" de 3");
   text.textContent=message;fill.style.width=pct+"%";action.textContent=label;
   action.onclick=function(){navigateToSection(target);};
   bar.classList.remove("hidden");
@@ -2856,7 +2857,6 @@ function outlookHtml(unlocked) {
   var h = "<div id=\"outlookEmpty\" class=\"one-thing" + (empty ? "" : " hidden") + "\">";
   h += "<p class=\"one-thing-lead\"><b>" + esc(tr("填这三个数，就知道你今年落在哪一格", "Fill these three numbers and you will see where this year lands", "Con estos tres números verá dónde cae este año")) + "</b></p>";
   h += "<p class=\"small muted\">" + esc(tr("收入、已经扣掉的税、学费，各填一个大概数就行；只存这台浏览器。", "Income, the tax already withheld, and tuition — rough figures are enough; they stay in this browser.", "Ingresos, el impuesto ya retenido y la matrícula: basta con cifras aproximadas; se quedan en este navegador.")) + "</p>";
-  h += "<p><button type=\"button\" id=\"btnOutlookGo\">" + esc(tr("去填这三个数", "Fill these three", "Rellenar estos tres")) + "</button></p>";
   h += "</div>";
   if (!empty) {
   h += "<div id=\"outlookMain\">";
@@ -2914,11 +2914,6 @@ function renderOutlook() {
     i.oninput = handler;
     i.onchange = handler;
   });
-  var go = $("btnOutlookGo");
-  if (go) go.onclick = function () {
-    var d = $("outlookInputs"); if (d) d.open = true;
-    var t = $("ol_income"); if (t) t.scrollIntoView({ behavior: "smooth", block: "center" });
-  };
   var det = $("outlookInputs");
   if (det && (touched || outlookEmptyState(s))) det.open = true;
 }
@@ -3244,7 +3239,7 @@ function renderHero(){
 }
 $("btnStart").onclick=function(){var t=$("heroText");if(t){t.scrollIntoView({behavior:"smooth",block:"center"});t.focus();}};
 $("btnAiOpen").onclick=function(e){e.preventDefault();var ai=$("aiCard");if(ai){ai.dataset.open="1";ai.classList.remove("hidden");ai.scrollIntoView({behavior:"smooth",block:"start"});}};
-$("btnSee").onclick=function(){sampleOpen=true;coverOpen=true;renderHero();var s=$("sampleCard");if(s){s.classList.remove("hidden");s.scrollIntoView({behavior:"smooth",block:"start"});}};
+$("btnSee").onclick=function(ev){if(ev&&ev.preventDefault)ev.preventDefault();sampleOpen=true;coverOpen=true;renderHero();var s=$("sampleCard");if(s){s.classList.remove("hidden");s.scrollIntoView({behavior:"smooth",block:"start"});}};
 function showPage(p){
   // 卡 2 对所有人免费可见：订阅页未登录也能看能填；只有支付页（3）要求登录。
   if(p===3&&isGuest()){pendingPage=p;showAuth();return;}
@@ -3284,7 +3279,8 @@ function showApp(){
   $("accountRow").classList.toggle("hidden",g);
   $("guestLine").classList.toggle("hidden",!g);
   $("deleteNote").classList.toggle("hidden",g);
-  $("btnSaveProgress").classList.toggle("hidden",!g);
+  var hasSomethingToSave=!!(packet&&((packet.checklist&&packet.checklist.length)||(packet.lastYear&&packet.lastYear.length)));
+  $("btnSaveProgress").classList.toggle("hidden",!g||!hasSomethingToSave);
   var eg=$("exportSaveGuide");if(eg&&!g)eg.classList.add("hidden");
   refreshSaveCtas();
   $("guestNote").classList.toggle("hidden",!g);
@@ -3721,8 +3717,8 @@ function addToLastYear(items){
   return {added:added,skipped:skipped};
 }
 // 「今年没什么变化 / 先跳过」是最常见的起点：不许 0 项，也不许提示「先补充一项材料」。
-// 口径：有去年那张表就从它推（条目问「去年有，今年还是吗」）；没有就给三项通用；
-// 自雇、房租、学费这些要用户自己勾，不凭空加。表号一律进括号，不当标题。
+// 行一律走 newRowFromKind(kind) 这条和标签同一个入口，再把 form / title / request 三处都换成
+// 当前语言的文案——newRowFromKind 给的中文 form 与 request 必须盖掉，否则 en/es 会漏出中文。
 function seedBaseChecklist(){
   if(!packet)return 0;
   if(packet.checklist&&packet.checklist.length)return 0;
@@ -3730,22 +3726,25 @@ function seedBaseChecklist(){
   if(packet.lastYear&&packet.lastYear.length){
     packet.lastYear.forEach(function(l){
       if(!l.form)return;
-      rows.push({kind:formToKind(l.form)||"generic",form:l.form,payer:l.payer||"",
-        title:tr("去年有，今年还是吗","You had this last year — still the same?","Lo tenía el año pasado, ¿sigue igual?")+"（"+l.form+"）"});
+      var q=tr("去年有，今年还是吗","You had this last year — still the same?","Lo tenía el año pasado, ¿sigue igual?")+"（"+l.form+"）";
+      rows.push({kind:formToKind(l.form)||"generic",form:l.form,payer:l.payer||"",title:q,request:q});
     });
   }
   if(!rows.length){
+    var t1=tr("工资单（公司发的年度工资表，W-2）","Pay statement (the yearly wage form from your employer, W-2)","Comprobante de sueldo (el resumen anual del empleador, W-2)");
+    var t2=tr("银行或券商的年度利息/分红单（1099-INT / 1099-DIV）","Yearly interest or dividend statement from your bank or broker (1099-INT / 1099-DIV)","Resumen anual de intereses o dividendos del banco o correduría (1099-INT / 1099-DIV)");
+    var t3=tr("去年的报税表（没有就空着，别编）","Last year's tax return (leave it blank if you do not have one — do not make it up)","La declaración del año pasado (si no la tiene, déjela en blanco; no la invente)");
     rows=[
-      {kind:"wages",form:"W-2",payer:"",title:tr("工资单（公司发的年度工资表，W-2）","Pay statement (the yearly wage form from your employer, W-2)","Comprobante de sueldo (el resumen anual del empleador, W-2)")},
-      {kind:"interest",form:"1099-INT",payer:"",title:tr("银行或券商的年度利息/分红单（1099-INT / 1099-DIV）","Yearly interest or dividend statement from your bank or broker (1099-INT / 1099-DIV)","Resumen anual de intereses o dividendos del banco o correduría (1099-INT / 1099-DIV)")},
-      {kind:"generic",payer:"",form:tr("去年的报税表（没有就空着，别编）","Last year's tax return (leave it blank if you do not have one — do not make it up)","La declaración del año pasado (si no la tiene, déjela en blanco; no la invente)"),title:tr("去年的报税表（没有就空着，别编）","Last year's tax return (leave it blank if you do not have one — do not make it up)","La declaración del año pasado (si no la tiene, déjela en blanco; no la invente)")}
+      {kind:"wages",form:"W-2",payer:"",title:t1,request:t1},
+      {kind:"interest",form:"1099-INT",payer:"",title:t2,request:t2},
+      {kind:"generic",form:t3,payer:"",title:t3,request:t3}
     ];
   }
   var made=0;
   rows.forEach(function(r){
     try{
       var row=newRowFromKind(r.kind,r.payer);
-      row.form=r.form;row.title=r.title;
+      row.form=r.form;row.title=r.title;row.request=r.request;
       packet.checklist.push(row);made++;
     }catch(e){}
   });

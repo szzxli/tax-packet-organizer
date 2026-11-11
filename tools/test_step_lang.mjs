@@ -110,7 +110,7 @@ check("关键控件文案已走 tr()（抽查 12 处）", () => {
     "不适用原因（必填）",
     "继续补齐材料",
     " 项已解决",
-    "你的整理进度",
+    "先生成今年清单",
     "缺数字：",
     "可抵扣成本 · ",
   ];
@@ -177,6 +177,7 @@ function stickyText(lang, doneCount, total) {
     $: (id) => els[id],
     packet: { checklist: rows },
     currentPage: 1,
+    currentOrganizeStep: 2,
     rowResolved: (r) => !!r.ok,
     navigateToSection() {},
     tr: (zh, en, es) => (lang === "en" ? en : lang === "es" ? es : zh),
