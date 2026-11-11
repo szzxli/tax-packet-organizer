@@ -22,6 +22,8 @@ const sandbox = {
   console,
 };
 vm.createContext(sandbox);
+// 卡 1 的税档表只来自 rules/graph.json；页面不再自带数字。
+sandbox.RULES = JSON.parse(fs.readFileSync(path.join(root, "rules", "graph.json"), "utf8"));
 vm.runInContext(html.slice(start, end), sandbox, { filename: "plan-cards.js" });
 
 const C1_MFJ_22 = "你的应税收入落在 22% 档（2026 年 · 已婚合并申报，$100,800–$211,400）。退到 12% 档的分界线是 $100,800，跨进 24% 档的分界线是 $211,400。这里只标档位和分界线，不是建议你调整缴款，也不算税额。";

@@ -63,9 +63,10 @@ vm.runInContext(html.slice(start, end), sandbox, { filename: "process-mgmt.js" }
 const oStart = html.indexOf("// OUTLOOK_LOGIC_START");
 const oEnd = html.indexOf("// OUTLOOK_LOGIC_END");
 assert.ok(oStart > 0 && oEnd > oStart, "缺 OUTLOOK_LOGIC 块");
-const bracketsSrc = html.match(/var PLAN_BRACKETS_2026=\{[\s\S]*?\n\};/);
-assert.ok(bracketsSrc, "缺 2026 档位表");
-vm.runInContext(bracketsSrc[0], sandbox, { filename: "brackets.js" });
+// 税档表在 rules/graph.json（sandbox.RULES），页面只提供读取它的函数
+const bracketsFnSrc = html.match(/function planBrackets\(status\)\{[\s\S]*?\n\}/);
+assert.ok(bracketsFnSrc, "缺档位读取函数 planBrackets");
+vm.runInContext(bracketsFnSrc[0], sandbox, { filename: "brackets.js" });
 vm.runInContext(html.slice(oStart, oEnd), sandbox, { filename: "outlook.js" });
 
 const p = { status: "mfj", income: "75,000", college: "yes", ins1095a: "yes", mortgage: "no", eduUsed: "3", ssPoints: "34" };

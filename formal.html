@@ -1170,12 +1170,16 @@ function goCheck(){if(typeof showPage==="function")showPage(1);try{setOrganizeSt
 
 // PLAN_CARDS_LOGIC_START
 // 规划卡（补贴免费、其余三张属季票）：只标结构、不算税、不判资格。第一张与第三张的输入只存本机（localStorage），不进 packet、不同步后端。
-var PLAN_BRACKETS_2026={
-  single:[[12400,10],[50400,12],[105700,22],[201775,24],[256225,32],[640600,35],[Infinity,37]],
-  mfj:[[24800,10],[100800,12],[211400,22],[403550,24],[512450,32],[768700,35],[Infinity,37]],
-  mfs:[[12400,10],[50400,12],[105700,22],[201775,24],[256225,32],[384350,35],[Infinity,37]],
-  hoh:[[17700,10],[67450,12],[105700,22],[201775,24],[256200,32],[640600,35],[Infinity,37]]
-};
+// 税档表只在 rules/graph.json 的 brackets 里；这里取不到就出空态，不回落内置数字。
+function planBrackets(status){
+  // 先走 mapRules（和地图同一口径）；它在别的块里，单独跑这一段时直接读图。
+  var R=(typeof mapRules==="function")?mapRules():((typeof window!=="undefined"&&window.RULES)?window.RULES:((typeof RULES!=="undefined")?RULES:null));
+  var b=R&&R.brackets;if(!b)return null;
+  var rows=b[status]||b.single;if(!rows||!rows.length)return null;
+  var out=[];
+  for(var i=0;i<rows.length;i++)out.push([rows[i][0]==null?Infinity:rows[i][0],rows[i][1]]);
+  return out;
+}
 var PLAN_STATUS_LABEL={
   single:["单身","Single","Soltero(a)"],
   mfj:["已婚合并申报","Married filing jointly","Casados que declaran conjuntamente"],
@@ -1237,7 +1241,7 @@ function planStatusLabel(key){var s=PLAN_STATUS_LABEL[key];return s?planLang(s[0
 function planMoney(n){return "$"+Math.round(n).toLocaleString("en-US");}
 function planAmount(v){var s=String(v==null?"":v).replace(/[^0-9.]/g,"");if(!s)return null;var n=parseFloat(s);return isFinite(n)?n:null;}
 function planBracket(status,income){
-  var rows=PLAN_BRACKETS_2026[status];if(!rows||income==null||income<0)return null;
+  var rows=planBrackets(status);if(!rows||income==null||income<0)return null;
   var lo=0;
   for(var i=0;i<rows.length;i++){
     var hi=rows[i][0],rate=rows[i][1];
@@ -1350,6 +1354,7 @@ function planCardsHtml(state,unlocked){
 function plan1Result(s){
   var inc=planAmount(s.income);
   if(!s.status||inc==null)return "<span class='small muted'>"+esc(planLang("先选报税身份、填应税收入，才显示档位；空着不猜。","Pick a filing status and enter taxable income to see the bracket; we do not guess when it is blank.","Elija un estado civil fiscal e ingrese el ingreso gravable para ver el tramo; no adivinamos si está en blanco."))+"</span>";
+  if(!planBrackets(s.status))return "<span class='small muted'>"+esc(planLang("税档表还没读到，这里先不出档位；刷新一次再看。","The bracket table has not loaded, so no bracket is shown yet. Refresh once.","La tabla de tramos no se cargó, así que todavía no se muestra el tramo. Actualice una vez."))+"</span>";
   return esc(planTierText(s.status,inc));
 }
 function plan2Parts(s){
@@ -2342,7 +2347,8 @@ function outlookNum(v) {
   return isFinite(n) && n > 0 ? n : 0;
 }
 function outlookTax(status, taxable) {
-  var rows = (typeof PLAN_BRACKETS_2026 !== "undefined" && PLAN_BRACKETS_2026[status]) || PLAN_BRACKETS_2026.single;
+  var rows = planBrackets(status);
+  if (!rows) return null;
   var t = 0, lo = 0;
   for (var i = 0; i < rows.length; i++) {
     var hi = rows[i][0], r = rows[i][1];
@@ -2357,7 +2363,7 @@ function outlookEstimate(s) {
   var income = outlookNum(s.income), withheld = outlookNum(s.withheld), retire = outlookNum(s.retire);
   var R = mapRules(), status = s.status || "single";
   var std = (R && R.standard_deduction) ? (R.standard_deduction[status] || R.standard_deduction.single) : null;
-  if (std == null) return { filled: false, noRules: true, dir: "even", gap: 0, low: 0, high: 0, tax: 0, taxable: 0, agi: 0, income: income, withheld: withheld, whys: [] };
+  if (std == null || !planBrackets(status)) return { filled: false, noRules: true, dir: "even", gap: 0, low: 0, high: 0, tax: 0, taxable: 0, agi: 0, income: income, withheld: withheld, whys: [] };
   var agi = Math.max(0, income - retire);          // MAGI 的近似：报的收入减退休缴款
   var taxable = Math.max(0, agi - std);            // 应税收入 = AGI − 标准扣除
   var tax = outlookTax(status, taxable);
@@ -2418,7 +2424,8 @@ function outlookOutHtml(unlocked) {
   var condEn = "; it uses the standard deduction only (" + outlookMoney(e.std) + "), so itemizing or other adjustments will move it; the tuition form, the subsidy reconciliation, dependents, mortgage interest and state tax are not in it yet, so the range is wider than the real one";
   var condEs = "; solo usa la deducción estándar (" + outlookMoney(e.std) + "), así que detallar o aplicar otros ajustes lo moverá; aún no incluye el formulario de matrícula, el ajuste del subsidio, las personas a cargo, los intereses hipotecarios ni el impuesto estatal, así que el rango es más amplio que el real";
   h += "<p>" + esc(tr("大概范围：", "Rough range: ", "Rango aproximado: ")) + "<b>" + esc(outlookRangeText(e)) + "</b>" + esc(tr(condZh + "。", condEn + ".", condEs + ".")) + "</p>";
-  h += "<p class=\"small muted\">" + esc(tr("依据：2026 年联邦档位表（与本页卡 1 同一张，核于 " + OUTLOOK_CHECKED + "）。", "Basis: the 2026 federal bracket table (same one as card 1 on this page, checked " + OUTLOOK_CHECKED + ").", "Base: la tabla federal de tramos de 2026 (la misma de la tarjeta 1, verificada el " + OUTLOOK_CHECKED + ").")) + "</p>";
+  var OBR = (mapRules() || {}).brackets || {};
+  h += "<p class=\"small muted\">" + esc(tr("依据：2026 年联邦档位表（与本页卡 1 同一张，" + (OBR.source || "") + "，核于 " + OBR.checked + "）。", "Basis: the 2026 federal bracket table (same one as card 1 on this page, " + (OBR.source || "") + ", checked " + OBR.checked + ").", "Base: la tabla federal de tramos de 2026 (la misma de la tarjeta 1, " + (OBR.source || "") + ", verificada el " + OBR.checked + ").")) + "</p>";
   h += "<p class=\"small\"><b>" + esc(tr("是哪几项在推这个结果", "What is driving this", "Qué está moviendo esto")) + "</b></p><ul class=\"small\">";
   if (e.withheld > 0) h += "<li>" + esc(tr("工资里已经扣掉的税 " + outlookMoney(e.withheld) + "：先把它从这个数里减掉。", "Tax already taken out of your pay, " + outlookMoney(e.withheld) + ": subtracted first.", "El impuesto ya descontado de su pago, " + outlookMoney(e.withheld) + ": se resta primero.")) + "</li>";
   if (outlookNum(outlookLoad().tuition) > 0) h += "<li>" + esc(tr("学校寄来的学费单：会让这个数变小，能少多少要看你在读年限和收入，这里先按不抵算。", "The tuition form from the school: it lowers this number, by how much depends on your years enrolled and income — not counted here yet.", "El formulario de matrícula de la escuela: baja este número, cuánto depende de sus años inscrito y de sus ingresos; aquí todavía no se cuenta.")) + "</li>";
@@ -2487,7 +2494,8 @@ function aiSafeText(text) {
   return t;
 }
 function outlookBracket(status, taxable) {
-  var rows = (typeof PLAN_BRACKETS_2026 !== "undefined" && PLAN_BRACKETS_2026[status]) || PLAN_BRACKETS_2026.single;
+  var rows = planBrackets(status);
+  if (!rows) return null;
   var lo = 0;
   for (var i = 0; i < rows.length; i++) {
     var hi = rows[i][0], rate = rows[i][1];
@@ -2513,10 +2521,16 @@ function outlookMapHtml(unlocked) {
   if (!R) {
     return "<p class=\"small muted\">" + esc(tr("先填这两项：今年要报的收入、全年已经被扣掉的税。填了才出这张地图，不替你填默认值。", "Fill these two first: this year's income and the tax already withheld. The map appears once they are in — no default values are filled in for you.", "Llene primero estos dos: los ingresos de este año y el impuesto ya retenido. El mapa aparece cuando estén; no rellenamos valores por defecto.")) + "</p>";
   }
+  if (e.noRules) {
+    return "<p class=\"small muted\">" + esc(tr("规则表还没读到，这张地图先不出；刷新一次再看。", "The rules table has not loaded, so this map is not shown yet. Refresh once.", "La tabla de reglas no se cargó, así que este mapa no se muestra todavía. Actualice una vez.")) + "</p>";
+  }
   if (!e.filled) {
     return "<p class=\"small muted\">" + esc(tr("先填这两项：今年要报的收入、全年已经被扣掉的税。填了才出这张地图，不替你填默认值。", "Fill these two first: this year's income and the tax already withheld. The map appears once they are in — no default values are filled in for you.", "Llene primero estos dos: los ingresos de este año y el impuesto ya retenido. El mapa aparece cuando estén; no rellenamos valores por defecto.")) + "</p>";
   }
   var b = outlookBracket(s.status || "single", e.taxable);
+  if (!b) {
+    return "<p class=\"small muted\">" + esc(tr("规则表还没读到，这张地图先不出；刷新一次再看。", "The rules table has not loaded, so this map is not shown yet. Refresh once.", "La tabla de reglas no se cargó, así que este mapa no se muestra todavía. Actualice una vez.")) + "</p>";
+  }
   var mkt = outlookNum(s.mkt), prem = outlookNum(s.premium);
   var tuition = outlookNum(s.tuition), retire = outlookNum(s.retire);
   var points = 0, eduUsed = -1;
@@ -2616,9 +2630,9 @@ function outlookMapHtml(unlocked) {
   h += outlookMapRow(tr("退休账户今年放了多少", "Put into retirement accounts this year", "Aportado a cuentas de retiro este año"), pos4a, push4a, f4a, when4a);
   h += outlookMapRow(tr("40 分进度（按劳动收入）", "40-credit progress (work income)", "Progreso de 40 créditos (ingreso laboral)"), pos4b, push4b, f4b, when4b);
   h += "</tbody></table></div>";
-  var P = R.poverty_lines || {}, A = R.credits.aotc || {}, S = R.credits.ssa || {};
+  var P = R.poverty_lines || {}, A = R.credits.aotc || {}, S = R.credits.ssa || {}, BR = R.brackets || {};
   h += unlocked
-    ? "<p class=\"small muted\">" + esc(tr("依据（rules/graph.json）：2026 年联邦档位表（核于 2026-11-03）；400% 线见 26 U.S.C. §36B(c)(1)(A)，按 HHS " + P.effective_tax_year + " 年贫困线 ×4（适用 " + P.coverage_year + " 保障年、对应 " + R.tax_year + " 税年；指南 " + P.source_url + "，FR " + P.federal_register + "，核于 " + P.checked + "）；AOTC 每个学生最多 " + A.max_tax_years_per_student + " 个税年、LLC 无年限（Pub 970，核于 " + A.checked + "）；SSA 每 " + money(ssPoint) + " 记 1 分，一年最多 " + ssMax + " 分（核于 " + S.checked + "）；FAFSA 用两年前的收入（studentaid.gov，核于 " + R.built + "）。只标位置与联动，不判资格、不算税、不是建议你调缴款。", "Basis (rules/graph.json): 2026 federal bracket table (checked 2026-11-03); the 400% line is 26 U.S.C. §36B(c)(1)(A), using the HHS " + P.effective_tax_year + " poverty line ×4 (applies to coverage year " + P.coverage_year + ", tax year " + R.tax_year + "; guidelines " + P.source_url + ", FR " + P.federal_register + ", checked " + P.checked + "); the AOTC runs at most " + A.max_tax_years_per_student + " tax years per student and the LLC has no year limit (Pub 970, checked " + A.checked + "); SSA — one credit per " + money(ssPoint) + ", at most " + ssMax + " a year (checked " + S.checked + "); FAFSA reads income from two years earlier (studentaid.gov, checked " + R.built + "). It only marks positions and links: no eligibility decision, no tax calculation, not advice to change contributions.", "Base (rules/graph.json): tabla federal de tramos de 2026 (verificada el 03-11-2026); la línea del 400% es 26 U.S.C. §36B(c)(1)(A), con la línea de pobreza de HHS de " + P.effective_tax_year + " ×4 (aplica al año de cobertura " + P.coverage_year + ", año fiscal " + R.tax_year + "; guía " + P.source_url + ", FR " + P.federal_register + ", verificado el " + P.checked + "); el AOTC dura como máximo " + A.max_tax_years_per_student + " años fiscales por estudiante y el LLC no tiene límite (Pub 970, verificado el " + A.checked + "); SSA — un crédito por cada " + money(ssPoint) + ", máximo " + ssMax + " al año (verificado el " + S.checked + "); la FAFSA lee los ingresos de dos años antes (studentaid.gov, verificado el " + R.built + "). Solo marca posiciones y enlaces: no decide elegibilidad ni calcula impuestos, ni es una recomendación de aportar.")) + "</p>"
+    ? "<p class=\"small muted\">" + esc(tr("依据（rules/graph.json）：2026 年联邦档位表（" + (BR.source || "") + "，核于 " + BR.checked + "）；400% 线见 26 U.S.C. §36B(c)(1)(A)，按 HHS " + P.effective_tax_year + " 年贫困线 ×4（适用 " + P.coverage_year + " 保障年、对应 " + R.tax_year + " 税年；指南 " + P.source_url + "，FR " + P.federal_register + "，核于 " + P.checked + "）；AOTC 每个学生最多 " + A.max_tax_years_per_student + " 个税年、LLC 无年限（Pub 970，核于 " + A.checked + "）；SSA 每 " + money(ssPoint) + " 记 1 分，一年最多 " + ssMax + " 分（核于 " + S.checked + "）；FAFSA 用两年前的收入（studentaid.gov，核于 " + R.built + "）。只标位置与联动，不判资格、不算税、不是建议你调缴款。", "Basis (rules/graph.json): 2026 federal bracket table (" + (BR.source || "") + ", checked " + BR.checked + "); the 400% line is 26 U.S.C. §36B(c)(1)(A), using the HHS " + P.effective_tax_year + " poverty line ×4 (applies to coverage year " + P.coverage_year + ", tax year " + R.tax_year + "; guidelines " + P.source_url + ", FR " + P.federal_register + ", checked " + P.checked + "); the AOTC runs at most " + A.max_tax_years_per_student + " tax years per student and the LLC has no year limit (Pub 970, checked " + A.checked + "); SSA — one credit per " + money(ssPoint) + ", at most " + ssMax + " a year (checked " + S.checked + "); FAFSA reads income from two years earlier (studentaid.gov, checked " + R.built + "). It only marks positions and links: no eligibility decision, no tax calculation, not advice to change contributions.", "Base (rules/graph.json): tabla federal de tramos de 2026 (" + (BR.source || "") + ", verificada el " + BR.checked + "); la línea del 400% es 26 U.S.C. §36B(c)(1)(A), con la línea de pobreza de HHS de " + P.effective_tax_year + " ×4 (aplica al año de cobertura " + P.coverage_year + ", año fiscal " + R.tax_year + "; guía " + P.source_url + ", FR " + P.federal_register + ", verificado el " + P.checked + "); el AOTC dura como máximo " + A.max_tax_years_per_student + " años fiscales por estudiante y el LLC no tiene límite (Pub 970, verificado el " + A.checked + "); SSA — un crédito por cada " + money(ssPoint) + ", máximo " + ssMax + " al año (verificado el " + S.checked + "); la FAFSA lee los ingresos de dos años antes (studentaid.gov, verificado el " + R.built + "). Solo marca posiciones y enlaces: no decide elegibilidad ni calcula impuestos, ni es una recomendación de aportar.")) + "</p>"
     : "<p class=\"small muted\">" + esc(tr("只标位置与联动，不判资格、不算税；每行的依据和日期在季票里。", "It only marks positions and links: no eligibility decision, no tax calculation; the sources and dates for each line come with the pass.", "Solo marca posiciones y enlaces: no decide elegibilidad ni calcula impuestos; las fuentes y fechas de cada línea vienen con el pase.")) + "</p>";
   return h;
 }
@@ -4315,6 +4329,8 @@ try{captureZh();var _sl=window.__TPO_LANG||null;if(!_sl){try{_sl=localStorage.ge
     if (!g || !g.schema) return;
     window.RULES = g;
     try { renderOutlook(); } catch (e) {}
+    // 规划卡第一次渲染可能早于规则图到达；到了再画一遍，免得停在「还没读到」。
+    try { renderPlanCards(); } catch (e2) {}
   }).catch(function () {});
 
   var q=new URLSearchParams(window.location.search||"");

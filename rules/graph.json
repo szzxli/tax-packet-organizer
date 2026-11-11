@@ -3,6 +3,18 @@
   "built": "2026-11-10",
   "tax_year": 2026,
   "note": "页面只从这里取门槛与出处；数字不抄进 js，也不抄进测试。每条带有效税年、适用保障年、出处与核实日。",
+  "brackets": {
+    "effective_tax_year": 2026,
+    "checked": "2026-11-03",
+    "source": "Rev. Proc. 2025-32",
+    "source_url": "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf",
+    "note": "2026 税年联邦个人所得税档位，按应税收入。每组为 [该档上限（含）, 税率%]，最高档上限为 null（无上限）。不在 filing_statuses 里的身份按 single。",
+    "filing_statuses": ["single", "mfj", "mfs", "hoh"],
+    "single": [[12400, 10], [50400, 12], [105700, 22], [201775, 24], [256225, 32], [640600, 35], [null, 37]],
+    "mfj": [[24800, 10], [100800, 12], [211400, 22], [403550, 24], [512450, 32], [768700, 35], [null, 37]],
+    "mfs": [[12400, 10], [50400, 12], [105700, 22], [201775, 24], [256225, 32], [384350, 35], [null, 37]],
+    "hoh": [[17700, 10], [67450, 12], [105700, 22], [201775, 24], [256200, 32], [640600, 35], [null, 37]]
+  },
   "poverty_lines": {
     "program": "HHS poverty guidelines, 48 contiguous states + DC",
     "effective_tax_year": 2025,

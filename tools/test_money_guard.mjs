@@ -35,12 +35,12 @@ vm.createContext(sandbox);
 // 规则图是唯一来源：页面 fetch 它，测试直接读同一个文件
 const graph = JSON.parse(fs.readFileSync(new URL("../rules/graph.json", import.meta.url), "utf8"));
 sandbox.RULES = graph;
-// 档位表与身份表来自页面本身，和卡 1 用同一份
-const bracketsSrc = html.match(/var PLAN_BRACKETS_2026=\{[\s\S]*?\n\};/);
+// 身份表来自页面本身，和卡 1 用同一份；税档表已搬进 rules/graph.json，页面只读图
 const statusSrc = html.match(/var PLAN_STATUS_LABEL=\{[\s\S]*?\n\};/);
 const orderSrc = html.match(/var PLAN_STATUS_ORDER=\[[^\]]*\];/);
-assert.ok(bracketsSrc && statusSrc && orderSrc, "缺档位/身份表");
-vm.runInContext(bracketsSrc[0] + statusSrc[0] + orderSrc[0], sandbox);
+const bracketsFnSrc = html.match(/function planBrackets\(status\)\{[\s\S]*?\n\}/);
+assert.ok(statusSrc && orderSrc && bracketsFnSrc, "缺身份表 / 档位读取函数");
+vm.runInContext(statusSrc[0] + orderSrc[0] + bracketsFnSrc[0], sandbox);
 vm.runInContext(html.slice(start, end), sandbox);
 
 const results = [];
@@ -260,6 +260,50 @@ check("全页没有不存在的 Form 8880-A", () => {
   assert.ok(html.includes("尚未公布表单号"), "没注明表单号未公布");
 });
 
+// ---- 税档表：只在图里，页面只读图 ----
+// 四个身份 × 七档的上限；页面里出现任何一个字面值都说明还有第二份表。
+const BRACKET_LITERALS = ["12400", "50400", "105700", "201775", "256225", "640600", "24800", "100800", "211400", "403550", "512450", "768700", "384350", "17700", "67450", "256200"];
+check("税档四个身份的七档只在 rules/graph.json，页面 0 字面值", () => {
+  assert.equal(html.indexOf("PLAN_BRACKETS_2026"), -1, "页面仍有 PLAN_BRACKETS_2026");
+  const hits = BRACKET_LITERALS.filter((n) => html.indexOf(n) !== -1);
+  assert.deepEqual(hits, [], "页面仍写死档位数字：" + hits.join(","));
+});
+check("规则图 brackets：四身份 × 七档、单调递增、最高档无上限、带出处与核实日", () => {
+  const b = graph.brackets;
+  assert.ok(b, "图里没有 brackets");
+  assert.deepEqual(b.filing_statuses, ["single", "mfj", "mfs", "hoh"], "身份清单不对");
+  assert.equal(b.effective_tax_year, graph.tax_year, "有效税年与图不一致");
+  assert.match(b.source_url, /^https:\/\//, "缺出处 URL");
+  assert.match(b.checked, /^\d{4}-\d{2}-\d{2}$/, "缺核实日");
+  for (const st of b.filing_statuses) {
+    const rows = b[st];
+    assert.ok(Array.isArray(rows) && rows.length === 7, st + " 不是七档");
+    assert.equal(rows[rows.length - 1][0], null, st + " 最高档应无上限（null）");
+    for (let i = 0; i < rows.length - 1; i++) {
+      assert.ok(rows[i][0] > (i ? rows[i - 1][0] : 0), st + " 第 " + (i + 1) + " 档上限不是递增");
+      assert.ok(rows[i][1] < rows[i + 1][1], st + " 第 " + (i + 1) + " 档税率没有递增");
+    }
+  }
+});
+check("删掉图里 brackets：地图与卡 1 都走空态，不回落内置数字、不抛错", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ status: "single", income: "85000", withheld: "9000" })));
+  const full = graph.brackets;
+  const without = JSON.parse(JSON.stringify(graph));
+  delete without.brackets;
+  try {
+    sandbox.RULES = without;
+    const map = sandbox.outlookMapHtml(true) + sandbox.outlookMapHtml(false);
+    assert.ok(map.includes("规则表还没读到"), "地图没走空态：" + map.slice(0, 80));
+    assert.ok(!/\d+% 档/.test(map), "地图仍在出档位");
+    assert.ok(!/\$[\d,]{4,}/.test(map), "地图仍在出金额");
+  } finally {
+    sandbox.RULES = graph;
+  }
+  assert.equal(graph.brackets, full, "测试不该改动图本身");
+  const back = sandbox.outlookMapHtml(true);
+  assert.ok(/\d+% 档/.test(back), "恢复图后地图没回来");
+});
+
 // ---- 规则图与运行时扫描 ----
 check("规则图：400% 每行都带两个年度字段、出处与核实日", () => {
   const rows = graph.poverty_lines.four_hundred_pct;
@@ -273,10 +317,12 @@ check("规则图：400% 每行都带两个年度字段、出处与核实日", ()
   }
   for (const r of rows) assert.equal(r.limit, r.fpl * 4, "400% = 贫困线 ×4");
 });
-check("sw：图进了 APP_SHELL，缓存版本不再是 v3", () => {
+check("sw：图进了 APP_SHELL，缓存版本随图改动升到 v5", () => {
   const sw = fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8");
   assert.ok(sw.includes('"./rules/graph.json"'), "APP_SHELL 缺规则图");
-  assert.ok(!sw.includes('"tax-packet-shell-v3"'), "CACHE_NAME 没升，图会被旧缓存盖住");
+  // 图是缓存优先；改了图不升版本，老用户会一直读到旧图（这轮就少了 brackets）。
+  assert.ok(sw.includes('"tax-packet-shell-v5"'), "改了规则图却没升 CACHE_NAME，旧图会被缓存盖住");
+  assert.ok(!sw.includes('"tax-packet-shell-v3"'), "CACHE_NAME 还停在 v3");
 });
 check("AI 文案进 DOM 前换成中性句，正常文案不动", () => {
   const bad = sandbox.aiSafeText("You are eligible for this credit");
