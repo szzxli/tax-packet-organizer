@@ -74,7 +74,14 @@
       "target": 40,
       "effective_tax_year": 2026,
       "checked": "2026-11-08",
-      "source_url": "https://www.ssa.gov/oact/cola/QC.html"
+      "source_url": "https://www.ssa.gov/oact/cola/QC.html",
+      "next": {
+        "tax_year": 2027,
+        "per_credit_usd": 1970,
+        "checked": "2026-10-26",
+        "source": "FR 2026-21796",
+        "source_url": "https://www.federalregister.gov/documents/2026/10/26/2026-21796/cost-of-living-increase-and-other-determinations-for-2027"
+      }
     },
     "aotc": {
       "max_tax_years_per_student": 4,
