@@ -193,7 +193,10 @@ check("ins 预警：说「退回有上限」，不出现上限金额、也不说
   for (const lang of ["zh", "en", "es"]) {
     sandbox.LANG = lang;
     const w = sandbox.procCardHtml({ k: "ins" }, 0, true, p);
-    assert.ok(/上限|up to a cap|con un tope/.test(w), lang + " 缺「有上限」");
+    // 2026 起超额预缴全额退回、无封顶（OBBBA §71305 废除 §36B(f)(2)(B)），不许再写「有上限」
+    assert.ok(/全额退回|repaid in full|devuelve completo/.test(w), lang + " 缺「全额退回」");
+    assert.ok(/没有封顶|no cap|sin tope/.test(w), lang + " 缺「没有封顶」");
+    assert.ok(!/有上限|up to a cap|con un tope/.test(w), lang + " 仍写「有上限」");
     assert.ok(!/\$\s?\d/.test(w), lang + " 出现了金额");
     assert.ok(!/一分|one for one|uno por uno/i.test(w), lang + " 仍是一比一说法");
   }
