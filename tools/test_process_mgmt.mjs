@@ -89,9 +89,10 @@ function resetFrags(list) {
 
 // ---- 9 项不许减项 ----
 check("9 项输入一个不少，且画像只预填其中 5 项", () => {
+  // 9 项顶层输入 + 1 个可选的工资拆分行（只用来算 40 分，不是第 10 个顶层输入）
   assert.deepEqual(
     Array.from(sandbox.OUTLOOK_FIELDS),
-    ["status", "dep", "income", "withheld", "tuition", "retire", "mkt", "premium", "mortgage"]
+    ["status", "dep", "income", "wage", "withheld", "tuition", "retire", "mkt", "premium", "mortgage"]
   );
   const add = sandbox.procPrefill(p);
   assert.equal(add.status, "mfj", "报法");
@@ -229,8 +230,8 @@ check("AI 条目里的数字不进五条线", () => {
   const after = sandbox.outlookMapHtml(true);
   assert.equal(after, before, "地图被 AI 条目影响了");
   assert.ok(!after.includes("999,999") && !after.includes("5,000 补贴"), "AI 的数字进了地图");
-  const peek = sandbox.aiMapPeekHtml(true);
-  assert.ok(peek.endsWith(before), "AI 只读区没有复用同一张地图，另算了一套");
+  // 第 1 步不再渲染任何金额或方向：入口只是一句话 + 一个按钮
+  assert.ok(!/这四项填了/.test(before), "地图不该出现在第 1 步");
 });
 
 check("五条线每个金额都能追回具体哪一项输入", () => {

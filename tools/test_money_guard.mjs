@@ -141,11 +141,9 @@ check("地图：季票态四条线 × 四格，位置/联动/未来/截止日都
   // FAFSA 只写「两年」，不点名没发布的学年
   assert.ok(/两年/.test(out), "教育线未来格缺「两年」口径");
   assert.ok(!/2028|2029/.test(out), "教育线出现了没发布的学年");
-  assert.ok(out.includes("工资／自雇"), "40 分未来格没写只按工资／自雇算");
-  // 「一年最多 4 分」是规则，不算估分；要拦的是「今年能拿 N 分」「40 分最多到 X」「从 x 走到 y」
-  assert.ok(!/今年能拿 [0-9]+ 分/.test(out), "仍按总收入报「今年能拿 N 分」");
-  assert.ok(!/40 分最多到 [0-9]+/.test(out), "仍给「40 分最多到 X」的推进");
-  assert.ok(!/40 分从 [0-9]+ 走到/.test(out), "仍给「从 x 走到 y」");
+  // 没填工资：不许出分，必须写明缺哪一项
+  assert.ok(out.includes("还差工资那一项"), "没填工资时没说明缺哪一项");
+  assert.ok(!/今年能拿 [0-9]+ 分|40 分最多到 [0-9]+|从 [0-9]+ 走到/.test(out), "没填工资仍在估分");
   assert.ok(out.includes("studentaid.gov"), "来源行缺 FAFSA 出处");
   // 400% 线按家庭人数折算：2 人 = 4 × ($15,650 + $5,500) = $84,600；
   // AGI = 85,000 − 5,000 = 80,000，离这条线还有约 $4,600
@@ -239,6 +237,25 @@ check("页面里没有直接吃毛收入的写法（e.income - line400 / e.incom
   assert.equal(html.split("e.income - line400").length - 1, 0, "还有 e.income - line400");
   assert.equal(html.split("e.income / ssPoint").length - 1, 0, "还有 e.income / ssPoint");
   assert.ok(html.includes("e.agi - line400"), "400% 应改用 e.agi");
+});
+
+check("填了工资才出分：工资 60,000 → 最多 4 分", () => {
+  const st = state({ status: "single", dep: "", income: "70000", wage: "60000", withheld: "8000" });
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(st));
+  const out = sandbox.outlookMapHtml(true);
+  assert.ok(out.includes("按你填的工资估算，今年最多 4 分"), "填了工资却没按工资算分");
+  assert.ok(!out.includes("还差工资那一项"), "填了工资仍提示缺工资");
+});
+check("工资只填 3,000 → 最多 1 分（不是按总收入 4 分）", () => {
+  const st = state({ status: "single", dep: "", income: "70000", wage: "3000", withheld: "8000" });
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(st));
+  const out = sandbox.outlookMapHtml(true);
+  assert.ok(out.includes("今年最多 1 分"), "没按工资算分");
+});
+check("全页没有不存在的 Form 8880-A", () => {
+  assert.equal(html.indexOf("8880-A"), -1, "仍在写 Form 8880-A");
+  assert.ok(html.includes("SECURE 2.0 §103"), "缺 Saver's Match 的法条依据");
+  assert.ok(html.includes("尚未公布表单号"), "没注明表单号未公布");
 });
 
 // ---- 规则图与运行时扫描 ----

@@ -738,8 +738,9 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div id="aiResults" class="hidden">
 <p class="small"><b>AI 建议的清单（请逐项核对）：</b></p>
 <div id="aiList"></div>
-<div id="aiMapPeek" class="hidden"></div>
 <p><button id="btnAiAdd">加入今年清单</button> <span class="small muted">AI 建议仅供参考，最后由你和会计师确认。</span></p>
+<p class="small">这四项填了，就能看你今年和明年</p>
+<p><button type="button" id="btnAiToOutlook" class="secondary">去填这 9 项</button></p>
 </div>
 </div>
 
@@ -1224,9 +1225,12 @@ var PLAN_C4_POLICY_ES="Saver's Match: a partir de 2027, el dinero que deposite e
 var PLAN_C4_WHO_ZH="单身满额到 $20,500，$35,500 及以上就没有；夫妻合并申报满额到 $41,000，$71,000 及以上就没有。两者之间是部分配比。条件是年末满 18 岁、不是全日制在读学生、不是被抚养人、美国税务居民。";
 var PLAN_C4_WHO_EN="Single: full match up to $20,500, none at $35,500 and above. Married filing jointly: full match up to $41,000, none at $71,000 and above. In between, the match is partial. Requirements: at least 18 at year-end, not a full-time student, not a dependent, a U.S. taxpayer.";
 var PLAN_C4_WHO_ES="Soltero(a): aportación completa hasta $20,500, nada desde $35,500. Casados que declaran conjuntamente: completa hasta $41,000, nada desde $71,000. Entre esos montos, la aportación es parcial. Requisitos: tener al menos 18 años al cierre del año, no ser estudiante de tiempo completo, no ser dependiente y ser contribuyente de EE. UU.";
-var PLAN_C4_TODO_ZH="2027 年真的存进去才算，2028 年报税用 Form 8880-A 申请；不存就没有，不能补。";
-var PLAN_C4_TODO_EN="It only counts if the money is actually deposited in 2027; claim it on Form 8880-A with your 2028 return. No deposit, no match — it cannot be made up later.";
-var PLAN_C4_TODO_ES="Solo cuenta si el dinero se deposita realmente en 2027; se reclama con el Formulario 8880-A en la declaración de 2028. Sin depósito no hay aportación, y no se puede recuperar después.";
+var PLAN_C4_TODO_ZH="2027 年真的存进去才算，报 2027 年那张表时申请；不存就没有，不能补。";
+var PLAN_C4_TODO_EN="It only counts if the money is actually deposited in 2027; you claim it on your 2027 tax return. No deposit, no match — it cannot be made up later.";
+var PLAN_C4_SRC_ZH="依据：SECURE 2.0 §103（2027 税年起）；IRS 到 2026-11-10 尚未公布表单号，这里不点表号。";
+var PLAN_C4_SRC_EN="Basis: SECURE 2.0 §103 (from tax year 2027); as of 2026-11-10 the IRS has not published a form number, so none is named here.";
+var PLAN_C4_SRC_ES="Base: SECURE 2.0 §103 (desde el año fiscal 2027); a 2026-11-10 el IRS no ha publicado número de formulario, así que aquí no se nombra ninguno.";
+var PLAN_C4_TODO_ES="Solo cuenta si el dinero se deposita realmente en 2027; se reclama en la declaración de 2027. Sin depósito no hay aportación, y no se puede recuperar después.";
 
 function planLang(zh,en,es){return LANG==="en"?en:(LANG==="es"?es:zh);}
 function planStatusLabel(key){var s=PLAN_STATUS_LABEL[key];return s?planLang(s[0],s[1],s[2]):"";}
@@ -1335,7 +1339,8 @@ function planCardsHtml(state,unlocked){
   var body4;
   if(unlocked){
     body4="<table><tr><th>"+esc(planLang("政策","Policy","Política"))+"</th><th>"+esc(planLang("谁受影响","Who is affected","A quién afecta"))+"</th><th>"+esc(planLang("现在要做什么","What to do now","Qué hacer ahora"))+"</th></tr>"+
-      "<tr><td>"+esc(planLang(PLAN_C4_POLICY_ZH,PLAN_C4_POLICY_EN,PLAN_C4_POLICY_ES))+"</td><td>"+esc(planLang(PLAN_C4_WHO_ZH,PLAN_C4_WHO_EN,PLAN_C4_WHO_ES))+"</td><td>"+esc(planLang(PLAN_C4_TODO_ZH,PLAN_C4_TODO_EN,PLAN_C4_TODO_ES))+"</td></tr></table>";
+      "<tr><td>"+esc(planLang(PLAN_C4_POLICY_ZH,PLAN_C4_POLICY_EN,PLAN_C4_POLICY_ES))+"</td><td>"+esc(planLang(PLAN_C4_WHO_ZH,PLAN_C4_WHO_EN,PLAN_C4_WHO_ES))+"</td><td>"+esc(planLang(PLAN_C4_TODO_ZH,PLAN_C4_TODO_EN,PLAN_C4_TODO_ES))+"</td></tr></table>"+
+      "<p class='plan-note' style='margin:8px 0 0'>"+esc(planLang(PLAN_C4_SRC_ZH,PLAN_C4_SRC_EN,PLAN_C4_SRC_ES))+"</p>";
   }else{body4="<p class='plan-lock'>"+esc(lock)+"</p>";}
   html+=planCard(planLang("卡 4 · 今年变了什么","Card 4 · What changed this year","Tarjeta 4 · Qué cambió este año"),planLang("今年变了什么（政策）","What changed this year (policy)","Qué cambió este año (política)"),planLang("今年有什么新规矩是我不知道的？","What new rule should I know about?","¿Qué regla nueva debería conocer?"),body4,planLang("只列政策口径，不承诺金额、不推荐机构。","Policy wording only: no promised amount, no institution recommendations.","Solo el texto de la política: sin prometer montos ni recomendar instituciones."));
   html+="<p class='small muted'>"+esc(planLang("打印这一页给会计。你交了什么、还缺什么，纸上都写着——他替你出面的时候，手里有东西。","Print this page for your accountant. What you handed over and what's still missing is all on it — so when he speaks for you, he has something in hand.","Imprima esta página para su contador. Lo que entregó y lo que todavía falta está todo en ella: cuando él hable por usted, tendrá algo en la mano."))+"</p>"+
@@ -2322,9 +2327,9 @@ var OUTLOOK_CHECKED = "2026-11-03";
 var OUTLOOK_TAX_YEAR = 2026;
 var OUTLOOK_DEADLINE_BY_YEAR = { 2026: "2027-04-15" };
 var OUTLOOK_DEADLINE = OUTLOOK_DEADLINE_BY_YEAR[OUTLOOK_TAX_YEAR] || "";
-var OUTLOOK_FIELDS = ["status", "dep", "income", "withheld", "tuition", "retire", "mkt", "premium", "mortgage"];
+var OUTLOOK_FIELDS = ["status", "dep", "income", "wage", "withheld", "tuition", "retire", "mkt", "premium", "mortgage"];
 function outlookLoad() {
-  var d = { status: "single", dep: "", income: "", withheld: "", tuition: "", retire: "", mkt: "", premium: "", mortgage: "" };
+  var d = { status: "single", dep: "", income: "", wage: "", withheld: "", tuition: "", retire: "", mkt: "", premium: "", mortgage: "" };
   try {
     var o = JSON.parse(localStorage.getItem(OUTLOOK_KEY) || "{}") || {};
     OUTLOOK_FIELDS.forEach(function (k) { if (o[k] != null) d[k] = String(o[k]); });
@@ -2431,11 +2436,14 @@ function outlookInputsHtml(s) {
     var lab = PLAN_STATUS_LABEL[code];
     opts += "<option value=\"" + code + "\">" + esc(tr(lab[0], lab[1], lab[2])) + "</option>";
   });
-  return "<details class=\"small\" id=\"outlookInputs\"><summary>" + esc(tr("填这 9 项（只存这台浏览器）", "Fill these 9 fields (saved only in this browser)", "Llene estos 9 campos (solo en este navegador)")) + "</summary>"
+  return "<details class=\"small\" id=\"outlookInputs\"><summary>" + esc(tr("填这 9 项（工资那行可选，只用来算 40 分；只存这台浏览器）", "Fill these 9 fields (the wage line is optional, used only for credits; saved only in this browser)", "Llene estos 9 campos (la línea de salario es opcional, solo para créditos; solo en este navegador)")) + "</summary>"
     + "<div class=\"row\"><div><label for=\"ol_status\">" + esc(tr("报税身份", "Filing status", "Estado civil fiscal")) + "</label><select id=\"ol_status\">" + opts + "</select></div></div>"
     + "<div class=\"row\">"
     + num("dep", "被抚养人数", "People you support", "Personas a su cargo", "0")
     + num("income", "今年要报的收入（W-2、1099 加起来）", "Income to report this year (W-2 and 1099 combined)", "Ingresos a declarar este año (W-2 y 1099 juntos)", "例如 85000")
+    + "</div><div class=\"row\">"
+    + num("wage", "其中工资（W-2）大概多少（可选，只用来算 40 分）", "Of that, roughly how much is W-2 wages (optional — only used for credits)", "De eso, cuánto es salario W-2 (opcional; solo para créditos)", "例如 60000")
+    + "<div></div>"
     + "</div><div class=\"row\">"
     + num("withheld", "全年已经被扣掉的税（W-2 上的联邦预扣）", "Tax already taken out all year (federal withholding on your W-2)", "Impuesto ya descontado todo el año (retención federal de su W-2)", "例如 9000")
     + num("tuition", "学费（一年实付，学校单子上的数）", "Tuition (what you actually paid this year)", "Matrícula (lo que pagó este año)", "例如 12000")
@@ -2512,7 +2520,7 @@ function outlookMapHtml(unlocked) {
     return "<p class=\"small muted\">" + esc(tr("先填这两项：今年要报的收入、全年已经被扣掉的税。填了才出这张地图，不替你填默认值。", "Fill these two first: this year's income and the tax already withheld. The map appears once they are in — no default values are filled in for you.", "Llene primero estos dos: los ingresos de este año y el impuesto ya retenido. El mapa aparece cuando estén; no rellenamos valores por defecto.")) + "</p>";
   }
   var b = outlookBracket(s.status || "single", e.taxable);
-  var mkt = outlookNum(s.mkt), prem = outlookNum(s.premium);
+  var mkt = outlookNum(s.mkt), prem = outlookNum(s.premium), wage = outlookNum(s.wage);
   var tuition = outlookNum(s.tuition), retire = outlookNum(s.retire);
   var points = 0, eduUsed = -1;
   try {
@@ -2593,7 +2601,9 @@ function outlookMapHtml(unlocked) {
     ? tr("只改今年这张表；2027 年的缴款额度按当年公布值走，这里不猜。", "It only changes this year's return; the 2027 contribution limit follows the figure published for that year — not guessed here.", "Solo cambia la declaración de este año; el límite de aportes de 2027 sigue el valor publicado para ese año: aquí no se adivina.")
     : tr("只改今年这张表，明年的额度按当年公布", "changes only this year's return; next year's limit is the one published then", "solo cambia la declaración de este año; el límite del próximo se publica en su momento");
   var f4b = unlocked
-    ? tr("这一年只按工资／自雇那份往上走，一年最多 " + ssMax + " 分；你填的这份收入里如果没有工资／自雇，分就不动。分越高，退休后月付的方向往上——具体按 SSA 当年表，这里不给金额。", "Only the wage/self-employment part moves this count, at most " + ssMax + " credits a year; if none of the income you entered is wages or self-employment, the count does not move. More credits means a higher monthly benefit direction — the amount follows SSA's table for the year and is not shown here.", "Solo la parte de salarios o trabajo por cuenta propia sube esta cuenta, como máximo " + ssMax + " créditos al año; si nada de su ingreso es salario o trabajo por cuenta propia, la cuenta no se mueve. Más créditos apuntan a una mensualidad mayor: el monto sigue la tabla del SSA del año y aquí no se muestra.")
+    ? (wage > 0
+      ? tr("按你填的工资估算，今年最多 " + Math.min(ssMax, Math.floor(wage / ssPoint)) + " 分（每 " + money(ssPoint) + " 记 1 分、一年最多 " + ssMax + " 分）；40 分最多到 " + Math.min(ssTarget, points + Math.min(ssMax, Math.floor(wage / ssPoint))) + "。分越高，退休后月付的方向往上——具体按 SSA 当年表，这里不给金额。", "On the wages you entered, at most " + Math.min(ssMax, Math.floor(wage / ssPoint)) + " credits this year (one per " + money(ssPoint) + ", at most " + ssMax + " a year); the 40-credit count tops out at " + Math.min(ssTarget, points + Math.min(ssMax, Math.floor(wage / ssPoint))) + ". More credits means a higher monthly benefit direction — the amount follows SSA's table for the year and is not shown here.", "Con el salario que ingresó, como máximo " + Math.min(ssMax, Math.floor(wage / ssPoint)) + " créditos este año (uno por cada " + money(ssPoint) + ", máximo " + ssMax + " al año); la cuenta de 40 llega como máximo a " + Math.min(ssTarget, points + Math.min(ssMax, Math.floor(wage / ssPoint))) + ". Más créditos apuntan a una mensualidad mayor: el monto sigue la tabla del SSA del año y aquí no se muestra.")
+      : tr("还差工资那一项：只有工资（W-2）算分，填了才说得出今年几分；存钱不加分。分越高，退休后月付的方向往上——具体按 SSA 当年表，这里不给金额。", "Wages are missing: only W-2 wages earn credits, so this cannot be estimated until you enter them; contributions earn none. More credits means a higher monthly benefit direction — the amount follows SSA's table for the year and is not shown here.", "Falta el salario: solo el salario W-2 suma créditos, así que no se puede estimar hasta que lo ingrese; aportar no suma. Más créditos apuntan a una mensualidad mayor: el monto sigue la tabla del SSA del año y aquí no se muestra."))
     : tr("分往前走，退休后月付的方向往上", "Credits move forward, so the monthly benefit direction rises", "Los créditos avanzan y la mensualidad apunta hacia arriba");
 
   var when1 = unlocked ? tr("12/31 前 401(k) 缴款到账；4/15 前 IRA 还能补", "401(k) deferrals must land by 12/31; IRA contributions can still be made by 4/15", "Las aportaciones al 401(k) deben entrar antes del 31/12; al IRA aún puede aportar hasta el 15/4") : gate;
@@ -2616,12 +2626,6 @@ function outlookMapHtml(unlocked) {
     ? "<p class=\"small muted\">" + esc(tr("依据（rules/graph.json）：2026 年联邦档位表（核于 2026-11-03）；400% 线见 26 U.S.C. §36B(c)(1)(A)，按 HHS " + P.effective_tax_year + " 年贫困线 ×4（适用 " + P.coverage_year + " 保障年、对应 " + R.tax_year + " 税年；指南 " + P.source_url + "，FR " + P.federal_register + "，核于 " + P.checked + "）；AOTC 每个学生最多 " + A.max_tax_years_per_student + " 个税年、LLC 无年限（Pub 970，核于 " + A.checked + "）；SSA 每 " + money(ssPoint) + " 记 1 分，一年最多 " + ssMax + " 分（核于 " + S.checked + "）；FAFSA 用两年前的收入（studentaid.gov，核于 " + R.built + "）。只标位置与联动，不判资格、不算税、不是建议你调缴款。", "Basis (rules/graph.json): 2026 federal bracket table (checked 2026-11-03); the 400% line is 26 U.S.C. §36B(c)(1)(A), using the HHS " + P.effective_tax_year + " poverty line ×4 (applies to coverage year " + P.coverage_year + ", tax year " + R.tax_year + "; guidelines " + P.source_url + ", FR " + P.federal_register + ", checked " + P.checked + "); the AOTC runs at most " + A.max_tax_years_per_student + " tax years per student and the LLC has no year limit (Pub 970, checked " + A.checked + "); SSA — one credit per " + money(ssPoint) + ", at most " + ssMax + " a year (checked " + S.checked + "); FAFSA reads income from two years earlier (studentaid.gov, checked " + R.built + "). It only marks positions and links: no eligibility decision, no tax calculation, not advice to change contributions.", "Base (rules/graph.json): tabla federal de tramos de 2026 (verificada el 03-11-2026); la línea del 400% es 26 U.S.C. §36B(c)(1)(A), con la línea de pobreza de HHS de " + P.effective_tax_year + " ×4 (aplica al año de cobertura " + P.coverage_year + ", año fiscal " + R.tax_year + "; guía " + P.source_url + ", FR " + P.federal_register + ", verificado el " + P.checked + "); el AOTC dura como máximo " + A.max_tax_years_per_student + " años fiscales por estudiante y el LLC no tiene límite (Pub 970, verificado el " + A.checked + "); SSA — un crédito por cada " + money(ssPoint) + ", máximo " + ssMax + " al año (verificado el " + S.checked + "); la FAFSA lee los ingresos de dos años antes (studentaid.gov, verificado el " + R.built + "). Solo marca posiciones y enlaces: no decide elegibilidad ni calcula impuestos, ni es una recomendación de aportar.")) + "</p>"
     : "<p class=\"small muted\">" + esc(tr("只标位置与联动，不判资格、不算税；每行的依据和日期在季票里。", "It only marks positions and links: no eligibility decision, no tax calculation; the sources and dates for each line come with the pass.", "Solo marca posiciones y enlaces: no decide elegibilidad ni calcula impuestos; las fuentes y fechas de cada línea vienen con el pase.")) + "</p>";
   return h;
-}
-// AI 结果区只读复用同一张地图：不另算一套，缺字段由 outlookMapHtml 输出「先填」。
-function aiMapPeekHtml(unlocked) {
-  return "<div class=\"small\"><b>" + esc(tr("顺手看一眼：今年的五条线（只读）", "While you are here: this year's five lines (read-only)", "De paso: las cinco líneas de este año (solo lectura)")) + "</b> "
-    + esc(tr("按你在结果页填的 9 项算；上面描述里的数字不参与。", "Calculated from the nine fields on the results screen; numbers in your description are not used.", "Se calcula con los nueve campos de la pantalla de resultados; los números de su descripción no se usan.")) + "</div>"
-    + outlookMapHtml(unlocked);
 }
 function outlookHtml(unlocked) {
   var s = outlookLoad();
@@ -4181,8 +4185,6 @@ $("btnAiGenerate").addEventListener("click",async function(){
       });
       window._aiItems=r.items;
       $("aiResults").classList.remove("hidden");
-      var mk = $("aiMapPeek");
-      if (mk) { mk.innerHTML = aiMapPeekHtml(hasPass()); mk.classList.remove("hidden"); }
       $("aiMsg").textContent=t("已生成 ") + r.items.length + t(" 项，请勾选需要的，再加入清单。");
     }else{$("aiMsg").textContent=t("AI 暂时没生成出来，请稍后再试。");}
   }catch(e){
@@ -4192,6 +4194,14 @@ $("btnAiGenerate").addEventListener("click",async function(){
     else if(m.indexOf("ai_not_configured")>=0)$("aiMsg").textContent=t("AI 未接通，请稍后再试。");
     else $("aiMsg").textContent=t("AI 暂时没生成出来，请稍后再试。");
   }finally{$("btnAiGenerate").disabled=false;}
+});
+var btnAiToOutlook=$("btnAiToOutlook");
+if(btnAiToOutlook)btnAiToOutlook.addEventListener("click",function(){
+  try{ setOrganizeStep(3,false); }catch(e){}
+  try{ renderOutlook(); }catch(e){}
+  var card=$("outlookCard"), det=$("outlookInputs");
+  if(det)det.open=true;
+  if(card){card.classList.remove("hidden");card.scrollIntoView({behavior:"smooth",block:"start"});}
 });
 $("btnAiAdd").addEventListener("click",function(){
   if(!window._aiItems||!packet)return;
@@ -4308,7 +4318,6 @@ try{captureZh();var _sl=window.__TPO_LANG||null;if(!_sl){try{_sl=localStorage.ge
     if (!g || !g.schema) return;
     window.RULES = g;
     try { renderOutlook(); } catch (e) {}
-    try { var mk = $("aiMapPeek"); if (mk && !mk.classList.contains("hidden")) mk.innerHTML = aiMapPeekHtml(hasPass()); } catch (e) {}
   }).catch(function () {});
 
   var q=new URLSearchParams(window.location.search||"");
