@@ -2636,85 +2636,118 @@ function outlookMapHtml(unlocked) {
     : "<p class=\"small muted\">" + esc(tr("只标位置与联动，不判资格、不算税；每行的依据和日期在季票里。", "It only marks positions and links: no eligibility decision, no tax calculation; the sources and dates for each line come with the pass.", "Solo marca posiciones y enlaces: no decide elegibilidad ni calcula impuestos; las fuentes y fechas de cada línea vienen con el pase.")) + "</p>";
   return h;
 }
-// 首屏结论条：一首屏只讲一件事——这一格动了，今年与以后各差多少。三行，多了就折叠。
-// 数值与出处只从 rules/graph.json 取；图没到就整条不出，不留半句。
-function oneThingHtml(unlocked) {
-  var R = mapRules();
-  if (!R || !R.credits || !R.credits.ssa) return "";
-  var s = outlookLoad(), e = outlookEstimate(s);
-  var tuition = outlookNum(s.tuition), mkt = outlookNum(s.mkt);
-  var prof = {};
-  try { if (typeof procProfileLoad === "function") prof = procProfileLoad() || {}; } catch (err) { prof = {}; }
-  var eduTxt = String(prof.eduUsed == null ? "" : prof.eduUsed).trim();
-  var eduUsed = eduTxt === "" ? -1 : parseInt(eduTxt.replace(/[^0-9]/g, ""), 10);
-  var ptsTxt = String(prof.ssPoints == null ? "" : prof.ssPoints).trim();
-  var points = ptsTxt === "" ? 0 : (parseInt(ptsTxt.replace(/[^0-9]/g, ""), 10) || 0);
-  var A = R.credits.aotc || {}, S = R.credits.ssa || {}, BR = R.brackets || {}, P = R.poverty_lines || {};
-  var money = outlookMoney;
-  var gate = tr("领季票后看", "see it with the pass", "se ve con el pase");
-  var line1 = "", src = "";
-  var dirZh = { refund: "退税", even: "基本持平", owe: "补税" }[e.dir] || "补税";
-  var dirEn = { refund: "a refund", even: "close to even", owe: "tax owed" }[e.dir] || "tax owed";
-  var dirEs = { refund: "una devolución", even: "casi parejo", owe: "impuesto por pagar" }[e.dir] || "impuesto por pagar";
+// 政策变化是「事件」，不是常驻文案：没变化就整条不出，也不留占位。
+// 三态：14 天内的新事件（首屏最多两条，带「新」与生效年）／过期（收进下方时间轴）／无变化（什么都不显示）。
+// 判据只有一条：这条变化能不能落到他某一格（哪条线、哪一年）。落不到的只进内部变更日志，不上页面。
+var POLICY_NEW_DAYS = 14, POLICY_BAR_MAX = 2, POLICY_TIMELINE_MAX = 5;
 
-  if (tuition > 0 && eduUsed >= 0 && A.max_tax_years_per_student) {
-    var maxYr = A.max_tax_years_per_student, left = Math.max(0, maxYr - eduUsed - 1);
-    line1 = tr("今年用掉第 " + (eduUsed + 1) + " 年的学费抵免（每个学生最多 " + maxYr + " 年），明年还剩 " + left + " 次。",
-      "This year uses AOTC year " + (eduUsed + 1) + " for that student (at most " + maxYr + "), leaving " + left + ".",
-      "Este año usa el año " + (eduUsed + 1) + " del AOTC (máximo " + maxYr + " por estudiante); quedan " + left + ".");
-    src = tr("依据：Pub 970（AOTC 每个学生最多 " + maxYr + " 个税年），核于 " + A.checked + "。" + (A.source_url || ""),
-      "Basis: Pub 970 (the AOTC runs at most " + maxYr + " tax years per student), checked " + A.checked + ". " + (A.source_url || ""),
-      "Base: Pub 970 (el AOTC dura como máximo " + maxYr + " años fiscales por estudiante), verificado el " + A.checked + ". " + (A.source_url || ""));
-  } else if (mkt > 0 && e.agi > 0) {
-    var hh = 1 + Math.max(0, Math.round(outlookNum(s.dep)));
-    var line400 = mapFpl400(hh), over = e.agi - line400;
-    if (over > 0) {
-      line1 = unlocked
-        ? tr("按今年这个数，你已经越过 400% 线约 " + money(over) + "：补贴按整份没有算。", "On this year's numbers you are about " + money(over) + " above the 400% line, so the credit is gone entirely.", "Con sus números de este año está unos " + money(over) + " por encima de la línea del 400%: el crédito desaparece por completo.")
-        : tr("按今年这个数，你已经越过 400% 那条线。", "On this year's numbers you are above the 400% line.", "Con sus números de este año está por encima de la línea del 400%.");
-    } else {
-      line1 = unlocked
-        ? tr("按今年这个数，你离 400% 线还差 " + money(-over) + "。", "On this year's numbers you are " + money(-over) + " below the 400% line.", "Con sus números de este año está " + money(-over) + " por debajo de la línea del 400%.")
-        : tr("按今年这个数，你离 400% 那条线还有余量。", "On this year's numbers you are still below the 400% line.", "Con sus números de este año todavía está por debajo de la línea del 400%.");
-    }
-    src = tr("依据：26 U.S.C. §36B(c)(1)(A)，HHS " + P.effective_tax_year + " 年贫困线 ×4（适用 " + P.coverage_year + " 年），核于 " + P.checked + "。" + (P.source_url || ""),
-      "Basis: 26 U.S.C. §36B(c)(1)(A) — the HHS " + P.effective_tax_year + " poverty line ×4 (coverage year " + P.coverage_year + "), checked " + P.checked + ". " + (P.source_url || ""),
-      "Base: 26 U.S.C. §36B(c)(1)(A): línea de pobreza de HHS de " + P.effective_tax_year + " ×4 (año de cobertura " + P.coverage_year + "), verificado el " + P.checked + ". " + (P.source_url || ""));
-  } else if (points > 0) {
-    line1 = tr("今年记了 " + points + " 分（一年最多 " + S.max_per_year + " 分），到 " + S.target + " 分还差 " + Math.max(0, S.target - points) + " 分。",
-      "You have " + points + " credits this year (at most " + S.max_per_year + " a year); " + Math.max(0, S.target - points) + " to go until " + S.target + ".",
-      "Este año lleva " + points + " créditos (máximo " + S.max_per_year + " al año); faltan " + Math.max(0, S.target - points) + " para " + S.target + ".");
-    src = unlocked ? tr("依据：SSA " + S.effective_tax_year + " 每 " + money(S.per_credit_usd) + " 记 1 分，一年最多 " + S.max_per_year + " 分（核于 " + S.checked + "）。" + (S.source_url || ""),
-      "Basis: SSA " + S.effective_tax_year + " — one credit per " + money(S.per_credit_usd) + ", at most " + S.max_per_year + " a year (checked " + S.checked + "). " + (S.source_url || ""),
-      "Base: SSA " + S.effective_tax_year + ": un crédito por cada " + money(S.per_credit_usd) + ", máximo " + S.max_per_year + " al año (verificado el " + S.checked + "). " + (S.source_url || ""))
-      : tr("依据：SSA " + S.effective_tax_year + " 年的记分规则，一年最多 " + S.max_per_year + " 分（核于 " + S.checked + "）。" + (S.source_url || ""),
-      "Basis: SSA " + S.effective_tax_year + " credit rules, at most " + S.max_per_year + " a year (checked " + S.checked + "). " + (S.source_url || ""),
-      "Base: reglas de créditos del SSA para " + S.effective_tax_year + ", máximo " + S.max_per_year + " al año (verificado el " + S.checked + "). " + (S.source_url || ""));
-  } else if (e.filled) {
-    line1 = unlocked
-      ? tr("今年大概是" + dirZh + "，" + outlookRangeText(e) + "。", "This year looks like " + dirEn + " — " + outlookRangeText(e) + ".", "Este año se ve como " + dirEs + ": " + outlookRangeText(e) + ".")
-      : tr("今年大概是" + dirZh + "。", "This year looks like " + dirEn + ".", "Este año se ve como " + dirEs + ".");
-    src = tr("依据：2026 年联邦档位表（" + (BR.source || "") + "，核于 " + BR.checked + "）。" + (BR.source_url || ""),
-      "Basis: the 2026 federal bracket table (" + (BR.source || "") + ", checked " + BR.checked + "). " + (BR.source_url || ""),
-      "Base: tabla federal de tramos de 2026 (" + (BR.source || "") + ", verificada el " + BR.checked + "). " + (BR.source_url || ""));
+function policyLineLabel(line) {
+  if (line === "credits") return tr("每记 1 分的收入门槛", "earnings needed per credit", "ingreso necesario por crédito");
+  if (line === "retirement") return tr("退休账户年度额度", "yearly retirement account limits", "límites anuales de cuentas de retiro");
+  if (line === "education") return tr("教育抵免的年限", "education credit year limit", "límite de años del crédito educativo");
+  if (line === "subsidy") return tr("400% 收入线", "400% income line", "línea de ingresos del 400%");
+  if (line === "income") return tr("联邦税档", "federal tax brackets", "tramos federales");
+  return "";
+}
+function policyNum(v, unit) {
+  if (typeof v !== "number") return "";
+  return unit === "usd" ? outlookMoney(v) : String(v);
+}
+// 一句话：哪一年起、哪一格、从几变成几。缺任一项就不亮（宁可不亮，也不说含糊话）。
+function policyHeadline(e) {
+  var label = policyLineLabel(e.line), a = policyNum(e.after, e.unit), b = policyNum(e.before, e.unit);
+  if (!label || !a || !b || !e.effective_tax_year) return "";
+  return tr(e.effective_tax_year + " 税年起，" + label + "：" + b + " → " + a + "。",
+    "Tax year " + e.effective_tax_year + " on, " + label + ": " + b + " → " + a + ".",
+    "Desde el año fiscal " + e.effective_tax_year + ", " + label + ": " + b + " → " + a + ".");
+}
+function policyEffective(e) {
+  if (e.filed_in_year) return tr(e.effective_tax_year + " 税年，报 " + e.filed_in_year + " 年那张表时用。", "Tax year " + e.effective_tax_year + "; used on your " + e.filed_in_year + " return.", "Año fiscal " + e.effective_tax_year + "; se usa en la declaración de " + e.filed_in_year + ".");
+  return tr(e.effective_tax_year + " 税年起。", "From tax year " + e.effective_tax_year + ".", "Desde el año fiscal " + e.effective_tax_year + ".");
+}
+function policySource(e) {
+  return tr("依据：" + (e.source || "") + "，核于 " + (e.checked || "") + "。",
+    "Basis: " + (e.source || "") + ", checked " + (e.checked || "") + ".",
+    "Base: " + (e.source || "") + ", verificado el " + (e.checked || "") + ".");
+}
+function policyAgeDays(e, now) {
+  var t = Date.parse(String(e.announced || "") + "T00:00:00Z");
+  if (isNaN(t)) return Infinity;
+  return Math.floor((now - t) / 86400000);
+}
+// 落到他某一格才留下：他填了那条线的数，才算这一格在他身上。
+function policyLanded(R, s, prof) {
+  var evs = (R && Object.prototype.toString.call(R.events) === "[object Array]") ? R.events.slice() : [];
+  var points = 0;
+  try { points = parseInt(String((prof || {}).ssPoints == null ? "0" : prof.ssPoints).replace(/[^0-9]/g, ""), 10) || 0; } catch (err) { points = 0; }
+  var tuition = outlookNum(s.tuition), mkt = outlookNum(s.mkt), retire = outlookNum(s.retire), income = outlookNum(s.income);
+  return evs.filter(function (e) {
+    if (!e || !e.line) return false;
+    if (e.line === "education") return tuition > 0;
+    if (e.line === "subsidy") return mkt > 0;
+    if (e.line === "credits") return points > 0;
+    if (e.line === "retirement") return retire > 0;
+    if (e.line === "income") return income > 0;
+    return false;
+  }).filter(function (e) { return policyHeadline(e) !== ""; })
+    .sort(function (a, b) { return String(b.announced || "").localeCompare(String(a.announced || "")); });
+}
+function policySplit(R, s, prof, now) {
+  var all = policyLanded(R, s, prof);
+  var fresh = [], older = [];
+  all.forEach(function (e) { var d = policyAgeDays(e, now); (d >= 0 && d <= POLICY_NEW_DAYS ? fresh : older).push(e); });
+  return { fresh: fresh, older: older };
+}
+function policyBarHtml(unlocked, nowMs) {
+  if (!unlocked) return "";
+  var R = mapRules(); if (!R) return "";
+  var s = outlookLoad(), prof = {};
+  try { if (typeof procProfileLoad === "function") prof = procProfileLoad() || {}; } catch (err) { prof = {}; }
+  var now = (nowMs == null) ? Date.now() : nowMs;
+  var fresh = policySplit(R, s, prof, now).fresh.slice(0, POLICY_BAR_MAX);
+  if (!fresh.length) return "";
+  var h = "<div id=\"outlookOneThing\" class=\"one-thing\">";
+  fresh.forEach(function (e) {
+    h += "<p class=\"one-thing-lead\"><span class=\"one-badge\">" + esc(tr("新", "New", "Nuevo")) + "</span><b>" + esc(policyHeadline(e)) + "</b></p>";
+    h += "<p class=\"small muted\">" + esc(policyEffective(e)) + "</p>";
+    h += "<p class=\"small muted\">" + esc(policySource(e) + " " + (e.source_url || "")) + "</p>";
+  });
+  if (fresh.length === 1 && fresh[0].effective_tax_year === OUTLOOK_TAX_YEAR && OUTLOOK_DEADLINE) {
+    h += "<p class=\"small muted\">" + esc(tr("最晚 " + OUTLOOK_DEADLINE + " 还能改（" + OUTLOOK_TAX_YEAR + " 税年）。", "Last day to change it: " + OUTLOOK_DEADLINE + " (tax year " + OUTLOOK_TAX_YEAR + ").", "Último día para cambiarlo: " + OUTLOOK_DEADLINE + " (año fiscal " + OUTLOOK_TAX_YEAR + ").")) + "</p>";
   }
-  if (!line1) return "";
-  var when = unlocked
-    ? (OUTLOOK_DEADLINE ? tr("最晚 " + OUTLOOK_DEADLINE + " 还能改（" + OUTLOOK_TAX_YEAR + " 税年）。", "Last day to change it: " + OUTLOOK_DEADLINE + " (tax year " + OUTLOOK_TAX_YEAR + ").", "Último día para cambiarlo: " + OUTLOOK_DEADLINE + " (año fiscal " + OUTLOOK_TAX_YEAR + ").") : "")
-    : gate;
-  return "<div id=\"outlookOneThing\" class=\"one-thing\">"
-    + "<p class=\"one-thing-lead\"><b>" + esc(line1) + "</b></p>"
-    + "<p class=\"small muted\">" + esc(src) + "</p>"
-    + (when ? "<p class=\"small muted\">" + esc(when) + "</p>" : "")
-    + "</div>";
+  return h + "</div>";
+}
+function policyTimelineHtml(unlocked, nowMs) {
+  if (!unlocked) return "";
+  var R = mapRules(); if (!R) return "";
+  var s = outlookLoad(), prof = {};
+  try { if (typeof procProfileLoad === "function") prof = procProfileLoad() || {}; } catch (err) { prof = {}; }
+  var now = (nowMs == null) ? Date.now() : nowMs;
+  var sp = policySplit(R, s, prof, now);
+  var items = sp.fresh.slice(POLICY_BAR_MAX).concat(sp.older);
+  if (!items.length) return "";
+  function row(e) {
+    return "<li>" + esc(String(e.announced || "")) + " · " + esc(policyHeadline(e)) + " <a href=\"" + esc(e.source_url || "#") + "\" target=\"_blank\" rel=\"noopener\">" + esc(e.source || tr("原文", "source", "fuente")) + "</a></li>";
+  }
+  var shown = items.slice(0, POLICY_TIMELINE_MAX), rest = items.slice(POLICY_TIMELINE_MAX);
+  var h = "<details class=\"small\" id=\"policyTimeline\"><summary>" + esc(tr("政策变化时间轴（" + items.length + " 条）", "Policy change timeline (" + items.length + ")", "Cronología de cambios (" + items.length + ")")) + "</summary><ul class=\"policy-timeline\">";
+  shown.forEach(function (e) { h += row(e); });
+  h += "</ul>";
+  if (rest.length) {
+    h += "<details class=\"small\"><summary>" + esc(tr("更早的 " + rest.length + " 条", rest.length + " older", rest.length + " anteriores")) + "</summary><ul class=\"policy-timeline\">";
+    rest.forEach(function (e) { h += row(e); });
+    h += "</ul></details>";
+  }
+  return h + "</details>";
 }
 function outlookHtml(unlocked) {
   var s = outlookLoad();
-  var h = oneThingHtml(unlocked);
+  var h = policyBarHtml(unlocked);
   h += "<h2>" + esc(tr("整理完先看这一屏：今年大概退还是补", "Before you export: does this year look like a refund or tax owed", "Antes de exportar: ¿este año se ve como devolución o impuesto por pagar")) + "</h2>";
   h += "<p class=\"muted small\">" + esc(tr("按你现在填的数和材料估的；只用来安排现金，不算税、不打表。", "Estimated from the numbers and papers you have so far; only for planning cash — no tax calculation, no return.", "Estimado con sus números y papeles actuales; solo para planear efectivo: sin calcular impuestos, sin declaración.")) + "</p>";
   h += "<div id=\"outlookOut\">" + outlookOutHtml(unlocked) + "</div>";
   h += "<div id=\"outlookMap\">" + outlookMapHtml(unlocked) + "</div>";
+  h += policyTimelineHtml(unlocked);
   h += outlookInputsHtml(s);
   h += "<div id=\"procBlock\"></div>";
   h += "<p class=\"small\"><b>" + esc(tr("这是估算，不是申报；最终以你的会计师与 IRS 核算为准。", "This is an estimate, not a filing; your accountant and the IRS have the final word.", "Esto es una estimación, no una declaración; la última palabra la tienen su contador y el IRS.")) + "</b></p>";
@@ -4424,6 +4457,9 @@ body{background:var(--p-bg);-webkit-font-smoothing:antialiased;letter-spacing:.0
 .one-thing{border-left:3px solid var(--p-accent);background:rgba(47,212,160,.07);border-radius:8px;padding:10px 12px;margin:0 0 14px}
 .one-thing p{margin:2px 0}
 .one-thing .one-thing-lead{font-size:1.02em;line-height:1.45}
+.one-badge{display:inline-block;background:var(--p-accent);color:var(--p-accent-ink);border-radius:4px;padding:0 6px;margin-right:6px;font-size:.78em;vertical-align:1px;font-weight:600}
+.policy-timeline{margin:4px 0 0;padding-left:18px}
+.policy-timeline li{margin:2px 0}
 .card{transition:border-color .2s ease,box-shadow .2s ease}
 .card:hover{border-color:#2c4258}
 
