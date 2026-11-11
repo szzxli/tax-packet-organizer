@@ -539,6 +539,51 @@ check("事件条三语：无 undefined / null，en/es 无中文", () => {
   sandbox.LANG = "zh";
 });
 
+// ---- 路径重排：首屏不属于任何一步 ----
+check("首屏那块不再依赖 currentOrganizeStep / 清单", () => {
+  assert.equal(html.indexOf("currentOrganizeStep === 3"), -1, "还有按第 3 步显示的条件");
+  const m = html.match(/function renderOutlook\(\) \{[\s\S]*?var show = ([^;]+);/);
+  assert.ok(m, "找不到 renderOutlook 的显示条件");
+  assert.equal(m[1].trim(), "currentPage === 1", "显示条件不再是 currentPage===1：" + m[1]);
+});
+check("空态：只给一句提示 + 去填按钮，不出金额、不出标题与地图", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify({ status: "single", dep: "", income: "", withheld: "", tuition: "", retire: "", mkt: "", premium: "", mortgage: "" }));
+  for (const lang of ["zh", "en", "es"]) {
+    sandbox.LANG = lang;
+    const paid = sandbox.outlookHtml(true), free = sandbox.outlookHtml(false);
+    for (const out of [paid, free]) {
+      assert.ok(!/\$[\d]/.test(out), lang + " 空态出现金额：" + out.slice(0, 160));
+      assert.ok(out.includes('id="btnOutlookGo"'), lang + " 空态缺「去填」按钮");
+      assert.ok(!out.includes('id="outlookMain"'), lang + " 空态还把估算那块渲染出来了");
+      assert.ok(!out.includes("<h2>"), lang + " 空态还出了 h2");
+      assert.ok(!out.includes("outlookMap"), lang + " 空态还渲染了地图容器");
+    }
+  }
+  sandbox.LANG = "zh";
+});
+check("步骤名已改，全页 0 处「完成判据」「必做：」", () => {
+  for (const k of ["① 今年哪里变了", "② 把材料放进来", "③ 交出去之前核一遍"]) {
+    assert.ok(html.includes(k), "缺步骤名：" + k);
+    const m = html.match(new RegExp('"' + k + '": \\{"en": "([^"]+)", "es": "([^"]+)"\\}'));
+    assert.ok(m && m[1] && m[2], "缺 en/es：" + k);
+  }
+  assert.equal(html.indexOf("完成判据"), -1, "还有「完成判据」");
+  assert.equal(html.indexOf("必做："), -1, "还有「必做：」");
+  assert.equal(html.indexOf("01 建清单"), -1, "还有旧步骤名");
+});
+
+check("第 1 步三个默认选项：都在、都有三语、跳过会记一笔", () => {
+  for (const id of ["btnHqSame", "btnHqTalk", "btnHqSkip"]) {
+    assert.ok(html.includes('id="' + id + '"'), "缺按钮：" + id);
+  }
+  for (const k of ["今年和去年差不多", "有变化，我来说", "还没想好，先跳过"]) {
+    const m = html.match(new RegExp('"' + k + '": \\{"en": "([^"]+)", "es": "([^"]+)"\\}'));
+    assert.ok(m && m[1] && m[2], "选项缺 en/es：" + k);
+  }
+  assert.ok(html.includes("不确定就先跳过，随时回来补。"), "缺「不确定就先跳过」那行");
+  assert.ok(/packet\.changesSkip=true/.test(html), "跳过没有记录状态");
+});
+
 // ---- 输出 ----
 let bad = 0;
 for (const [tag, msg] of results) {

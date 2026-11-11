@@ -2849,7 +2849,8 @@ function outlookHtml(unlocked) {
   h += "<p class=\"small muted\">" + esc(tr("收入、已经扣掉的税、学费，各填一个大概数就行；只存这台浏览器。", "Income, the tax already withheld, and tuition — rough figures are enough; they stay in this browser.", "Ingresos, el impuesto ya retenido y la matrícula: basta con cifras aproximadas; se quedan en este navegador.")) + "</p>";
   h += "<p><button type=\"button\" id=\"btnOutlookGo\">" + esc(tr("去填这三个数", "Fill these three", "Rellenar estos tres")) + "</button></p>";
   h += "</div>";
-  h += "<div id=\"outlookMain\"" + (empty ? " class=\"hidden\"" : "") + ">";
+  if (!empty) {
+  h += "<div id=\"outlookMain\">";
   h += "<div id=\"outlookTop\">" + policyBarHtml(unlocked) + oneThingHtml(unlocked) + "</div>";
   h += "<h2>" + esc(tr("整理完先看这一屏：今年大概退还是补", "Before you export: does this year look like a refund or tax owed", "Antes de exportar: ¿este año se ve como devolución o impuesto por pagar")) + "</h2>";
   h += "<p class=\"muted small\">" + esc(tr("按你现在填的数和材料估的；只用来安排现金，不算税、不打表。", "Estimated from the numbers and papers you have so far; only for planning cash — no tax calculation, no return.", "Estimado con sus números y papeles actuales; solo para planear efectivo: sin calcular impuestos, sin declaración.")) + "</p>";
@@ -2858,16 +2859,14 @@ function outlookHtml(unlocked) {
   h += "<div id=\"outlookTimeline\">" + policyTimelineHtml(unlocked) + "</div>";
   h += "<p class=\"small\"><b>" + esc(tr("这是估算，不是申报；最终以你的会计师与 IRS 核算为准。", "This is an estimate, not a filing; your accountant and the IRS have the final word.", "Esto es una estimación, no una declaración; la última palabra la tienen su contador y el IRS.")) + "</b></p>";
   h += "</div>";
+  }
   h += outlookInputsHtml(s);
   h += "<div id=\"procBlock\"></div>";
   return h;
 }
 function syncOutlookBlocks() {
-  var s = outlookLoad(), empty = outlookEmptyState(s), unlocked = hasPass();
-  var main = $("outlookMain"), hint = $("outlookEmpty");
-  if (main) main.classList.toggle("hidden", empty);
-  if (hint) hint.classList.toggle("hidden", !empty);
-  if (empty) return;
+  var s = outlookLoad(), unlocked = hasPass();
+  if (outlookEmptyState(s)) return;
   var top = $("outlookTop"); if (top) top.innerHTML = policyBarHtml(unlocked) + oneThingHtml(unlocked);
   var out = $("outlookOut"); if (out) out.innerHTML = outlookOutHtml(unlocked);
   var mp = $("outlookMap"); if (mp) mp.innerHTML = outlookMapHtml(unlocked);
@@ -2881,7 +2880,7 @@ function renderOutlook() {
   if (!show) return;
   el.innerHTML = outlookHtml(hasPass());
   renderProcess();
-  var s = outlookLoad(), touched = false;
+  var s = outlookLoad(), touched = false, hadEmpty = outlookEmptyState(s);
   OUTLOOK_FIELDS.forEach(function (k) {
     var i = $("ol_" + k);
     if (!i) return;
@@ -2890,6 +2889,17 @@ function renderOutlook() {
       s[k] = i.value;
       touched = true;
       outlookSave(s);
+      var nowEmpty = outlookEmptyState(s);
+      if (nowEmpty !== hadEmpty) {
+        hadEmpty = nowEmpty;
+        renderOutlook();
+        var again = $("ol_" + k);
+        if (again) {
+          again.focus();
+          try { again.setSelectionRange(again.value.length, again.value.length); } catch (e) {}
+        }
+        return;
+      }
       syncOutlookBlocks();
     };
     i.oninput = handler;
