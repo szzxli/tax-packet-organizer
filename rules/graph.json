@@ -1,0 +1,398 @@
+{
+  "schema": "tpo-rules/1",
+  "built": "2026-11-10",
+  "tax_year": 2026,
+  "note": "页面只从这里取门槛与出处；数字不抄进 js，也不抄进测试。每条带有效税年、适用保障年、出处与核实日。",
+  "brackets": {
+    "effective_tax_year": 2026,
+    "checked": "2026-11-03",
+    "source": "Rev. Proc. 2025-32",
+    "source_url": "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf",
+    "note": "2026 税年联邦个人所得税档位，按应税收入。每组为 [该档上限（含）, 税率%]，最高档上限为 null（无上限）。不在 filing_statuses 里的身份按 single。",
+    "filing_statuses": ["single", "mfj", "mfs", "hoh"],
+    "single": [[12400, 10], [50400, 12], [105700, 22], [201775, 24], [256225, 32], [640600, 35], [null, 37]],
+    "mfj": [[24800, 10], [100800, 12], [211400, 22], [403550, 24], [512450, 32], [768700, 35], [null, 37]],
+    "mfs": [[12400, 10], [50400, 12], [105700, 22], [201775, 24], [256225, 32], [384350, 35], [null, 37]],
+    "hoh": [[17700, 10], [67450, 12], [105700, 22], [201775, 24], [256200, 32], [640600, 35], [null, 37]]
+  },
+  "events": [
+    {
+      "id": "ssa-per-credit-2027",
+      "line": "credits",
+      "pointer": "/credits/ssa/per_credit_usd",
+      "unit": "usd",
+      "before": 1890,
+      "after": 1970,
+      "effective_tax_year": 2027,
+      "filed_in_year": 2028,
+      "announced": "2026-11-11",
+      "source_published": "2026-10-26",
+      "source": "FR 2026-21796",
+      "source_url": "https://www.federalregister.gov/documents/2026/10/26/2026-21796/cost-of-living-increase-and-other-determinations-for-2027",
+      "checked": "2026-10-26",
+      "note": "announced 是这条变化第一次进本页的日期（角标按它算 14 天）；source_published 是原文发布日，两者别混。"
+    }
+  ],
+  "poverty_lines": {
+    "program": "HHS poverty guidelines, 48 contiguous states + DC",
+    "effective_tax_year": 2025,
+    "coverage_year": 2026,
+    "checked": "2026-11-10",
+    "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines/prior-hhs-poverty-guidelines-federal-register-references",
+    "federal_register": "https://www.govinfo.gov/content/pkg/FR-2025-01-17/pdf/2025-01377.pdf",
+    "four_hundred_pct": [
+      {
+        "household_size": 1,
+        "fpl": 15650,
+        "limit": 62600,
+        "effective_tax_year": 2025,
+        "coverage_year": 2026,
+        "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines/prior-hhs-poverty-guidelines-federal-register-references",
+        "federal_register": "https://www.govinfo.gov/content/pkg/FR-2025-01-17/pdf/2025-01377.pdf",
+        "checked": "2026-11-10"
+      },
+      {
+        "household_size": 2,
+        "fpl": 21150,
+        "limit": 84600,
+        "effective_tax_year": 2025,
+        "coverage_year": 2026,
+        "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines/prior-hhs-poverty-guidelines-federal-register-references",
+        "federal_register": "https://www.govinfo.gov/content/pkg/FR-2025-01-17/pdf/2025-01377.pdf",
+        "checked": "2026-11-10"
+      },
+      {
+        "household_size": 3,
+        "fpl": 26650,
+        "limit": 106600,
+        "effective_tax_year": 2025,
+        "coverage_year": 2026,
+        "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines/prior-hhs-poverty-guidelines-federal-register-references",
+        "federal_register": "https://www.govinfo.gov/content/pkg/FR-2025-01-17/pdf/2025-01377.pdf",
+        "checked": "2026-11-10"
+      },
+      {
+        "household_size": 4,
+        "fpl": 32150,
+        "limit": 128600,
+        "effective_tax_year": 2025,
+        "coverage_year": 2026,
+        "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines/prior-hhs-poverty-guidelines-federal-register-references",
+        "federal_register": "https://www.govinfo.gov/content/pkg/FR-2025-01-17/pdf/2025-01377.pdf",
+        "checked": "2026-11-10"
+      }
+    ],
+    "step_per_extra_person": 5500,
+    "step_limit_per_extra_person": 22000
+  },
+  "credits": {
+    "ssa": {
+      "per_credit_usd": 1890,
+      "max_per_year": 4,
+      "target": 40,
+      "effective_tax_year": 2026,
+      "checked": "2026-11-08",
+      "source_url": "https://www.ssa.gov/oact/cola/QC.html",
+      "next": {
+        "tax_year": 2027,
+        "per_credit_usd": 1970,
+        "checked": "2026-10-26",
+        "source": "FR 2026-21796",
+        "source_url": "https://www.federalregister.gov/documents/2026/10/26/2026-21796/cost-of-living-increase-and-other-determinations-for-2027"
+      }
+    },
+    "aotc": {
+      "max_tax_years_per_student": 4,
+      "first_four_years_only": true,
+      "effective_tax_year": 2026,
+      "checked": "2026-11-08",
+      "source_url": "https://www.irs.gov/publications/p970"
+    },
+    "llc": {
+      "no_year_limit": true,
+      "covers_graduate_tuition": true,
+      "effective_tax_year": 2026,
+      "checked": "2026-11-08",
+      "source_url": "https://www.irs.gov/publications/p970"
+    }
+  },
+  "retirement": {
+    "ira_limit": 7500,
+    "k401_limit": 24500,
+    "effective_tax_year": 2026,
+    "checked": "2026-11-08",
+    "source_url": "https://www.irs.gov/pub/irs-drop/n-25-67.pdf"
+  },
+  "subsidy_cliff": {
+    "rule": "premium tax credit limited to household income at or below 400% of the poverty line",
+    "effective_tax_year": 2026,
+    "checked": "2026-11-10",
+    "source_url": "https://www.law.cornell.edu/uscode/text/26/36B"
+  },
+  "forms": [
+    {
+      "form": "W-2",
+      "node": "w2",
+      "aliases": [
+        "W2"
+      ]
+    },
+    {
+      "form": "W-2G",
+      "node": "w2g",
+      "aliases": [
+        "W2G"
+      ]
+    },
+    {
+      "form": "1099-INT",
+      "node": "1099int",
+      "aliases": [
+        "1099INT"
+      ]
+    },
+    {
+      "form": "1099-DIV",
+      "node": "1099div",
+      "aliases": [
+        "1099DIV"
+      ]
+    },
+    {
+      "form": "1099-R",
+      "node": "1099r",
+      "aliases": [
+        "1099R"
+      ]
+    },
+    {
+      "form": "1099-B",
+      "node": "1099b",
+      "aliases": [
+        "1099B"
+      ]
+    },
+    {
+      "form": "1099-DA",
+      "node": "1099da",
+      "aliases": [
+        "1099DA"
+      ]
+    },
+    {
+      "form": "1099-G",
+      "node": "1099g",
+      "aliases": [
+        "1099G"
+      ]
+    },
+    {
+      "form": "1099-MISC",
+      "node": "1099misc",
+      "aliases": [
+        "1099MISC"
+      ]
+    },
+    {
+      "form": "1099-K",
+      "node": "1099k",
+      "aliases": [
+        "1099K"
+      ]
+    },
+    {
+      "form": "1099-S",
+      "node": "1099s",
+      "aliases": [
+        "1099S"
+      ]
+    },
+    {
+      "form": "1099-C",
+      "node": "1099c",
+      "aliases": [
+        "1099C"
+      ]
+    },
+    {
+      "form": "1099-NEC",
+      "node": "1099nec",
+      "aliases": [
+        "1099NEC"
+      ]
+    },
+    {
+      "form": "1099-SA",
+      "node": "1099sa",
+      "aliases": [
+        "1099SA"
+      ]
+    },
+    {
+      "form": "SSA-1099",
+      "node": "ssa1099",
+      "aliases": [
+        "SSA1099"
+      ]
+    },
+    {
+      "form": "1098",
+      "node": "1098",
+      "aliases": []
+    },
+    {
+      "form": "1098-E",
+      "node": "1098e",
+      "aliases": [
+        "1098E"
+      ]
+    },
+    {
+      "form": "1098-T",
+      "node": "1098t",
+      "aliases": [
+        "1098T"
+      ]
+    },
+    {
+      "form": "1095-A",
+      "node": "1095a",
+      "aliases": [
+        "1095A"
+      ]
+    },
+    {
+      "form": "1095-B",
+      "node": "1095b",
+      "aliases": [
+        "1095B"
+      ]
+    },
+    {
+      "form": "1095-C",
+      "node": "1095c",
+      "aliases": [
+        "1095C"
+      ]
+    },
+    {
+      "form": "5498",
+      "node": "5498",
+      "aliases": []
+    },
+    {
+      "form": "5498-SA",
+      "node": "5498sa",
+      "aliases": [
+        "5498SA"
+      ]
+    },
+    {
+      "form": "Schedule C",
+      "node": "schC",
+      "aliases": [
+        "ScheduleC"
+      ]
+    },
+    {
+      "form": "Schedule E",
+      "node": "schE",
+      "aliases": [
+        "ScheduleE"
+      ]
+    },
+    {
+      "form": "Schedule F",
+      "node": "schF",
+      "aliases": [
+        "ScheduleF"
+      ]
+    },
+    {
+      "form": "Schedule SE",
+      "node": "schSE",
+      "aliases": [
+        "ScheduleSE"
+      ]
+    },
+    {
+      "form": "Schedule K-1",
+      "node": "schK1",
+      "aliases": [
+        "K-1",
+        "K1",
+        "ScheduleK1"
+      ]
+    },
+    {
+      "form": "Form 2441",
+      "node": "f2441",
+      "aliases": [
+        "2441"
+      ]
+    },
+    {
+      "form": "Form 8938",
+      "node": "f8938",
+      "aliases": [
+        "8938"
+      ]
+    },
+    {
+      "form": "Form 8621",
+      "node": "f8621",
+      "aliases": [
+        "8621"
+      ]
+    },
+    {
+      "form": "FinCEN 114",
+      "node": "fbar",
+      "aliases": [
+        "FBAR",
+        "FinCEN114"
+      ]
+    },
+    {
+      "form": "房产税单",
+      "node": "propertyTax",
+      "aliases": []
+    },
+    {
+      "form": "医疗收据",
+      "node": "medicalReceipts",
+      "aliases": []
+    },
+    {
+      "form": "捐赠收据",
+      "node": "donationReceipts",
+      "aliases": []
+    }
+  ],
+  "standard_deduction": {
+    "single": 16100,
+    "mfj": 32200,
+    "mfs": 16100,
+    "hoh": 24150,
+    "effective_tax_year": 2026,
+    "checked": "2026-11-08",
+    "source_url": "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf",
+    "note": "Rev. Proc. 2025-32；与 us-tax-2026-constants 一致，不另找来源"
+  },
+  "banned_drop": [
+    "符合条件",
+    "能拿",
+    "保证",
+    "一定能",
+    "一定会",
+    "一定可以",
+    "一定有",
+    "最多可退",
+    "合格",
+    "eligible",
+    "entitled"
+  ],
+  "banned_replace": {
+    "抵税": "少交"
+  }
+}

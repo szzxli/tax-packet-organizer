@@ -9,6 +9,8 @@
 // - 生产必须设置：PACKET_KEY、STRIPE_SECRET_KEY、STRIPE_WEBHOOK_SECRET、RESEND_API_KEY、
 //   FRONTEND_ORIGIN；未设置时对应功能返回明确错误，不回落为明文/假成功（DEV_MODE 除外）。
 
+import { sanitizeAiItems } from "./ai_items.js";
+
 function b64enc(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
 function b64dec(s) { return Uint8Array.from(atob(s), (c) => c.charCodeAt(0)); }
 function hex(buf) { return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join(""); }
@@ -390,12 +392,8 @@ export default {
       if (!res.ok) return bad(res.error || "ai_failed", 502);
       const items = normalizeAiItems(res.text);
       if (!items) return bad("ai_bad_response", 502);
-      const clean = items.slice(0, 20).map((it) => ({
-        form: String((it && it.form) || "").trim().slice(0, 60),
-        payer: String((it && it.payer) || "").trim().slice(0, 80),
-        prepare: String((it && it.prepare) || "").trim().slice(0, 200),
-        why: String((it && it.why) || "").trim().slice(0, 200),
-      })).filter((it) => it.form && it.prepare);
+      // 表清单白名单 + 禁用词：模型编的表、带「符合/能拿/保证」的条目不进用户清单。
+      const clean = sanitizeAiItems(items);
       if (!clean.length) return bad("ai_bad_response", 502);
       await env.DB.prepare("INSERT INTO ai_rate (ip_hash, created_at) VALUES (?,?)").bind(ipHash, Date.now()).run();
       return ok({ items: clean });
