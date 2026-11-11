@@ -10,6 +10,19 @@ for (const entry of graph.forms || []) {
   for (const name of [entry.form].concat(entry.aliases || [])) NODES.set(norm(name), entry.node);
 }
 
+// 语义闸门：有些表只在特定情形下成立（1098 是房贷利息、不是大学；Uber 的收款走 1099-K/NEC，不是 MISC）。
+// 图里的 ai_scope 给每张表两条：when（描述里出现才算数）与 reject（出现在描述或 payer/why/prepare 里就丢）。
+const SCOPE = new Map();
+for (const k of Object.keys(graph.ai_scope || {})) {
+  if (k === "note") continue;
+  SCOPE.set(norm(k), graph.ai_scope[k]);
+}
+const lower = (v) => String(v == null ? "" : v).toLowerCase();
+const anyOf = (text, words) => {
+  const s = lower(text);
+  return (words || []).some((w) => s.indexOf(lower(w)) >= 0);
+};
+
 // 两档：结论级整条丢；词汇级只替换措辞（如「抵税」->「少交」），不丢条目。
 export const AI_BANNED = (graph.banned_drop || []).slice();
 export const AI_REPLACE = Object.assign({}, graph.banned_replace || {});
@@ -32,8 +45,9 @@ function soften(text) {
   return out;
 }
 
-export function sanitizeAiItems(items) {
+export function sanitizeAiItems(items, description) {
   if (!Array.isArray(items)) return [];
+  const desc = String(description || "");
   const out = [];
   for (const it of items.slice(0, 20)) {
     if (!it || typeof it !== "object") continue;
@@ -44,6 +58,16 @@ export function sanitizeAiItems(items) {
     if (!form || !prepare) continue;
     if (!aiFormAllowed(form)) continue;
     if (hitsBanned(prepare) || hitsBanned(why)) continue;
+    const scope = SCOPE.get(norm(form));
+    if (scope) {
+      // 1) 描述里没提这件事，就不许出现这张表
+      if ((scope.when || []).length && !anyOf(desc, scope.when)) continue;
+      // 2) 表与理由对不上（1098 挂「大学」、1099-MISC 挂「Uber」）直接丢
+      if ((scope.reject || []).length) {
+        const blob = [desc, payer, prepare, why].join(" ");
+        if (anyOf(blob, scope.reject)) continue;
+      }
+    }
     out.push({ form, payer, prepare, why });
   }
   return out;
