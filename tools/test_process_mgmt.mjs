@@ -58,6 +58,14 @@ sandbox.outlookLoad = () => {
 sandbox.outlookSave = (s) => { store["tpo_outlook"] = JSON.stringify(s); };
 
 vm.runInContext(html.slice(start, end), sandbox, { filename: "process-mgmt.js" });
+// 结果页那张地图（AI 结果区只读复用同一套，这里一起载入）
+const oStart = html.indexOf("// OUTLOOK_LOGIC_START");
+const oEnd = html.indexOf("// OUTLOOK_LOGIC_END");
+assert.ok(oStart > 0 && oEnd > oStart, "缺 OUTLOOK_LOGIC 块");
+const bracketsSrc = html.match(/var PLAN_BRACKETS_2026=\{[\s\S]*?\n\};/);
+assert.ok(bracketsSrc, "缺 2026 档位表");
+vm.runInContext(bracketsSrc[0], sandbox, { filename: "brackets.js" });
+vm.runInContext(html.slice(oStart, oEnd), sandbox, { filename: "outlook.js" });
 
 const p = { status: "mfj", income: "75,000", college: "yes", ins1095a: "yes", mortgage: "no", eduUsed: "3", ssPoints: "34" };
 const BANNED = ["抵税", "合格", "能领", "符合条件", "最多可退", "保证", "一定", "eligible", "entitled"];
@@ -206,6 +214,40 @@ check("年轮标签写明按单个学生 / 按本人，并给出两个孩子的�
   assert.ok(es.includes("Los primeros cuatro años del AOTC (por estudiante)") && es.includes("Créditos de retiro (los suyos)"), "es 标签不对");
   assert.ok(es.includes("el LLC (crédito de aprendizaje permanente) no tiene límite de años"), "es 来源行没写 LLC 无年限");
   sandbox.LANG = "zh";
+});
+
+// ---- AI 层：模型的话不进地图，每个数可追回输入 ----
+check("AI 条目里的数字不进五条线", () => {
+  const st = { status: "mfj", dep: "1", income: "85000", withheld: "9000", tuition: "12000", retire: "5000", mkt: "12", premium: "8400", mortgage: "14000" };
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(st));
+  const before = sandbox.outlookMapHtml(true);
+  sandbox._aiItems = [{ form: "W-2", payer: "某雇主", prepare: "你能拿 $999,999", why: "另有 $5,000 补贴" }];
+  const after = sandbox.outlookMapHtml(true);
+  assert.equal(after, before, "地图被 AI 条目影响了");
+  assert.ok(!after.includes("999,999") && !after.includes("5,000 补贴"), "AI 的数字进了地图");
+  const peek = sandbox.aiMapPeekHtml(true);
+  assert.ok(peek.endsWith(before), "AI 只读区没有复用同一张地图，另算了一套");
+});
+
+check("五条线每个金额都能追回具体哪一项输入", () => {
+  const st = { status: "mfj", dep: "1", income: "85000", withheld: "9000", tuition: "12000", retire: "5000", mkt: "12", premium: "8400", mortgage: "14000" };
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(st));
+  const out = sandbox.outlookMapHtml(true);
+  // 只允许这些数：应税收入 80,000 / 距下一档 20,800 / 落到下一档需 55,200 /
+  // 学费 12,000 / 保费 8,400 / 2 人 400% 线 84,600（4×(15,650+5,500)）/ 越过 400 /
+  // 退休缴款 5,000 / SSA 每分 1,890
+  const allowed = new Set(["80,000", "20,800", "55,200", "12,000", "8,400", "84,600", "400", "5,000", "1,890"]);
+  const found = [...out.matchAll(/\$([\d,]+)/g)].map((m) => m[1]);
+  assert.ok(found.length >= 8, "金额太少，可能没渲染：" + found.join(","));
+  for (const v of found) assert.ok(allowed.has(v), "出现追不回输入的数：" + v);
+});
+
+check("缺收入与预扣时只说「先填这两项」，不填默认值", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify({ status: "mfj", dep: "1", income: "", withheld: "", tuition: "", retire: "", mkt: "", premium: "", mortgage: "" }));
+  const out = sandbox.outlookMapHtml(true);
+  assert.ok(out.includes("先填这两项"), "没有给出先填提示");
+  assert.ok(!/\$[\d]/.test(out), "缺字段时出现了金额");
+  assert.ok(!out.includes("<table"), "缺字段时仍渲染了表格");
 });
 
 // ---- 三语无兜底 ----

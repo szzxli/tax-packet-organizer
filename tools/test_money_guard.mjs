@@ -117,11 +117,11 @@ check("免费态：只有方向，没有金额/区间/推手/时点", () => {
 
 // ---- 今年这张地图（四条线 × 四格：位置 / 推得动哪一条 / 以后会怎样 / 最晚哪天）----
 check("地图：季票态四条线 × 四格，位置/联动/未来/截止日都在", () => {
-  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "12000", mkt: "12", premium: "8400", retire: "5000" })));
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ dep: "1", tuition: "12000", mkt: "12", premium: "8400", retire: "5000" })));
   const out = sandbox.outlookMapHtml(true);
-  for (const k of ["收入 / 税档", "医保补贴（1095-A / 8962）", "教育（AOTC / LLC）", "退休"]) assert.ok(out.includes(k), "缺这一行：" + k);
-  assert.equal((out.match(/<tr>/g) || []).length, 5, "应为表头 1 + 四条线 4 行");
-  assert.equal((out.match(/<td>/g) || []).length, 16, "四条线各应四格（共 16 个 td）");
+  for (const k of ["收入 / 税档", "医保补贴（1095-A / 8962）", "教育（AOTC / LLC）", "退休账户今年放了多少", "40 分进度（按劳动收入）"]) assert.ok(out.includes(k), "缺这一行：" + k);
+  assert.equal((out.match(/<tr>/g) || []).length, 6, "应为表头 1 + 五条线 5 行");
+  assert.equal((out.match(/<td>/g) || []).length, 20, "五条线各应四格（共 20 个 td）");
   assert.ok(out.includes("以后会怎样"), "表头缺「以后会怎样」");
   assert.ok(out.includes("% 档"), "缺档位");
   assert.ok(out.includes("$12,000"), "缺学费位置");
@@ -138,6 +138,12 @@ check("地图：季票态四条线 × 四格，位置/联动/未来/截止日都
   assert.ok(out.includes("2028–29 的 FAFSA"), "教育线未来格缺 FAFSA 年度");
   assert.ok(out.includes("40 分从 34 走到 38"), "退休线未来格缺 40 分走向");
   assert.ok(out.includes("studentaid.gov"), "来源行缺 FAFSA 出处");
+  // 400% 线按家庭人数（1 + 被抚养人数）折算：2 人 = 4 × ($15,650 + $5,500) = $84,600；收入 85,000 越过约 $400
+  assert.ok(out.includes("$84,600") && out.includes("已越过约 $400"), "缺按人数折算的 400% 线或距离");
+  assert.ok(out.includes("HHS") || out.includes("2025 贫困线") || out.includes("FR 2025-01-17"), "来源行缺贫困线出处");
+  // 40 分那行必须写明跟存钱无关，且不许出现「再存多少能多几分」
+  assert.ok(out.includes("按劳动收入记，跟存钱无关") || out.includes("存进去的钱不加分"), "40 分行没写跟存钱无关");
+  assert.ok(!/再存.{0,8}(就|能|可以).{0,6}分/.test(out), "出现了「再存多少能多几分」这类话");
 });
 check("地图：免费态只给方向，没有金额、没有截止日、没有年数", () => {
   for (const lang of ["zh", "en", "es"]) {
