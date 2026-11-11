@@ -10,7 +10,9 @@ for (const entry of graph.forms || []) {
   for (const name of [entry.form].concat(entry.aliases || [])) NODES.set(norm(name), entry.node);
 }
 
-export const AI_BANNED = (graph.banned || []).slice();
+// 两档：结论级整条丢；词汇级只替换措辞（如「抵税」->「少交」），不丢条目。
+export const AI_BANNED = (graph.banned_drop || []).slice();
+export const AI_REPLACE = Object.assign({}, graph.banned_replace || {});
 
 export function aiFormNode(form) {
   return NODES.get(norm(form)) || null;
@@ -24,6 +26,11 @@ function hitsBanned(text) {
   const s = String(text || "").toLowerCase();
   return AI_BANNED.some((w) => s.indexOf(String(w).toLowerCase()) >= 0);
 }
+function soften(text) {
+  let out = String(text || "");
+  for (const k of Object.keys(AI_REPLACE)) out = out.split(k).join(AI_REPLACE[k]);
+  return out;
+}
 
 export function sanitizeAiItems(items) {
   if (!Array.isArray(items)) return [];
@@ -32,8 +39,8 @@ export function sanitizeAiItems(items) {
     if (!it || typeof it !== "object") continue;
     const form = String(it.form || "").trim().slice(0, 60);
     const payer = String(it.payer || "").trim().slice(0, 80);
-    const prepare = String(it.prepare || "").trim().slice(0, 200);
-    const why = String(it.why || "").trim().slice(0, 200);
+    const prepare = soften(String(it.prepare || "").trim().slice(0, 200));
+    const why = soften(String(it.why || "").trim().slice(0, 200));
     if (!form || !prepare) continue;
     if (!aiFormAllowed(form)) continue;
     if (hitsBanned(prepare) || hitsBanned(why)) continue;

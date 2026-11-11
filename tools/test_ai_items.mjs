@@ -25,17 +25,19 @@ check("form→node 精确匹配：图里的别名认，模糊/前缀不认", () 
     assert.equal(aiFormNode(bad), null, bad + " 不应被模糊匹配");
   }
 });
-check("禁用词来自图：命中整条丢弃", () => {
+check("结论级禁词整条丢；词汇级只替换不丢", () => {
   assert.ok(AI_BANNED.includes("eligible") && AI_BANNED.includes("能拿"));
   const out = sanitizeAiItems([
     item("W-2", "You are eligible for this credit"),
     item("W-2", "你可能符合条件"),
     item("1099-INT", "这样能拿更多退税"),
     item("1098-T", "保证能退"),
-    item("1099-DIV", "正常的一条"),
+    item("1099-DIV", "这份用来抵税"),
+    item("W-2", "你一定要拿到 1098-T 单子"),
   ]);
-  assert.equal(out.length, 1);
-  assert.equal(out[0].form, "1099-DIV");
+  assert.equal(out.length, 2, "应只留「抵税」与「一定要」两条");
+  assert.equal(out[0].prepare, "这份用来少交", "抵税应替换成少交");
+  assert.equal(out[1].prepare, "你一定要拿到 1098-T 单子", "「一定要拿到」不该被丢");
 });
 check("清洗模块里没有写死的表清单", () => {
   const src = fs.readFileSync(new URL("../backend/worker/ai_items.js", import.meta.url), "utf8");

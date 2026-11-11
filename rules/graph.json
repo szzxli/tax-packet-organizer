@@ -332,17 +332,30 @@
       "aliases": []
     }
   ],
-  "banned": [
-    "抵税",
-    "合格",
-    "能领",
+  "standard_deduction": {
+    "single": 16100,
+    "mfj": 32200,
+    "mfs": 16100,
+    "hoh": 24150,
+    "effective_tax_year": 2026,
+    "checked": "2026-11-08",
+    "source_url": "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf",
+    "note": "Rev. Proc. 2025-32；与 us-tax-2026-constants 一致，不另找来源"
+  },
+  "banned_drop": [
     "符合条件",
-    "最多可退",
+    "能拿",
     "保证",
-    "一定",
+    "一定能",
+    "一定会",
+    "一定可以",
+    "一定有",
+    "最多可退",
+    "合格",
     "eligible",
-    "entitled",
-    "省$",
-    "能拿"
-  ]
+    "entitled"
+  ],
+  "banned_replace": {
+    "抵税": "少交"
+  }
 }

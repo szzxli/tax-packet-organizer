@@ -138,11 +138,15 @@ check("地图：季票态四条线 × 四格，位置/联动/未来/截止日都
   assert.ok(out.includes("2027 年的预扣"), "收入线未来格没落到 2027");
   assert.ok(out.includes("2027 计划年"), "医保线未来格没落到 2027 计划年");
   assert.ok(out.includes("还剩 2 年") && out.includes("2027 年这一项就没有了"), "教育线未来格缺剩余年数或落点年份");
-  assert.ok(out.includes("2028–29 的 FAFSA"), "教育线未来格缺 FAFSA 年度");
+  // FAFSA 只写「两年」，不点名没发布的学年
+  assert.ok(/两年/.test(out), "教育线未来格缺「两年」口径");
+  assert.ok(!/2028|2029/.test(out), "教育线出现了没发布的学年");
   assert.ok(out.includes("40 分从 34 走到 38"), "退休线未来格缺 40 分走向");
   assert.ok(out.includes("studentaid.gov"), "来源行缺 FAFSA 出处");
-  // 400% 线按家庭人数（1 + 被抚养人数）折算：2 人 = 4 × ($15,650 + $5,500) = $84,600；收入 85,000 越过约 $400
-  assert.ok(out.includes("$84,600") && out.includes("已越过约 $400"), "缺按人数折算的 400% 线或距离");
+  // 400% 线按家庭人数折算：2 人 = 4 × ($15,650 + $5,500) = $84,600；
+  // AGI = 85,000 − 5,000 = 80,000，离这条线还有约 $4,600
+  assert.ok(out.includes("$84,600") && out.includes("离这条线还有约 $4,600"), "缺按人数折算的 400% 线或 AGI 距离");
+  assert.ok(!/NaN|undefined/.test(out), "400% 行出现 NaN/undefined");
   assert.ok(out.includes("HHS") || out.includes("2025 贫困线") || out.includes("FR 2025-01-17"), "来源行缺贫困线出处");
   // 40 分那行必须写明跟存钱无关，且不许出现「再存多少能多几分」
   assert.ok(out.includes("按劳动收入记，跟存钱无关") || out.includes("存进去的钱不加分"), "40 分行没写跟存钱无关");
@@ -161,6 +165,36 @@ check("地图：免费态只给方向，没有金额、没有截止日、没有�
     assert.ok(/偏低|中间|接近上限|最高档|low|middle|near the top|top bracket|bajo|medio|cerca del tope|tramo más alto/.test(out), lang + " 缺方向词");
   }
   sandbox.LANG = "zh";
+});
+
+check("钱那屏：条件行写明只按标准扣除算（金额在条件行里）", () => {
+  const s = state({ status: "mfj", dep: "1", income: "85000", withheld: "9000", retire: "5000" });
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(s));
+  const out = sandbox.outlookOutHtml(true);
+  assert.ok(out.includes("$32,200"), "条件行缺标准扣除金额");
+  assert.ok(out.includes("分项扣除"), "条件行没说明分项会让实际不一样");
+});
+check("估算：先扣标准扣除，四个样例的方向与税额都对", () => {
+  const cases = [
+    [{ status: "single", income: "70000", withheld: "8000" }, "refund", 1430],
+    [{ status: "single", income: "45000", withheld: "5000" }, "refund", 1780],
+    [{ status: "mfj", income: "120000", withheld: "12000" }, "refund", 1960],
+    [{ status: "single", income: "100000", withheld: "12000" }, "owe", 1170],
+  ];
+  for (const [over, dir, gap] of cases) {
+    sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state(over)));
+    const e = sandbox.outlookEstimate(state(over));
+    assert.equal(e.dir, dir, over.status + " " + over.income + " 方向错了");
+    assert.equal(Math.abs(Math.round(e.gap)), gap, over.status + " " + over.income + " 差额错了");
+  }
+});
+check("400%：单身 70,000 用 AGI 比线，越过 7,400（不是拿应税收入比）", () => {
+  const s = state({ status: "single", dep: "", income: "70000", withheld: "8000", mkt: "12", premium: "8400" });
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(s));
+  assert.equal(sandbox.mapFpl400(1), 62600);
+  assert.equal(sandbox.outlookEstimate(s).agi, 70000);
+  const out = sandbox.outlookMapHtml(true);
+  assert.ok(out.includes("已越过约 $7,400"), "400% 距离没用 AGI 算");
 });
 
 // ---- 规则图与运行时扫描 ----

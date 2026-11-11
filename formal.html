@@ -2350,8 +2350,12 @@ function outlookTax(status, taxable) {
 // 差额 = 应缴 − 已预扣：负=退、正=补。±250 以内算持平，避免把噪声说成结论。
 function outlookEstimate(s) {
   var income = outlookNum(s.income), withheld = outlookNum(s.withheld), retire = outlookNum(s.retire);
-  var taxable = Math.max(0, income - retire);
-  var tax = outlookTax(s.status || "single", taxable);
+  var R = mapRules(), status = s.status || "single";
+  var std = (R && R.standard_deduction) ? (R.standard_deduction[status] || R.standard_deduction.single) : null;
+  if (std == null) return { filled: false, noRules: true, dir: "even", gap: 0, low: 0, high: 0, tax: 0, taxable: 0, agi: 0, income: income, withheld: withheld, whys: [] };
+  var agi = Math.max(0, income - retire);          // MAGI 的近似：报的收入减退休缴款
+  var taxable = Math.max(0, agi - std);            // 应税收入 = AGI − 标准扣除
+  var tax = outlookTax(status, taxable);
   var gap = tax - withheld;
   var dir = gap <= -250 ? "refund" : (gap < 250 ? "even" : "owe");
   var width = 500, whys = [];
@@ -2362,7 +2366,7 @@ function outlookEstimate(s) {
   var base = Math.round(gap / 50) * 50;
   return {
     dir: dir, gap: gap, low: base - width, high: base + width,
-    tax: tax, taxable: taxable, income: income, withheld: withheld,
+    tax: tax, taxable: taxable, agi: agi, std: std, income: income, withheld: withheld,
     whys: whys, filled: (income > 0 || withheld > 0)
   };
 }
@@ -2391,6 +2395,7 @@ function outlookWhyText(whys) {
 }
 function outlookOutHtml(unlocked) {
   var e = outlookEstimate(outlookLoad());
+  if (e.noRules) return "";
   if (!e.filled) {
     return "<p class=\"small\">" + esc(tr("先填两行就能看方向：今年要报的收入、工资里已经扣掉的税。", "Two lines are enough to see the direction: this year's income and the tax already taken out of your pay.", "Con dos líneas ya ve la dirección: sus ingresos de este año y el impuesto que ya le descontaron.")) + "</p>";
   }
@@ -2404,9 +2409,9 @@ function outlookOutHtml(unlocked) {
     return h;
   }
   // 这一行必须同时说清「算什么、没算什么」，否则区间就是个孤零零的数。
-  var condZh = "；还没算学费单、医保对账、被抚养人、房贷利息和州税，所以范围比实际宽";
-  var condEn = "; the tuition form, the subsidy reconciliation, dependents, mortgage interest and state tax are not in it yet, so the range is wider than the real one";
-  var condEs = "; aún no incluye el formulario de matrícula, el ajuste del subsidio, las personas a cargo, los intereses hipotecarios ni el impuesto estatal, así que el rango es más amplio que el real";
+  var condZh = "；只按标准扣除算（" + outlookMoney(e.std) + "），分项扣除或别的调整项会让实际不一样；还没算学费单、医保对账、被抚养人、房贷利息和州税，所以范围比实际宽";
+  var condEn = "; it uses the standard deduction only (" + outlookMoney(e.std) + "), so itemizing or other adjustments will move it; the tuition form, the subsidy reconciliation, dependents, mortgage interest and state tax are not in it yet, so the range is wider than the real one";
+  var condEs = "; solo usa la deducción estándar (" + outlookMoney(e.std) + "), así que detallar o aplicar otros ajustes lo moverá; aún no incluye el formulario de matrícula, el ajuste del subsidio, las personas a cargo, los intereses hipotecarios ni el impuesto estatal, así que el rango es más amplio que el real";
   h += "<p>" + esc(tr("大概范围：", "Rough range: ", "Rango aproximado: ")) + "<b>" + esc(outlookRangeText(e)) + "</b>" + esc(tr(condZh + "。", condEn + ".", condEs + ".")) + "</p>";
   h += "<p class=\"small muted\">" + esc(tr("依据：2026 年联邦档位表（与本页卡 1 同一张，核于 " + OUTLOOK_CHECKED + "）。", "Basis: the 2026 federal bracket table (same one as card 1 on this page, checked " + OUTLOOK_CHECKED + ").", "Base: la tabla federal de tramos de 2026 (la misma de la tarjeta 1, verificada el " + OUTLOOK_CHECKED + ").")) + "</p>";
   h += "<p class=\"small\"><b>" + esc(tr("是哪几项在推这个结果", "What is driving this", "Qué está moviendo esto")) + "</b></p><ul class=\"small\">";
@@ -2460,10 +2465,17 @@ function mapFpl400(size) {
 // AI 文案进 DOM 前扫一遍：命中禁用词就换成中性句，不把「符合/能拿」带给用户。
 function aiSafeText(text) {
   var R = mapRules(), t = String(text == null ? "" : text);
-  if (!R || !R.banned) return t;
-  var low = t.toLowerCase();
-  for (var i = 0; i < R.banned.length; i++) {
-    if (low.indexOf(String(R.banned[i]).toLowerCase()) >= 0) {
+  if (!R) return t;
+  // 词汇级：只替换措辞，不丢条目（图里 banned_replace 一张小表）
+  var rep = R.banned_replace || {};
+  for (var k in rep) {
+    if (!Object.prototype.hasOwnProperty.call(rep, k)) continue;
+    t = t.split(k).join(rep[k]);
+  }
+  // 结论级：命中就整句换成中性句，不把资格与承诺类说法带给用户
+  var low = t.toLowerCase(), drop = R.banned_drop || [];
+  for (var i = 0; i < drop.length; i++) {
+    if (low.indexOf(String(drop[i]).toLowerCase()) >= 0) {
       return tr("（原文含结论性措辞，已隐藏；请按这一项本身核对）", "(wording withheld — check the item itself)", "(texto oculto: revise el elemento)");
     }
   }
@@ -2514,7 +2526,7 @@ function outlookMapHtml(unlocked) {
   var eduMax = R.credits.aotc.max_tax_years_per_student;
   var creditsYr = Math.min(ssMax, Math.floor(e.income / ssPoint));
   var hhSize = 1 + Math.max(0, Math.round(outlookNum(s.dep)));
-  var line400 = mapFpl400(hhSize), overLine = e.income - line400;
+  var line400 = mapFpl400(hhSize), overLine = e.agi - line400;
   var gate = tr("领季票后看", "see it with the pass", "se ve con el pase");
   var money = outlookMoney;
 
@@ -2527,7 +2539,7 @@ function outlookMapHtml(unlocked) {
       ? tr("最高档", "top bracket", "tramo más alto")
       : (b.pos < 0.34 ? tr("偏低", "low", "bajo") : (b.pos < 0.67 ? tr("中间", "middle", "medio") : tr("接近上限", "near the top", "cerca del tope"))));
 
-  var push1 = tr("退休缴款先压低应税收入", "Retirement contributions lower taxable income first", "Los aportes al retiro bajan primero el ingreso gravable")
+  var push1 = tr("退休缴款先压低应税收入；收入下来，基准跟着下来", "Retirement contributions lower taxable income first; if income falls, the baseline falls too", "Los aportes al retiro bajan primero el ingreso gravable; si el ingreso baja, la base también baja")
     + (unlocked && retire > 0 ? tr("（今年 " + money(retire) + "）", " (" + money(retire) + " this year)", " (" + money(retire) + " este año)") : "")
     + (unlocked && b.toLower != null
       ? tr("；再多放 " + money(b.toLower) + " 以上才落到 " + b.lower + "% 档（这是档位界线，不是缴款建议）", "; over " + money(b.toLower) + " more drops you to the " + b.lower + "% bracket (that is a boundary, not contribution advice)", "; más de " + money(b.toLower) + " lo baja al tramo del " + b.lower + "% (es un límite, no una recomendación de aporte)")
@@ -2535,14 +2547,14 @@ function outlookMapHtml(unlocked) {
 
   var pos2 = unlocked
     ? (mkt > 0
-      ? tr("Marketplace 覆盖 " + mkt + " 个月，全年保费 " + money(prem) + "；按 " + hhSize + " 人算，400% 线约 " + money(line400) + (overLine > 0 ? "，已越过约 " + money(overLine) : "，离这条线还有约 " + money(-overLine)) + "；在 8962 上对账",
-           "Marketplace coverage for " + mkt + " months, full-year premium " + money(prem) + "; for a household of " + hhSize + " the 400% line is about " + money(line400) + (overLine > 0 ? ", about " + money(overLine) + " above it" : ", about " + money(-overLine) + " below it") + "; reconciled on Form 8962",
-           "Cobertura del Marketplace por " + mkt + " meses, prima anual " + money(prem) + "; para " + hhSize + " personas la línea del 400% es de unos " + money(line400) + (overLine > 0 ? ", unos " + money(overLine) + " por encima" : ", unos " + money(-overLine) + " por debajo") + "; se concilia en el Formulario 8962")
+      ? tr("Marketplace 覆盖 " + mkt + " 个月，全年保费 " + money(prem) + "；按 " + hhSize + " 人算，400% 线约 " + money(line400) + "，你填的收入减退休缴款约 " + money(e.agi) + (Math.abs(overLine) < 3000 ? "，就在线边上，以你表上的 AGI 为准" : (overLine > 0 ? "，已越过约 " + money(overLine) : "，离这条线还有约 " + money(-overLine))) + "；在 8962 上对账",
+           "Marketplace coverage for " + mkt + " months, full-year premium " + money(prem) + "; for a household of " + hhSize + " the 400% line is about " + money(line400) + ", your income minus retirement about " + money(e.agi) + (Math.abs(overLine) < 3000 ? ", right at the line — go by the AGI on your return" : (overLine > 0 ? ", about " + money(overLine) + " above it" : ", about " + money(-overLine) + " below it")) + "; reconciled on Form 8962",
+           "Cobertura del Marketplace por " + mkt + " meses, prima anual " + money(prem) + "; para " + hhSize + " personas la línea del 400% es de unos " + money(line400) + ", su ingreso menos aportes al retiro unos " + money(e.agi) + (Math.abs(overLine) < 3000 ? ", justo en la línea: guíese por el AGI de su declaración" : (overLine > 0 ? ", unos " + money(overLine) + " por encima" : ", unos " + money(-overLine) + " por debajo")) + "; se concilia en el Formulario 8962")
       : tr("你填了 0 个月覆盖，这条线今年不动", "You entered 0 months of coverage, so this line does not move this year", "Ingresó 0 meses de cobertura, así que esta línea no se mueve este año"))
     : (mkt > 0
-      ? (overLine > 0 ? tr("已越过那条线", "above that line", "por encima de esa línea") : (e.income > line400 * 0.9 ? tr("接近那条线", "close to that line", "cerca de esa línea") : tr("离那条线还远", "well below that line", "lejos de esa línea")))
+      ? (Math.abs(overLine) < 3000 ? tr("就在线边上", "right at the line", "justo en la línea") : (overLine > 0 ? tr("已越过那条线", "above that line", "por encima de esa línea") : (e.agi > line400 * 0.9 ? tr("接近那条线", "close to that line", "cerca de esa línea") : tr("离那条线还远", "well below that line", "lejos de esa línea"))))
       : tr("今年没有这条线", "not in play this year", "este año no cuenta"));
-  var push2 = tr("收入越高、或家里人数越少，越可能越过 400% 那条线；越过就是整份没有（2026 税年）", "The higher the income, or the smaller the household, the closer you get to the 400% line; cross it and the credit is gone entirely (tax year 2026)", "Cuanto más alto el ingreso o más pequeña la familia, más cerca queda la línea del 400%; al cruzarla, el crédito desaparece por completo (año fiscal 2026)");
+  var push2 = tr("收入越高、或家里人数越少，越可能越过 400% 那条线；越过就是整份没有（2026 税年）；反过来，把收入压回线下，下一个计划年就按有补贴计价", "The higher the income, or the smaller the household, the closer you get to the 400% line; cross it and the credit is gone entirely (tax year 2026). The other way round, bring income back under the line and the next plan year is priced with the credit again", "Cuanto más alto el ingreso o más pequeña la familia, más cerca queda la línea del 400%; al cruzarla, el crédito desaparece por completo (año fiscal 2026); al revés, si baja el ingreso por debajo de la línea, el próximo año de plan se calcula con crédito");
 
   var pos3 = unlocked
     ? (tuition > 0
@@ -2575,8 +2587,8 @@ function outlookMapHtml(unlocked) {
     : tr("越过这条线，下一个计划年的补贴按整份没有算", "Cross that line and the next plan year is priced with no credit at all", "Al cruzar esa línea, el próximo año de plan queda sin crédito alguno");
   var f3 = unlocked
     ? (eduUsed >= 0
-      ? tr("今年用掉第 " + (eduUsed + 1) + " 年，还剩 " + Math.max(0, eduMax - eduUsed - 1) + " 年；如果今年就是第 4 年，2027 年这一项就没有了。2028–29 的 FAFSA 读的是今年这张表的收入；LLC 不设年限，研究生学费走这条。", "This uses AOTC year " + (eduUsed + 1) + ", leaving " + Math.max(0, eduMax - eduUsed - 1) + "; if this is year four, the credit is gone in 2027. The 2028–29 FAFSA reads this year's return; the LLC has no year limit and covers graduate tuition.", "Este año consume el año " + (eduUsed + 1) + " del AOTC y quedan " + Math.max(0, eduMax - eduUsed - 1) + "; si este es el cuarto, en 2027 ya no hay crédito. La FAFSA 2028–29 lee la declaración de este año; el LLC no tiene límite de años y cubre matrícula de posgrado.")
-      : tr("「已用几年」还没填：填了才说得出还剩几年。2028–29 的 FAFSA 读的是今年这张表的收入；LLC 不设年限，研究生学费走这条。", "Years used is not entered yet, so the remaining count cannot be stated. The 2028–29 FAFSA reads this year's return; the LLC has no year limit and covers graduate tuition.", "Aún no ingresó los años usados, así que no se puede decir cuántos quedan. La FAFSA 2028–29 lee la declaración de este año; el LLC no tiene límite de años y cubre matrícula de posgrado."))
+      ? tr("今年用掉第 " + (eduUsed + 1) + " 年，还剩 " + Math.max(0, eduMax - eduUsed - 1) + " 年；如果今年就是第 4 年，2027 年这一项就没有了。助学金那张表看的是两年前的收入——今年这一步，要等两年后才显出来；LLC 不设年限，研究生学费走这条。", "This uses AOTC year " + (eduUsed + 1) + ", leaving " + Math.max(0, eduMax - eduUsed - 1) + "; if this is year four, the credit is gone in 2027. Financial-aid forms read income from two years earlier — what you do this year shows up two years out; the LLC has no year limit and covers graduate tuition.", "Este año consume el año " + (eduUsed + 1) + " del AOTC y quedan " + Math.max(0, eduMax - eduUsed - 1) + "; si este es el cuarto, en 2027 ya no hay crédito. Las solicitudes de ayuda leen los ingresos de dos años antes: lo que haga este año se verá dos años después; el LLC no tiene límite de años y cubre matrícula de posgrado.")
+      : tr("「已用几年」还没填：填了才说得出还剩几年。助学金那张表看的是两年前的收入——今年这一步，要等两年后才显出来；LLC 不设年限，研究生学费走这条。", "Years used is not entered yet, so the remaining count cannot be stated. Financial-aid forms read income from two years earlier — what you do this year shows up two years out; the LLC has no year limit and covers graduate tuition.", "Aún no ingresó los años usados, así que no se puede decir cuántos quedan. Las solicitudes de ayuda leen los ingresos de dos años antes: lo que haga este año se verá dos años después; el LLC no tiene límite de años y cubre matrícula de posgrado."))
     : tr("今年用掉，明年就少一年", "Use one this year and next year one is gone", "Si lo usa este año, el próximo queda uno menos");
   var f4a = unlocked
     ? tr("只改今年这张表；2027 年的缴款额度按当年公布值走，这里不猜。", "It only changes this year's return; the 2027 contribution limit follows the figure published for that year — not guessed here.", "Solo cambia la declaración de este año; el límite de aportes de 2027 sigue el valor publicado para ese año: aquí no se adivina.")
