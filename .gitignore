@@ -1,0 +1,4 @@
+
+# wrangler 本地缓存（账号 id 之类，不入库）
+.wrangler/
+backend/worker/.wrangler/
