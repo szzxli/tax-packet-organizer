@@ -2541,7 +2541,7 @@ function outlookMapHtml(unlocked) {
       eduUsed = String(prof.eduUsed == null ? "" : prof.eduUsed).trim() === "" ? -1 : Math.min(R.credits.aotc.max_tax_years_per_student, parseInt(String(prof.eduUsed).replace(/[^0-9]/g, ""), 10) || 0);
     }
   } catch (err) { points = 0; eduUsed = -1; }
-  var ssPoint = R.credits.ssa.per_credit_usd, ssMax = R.credits.ssa.max_per_year, ssTarget = R.credits.ssa.target;
+  var ssPoint = R.credits.ssa.per_credit_usd, ssMax = R.credits.ssa.max_per_year, ssTarget = R.credits.ssa.target, ssNext = R.credits.ssa.next || null;
   var eduMax = R.credits.aotc.max_tax_years_per_student;
   var hhSize = 1 + Math.max(0, Math.round(outlookNum(s.dep)));
   var line400 = mapFpl400(hhSize), overLine = e.agi - line400;
@@ -2594,11 +2594,11 @@ function outlookMapHtml(unlocked) {
       : tr("40 分进度还没填（按劳动收入记，跟存钱无关）", "Credits not entered yet (earned on work income, nothing to do with contributions)", "Créditos aún sin llenar (por ingreso laboral, nada que ver con aportes)"))
     : tr("按劳动收入记，跟存钱无关", "earned on work income, not on contributions", "por ingreso laboral, no por aportes");
   var push4b = unlocked
-    ? tr("只有劳动收入加分：每 " + money(ssPoint) + " 记 1 分、一年最多 " + ssMax + " 分；存进去的钱不加分，你填的总收入里也只有工资／自雇那部分算", "Only work income earns credits: one per " + money(ssPoint) + ", at most " + ssMax + " a year; money put into accounts earns none, and of the total income you entered only wages/self-employment count", "Solo el ingreso laboral suma créditos: uno por cada " + money(ssPoint) + ", máximo " + ssMax + " al año; el dinero aportado no suma, y del ingreso total que ingresó solo cuentan salarios o trabajo por cuenta propia")
+    ? tr("只有劳动收入加分：2026 税年每 " + money(ssPoint) + " 记 1 分、一年最多 " + ssMax + " 分；存进去的钱不加分，你填的总收入里也只有工资／自雇那部分算", "Only work income earns credits: in tax year 2026, one per " + money(ssPoint) + ", at most " + ssMax + " a year; money put into accounts earns none, and of the total income you entered only wages/self-employment count", "Solo el ingreso laboral suma créditos: en el año fiscal 2026, uno por cada " + money(ssPoint) + ", máximo " + ssMax + " al año; el dinero aportado no suma, y del ingreso total que ingresó solo cuentan salarios o trabajo por cuenta propia")
     : tr("只有劳动收入加分，存钱不加分", "only work income earns credits, contributions do not", "solo el ingreso laboral suma, los aportes no");
 
   var f1 = unlocked
-    ? tr("如果今年多这一笔，2027 年的预扣要按今年这张表重算（W-4 调不调由你定）；会顶到上限的那类，按 2027 年公布值走，这里不猜。", "If this line grows, 2027 withholding is recalculated on this year's table (whether to adjust your W-4 is your call); anything that hits a cap follows the 2027 published figure — not guessed here.", "Si esta línea sube, la retención de 2027 se recalcula con la tabla de este año (ajustar el W-4 es decisión suya); lo que tope un límite sigue el valor publicado para 2027: aquí no se adivina.")
+    ? tr("如果今年多这一笔，2027 年的预扣要按今年这张表重算（W-4 调不调由你定）；你现在落在 " + b.rate + "% 档，这一笔一变，档位也跟着挪。会顶到上限的那类，按 2027 年公布值走，这里不猜。", "If this line grows, 2027 withholding is recalculated on this year's table (whether to adjust your W-4 is your call); you are in the " + b.rate + "% bracket now, so this line moving also moves the bracket. Anything that hits a cap follows the 2027 published figure — not guessed here.", "Si esta línea sube, la retención de 2027 se recalcula con la tabla de este año (ajustar el W-4 es decisión suya); hoy está en el tramo del " + b.rate + "%, así que al mover esta línea el tramo también se mueve. Lo que tope un límite sigue el valor publicado para 2027: aquí no se adivina.")
     : tr("这一笔会把明年的预扣基准推上去", "This pushes next year's withholding baseline up", "Esto sube la base de retención del próximo año");
   var f2 = unlocked
     ? tr("如果今年越过 400%，2027 计划年续保时补贴按整份没有算；今年这张表在 2027 年报税时用 8962 对账。改计划的窗口只影响下一个计划年，不影响今年。", "If you cross 400% this year, the 2027 plan year is priced with no credit at all; this year's figures are reconciled on Form 8962 when you file in 2027. Changing plans only moves the next plan year, not this one.", "Si este año cruza el 400%, el año de plan 2027 se calcula sin crédito alguno; las cifras de este año se concilian en el Formulario 8962 al declarar en 2027. Cambiar de plan solo afecta al próximo año de plan, no a este.")
@@ -2612,7 +2612,7 @@ function outlookMapHtml(unlocked) {
     ? tr("只改今年这张表；2027 年的缴款额度按当年公布值走，这里不猜。", "It only changes this year's return; the 2027 contribution limit follows the figure published for that year — not guessed here.", "Solo cambia la declaración de este año; el límite de aportes de 2027 sigue el valor publicado para ese año: aquí no se adivina.")
     : tr("只改今年这张表，明年的额度按当年公布", "changes only this year's return; next year's limit is the one published then", "solo cambia la declaración de este año; el límite del próximo se publica en su momento");
   var f4b = unlocked
-    ? tr("分只按工资／自雇那部分记，一年最多 " + ssMax + " 分；攒到 " + ssTarget + " 分才够领退休金。分越高，退休后月付的方向往上——具体按 SSA 当年表，这里不给金额。", "Credits come only from wages/self-employment, at most " + ssMax + " a year; " + ssTarget + " credits is what retirement benefits need. More credits means a higher monthly benefit direction — the amount follows SSA's table for the year and is not shown here.", "Los créditos vienen solo de salarios o trabajo por cuenta propia, como máximo " + ssMax + " al año; se necesitan " + ssTarget + " para la jubilación. Más créditos apuntan a una mensualidad mayor: el monto sigue la tabla del SSA del año y aquí no se muestra.")
+    ? tr("分只按工资／自雇那部分记，一年最多 " + ssMax + " 分；攒到 " + ssTarget + " 分大约要 10 年，退休金算的是收入最高的 35 年。" + (ssNext ? "2027 税年起每 " + money(ssNext.per_credit_usd) + " 记 1 分（" + (ssNext.source || "IRS") + "，" + ssNext.checked + " 公布，2027 税年生效）。" : ""), "Credits come only from wages/self-employment, at most " + ssMax + " a year; " + ssTarget + " credits is about 10 years of work, and the benefit averages your highest 35 years." + (ssNext ? " From tax year 2027 each credit takes " + money(ssNext.per_credit_usd) + " (" + (ssNext.source || "IRS") + ", published " + ssNext.checked + ", effective tax year 2027)." : ""), "Los créditos vienen solo de salarios o trabajo por cuenta propia, como máximo " + ssMax + " al año; " + ssTarget + " créditos son unos 10 años, y la jubilación promedia sus 35 años de mayores ingresos." + (ssNext ? " Desde el año fiscal 2027 cada crédito requiere " + money(ssNext.per_credit_usd) + " (" + (ssNext.source || "IRS") + ", publicado el " + ssNext.checked + ", vigente en el año fiscal 2027)." : ""))
     : tr("分往前走，退休后月付的方向往上", "Credits move forward, so the monthly benefit direction rises", "Los créditos avanzan y la mensualidad apunta hacia arriba");
 
   var when1 = unlocked ? tr("12/31 前 401(k) 缴款到账；4/15 前 IRA 还能补", "401(k) deferrals must land by 12/31; IRA contributions can still be made by 4/15", "Las aportaciones al 401(k) deben entrar antes del 31/12; al IRA aún puede aportar hasta el 15/4") : gate;
@@ -2628,7 +2628,7 @@ function outlookMapHtml(unlocked) {
   h += outlookMapRow(tr("医保补贴（1095-A / 8962）", "Subsidy (1095-A / 8962)", "Subsidio (1095-A / 8962)"), pos2, push2, f2, when2);
   h += outlookMapRow(tr("教育（AOTC / LLC）", "Education (AOTC / LLC)", "Educación (AOTC / LLC)"), pos3, push3, f3, when3);
   h += outlookMapRow(tr("退休账户今年放了多少", "Put into retirement accounts this year", "Aportado a cuentas de retiro este año"), pos4a, push4a, f4a, when4a);
-  h += outlookMapRow(tr("40 分进度（按劳动收入）", "40-credit progress (work income)", "Progreso de 40 créditos (ingreso laboral)"), pos4b, push4b, f4b, when4b);
+  h += outlookMapRow(tr("今年记了几分（40 分 ≈ 10 年）", "Credits this year (40 ≈ 10 years)", "Créditos de este año (40 ≈ 10 años)"), pos4b, push4b, f4b, when4b);
   h += "</tbody></table></div>";
   var P = R.poverty_lines || {}, A = R.credits.aotc || {}, S = R.credits.ssa || {}, BR = R.brackets || {};
   h += unlocked
@@ -2636,9 +2636,82 @@ function outlookMapHtml(unlocked) {
     : "<p class=\"small muted\">" + esc(tr("只标位置与联动，不判资格、不算税；每行的依据和日期在季票里。", "It only marks positions and links: no eligibility decision, no tax calculation; the sources and dates for each line come with the pass.", "Solo marca posiciones y enlaces: no decide elegibilidad ni calcula impuestos; las fuentes y fechas de cada línea vienen con el pase.")) + "</p>";
   return h;
 }
+// 首屏结论条：一首屏只讲一件事——这一格动了，今年与以后各差多少。三行，多了就折叠。
+// 数值与出处只从 rules/graph.json 取；图没到就整条不出，不留半句。
+function oneThingHtml(unlocked) {
+  var R = mapRules();
+  if (!R || !R.credits || !R.credits.ssa) return "";
+  var s = outlookLoad(), e = outlookEstimate(s);
+  var tuition = outlookNum(s.tuition), mkt = outlookNum(s.mkt);
+  var prof = {};
+  try { if (typeof procProfileLoad === "function") prof = procProfileLoad() || {}; } catch (err) { prof = {}; }
+  var eduTxt = String(prof.eduUsed == null ? "" : prof.eduUsed).trim();
+  var eduUsed = eduTxt === "" ? -1 : parseInt(eduTxt.replace(/[^0-9]/g, ""), 10);
+  var ptsTxt = String(prof.ssPoints == null ? "" : prof.ssPoints).trim();
+  var points = ptsTxt === "" ? 0 : (parseInt(ptsTxt.replace(/[^0-9]/g, ""), 10) || 0);
+  var A = R.credits.aotc || {}, S = R.credits.ssa || {}, BR = R.brackets || {}, P = R.poverty_lines || {};
+  var money = outlookMoney;
+  var gate = tr("领季票后看", "see it with the pass", "se ve con el pase");
+  var line1 = "", src = "";
+  var dirZh = { refund: "退税", even: "基本持平", owe: "补税" }[e.dir] || "补税";
+  var dirEn = { refund: "a refund", even: "close to even", owe: "tax owed" }[e.dir] || "tax owed";
+  var dirEs = { refund: "una devolución", even: "casi parejo", owe: "impuesto por pagar" }[e.dir] || "impuesto por pagar";
+
+  if (tuition > 0 && eduUsed >= 0 && A.max_tax_years_per_student) {
+    var maxYr = A.max_tax_years_per_student, left = Math.max(0, maxYr - eduUsed - 1);
+    line1 = tr("今年用掉第 " + (eduUsed + 1) + " 年的学费抵免（每个学生最多 " + maxYr + " 年），明年还剩 " + left + " 次。",
+      "This year uses AOTC year " + (eduUsed + 1) + " for that student (at most " + maxYr + "), leaving " + left + ".",
+      "Este año usa el año " + (eduUsed + 1) + " del AOTC (máximo " + maxYr + " por estudiante); quedan " + left + ".");
+    src = tr("依据：Pub 970（AOTC 每个学生最多 " + maxYr + " 个税年），核于 " + A.checked + "。" + (A.source_url || ""),
+      "Basis: Pub 970 (the AOTC runs at most " + maxYr + " tax years per student), checked " + A.checked + ". " + (A.source_url || ""),
+      "Base: Pub 970 (el AOTC dura como máximo " + maxYr + " años fiscales por estudiante), verificado el " + A.checked + ". " + (A.source_url || ""));
+  } else if (mkt > 0 && e.agi > 0) {
+    var hh = 1 + Math.max(0, Math.round(outlookNum(s.dep)));
+    var line400 = mapFpl400(hh), over = e.agi - line400;
+    if (over > 0) {
+      line1 = unlocked
+        ? tr("按今年这个数，你已经越过 400% 线约 " + money(over) + "：补贴按整份没有算。", "On this year's numbers you are about " + money(over) + " above the 400% line, so the credit is gone entirely.", "Con sus números de este año está unos " + money(over) + " por encima de la línea del 400%: el crédito desaparece por completo.")
+        : tr("按今年这个数，你已经越过 400% 那条线。", "On this year's numbers you are above the 400% line.", "Con sus números de este año está por encima de la línea del 400%.");
+    } else {
+      line1 = unlocked
+        ? tr("按今年这个数，你离 400% 线还差 " + money(-over) + "。", "On this year's numbers you are " + money(-over) + " below the 400% line.", "Con sus números de este año está " + money(-over) + " por debajo de la línea del 400%.")
+        : tr("按今年这个数，你离 400% 那条线还有余量。", "On this year's numbers you are still below the 400% line.", "Con sus números de este año todavía está por debajo de la línea del 400%.");
+    }
+    src = tr("依据：26 U.S.C. §36B(c)(1)(A)，HHS " + P.effective_tax_year + " 年贫困线 ×4（适用 " + P.coverage_year + " 年），核于 " + P.checked + "。" + (P.source_url || ""),
+      "Basis: 26 U.S.C. §36B(c)(1)(A) — the HHS " + P.effective_tax_year + " poverty line ×4 (coverage year " + P.coverage_year + "), checked " + P.checked + ". " + (P.source_url || ""),
+      "Base: 26 U.S.C. §36B(c)(1)(A): línea de pobreza de HHS de " + P.effective_tax_year + " ×4 (año de cobertura " + P.coverage_year + "), verificado el " + P.checked + ". " + (P.source_url || ""));
+  } else if (points > 0) {
+    line1 = tr("今年记了 " + points + " 分（一年最多 " + S.max_per_year + " 分），到 " + S.target + " 分还差 " + Math.max(0, S.target - points) + " 分。",
+      "You have " + points + " credits this year (at most " + S.max_per_year + " a year); " + Math.max(0, S.target - points) + " to go until " + S.target + ".",
+      "Este año lleva " + points + " créditos (máximo " + S.max_per_year + " al año); faltan " + Math.max(0, S.target - points) + " para " + S.target + ".");
+    src = unlocked ? tr("依据：SSA " + S.effective_tax_year + " 每 " + money(S.per_credit_usd) + " 记 1 分，一年最多 " + S.max_per_year + " 分（核于 " + S.checked + "）。" + (S.source_url || ""),
+      "Basis: SSA " + S.effective_tax_year + " — one credit per " + money(S.per_credit_usd) + ", at most " + S.max_per_year + " a year (checked " + S.checked + "). " + (S.source_url || ""),
+      "Base: SSA " + S.effective_tax_year + ": un crédito por cada " + money(S.per_credit_usd) + ", máximo " + S.max_per_year + " al año (verificado el " + S.checked + "). " + (S.source_url || ""))
+      : tr("依据：SSA " + S.effective_tax_year + " 年的记分规则，一年最多 " + S.max_per_year + " 分（核于 " + S.checked + "）。" + (S.source_url || ""),
+      "Basis: SSA " + S.effective_tax_year + " credit rules, at most " + S.max_per_year + " a year (checked " + S.checked + "). " + (S.source_url || ""),
+      "Base: reglas de créditos del SSA para " + S.effective_tax_year + ", máximo " + S.max_per_year + " al año (verificado el " + S.checked + "). " + (S.source_url || ""));
+  } else if (e.filled) {
+    line1 = unlocked
+      ? tr("今年大概是" + dirZh + "，" + outlookRangeText(e) + "。", "This year looks like " + dirEn + " — " + outlookRangeText(e) + ".", "Este año se ve como " + dirEs + ": " + outlookRangeText(e) + ".")
+      : tr("今年大概是" + dirZh + "。", "This year looks like " + dirEn + ".", "Este año se ve como " + dirEs + ".");
+    src = tr("依据：2026 年联邦档位表（" + (BR.source || "") + "，核于 " + BR.checked + "）。" + (BR.source_url || ""),
+      "Basis: the 2026 federal bracket table (" + (BR.source || "") + ", checked " + BR.checked + "). " + (BR.source_url || ""),
+      "Base: tabla federal de tramos de 2026 (" + (BR.source || "") + ", verificada el " + BR.checked + "). " + (BR.source_url || ""));
+  }
+  if (!line1) return "";
+  var when = unlocked
+    ? (OUTLOOK_DEADLINE ? tr("最晚 " + OUTLOOK_DEADLINE + " 还能改（" + OUTLOOK_TAX_YEAR + " 税年）。", "Last day to change it: " + OUTLOOK_DEADLINE + " (tax year " + OUTLOOK_TAX_YEAR + ").", "Último día para cambiarlo: " + OUTLOOK_DEADLINE + " (año fiscal " + OUTLOOK_TAX_YEAR + ").") : "")
+    : gate;
+  return "<div id=\"outlookOneThing\" class=\"one-thing\">"
+    + "<p class=\"one-thing-lead\"><b>" + esc(line1) + "</b></p>"
+    + "<p class=\"small muted\">" + esc(src) + "</p>"
+    + (when ? "<p class=\"small muted\">" + esc(when) + "</p>" : "")
+    + "</div>";
+}
 function outlookHtml(unlocked) {
   var s = outlookLoad();
-  var h = "<h2>" + esc(tr("整理完先看这一屏：今年大概退还是补", "Before you export: does this year look like a refund or tax owed", "Antes de exportar: ¿este año se ve como devolución o impuesto por pagar")) + "</h2>";
+  var h = oneThingHtml(unlocked);
+  h += "<h2>" + esc(tr("整理完先看这一屏：今年大概退还是补", "Before you export: does this year look like a refund or tax owed", "Antes de exportar: ¿este año se ve como devolución o impuesto por pagar")) + "</h2>";
   h += "<p class=\"muted small\">" + esc(tr("按你现在填的数和材料估的；只用来安排现金，不算税、不打表。", "Estimated from the numbers and papers you have so far; only for planning cash — no tax calculation, no return.", "Estimado con sus números y papeles actuales; solo para planear efectivo: sin calcular impuestos, sin declaración.")) + "</p>";
   h += "<div id=\"outlookOut\">" + outlookOutHtml(unlocked) + "</div>";
   h += "<div id=\"outlookMap\">" + outlookMapHtml(unlocked) + "</div>";
@@ -4348,6 +4421,9 @@ try{captureZh();var _sl=window.__TPO_LANG||null;if(!_sl){try{_sl=localStorage.ge
 /* 视觉打磨 + 对比度修复：从另一版页面里挑出来、值得并进来的部分 */
 :root{--p-bg:#0b1118;--p-card:#111a24;--p-line:#223244;--p-text:#e6edf3;--p-sub:#9fb0c0;--p-accent:#2fd4a0;--p-accent-ink:#06261b}
 body{background:var(--p-bg);-webkit-font-smoothing:antialiased;letter-spacing:.005em}
+.one-thing{border-left:3px solid var(--p-accent);background:rgba(47,212,160,.07);border-radius:8px;padding:10px 12px;margin:0 0 14px}
+.one-thing p{margin:2px 0}
+.one-thing .one-thing-lead{font-size:1.02em;line-height:1.45}
 .card{transition:border-color .2s ease,box-shadow .2s ease}
 .card:hover{border-color:#2c4258}
 

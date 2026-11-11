@@ -122,7 +122,7 @@ check("免费态：只有方向，没有金额/区间/推手/时点", () => {
 check("地图：季票态四条线 × 四格，位置/联动/未来/截止日都在", () => {
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ dep: "1", tuition: "12000", mkt: "12", premium: "8400", retire: "5000" })));
   const out = sandbox.outlookMapHtml(true);
-  for (const k of ["收入 / 税档", "医保补贴（1095-A / 8962）", "教育（AOTC / LLC）", "退休账户今年放了多少", "40 分进度（按劳动收入）"]) assert.ok(out.includes(k), "缺这一行：" + k);
+  for (const k of ["收入 / 税档", "医保补贴（1095-A / 8962）", "教育（AOTC / LLC）", "退休账户今年放了多少", "今年记了几分（40 分 ≈ 10 年）"]) assert.ok(out.includes(k), "缺这一行：" + k);
   assert.equal((out.match(/<tr>/g) || []).length, 6, "应为表头 1 + 五条线 5 行");
   assert.equal((out.match(/<td>/g) || []).length, 20, "五条线各应四格（共 20 个 td）");
   assert.ok(out.includes("以后会怎样"), "表头缺「以后会怎样」");
@@ -317,11 +317,11 @@ check("规则图：400% 每行都带两个年度字段、出处与核实日", ()
   }
   for (const r of rows) assert.equal(r.limit, r.fpl * 4, "400% = 贫困线 ×4");
 });
-check("sw：图进了 APP_SHELL，缓存版本随图改动升到 v5", () => {
+check("sw：图进了 APP_SHELL，缓存版本随图改动升到 v6", () => {
   const sw = fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8");
   assert.ok(sw.includes('"./rules/graph.json"'), "APP_SHELL 缺规则图");
   // 图是缓存优先；改了图不升版本，老用户会一直读到旧图（这轮就少了 brackets）。
-  assert.ok(sw.includes('"tax-packet-shell-v5"'), "改了规则图却没升 CACHE_NAME，旧图会被缓存盖住");
+  assert.ok(sw.includes('"tax-packet-shell-v6"'), "改了规则图却没升 CACHE_NAME，旧图会被缓存盖住");
   assert.ok(!sw.includes('"tax-packet-shell-v3"'), "CACHE_NAME 还停在 v3");
 });
 check("AI 文案进 DOM 前换成中性句，正常文案不动", () => {
@@ -361,6 +361,105 @@ check("全文禁词 0 命中（含 en/es，良性短语已白名单）", () => {
   const hits = BANNED.filter((w) => body.toLowerCase().includes(w.toLowerCase()));
   assert.deepEqual(hits, [], "全文仍有禁词：" + hits.join(","));
   assert.ok(!/省\s*\$[\d]/.test(body), "全文出现「省$X」");
+});
+
+// ---- 首屏结论条：一首屏只讲一件事 ----
+function barOf(unlocked) {
+  const html = sandbox.outlookHtml(unlocked);
+  const m = html.match(/<div id="outlookOneThing" class="one-thing">([\s\S]*?)<\/div>/);
+  return m ? m[1] : "";
+}
+check("结论条：三行（结论 / 出处与核实日 / 最晚哪天），在地图之前", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
+  const whole = sandbox.outlookHtml(true);
+  const bar = barOf(true);
+  assert.ok(bar, "首屏没有结论条");
+  assert.equal((bar.match(/<p /g) || []).length, 3, "不是三行：" + bar);
+  assert.ok(bar.includes("核于"), "缺核实日");
+  assert.ok(bar.includes("https://"), "缺原文出处链接");
+  assert.ok(bar.includes("最晚"), "缺最晚哪天");
+  assert.ok(whole.indexOf("outlookOneThing") < whole.indexOf("<h2>"), "结论条没在地图那一屏最上方");
+});
+check("结论条只从规则图取值：改图里的数，条跟着变", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
+  const before = barOf(true);
+  const keep = graph.credits.ssa.per_credit_usd;
+  try {
+    graph.credits.ssa.per_credit_usd = 2000;
+    const after = barOf(true);
+    assert.notEqual(after, before, "改图后结论条没变，说明没读图");
+    assert.ok(after.includes("2,000"), "结论条没显示改后的值：" + after);
+  } finally {
+    graph.credits.ssa.per_credit_usd = keep;
+  }
+  assert.equal(barOf(true), before, "恢复图后结论条没回来");
+});
+check("删掉规则图：结论条整条不出、不抛错", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
+  const keep = sandbox.RULES;
+  try {
+    sandbox.RULES = null;
+    const whole = sandbox.outlookHtml(true);
+    assert.equal(barOf(true), "", "没有图还出了结论条");
+    assert.ok(!/\$[\d]/.test(whole), "没有图还出了金额");
+  } finally {
+    sandbox.RULES = keep;
+  }
+});
+check("2027 的数只在「以后」那一格，并标明生效年", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ dep: "1", tuition: "12000", retire: "5000" })));
+  const out = sandbox.outlookMapHtml(true);
+  assert.ok(out.includes("1,970"), "「以后」那格没给 2027 的值");
+  const i = out.indexOf("1,970");
+  const seg = out.slice(Math.max(0, i - 160), i + 60);
+  assert.ok(seg.includes("2027"), "2027 的值没标明生效年：" + seg);
+  const bar = barOf(true);
+  assert.ok(!bar.includes("1,970"), "2027 的数跑进今年那句了：" + bar);
+});
+check("改一个数：结论条 + 那一行的位置/推手/以后三格都变", () => {
+  const row1 = (st) => {
+    sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(st));
+    const out = sandbox.outlookMapHtml(true);
+    const m = out.match(/<tr><th>收入 \/ 税档<\/th>((?:<td>[\s\S]*?<\/td>){4})<\/tr>/);
+    return { cells: m ? [...m[1].matchAll(/<td>([\s\S]*?)<\/td>/g)].map((x) => x[1]) : [], bar: barOf(true) };
+  };
+  // 画像里没有已记分时，这一格讲的是收入；有 34 分时讲的是分（那是更该讲的那件事）
+  const keepProfile = sandbox.procProfileLoad;
+  sandbox.procProfileLoad = () => ({});
+  let a, b;
+  try {
+    a = row1(state({ income: "40000", withheld: "9000" }));
+    b = row1(state({ income: "70000", withheld: "9000" }));
+  } finally {
+    sandbox.procProfileLoad = keepProfile;
+  }
+  assert.equal(a.cells.length, 4, "没取到这行的四格：" + a.cells.length);
+  assert.notEqual(a.bar, b.bar, "结论条没随收入变");
+  for (const i of [0, 1, 2]) assert.notEqual(a.cells[i], b.cells[i], "第 " + (i + 1) + " 格没随收入变");
+  // 四行也各自跟着自己那一项动
+  const rowOf = (st, label) => {
+    sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(st));
+    const out = sandbox.outlookMapHtml(true);
+    const m = out.match(new RegExp("<tr><th>" + label + "<\\/th>((?:<td>[\\s\\S]*?<\\/td>){4})<\\/tr>"));
+    return m ? m[1] : "";
+  };
+  assert.notEqual(rowOf(state({ mkt: "0" }), "医保补贴（1095-A \\/ 8962）"), rowOf(state({ mkt: "12" }), "医保补贴（1095-A \\/ 8962）"), "改医保月数，医保那一行没动");
+  assert.notEqual(rowOf(state({ tuition: "0" }), "教育（AOTC \\/ LLC）"), rowOf(state({ tuition: "12000" }), "教育（AOTC \\/ LLC）"), "改学费，教育那一行没动");
+  assert.notEqual(rowOf(state({ retire: "0" }), "退休账户今年放了多少"), rowOf(state({ retire: "5000" }), "退休账户今年放了多少"), "改退休缴款，退休那一行没动");
+  // 第 4 格是法定期限，不随数字动；它动了才是假联动
+  assert.equal(a.cells[3], b.cells[3], "截止日不该随收入变");
+});
+check("结论条三语：无 undefined / null，en/es 无中文", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ dep: "1", tuition: "12000", mkt: "12", premium: "8400" })));
+  const cjk = /[\u4e00-\u9fff]/;
+  for (const lang of ["zh", "en", "es"]) {
+    sandbox.LANG = lang;
+    const bar = barOf(true);
+    assert.ok(bar.length > 0, lang + " 没出结论条");
+    assert.ok(!/undefined|null/.test(bar), lang + " 出现空值：" + bar);
+    if (lang !== "zh") assert.ok(!cjk.test(bar), lang + " 出现中文：" + bar);
+  }
+  sandbox.LANG = "zh";
 });
 
 // ---- 输出 ----
