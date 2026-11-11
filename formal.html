@@ -726,11 +726,6 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div class="sticky-copy"><strong id="stickyProgressTitle">继续整理</strong><p id="stickyProgressText"></p><div class="progress-track" aria-hidden="true"><span id="stickyProgressFill"></span></div></div>
 <button id="stickyProgressAction" type="button">继续</button>
 </div>
-<div class="flow-bar no-print hidden" id="stepPager" role="navigation" aria-label="步骤进度">
-<span class="flow-bar-step" id="stepPagerStep">第 1 步 / 共 3 步</span>
-<button id="btnStepPrev" class="secondary flow-bar-prev" type="button">← 上一步</button>
-<button id="btnStepNext" class="flow-bar-next" type="button">去把材料放进来</button>
-</div>
 
 <div class="card no-print hidden" id="subShowcase"><h2>免费版帮你整理材料，季票帮你减少遗漏</h2><p class="muted small">基础整理和导出永久免费；季票多给三张规划卡看清位置，交付前把整包核一遍，全年把时点盯住。</p><div class="sub-three"><div class="sub-three-item" onclick="goSub()"><b>三张规划卡</b><span>税档、退休、政策；只标结构，不算税。医保补贴那张卡所有人都能用，不用领季票。</span></div><div class="sub-three-item" onclick="goSub()"><b>交付前总核对</b><span>可交 / 不可交 + 缺项表，可重跑，现在就能出结果。</span></div><div class="sub-three-item" onclick="goSub()"><b>全年盯梢 <span class="badge pending">内测中</span></b><span>缺项、规则变化、截止日；目前只在本页展示，不发邮件、不推送。</span></div></div><p class="small">内测期免费，1 月公布价格。登录后领取免费季票。</p><p><button onclick="goSub()">去看季票</button></p></div>
 <div class="card no-print" id="aiCard">
@@ -2319,8 +2314,18 @@ function recommendedOrganizeStep(){
 function advanceAfterGenerate(){if(!packet.checklist.length)return;navigateToSection(recommendedOrganizeStep()===3?"s6":"s4");}
 function renderStickyProgress(){
   var bar=$("stickyProgress");if(!bar)return;
-  if(!packet||currentPage!==1||!packet.checklist.length){bar.classList.add("hidden");return;}
+  if(!packet||currentPage!==1){bar.classList.add("hidden");return;}
   var rows=packet.checklist||[],total=rows.length,done=rows.filter(rowResolved).length;
+  if(!total){
+    $("stickyProgressTitle").textContent=tr("第 1 步 / 共 3 步","Step 1 of 3","Paso 1 de 3");
+    $("stickyProgressText").textContent=tr("先生成今年清单","Generate this year\u2019s checklist first","Genere primero la lista de este año");
+    $("stickyProgressFill").style.width="0%";
+    var onlyAction=$("stickyProgressAction");
+    onlyAction.textContent=tr("生成清单","Generate checklist","Generar lista");
+    onlyAction.onclick=function(){var b=$("btnMake");if(b)b.click();};
+    bar.classList.remove("hidden");
+    return;
+  }
   var pct=total?Math.round(done*100/total):0;
   var title=$("stickyProgressTitle"),text=$("stickyProgressText"),fill=$("stickyProgressFill"),action=$("stickyProgressAction");
   var target="s3",label=tr("建立今年清单","Build this year's checklist","Crear la lista de este año"),message=tr("从去年表格或手头材料开始，先生成清单。","Start from last year's forms or the papers you have, and generate the checklist first.","Empiece con los formularios del año pasado o los papeles que tenga y genere primero la lista.");
@@ -3234,8 +3239,6 @@ function renderHero(){
   var ai=$("aiCard");if(ai){var showAi=ai.dataset.open==="1"&&currentPage===1&&currentOrganizeStep===1;ai.classList.toggle("hidden",!showAi);}
   var fq=$("faqCard");if(fq)fq.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==3);
   var sp=$("supportCard");if(sp)sp.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==3);
-  var pg=$("stepPager");
-  if(pg){var showBar=currentPage===1;pg.classList.toggle("hidden",!showBar);document.body.classList.toggle("has-flowbar",showBar);}
   var se=$("supEmail");if(se&&currentUser&&!se.value)se.value=currentUser;
   renderReturnState();
 }
@@ -3717,17 +3720,32 @@ function addToLastYear(items){
   savePacket();renderLast();
   return {added:added,skipped:skipped};
 }
-// 「今年没什么变化」是最常见的起点：不能给 0 项，否则用户被丢进一个空的第 2 步。
-// 只放两样几乎人人都会有的东西，其余留给他按手头证据自己加。
+// 「今年没什么变化 / 先跳过」是最常见的起点：不许 0 项，也不许提示「先补充一项材料」。
+// 口径：有去年那张表就从它推（条目问「去年有，今年还是吗」）；没有就给三项通用；
+// 自雇、房租、学费这些要用户自己勾，不凭空加。表号一律进括号，不当标题。
 function seedBaseChecklist(){
   if(!packet)return 0;
   if(packet.checklist&&packet.checklist.length)return 0;
+  var rows=[];
+  if(packet.lastYear&&packet.lastYear.length){
+    packet.lastYear.forEach(function(l){
+      if(!l.form)return;
+      rows.push({kind:formToKind(l.form)||"generic",form:l.form,payer:l.payer||"",
+        title:tr("去年有，今年还是吗","You had this last year — still the same?","Lo tenía el año pasado, ¿sigue igual?")+"（"+l.form+"）"});
+    });
+  }
+  if(!rows.length){
+    rows=[
+      {kind:"wages",form:"W-2",payer:"",title:tr("工资单（公司发的年度工资表，W-2）","Pay statement (the yearly wage form from your employer, W-2)","Comprobante de sueldo (el resumen anual del empleador, W-2)")},
+      {kind:"interest",form:"1099-INT",payer:"",title:tr("银行或券商的年度利息/分红单（1099-INT / 1099-DIV）","Yearly interest or dividend statement from your bank or broker (1099-INT / 1099-DIV)","Resumen anual de intereses o dividendos del banco o correduría (1099-INT / 1099-DIV)")},
+      {kind:"generic",form:"去年报税表",payer:"",title:tr("去年的报税表（没有就空着，别编）","Last year's tax return (leave it blank if you do not have one — do not make it up)","La declaración del año pasado (si no la tiene, déjela en blanco; no la invente)")}
+    ];
+  }
   var made=0;
-  [["wages","W-2"],["interest","1099-INT"]].forEach(function(x){
+  rows.forEach(function(r){
     try{
-      if(packet.checklist.some(function(it){return it.kind===x[0];}))return;
-      var row=newRowFromKind(x[0],"");
-      if(x[1]&&row&&!row.form)row.form=x[1];
+      var row=newRowFromKind(r.kind,r.payer);
+      row.form=r.form;row.title=r.title;
       packet.checklist.push(row);made++;
     }catch(e){}
   });
@@ -4441,9 +4459,12 @@ $("btnHqSame").onclick=function(){
 $("btnHqTalk").onclick=function(){var h=$("heroText");if(h)h.focus();};
 $("btnHqSkip").onclick=function(){
   if(!packet)return;
-  packet.changesSkip=true;savePacket();
-  showQuickPick(t("先跳过也没关系：按手头有的东西加一项，就能生成清单。"));
-  var q=$("quickPick");if(q)q.scrollIntoView({behavior:"smooth",block:"center"});
+  packet.changesSkip=true;
+  seedBaseChecklist();
+  savePacket();renderAll();
+  var m=$("tagMsg");
+  if(m)m.textContent=tr("已按通用项生成清单，随时回来改。","Generated the common items — change them any time.","Se generaron los elementos comunes; puede cambiarlos cuando quiera.");
+  if(packet.checklist.length)advanceAfterGenerate();
 };
 $("btnAiGenerate").addEventListener("click",async function(){
   var d=($("aiDesc").value||"").trim();
@@ -4569,39 +4590,8 @@ $("btnClearPriorCpa").onclick=function(){
 document.querySelectorAll('input[name="subPacks"]').forEach(function(r){
   r.onchange=function(){ if(!packet) return; packet.payPacks=parseInt(r.value,10)||1; savePacket(); renderOrders(); renderSubStatus(); };
 });
-function pendingMaterials(){
-  if(!packet||!packet.checklist)return 0;
-  var n=0;
-  packet.checklist.forEach(function(it){try{if(!rowResolved(it))n++;}catch(e){n++;}});
-  return n;
-}
-function updateStepPager(){
-  var bar=$("stepPager"),prev=$("btnStepPrev"),next=$("btnStepNext"),lab=$("stepPagerStep");
-  if(!bar||!prev||!next)return;
-  if(lab)lab.textContent=tr("第 "+currentOrganizeStep+" 步 / 共 3 步","Step "+currentOrganizeStep+" of 3","Paso "+currentOrganizeStep+" de 3");
-  prev.classList.toggle("hidden",currentOrganizeStep<=1);
-  if(currentOrganizeStep===1){
-    var n=pendingMaterials();
-    next.textContent=n
-      ?tr("去补 "+n+" 项材料","Go gather "+n+" items","A reunir "+n+" elementos")
-      :tr("去把材料放进来","Bring the materials in","Traiga los materiales");
-  }else if(currentOrganizeStep===2){
-    next.textContent=tr("交之前核一遍","Check it before handing over","Revísalo antes de entregar");
-  }else{
-    next.textContent=tr("导出 PDF","Export PDF","Exportar PDF");
-  }
-}
-var _updateStepTabs=updateStepTabs;
-updateStepTabs=function(){_updateStepTabs();updateStepPager();};
-$("btnStepPrev").onclick=function(){setOrganizeStep(currentOrganizeStep-1,true);};
-$("btnStepNext").onclick=function(){
-  if(currentOrganizeStep>=3){
-    var b=$("btnPrint");
-    if(b){b.scrollIntoView({behavior:"smooth",block:"center"});b.click();}
-    return;
-  }
-  setOrganizeStep(currentOrganizeStep+1,true);
-};
+
+
 
 [1,2,3].forEach(function(step){var tab=$("flowStep"+step);if(tab)tab.onclick=function(){if(step>1&&(!packet||!packet.checklist.length)){var hm=$("tagMsg");if(hm)hm.textContent=t("先选情况、生成今年清单，再去补材料。");var hb=$("heroBox");if(hb)hb.scrollIntoView({behavior:"smooth",block:"start"});return;}setOrganizeStep(step,true);};});
 var deferredInstallPrompt=null;
@@ -4646,16 +4636,6 @@ try{captureZh();var _sl=window.__TPO_LANG||null;if(!_sl){try{_sl=localStorage.ge
 body{background:var(--p-bg);-webkit-font-smoothing:antialiased;letter-spacing:.005em}
 .one-thing{border-left:3px solid var(--p-accent);background:rgba(47,212,160,.07);border-radius:8px;padding:7px 10px;margin:0 0 10px;max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 .one-thing p{margin:1px 0;overflow-wrap:anywhere;word-break:break-word}
-
-/* 底部步骤条：常驻、随步骤换主按钮文案，避开 iOS 安全区 */
-.flow-bar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;align-items:center;gap:8px;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(11,17,24,.96);border-top:1px solid var(--p-line)}
-.flow-bar.hidden{display:none}
-.flow-bar-step{font-size:13px;color:var(--p-sub);flex:0 0 auto;white-space:nowrap}
-.flow-bar-prev{flex:0 0 auto}
-.flow-bar-next{margin-left:auto;flex:0 1 auto}
-body.has-flowbar{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
-@media print{.flow-bar{display:none!important}}
-
 .one-thing .one-thing-lead{font-size:1em;line-height:1.3}
 .one-badge{display:inline-block;background:var(--p-accent);color:var(--p-accent-ink);border-radius:4px;padding:0 6px;margin-right:6px;font-size:.78em;vertical-align:1px;font-weight:600}
 .policy-timeline{margin:4px 0 0;padding-left:18px}
