@@ -122,6 +122,14 @@ check("免责句在折叠之外", () => {
   assert.ok(i > detailsEnd, "免责句落在折叠块里了");
 });
 
+// ---- 卡 4：Saver's Match 不点不存在的表号 ----
+check("全页没有编造的表号：8880 = 0、2028 = 0", () => {
+  assert.equal(html.indexOf("8880"), -1, "页面仍写 8880-A（IRS 未公布该表号）");
+  assert.equal(html.indexOf("2028"), -1, "页面仍写 2028 年那张表");
+  assert.ok(html.includes("SECURE 2.0 §103"), "缺 Saver's Match 的法条依据");
+  assert.ok(html.includes("尚未公布表单号"), "没写明表号未公布");
+});
+
 // ---- 禁词 ----
 const BANNED = ["抵税", "合格", "能领", "符合条件", "最多可退", "保证", "一定", "eligible", "entitled"];
 check("新模块三语 0 禁词", () => {
