@@ -371,73 +371,78 @@ check("全文禁词 0 命中（含 en/es，良性短语已白名单）", () => {
   assert.ok(!/省\s*\$[\d]/.test(body), "全文出现「省$X」");
 });
 
-// ---- 政策变化条：事件，不是常驻文案 ----
-const DAY = 86400000;
-const NOW_NEW = Date.UTC(2026, 10, 15);      // announced 2026-11-11 之后第 4 天
-const NOW_OLD = Date.UTC(2026, 11, 1);       // 第 20 天
+// ---- 动态区：事件条（付费两行 / 免费一行）+ 常驻结论条（两行）----
+const NOW_NEW = Date.UTC(2026, 10, 15);   // announced 2026-11-11 之后第 4 天
+const NOW_OLD = Date.UTC(2026, 11, 1);    // 第 20 天
 const barOf = (unlocked, now) => sandbox.policyBarHtml(unlocked, now);
+const timelineOf = (unlocked, now) => sandbox.policyTimelineHtml(unlocked, now);
 const oneOf = (unlocked) => {
   const html = sandbox.outlookHtml(unlocked);
   const m = html.match(/<div id="outlookOneThing" class="one-thing">([\s\S]*?)<\/div>/);
   return m ? m[1] : "";
 };
-const timelineOf = (unlocked, now) => sandbox.policyTimelineHtml(unlocked, now);
+const pCount = (h) => (h.match(/<p /g) || []).length;
+const withProfile = (p, fn) => {
+  const keep = sandbox.procProfileLoad;
+  sandbox.procProfileLoad = () => p;
+  try { return fn(); } finally { sandbox.procProfileLoad = keep; }
+};
 
-check("有新变化：首屏亮，带「新」与生效年；时间轴不出", () => {
+check("付费事件条：两行（徽标+标题 ／ 生效年·出处），没有单独那行截止日", () => {
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
   const bar = barOf(true, NOW_NEW);
-  assert.ok(bar.includes('id="policyBar"'), "新事件没亮：" + bar);
+  assert.ok(bar.includes('id="policyBar"'), "事件条没出：" + bar);
+  assert.equal(pCount(bar), 2, "不是两行：" + bar);
   assert.ok(bar.includes("新"), "缺「新」角标");
-  assert.ok(bar.includes("2027"), "缺生效年");
-  assert.ok(bar.includes("1,890") && bar.includes("1,970"), "没写清从几变成几：" + bar);
-  assert.ok(bar.includes("核于 2026-10-26"), "缺核实日");
-  assert.ok(bar.includes("https://www.federalregister.gov"), "缺原文链接");
-  assert.equal(timelineOf(true, NOW_NEW), "", "还有新事件时就出时间轴了");
+  assert.ok(bar.includes("2027") && bar.includes("1,890") && bar.includes("1,970"), "标题不对：" + bar);
+  assert.ok(bar.includes("核于 2026-10-26"), "第二行缺核实日");
+  assert.ok(/<a href="https:\/\/www\.federalregister\.gov[^"]*"[^>]*>/.test(bar), "出处没挂成链接");
+  assert.ok(!bar.includes("最晚"), "还留着单独的截止日那行：" + bar);
 });
-check("过了 14 天：首屏不亮，收进时间轴一行（日期 + 一句 + 链接）", () => {
+check("付费事件条：14 天后整条不出", () => {
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
-  assert.equal(barOf(true, NOW_OLD), "", "过期了首屏还亮着");
-  const tl = timelineOf(true, NOW_OLD);
-  assert.ok(tl.includes("2026-11-11"), "时间轴缺日期");
-  assert.ok(tl.includes("1,970"), "时间轴缺那一句");
-  assert.ok(tl.includes("https://www.federalregister.gov"), "时间轴缺出处链接");
-  assert.equal((tl.match(/<li>/g) || []).length, 1, "条数不对：" + tl);
+  assert.equal(barOf(true, NOW_OLD), "", "过期了还在首屏");
 });
-check("没有任何变化：首屏不出现空文案或占位条", () => {
+check("免费+命中：一行提示，不出金额、不出截止日", () => {
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
+  const bar = barOf(false, NOW_NEW);
+  assert.ok(bar.includes("落在你这一格"), "命中时没给这一句：" + bar);
+  assert.ok(!/\$[\d]/.test(bar), "免费提示里出现金额：" + bar);
+  assert.ok(!bar.includes("最晚") && !bar.includes("2027-04-15"), "免费提示里出现截止日");
+  assert.ok(!bar.includes("one-badge"), "免费提示不该带「新」角标");
+});
+check("免费+未命中：一行「今年有变化」提示", () => {
+  withProfile({ ssPoints: "", eduUsed: "1" }, () => {
+    sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
+    const bar = barOf(false, NOW_NEW);
+    assert.ok(bar.includes("今年有变化"), "未命中时没给这一句：" + bar);
+    assert.ok(!/\$[\d]/.test(bar), "免费提示里出现金额：" + bar);
+    assert.ok(!bar.includes("2027-04-15"), "免费提示里出现截止日");
+  });
+});
+check("免费且没有新鲜事件：整条不出，不留空壳", () => {
   const keep = graph.events;
   try {
     graph.events = [];
-    const whole = sandbox.outlookHtml(true);
-    assert.equal(barOf(true, NOW_NEW), "", "没有事件还出了条");
-    assert.equal(timelineOf(true, NOW_NEW), "", "没有事件还出了时间轴");
-    assert.ok(!whole.includes('id="policyBar"'), "事件条还留着空壳");
-    assert.ok(!/今日无|暂无变化|没有新变化/.test(whole), "出现了「暂无变化」这类占位文案");
+    sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
+    assert.equal(barOf(false, NOW_NEW), "", "没事件还出了免费提示");
+    const whole = sandbox.outlookHtml(false);
+    assert.ok(!whole.includes('id="policyBar"'), "页面里还留着空壳");
+    assert.ok(!/暂无变化|没有新变化/.test(whole), "出现「暂无变化」这类占位");
   } finally {
     graph.events = keep;
   }
 });
-check("落不到他某一格就不上页面：没填记分的人既不见条也不见时间轴", () => {
-  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
-  const keepProfile = sandbox.procProfileLoad;
-  sandbox.procProfileLoad = () => ({});
-  try {
-    assert.equal(barOf(true, NOW_NEW), "", "这一格不在他身上，却亮了");
-    assert.equal(timelineOf(true, NOW_NEW), "", "这一格不在他身上，却进了时间轴");
-  } finally {
-    sandbox.procProfileLoad = keepProfile;
-  }
-});
-check("首屏最多两条，多出来的进时间轴；时间轴最多 5 条、更早的折叠", () => {
+check("首屏只放 1 条，其余进时间轴；时间轴最多 5 条、更早的折叠", () => {
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
   const keep = graph.events;
   const mk = (id, day) => Object.assign({}, keep[0], { id, announced: "2026-11-" + String(day).padStart(2, "0") });
   try {
     graph.events = [mk("e1", 15), mk("e2", 14), mk("e3", 13), mk("e4", 12), mk("e5", 11), mk("e6", 10), mk("e7", 9), mk("e8", 8)];
     const bar = barOf(true, NOW_NEW);
-    assert.equal((bar.match(/one-badge/g) || []).length, 1, "首屏事件条不是一条：" + bar);
+    assert.equal((bar.match(/one-badge/g) || []).length, 1, "首屏不是一条：" + bar);
     const tl = timelineOf(true, NOW_NEW);
-    assert.ok(tl.includes("政策变化时间轴（7 条）"), "时间轴条数不对：" + tl.slice(0, 160));
+    assert.ok(tl.includes("政策变化时间轴（7 条）"), "时间轴条数不对：" + tl.slice(0, 140));
     const visible = tl.slice(0, tl.indexOf("更早的"));
     assert.equal((visible.match(/<li>/g) || []).length, 5, "可见的不是 5 条");
     assert.ok(tl.includes("更早的 2 条"), "更早的没折叠");
@@ -459,139 +464,75 @@ check("只从规则图取值：改图里的新值，标题跟着变", () => {
   }
   assert.equal(barOf(true, NOW_NEW), before, "恢复图后没回来");
 });
-check("免费态不亮这条（不给金额），页面也没有 $ 金额", () => {
+check("常驻结论条：付费两行，第一行带最晚与「其余几项写在下面」，第二行出处+核实日", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "20000" })));
+  const bar = oneOf(true);
+  assert.equal(pCount(bar), 2, "不是两行：" + bar);
+  assert.ok(bar.includes("学费抵免"), "结论没讲学费抵免：" + bar);
+  assert.ok(bar.includes("最晚 2027-04-15 还能改"), "第一行缺最晚可改日：" + bar);
+  assert.ok(bar.includes("其余几项写在下面"), "第一行缺指向下方推手那半句：" + bar);
+  assert.ok(bar.includes("依据：") && bar.includes("核于 2026-11-08"), "第二行缺出处与核实日：" + bar);
+  assert.ok(/<a href="https:\/\/www\.irs\.gov[^"]*"[^>]*>/.test(bar), "出处没挂成链接");
+});
+check("常驻结论条 0–3 年逐字锁定", () => {
+  const expect = {
+    0: "今年用掉第 1 年学费抵免，明年还剩 3 年 · 最晚 2027-04-15 还能改 · 其余几项写在下面",
+    1: "今年用掉第 2 年学费抵免，明年还剩 2 年 · 最晚 2027-04-15 还能改 · 其余几项写在下面",
+    2: "今年用掉第 3 年学费抵免，明年还剩 1 年 · 最晚 2027-04-15 还能改 · 其余几项写在下面",
+    3: "今年用掉第 4 年学费抵免，明年还剩 0 年 · 最晚 2027-04-15 还能改 · 其余几项写在下面",
+  };
+  for (const used of [0, 1, 2, 3]) {
+    withProfile({ ssPoints: "", eduUsed: String(used) }, () => {
+      sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "20000" })));
+      const bar = oneOf(true);
+      assert.ok(bar.includes(expect[used]), used + " 年那句变了，应为：" + expect[used] + "，实际：" + bar);
+    });
+  }
+});
+check("常驻结论条 AOTC 用完 4 年：三语都不出现「第 5 年」", () => {
+  withProfile({ ssPoints: "", eduUsed: "4" }, () => {
+    sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "20000" })));
+    for (const lang of ["zh", "en", "es"]) {
+      sandbox.LANG = lang;
+      const bar = oneOf(true);
+      const hit = bar.match(/.{0,26}(第 5 年|year 5|año 5).{0,26}/i);
+      assert.ok(!hit, lang + " 出现「第 5 年」：" + (hit ? hit[0] : ""));
+      assert.ok(/用完|used up|ya se usaron/.test(bar), lang + " 没写用完");
+      assert.ok(/退|paying it back|devolverlo/.test(bar), lang + " 没写要退回");
+    }
+    sandbox.LANG = "zh";
+  });
+});
+check("免费常驻结论条：只有方向、无 $、无日期，第二行「领季票后看」", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "20000" })));
+  const bar = oneOf(false);
+  assert.equal(pCount(bar), 2, "不是两行：" + bar);
+  assert.ok(/退税|补税|持平/.test(bar), "缺方向：" + bar);
+  assert.ok(!/\$[\d]/.test(bar), "免费态出现金额：" + bar);
+  assert.ok(!bar.includes("2027-04-15"), "免费态出现截止日：" + bar);
+  assert.ok(bar.includes("领季票后看"), "第二行不是「领季票后看」：" + bar);
+  assert.ok(!bar.includes("其余几项"), "免费态不该有解锁态那半句");
+});
+check("顺序：#policyBar → #outlookOneThing → h2，且都在 h2 之前", () => {
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
-  assert.equal(barOf(false, NOW_NEW), "", "免费态亮了政策条");
-  assert.equal(timelineOf(false, NOW_NEW), "", "免费态出了时间轴");
+  const whole = sandbox.outlookHtml(true);
+  const iEvent = whole.indexOf('id="policyBar"');
+  const iOne = whole.indexOf('id="outlookOneThing"');
+  const iH2 = whole.indexOf("<h2>");
+  assert.ok(iEvent >= 0 && iOne >= 0, "两块没都在");
+  assert.ok(iEvent < iOne && iOne < iH2, "顺序不对：" + [iEvent, iOne, iH2].join(","));
 });
 check("事件条三语：无 undefined / null，en/es 无中文", () => {
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
   const cjk = /[\u4e00-\u9fff]/;
   for (const lang of ["zh", "en", "es"]) {
     sandbox.LANG = lang;
-    const bar = barOf(true, NOW_NEW) + timelineOf(true, NOW_OLD);
-    assert.ok(bar.length > 0, lang + " 没出内容");
-    assert.ok(!/undefined|null|NaN/.test(bar), lang + " 出现空值：" + bar);
-    if (lang !== "zh") assert.ok(!cjk.test(bar), lang + " 出现中文：" + bar);
+    const all = barOf(true, NOW_NEW) + timelineOf(true, NOW_OLD) + barOf(false, NOW_NEW);
+    assert.ok(all.length > 0, lang + " 没出内容");
+    assert.ok(!/undefined|null|NaN/.test(all), lang + " 出现空值：" + all);
+    if (lang !== "zh") assert.ok(!cjk.test(all), lang + " 出现中文：" + all);
   }
   sandbox.LANG = "zh";
-});
-
-// ---- 教育这条：已经用完 4 年时不许把话说反 ----
-check("AOTC 已用完 4 年：三语都不出现「第 5 年」，改说用完了", () => {
-  const keepProfile = sandbox.procProfileLoad;
-  sandbox.procProfileLoad = () => ({ ssPoints: "34", eduUsed: "4" });
-  try {
-    sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "12000" })));
-    for (const lang of ["zh", "en", "es"]) {
-      sandbox.LANG = lang;
-      const out = sandbox.outlookHtml(true);
-      const hit = out.match(/.{0,24}(第 5 年|year 5|año 5).{0,24}/i);
-      assert.ok(!hit, lang + " 出现「第 5 年」：" + (hit ? hit[0] : ""));
-      assert.ok(/已经用完|used up|ya se usaron/.test(out), lang + " 没写「用完」");
-      assert.ok(!/还剩 0 年|0 left|quedan 0/.test(out), lang + " 还在说「还剩 0 年」");
-    }
-    sandbox.LANG = "zh";
-  } finally {
-    sandbox.procProfileLoad = keepProfile;
-  }
-});
-check("AOTC 未用完（0–3 年）：句子与现在一字不差", () => {
-  const keepProfile = sandbox.procProfileLoad;
-  const expect = {
-    0: "今年用掉第 1 年，还剩 3 年",
-    1: "今年用掉第 2 年，还剩 2 年",
-    2: "今年用掉第 3 年，还剩 1 年",
-    3: "今年用掉第 4 年，还剩 0 年；如果今年就是第 4 年，2027 年这一项就没有了",
-  };
-  try {
-    for (const used of [0, 1, 2, 3]) {
-      sandbox.procProfileLoad = () => ({ ssPoints: "34", eduUsed: String(used) });
-      sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "12000" })));
-      const out = sandbox.outlookMapHtml(true);
-      assert.ok(out.includes(expect[used]), used + " 年的文案变了，应为：" + expect[used]);
-    }
-  } finally {
-    sandbox.procProfileLoad = keepProfile;
-  }
-});
-
-// ---- 常驻三行结论（恢复后与事件条并存）----
-check("付费态有学费、画像记分为空：h2 之前三行结论与事件条并存，事件条在上", () => {
-  const keepProfile = sandbox.procProfileLoad;
-  sandbox.procProfileLoad = () => ({ ssPoints: "", eduUsed: "1" });
-  try {
-    sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "20000" })));
-    const whole = sandbox.outlookHtml(true);
-    const beforeH2 = whole.slice(0, whole.indexOf("<h2>"));
-    assert.ok(beforeH2.includes('id="outlookOneThing"'), "h2 之前没有三行结论：" + beforeH2.slice(0, 120));
-    const bar = oneOf(true);
-    assert.equal((bar.match(/<p /g) || []).length, 3, "结论条不是三行：" + bar);
-    assert.ok(bar.includes("学费抵免"), "结论没讲学费抵免：" + bar);
-    assert.ok(bar.includes("核于"), "第二行缺核实日：" + bar);
-    assert.ok(bar.includes("最晚"), "第三行缺最晚哪天：" + bar);
-    // 事件条此时不亮（记分空，落不到他那一格），但两块的位置关系仍然成立
-    assert.equal(barOf(true, NOW_NEW), "", "记分空时事件条不该亮");
-    assert.ok(beforeH2.indexOf("outlookOneThing") >= 0);
-  } finally {
-    sandbox.procProfileLoad = keepProfile;
-  }
-});
-check("两块并存：有事件时事件条在三行结论之前，且都在 h2 之前", () => {
-  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "12000" })));
-  const whole = sandbox.outlookHtml(true);
-  const iEvent = whole.indexOf('id="policyBar"');
-  const iOne = whole.indexOf('id="outlookOneThing"');
-  const iH2 = whole.indexOf("<h2>");
-  assert.ok(iEvent >= 0, "有事件却没出事件条");
-  assert.ok(iOne >= 0, "没出三行结论");
-  assert.ok(iEvent < iOne, "事件条没在三行结论上面");
-  assert.ok(iOne < iH2, "三行结论没在 h2 之前");
-});
-check("免费态三行结论：只有方向、无 $、无日期，第三行「领季票后看」", () => {
-  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "20000" })));
-  const whole = sandbox.outlookHtml(false);
-  const beforeH2 = whole.slice(0, whole.indexOf("<h2>"));
-  assert.ok(!/\$[\d]/.test(beforeH2), "免费态出现金额：" + beforeH2);
-  assert.ok(!beforeH2.includes("2027-04-15"), "免费态出现最晚日期");
-  assert.ok(beforeH2.includes("领季票后看"), "免费态第三行没写「领季票后看」：" + beforeH2.slice(0, 200));
-});
-check("三行结论在 AOTC 已用完 4 年时三语都不出现「第 5 年」", () => {
-  const keepProfile = sandbox.procProfileLoad;
-  sandbox.procProfileLoad = () => ({ ssPoints: "", eduUsed: "4" });
-  try {
-    sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "20000" })));
-    for (const lang of ["zh", "en", "es"]) {
-      sandbox.LANG = lang;
-      const bar = oneOf(true);
-      const hit = bar.match(/.{0,26}(第 5 年|year 5|año 5).{0,26}/i);
-      assert.ok(!hit, lang + " 结论条出现「第 5 年」：" + (hit ? hit[0] : ""));
-      assert.ok(/用完|used up|ya se usaron/.test(bar), lang + " 没写用完：" + bar);
-      assert.ok(/退|paying it back|devolverlo/.test(bar), lang + " 没写要退回：" + bar);
-    }
-    sandbox.LANG = "zh";
-  } finally {
-    sandbox.procProfileLoad = keepProfile;
-  }
-});
-check("三行结论 0–3 年逐字锁定（「还剩 N 年」）", () => {
-  const keepProfile = sandbox.procProfileLoad;
-  const expect = {
-    0: "今年用掉第 1 年的学费抵免（每个学生最多 4 年），明年还剩 3 年。",
-    1: "今年用掉第 2 年的学费抵免（每个学生最多 4 年），明年还剩 2 年。",
-    2: "今年用掉第 3 年的学费抵免（每个学生最多 4 年），明年还剩 1 年。",
-    3: "今年用掉第 4 年的学费抵免（每个学生最多 4 年），明年还剩 0 年。",
-  };
-  try {
-    for (const used of [0, 1, 2, 3]) {
-      sandbox.procProfileLoad = () => ({ ssPoints: "", eduUsed: String(used) });
-      sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "20000" })));
-      const bar = oneOf(true);
-      assert.ok(bar.includes(expect[used]), used + " 年那句变了，应为：" + expect[used] + "，实际：" + bar);
-    }
-  } finally {
-    sandbox.procProfileLoad = keepProfile;
-  }
 });
 
 // ---- 输出 ----

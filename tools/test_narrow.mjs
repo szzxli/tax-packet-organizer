@@ -1,6 +1,9 @@
 #!/usr/bin/env node
-// 窄屏闸门：375 视口下，首屏那两块（事件条 + 三行结论）不许把整页横向撑开。
-// 真跑布局：起一个真 Chrome，用它的调试口把视口精确设成 375×812，再读 documentElement 的 scrollWidth / clientWidth。
+// 窄屏闸门：375×812 真浏览器（真 Chrome 调试口设视口），量三件事：
+//   1) documentElement.scrollWidth <= clientWidth（整页不许横向滚动）
+//   2) #policyBar / #outlookOneThing 的实测高度不超过目标
+//   3) 长 token 兜底：.one-thing 里塞一个超长 URL 也不许撑宽（防止 URL 再犯）
+// 三种状态 × 三语：付费+事件 / 免费+命中 / 免费+未命中；另加长 token 一格。
 // 跑法：node tools/test_narrow.mjs
 import fs from "node:fs";
 import os from "node:os";
@@ -25,7 +28,7 @@ if (!CHROME) {
   process.exit(2);
 }
 
-// ---- 用页面自己的函数渲染那两块 ----
+// ---- 用页面自己的函数渲染 ----
 const store = {};
 const sandbox = {
   LANG: "zh", packet: null, console, Math, Number, String, Object, Array, JSON,
@@ -41,18 +44,22 @@ const slice = (a, b) => html.slice(html.indexOf(a), html.indexOf(b));
 vm.runInContext(slice("// PLAN_CARDS_LOGIC_START", "// PLAN_CARDS_LOGIC_END"), sandbox);
 vm.runInContext(slice("// OUTLOOK_LOGIC_START", "// OUTLOOK_LOGIC_END"), sandbox);
 
-// 页面里的全部样式，原样搬过来（窄屏问题就是样式问题，不能自己造一份）
 const STYLES = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join("\n");
 assert.ok(STYLES.includes(".one-thing"), "没抽到 .one-thing 的样式");
 
 const STATE = { status: "single", dep: "1", income: "85000", withheld: "9000", tuition: "20000", retire: "", mkt: "", premium: "", mortgage: "" };
 
-function barsHtml(lang, withEvent) {
+function barsHtml(lang, unlocked, profile) {
   sandbox.LANG = lang;
-  sandbox.procProfileLoad = () => (withEvent ? { ssPoints: "34", eduUsed: "1" } : { ssPoints: "", eduUsed: "1" });
+  sandbox.procProfileLoad = () => profile;
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(STATE));
-  const out = sandbox.outlookHtml(true);
+  const out = sandbox.outlookHtml(unlocked);
   return out.slice(0, out.indexOf("<h2>"));
+}
+// 长 token 兜底：URL 这一类连续 token 不许把容器撑宽（2026-11-11 真实踩过）
+function longTokenHtml() {
+  const url = "https://www.federalregister.gov/documents/2026/10/26/2026-21796/cost-of-living-increase-and-other-determinations-for-2027";
+  return '<div id="policyBar" class="one-thing"><p class="small muted">' + url + "</p></div>";
 }
 
 function pageFor(bars) {
@@ -65,7 +72,7 @@ function pageFor(bars) {
 </body></html>`;
 }
 
-// ---- 一个最小的调试口客户端 ----
+// ---- 最小调试口客户端 ----
 class Cdp {
   constructor(url) { this.url = url; this.id = 0; this.waiting = new Map(); }
   open() {
@@ -92,7 +99,6 @@ class Cdp {
   }
   close() { try { this.ws.close(); } catch {} }
 }
-
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function withChrome(fn) {
@@ -127,18 +133,44 @@ async function withChrome(fn) {
 async function measure(cdp, bars) {
   const file = path.join(os.tmpdir(), "narrow-" + Math.random().toString(36).slice(2) + ".html");
   fs.writeFileSync(file, pageFor(bars), "utf8");
-  // 精确设视口：375×812、DPR 1、按手机处理——和验收同一种量法
   await cdp.send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true });
   await cdp.send("Page.enable");
   await cdp.send("Page.navigate", { url: "file://" + file });
   await sleep(400);
   const res = await cdp.send("Runtime.evaluate", {
-    expression: "JSON.stringify({sw:document.documentElement.scrollWidth,cw:document.documentElement.clientWidth,iw:innerWidth})",
     returnByValue: true,
+    expression: `(() => {
+      const d = document.documentElement;
+      const one = document.getElementById("outlookOneThing");
+      const bar = document.getElementById("policyBar");
+      const h = (el) => el ? Math.round(el.getBoundingClientRect().height) : null;
+      return JSON.stringify({ sw: d.scrollWidth, cw: d.clientWidth, hBar: h(bar), hOne: h(one) });
+    })()`,
   });
   fs.rmSync(file, { force: true });
   return JSON.parse(res.result.value);
 }
+
+const CASES = [
+  { key: "paid", name: "付费+事件", unlocked: true, profile: { ssPoints: "34", eduUsed: "1" } },
+  { key: "freeHit", name: "免费+命中", unlocked: false, profile: { ssPoints: "34", eduUsed: "1" } },
+  { key: "freeMiss", name: "免费+未命中", unlocked: false, profile: { ssPoints: "", eduUsed: "1" } },
+];
+const LANGS = ["zh", "en", "es"];
+
+const got = await withChrome(async (cdp) => {
+  const out = [];
+  for (const lang of LANGS) {
+    for (const c of CASES) {
+      const bars = barsHtml(lang, c.unlocked, c.profile);
+      assert.ok(bars.includes("outlookOneThing"), lang + "/" + c.name + " 没渲染出常驻结论条");
+      assert.ok(bars.includes('id="policyBar"'), lang + "/" + c.name + " 没渲染出事件条");
+      out.push({ lang, case: c, box: await measure(cdp, bars) });
+    }
+    out.push({ lang, case: { key: "long", name: "长 token 兜底", unlocked: true }, box: await measure(cdp, longTokenHtml()) });
+  }
+  return out;
+});
 
 const results = [];
 function check(name, fn) {
@@ -146,30 +178,32 @@ function check(name, fn) {
   catch (e) { results.push(["FAIL", name + " — " + e.message]); }
 }
 
-const cases = [];
-for (const lang of ["zh", "en", "es"]) for (const withEvent of [true, false]) cases.push({ lang, withEvent });
-
-const got = await withChrome(async (cdp) => {
-  const out = [];
-  for (const c of cases) {
-    const bars = barsHtml(c.lang, c.withEvent);
-    assert.ok(bars.includes("outlookOneThing"), c.lang + " 没渲染出三行结论");
-    if (c.withEvent) assert.ok(bars.includes('id="policyBar"'), c.lang + " 没渲染出事件条");
-    out.push({ ...c, bars, box: await measure(cdp, bars) });
-  }
-  return out;
-});
-
-for (const c of got) {
-  const label = c.lang + (c.withEvent ? "-有事件" : "-无事件");
+for (const r of got) {
+  const label = r.lang + " · " + r.case.name;
   check("375 视口不横向溢出：" + label, () => {
-    assert.equal(c.box.cw, 375, "视口不是 375（实际 " + c.box.cw + "）");
-    assert.ok(c.box.sw <= c.box.cw, "整页被撑宽：scrollWidth=" + c.box.sw + " > clientWidth=" + c.box.cw);
+    assert.equal(r.box.cw, 375, "视口不是 375（实际 " + r.box.cw + "）");
+    assert.ok(r.box.sw <= r.box.cw, "整页被撑宽：scrollWidth=" + r.box.sw + " > clientWidth=" + r.box.cw);
   });
+  if (r.case.key === "paid") {
+    check("高度 ≤110：#policyBar（" + r.lang + "）", () => {
+      assert.ok(r.box.hBar != null && r.box.hBar <= 110, "实测 " + r.box.hBar + "px > 110px");
+    });
+    check("高度 ≤110：#outlookOneThing（" + r.lang + "）", () => {
+      assert.ok(r.box.hOne != null && r.box.hOne <= 110, "实测 " + r.box.hOne + "px > 110px");
+    });
+  }
+  if (r.case.key === "freeHit" || r.case.key === "freeMiss") {
+    check("高度 ≤80：#outlookOneThing（" + r.lang + " " + r.case.name + "）", () => {
+      assert.ok(r.box.hOne != null && r.box.hOne <= 80, "实测 " + r.box.hOne + "px > 80px");
+    });
+  }
 }
 
 let bad = 0;
 for (const [tag, msg] of results) { if (tag !== "ok  ") bad++; console.log(tag, msg); }
-console.log("\n实测：" + got.map((c) => c.lang + (c.withEvent ? "+事件" : "") + " " + c.box.sw + "/" + c.box.cw).join(" · "));
+console.log("\n实测高度：");
+for (const r of got) {
+  console.log("  " + (r.lang + " · " + r.case.name).padEnd(22) + " policyBar=" + String(r.box.hBar).padStart(4) + "px  outlookOneThing=" + String(r.box.hOne).padStart(4) + "px  " + r.box.sw + "/" + r.box.cw);
+}
 console.log(`\n${results.length - bad} passed, ${bad} failed`);
 process.exit(bad ? 1 : 0);
