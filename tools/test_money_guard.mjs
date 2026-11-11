@@ -141,9 +141,9 @@ check("地图：季票态四条线 × 四格，位置/联动/未来/截止日都
   // FAFSA 只写「两年」，不点名没发布的学年
   assert.ok(/两年/.test(out), "教育线未来格缺「两年」口径");
   assert.ok(!/2028|2029/.test(out), "教育线出现了没发布的学年");
-  // 没填工资：不许出分，必须写明缺哪一项
-  assert.ok(out.includes("还差工资那一项"), "没填工资时没说明缺哪一项");
-  assert.ok(!/今年能拿 [0-9]+ 分|40 分最多到 [0-9]+|从 [0-9]+ 走到/.test(out), "没填工资仍在估分");
+  // 不给当年分数：只讲规则（分只按工资/自雇记、一年最多 N 分、攒到 40）
+  assert.ok(out.includes("分只按工资／自雇那部分记"), "40 分行没写只按工资／自雇记");
+  assert.ok(!/今年能拿 [0-9]+ 分|最多到 [0-9]+|从 [0-9]+ 走到/.test(out), "仍在按总收入估年度分数");
   assert.ok(out.includes("studentaid.gov"), "来源行缺 FAFSA 出处");
   // 400% 线按家庭人数折算：2 人 = 4 × ($15,650 + $5,500) = $84,600；
   // AGI = 85,000 − 5,000 = 80,000，离这条线还有约 $4,600
@@ -193,7 +193,9 @@ check("估算：先扣标准扣除，四个样例的方向与税额都对", () =
 check("400%：单身 70,000 用 AGI 比线，越过 7,400（不是拿应税收入比）", () => {
   const s = state({ status: "single", dep: "", income: "70000", withheld: "8000", mkt: "12", premium: "8400" });
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(s));
-  assert.equal(sandbox.mapFpl400(1), 62600);
+  const row1 = sandbox.RULES.poverty_lines.four_hundred_pct[0];
+  assert.equal(sandbox.mapFpl400(1), row1.limit, "400% 线应按图算");
+  assert.equal(row1.limit, row1.fpl * 4, "公式：400% = 贫困线 ×4");
   assert.equal(sandbox.outlookEstimate(s).agi, 70000);
   const out = sandbox.outlookMapHtml(true);
   assert.ok(out.includes("已越过约 $7,400"), "400% 距离没用 AGI 算");
@@ -239,18 +241,18 @@ check("页面里没有直接吃毛收入的写法（e.income - line400 / e.incom
   assert.ok(html.includes("e.agi - line400"), "400% 应改用 e.agi");
 });
 
-check("填了工资才出分：工资 60,000 → 最多 4 分", () => {
-  const st = state({ status: "single", dep: "", income: "70000", wage: "60000", withheld: "8000" });
+check("7 万全 1099-INT：不出年度分数，只写规则", () => {
+  const st = state({ status: "single", dep: "", income: "70000", withheld: "8000" });
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(st));
   const out = sandbox.outlookMapHtml(true);
-  assert.ok(out.includes("按你填的工资估算，今年最多 4 分"), "填了工资却没按工资算分");
-  assert.ok(!out.includes("还差工资那一项"), "填了工资仍提示缺工资");
+  assert.ok(!/今年能拿 [0-9]+ 分|最多到 [0-9]+|从 [0-9]+ 走到/.test(out), "仍在按总收入估年度分数");
+  assert.ok(out.includes("分只按工资／自雇那部分记"), "没写明只按工资／自雇记");
+  assert.ok(out.includes("攒到 40 分"), "没写 40 分的目标");
 });
-check("工资只填 3,000 → 最多 1 分（不是按总收入 4 分）", () => {
-  const st = state({ status: "single", dep: "", income: "70000", wage: "3000", withheld: "8000" });
-  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(st));
-  const out = sandbox.outlookMapHtml(true);
-  assert.ok(out.includes("今年最多 1 分"), "没按工资算分");
+check("页面不写字面门槛（标准扣除 / 贫困线 / SSA 每分）", () => {
+  for (const lit of ["1890", "16100", "32200", "24150", "15650", "21150", "26650", "32150", "62600", "84600", "106600", "128600"]) {
+    assert.equal(html.indexOf(lit), -1, "页面仍写死门槛：" + lit);
+  }
 });
 check("全页没有不存在的 Form 8880-A", () => {
   assert.equal(html.indexOf("8880-A"), -1, "仍在写 Form 8880-A");
@@ -269,8 +271,7 @@ check("规则图：400% 每行都带两个年度字段、出处与核实日", ()
     assert.match(row.checked, /^\d{4}-\d{2}-\d{2}$/, "缺核实日");
     assert.equal(row.limit, row.fpl * 4, "400% 应为贫困线 ×4");
   }
-  assert.equal(rows[0].limit, 62600);
-  assert.equal(rows[3].limit, 128600);
+  for (const r of rows) assert.equal(r.limit, r.fpl * 4, "400% = 贫困线 ×4");
 });
 check("sw：图进了 APP_SHELL，缓存版本不再是 v3", () => {
   const sw = fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8");

@@ -89,10 +89,9 @@ function resetFrags(list) {
 
 // ---- 9 项不许减项 ----
 check("9 项输入一个不少，且画像只预填其中 5 项", () => {
-  // 9 项顶层输入 + 1 个可选的工资拆分行（只用来算 40 分，不是第 10 个顶层输入）
   assert.deepEqual(
     Array.from(sandbox.OUTLOOK_FIELDS),
-    ["status", "dep", "income", "wage", "withheld", "tuition", "retire", "mkt", "premium", "mortgage"]
+    ["status", "dep", "income", "withheld", "tuition", "retire", "mkt", "premium", "mortgage"]
   );
   const add = sandbox.procPrefill(p);
   assert.equal(add.status, "mfj", "报法");

@@ -2327,9 +2327,9 @@ var OUTLOOK_CHECKED = "2026-11-03";
 var OUTLOOK_TAX_YEAR = 2026;
 var OUTLOOK_DEADLINE_BY_YEAR = { 2026: "2027-04-15" };
 var OUTLOOK_DEADLINE = OUTLOOK_DEADLINE_BY_YEAR[OUTLOOK_TAX_YEAR] || "";
-var OUTLOOK_FIELDS = ["status", "dep", "income", "wage", "withheld", "tuition", "retire", "mkt", "premium", "mortgage"];
+var OUTLOOK_FIELDS = ["status", "dep", "income", "withheld", "tuition", "retire", "mkt", "premium", "mortgage"];
 function outlookLoad() {
-  var d = { status: "single", dep: "", income: "", wage: "", withheld: "", tuition: "", retire: "", mkt: "", premium: "", mortgage: "" };
+  var d = { status: "single", dep: "", income: "", withheld: "", tuition: "", retire: "", mkt: "", premium: "", mortgage: "" };
   try {
     var o = JSON.parse(localStorage.getItem(OUTLOOK_KEY) || "{}") || {};
     OUTLOOK_FIELDS.forEach(function (k) { if (o[k] != null) d[k] = String(o[k]); });
@@ -2436,14 +2436,11 @@ function outlookInputsHtml(s) {
     var lab = PLAN_STATUS_LABEL[code];
     opts += "<option value=\"" + code + "\">" + esc(tr(lab[0], lab[1], lab[2])) + "</option>";
   });
-  return "<details class=\"small\" id=\"outlookInputs\"><summary>" + esc(tr("填这 9 项（工资那行可选，只用来算 40 分；只存这台浏览器）", "Fill these 9 fields (the wage line is optional, used only for credits; saved only in this browser)", "Llene estos 9 campos (la línea de salario es opcional, solo para créditos; solo en este navegador)")) + "</summary>"
+  return "<details class=\"small\" id=\"outlookInputs\"><summary>" + esc(tr("填这 9 项（只存这台浏览器）", "Fill these 9 fields (saved only in this browser)", "Llene estos 9 campos (solo en este navegador)")) + "</summary>"
     + "<div class=\"row\"><div><label for=\"ol_status\">" + esc(tr("报税身份", "Filing status", "Estado civil fiscal")) + "</label><select id=\"ol_status\">" + opts + "</select></div></div>"
     + "<div class=\"row\">"
     + num("dep", "被抚养人数", "People you support", "Personas a su cargo", "0")
     + num("income", "今年要报的收入（W-2、1099 加起来）", "Income to report this year (W-2 and 1099 combined)", "Ingresos a declarar este año (W-2 y 1099 juntos)", "例如 85000")
-    + "</div><div class=\"row\">"
-    + num("wage", "其中工资（W-2）大概多少（可选，只用来算 40 分）", "Of that, roughly how much is W-2 wages (optional — only used for credits)", "De eso, cuánto es salario W-2 (opcional; solo para créditos)", "例如 60000")
-    + "<div></div>"
     + "</div><div class=\"row\">"
     + num("withheld", "全年已经被扣掉的税（W-2 上的联邦预扣）", "Tax already taken out all year (federal withholding on your W-2)", "Impuesto ya descontado todo el año (retención federal de su W-2)", "例如 9000")
     + num("tuition", "学费（一年实付，学校单子上的数）", "Tuition (what you actually paid this year)", "Matrícula (lo que pagó este año)", "例如 12000")
@@ -2520,7 +2517,7 @@ function outlookMapHtml(unlocked) {
     return "<p class=\"small muted\">" + esc(tr("先填这两项：今年要报的收入、全年已经被扣掉的税。填了才出这张地图，不替你填默认值。", "Fill these two first: this year's income and the tax already withheld. The map appears once they are in — no default values are filled in for you.", "Llene primero estos dos: los ingresos de este año y el impuesto ya retenido. El mapa aparece cuando estén; no rellenamos valores por defecto.")) + "</p>";
   }
   var b = outlookBracket(s.status || "single", e.taxable);
-  var mkt = outlookNum(s.mkt), prem = outlookNum(s.premium), wage = outlookNum(s.wage);
+  var mkt = outlookNum(s.mkt), prem = outlookNum(s.premium);
   var tuition = outlookNum(s.tuition), retire = outlookNum(s.retire);
   var points = 0, eduUsed = -1;
   try {
@@ -2568,7 +2565,7 @@ function outlookMapHtml(unlocked) {
       ? tr("今年实付学费 " + money(tuition), "Tuition actually paid this year: " + money(tuition), "Matrícula pagada este año: " + money(tuition))
       : tr("没填学费单，这条线今年不动", "No tuition form entered, so this line does not move this year", "No ingresó matrícula, así que esta línea no se mueve este año"))
     : (tuition > 0 ? tr("有学费单", "there is a tuition form", "hay formulario de matrícula") : tr("今年没有学费单", "no tuition form this year", "este año no hay matrícula"));
-  var push3 = tr("AOTC 每个学生最多 4 个税年、只限本科前四年；LLC 没有年数上限；同一年同一学生只能选一个", "The AOTC runs at most four tax years per student and only in the first four years of college; the LLC has no year limit; one student, one credit per year", "El AOTC dura como máximo cuatro años fiscales por estudiante y solo en los primeros cuatro años de universidad; el LLC no tiene límite de años; un estudiante, un crédito por año");
+  var push3 = tr("AOTC 每个学生最多 " + eduMax + " 个税年、只限本科前 " + eduMax + " 年；LLC 没有年数上限；同一年同一学生只能选一个", "The AOTC runs at most " + eduMax + " tax years per student and only in the first " + eduMax + " years of college; the LLC has no year limit; one student, one credit per year", "El AOTC dura como máximo " + eduMax + " años fiscales por estudiante y solo en los primeros " + eduMax + " años de universidad; el LLC no tiene límite de años; un estudiante, un crédito por año");
 
   var pos4a = unlocked
     ? tr("今年放了 " + money(retire) + " 进退休账户", "Put " + money(retire) + " into retirement accounts this year", "Aportó " + money(retire) + " a cuentas de retiro este año")
@@ -2594,16 +2591,14 @@ function outlookMapHtml(unlocked) {
     : tr("越过这条线，下一个计划年的补贴按整份没有算", "Cross that line and the next plan year is priced with no credit at all", "Al cruzar esa línea, el próximo año de plan queda sin crédito alguno");
   var f3 = unlocked
     ? (eduUsed >= 0
-      ? tr("今年用掉第 " + (eduUsed + 1) + " 年，还剩 " + Math.max(0, eduMax - eduUsed - 1) + " 年；如果今年就是第 4 年，2027 年这一项就没有了。助学金那张表看的是两年前的收入——今年这一步，要等两年后才显出来；LLC 不设年限，研究生学费走这条。", "This uses AOTC year " + (eduUsed + 1) + ", leaving " + Math.max(0, eduMax - eduUsed - 1) + "; if this is year four, the credit is gone in 2027. Financial-aid forms read income from two years earlier — what you do this year shows up two years out; the LLC has no year limit and covers graduate tuition.", "Este año consume el año " + (eduUsed + 1) + " del AOTC y quedan " + Math.max(0, eduMax - eduUsed - 1) + "; si este es el cuarto, en 2027 ya no hay crédito. Las solicitudes de ayuda leen los ingresos de dos años antes: lo que haga este año se verá dos años después; el LLC no tiene límite de años y cubre matrícula de posgrado.")
+      ? tr("今年用掉第 " + (eduUsed + 1) + " 年，还剩 " + Math.max(0, eduMax - eduUsed - 1) + " 年；如果今年就是第 " + eduMax + " 年，2027 年这一项就没有了。助学金那张表看的是两年前的收入——今年这一步，要等两年后才显出来；LLC 不设年限，研究生学费走这条。", "This uses AOTC year " + (eduUsed + 1) + ", leaving " + Math.max(0, eduMax - eduUsed - 1) + "; if this is year " + eduMax + ", the credit is gone in 2027. Financial-aid forms read income from two years earlier — what you do this year shows up two years out; the LLC has no year limit and covers graduate tuition.", "Este año consume el año " + (eduUsed + 1) + " del AOTC y quedan " + Math.max(0, eduMax - eduUsed - 1) + "; si este es el año " + eduMax + ", en 2027 ya no hay crédito. Las solicitudes de ayuda leen los ingresos de dos años antes: lo que haga este año se verá dos años después; el LLC no tiene límite de años y cubre matrícula de posgrado.")
       : tr("「已用几年」还没填：填了才说得出还剩几年。助学金那张表看的是两年前的收入——今年这一步，要等两年后才显出来；LLC 不设年限，研究生学费走这条。", "Years used is not entered yet, so the remaining count cannot be stated. Financial-aid forms read income from two years earlier — what you do this year shows up two years out; the LLC has no year limit and covers graduate tuition.", "Aún no ingresó los años usados, así que no se puede decir cuántos quedan. Las solicitudes de ayuda leen los ingresos de dos años antes: lo que haga este año se verá dos años después; el LLC no tiene límite de años y cubre matrícula de posgrado."))
     : tr("今年用掉，明年就少一年", "Use one this year and next year one is gone", "Si lo usa este año, el próximo queda uno menos");
   var f4a = unlocked
     ? tr("只改今年这张表；2027 年的缴款额度按当年公布值走，这里不猜。", "It only changes this year's return; the 2027 contribution limit follows the figure published for that year — not guessed here.", "Solo cambia la declaración de este año; el límite de aportes de 2027 sigue el valor publicado para ese año: aquí no se adivina.")
     : tr("只改今年这张表，明年的额度按当年公布", "changes only this year's return; next year's limit is the one published then", "solo cambia la declaración de este año; el límite del próximo se publica en su momento");
   var f4b = unlocked
-    ? (wage > 0
-      ? tr("按你填的工资估算，今年最多 " + Math.min(ssMax, Math.floor(wage / ssPoint)) + " 分（每 " + money(ssPoint) + " 记 1 分、一年最多 " + ssMax + " 分）；40 分最多到 " + Math.min(ssTarget, points + Math.min(ssMax, Math.floor(wage / ssPoint))) + "。分越高，退休后月付的方向往上——具体按 SSA 当年表，这里不给金额。", "On the wages you entered, at most " + Math.min(ssMax, Math.floor(wage / ssPoint)) + " credits this year (one per " + money(ssPoint) + ", at most " + ssMax + " a year); the 40-credit count tops out at " + Math.min(ssTarget, points + Math.min(ssMax, Math.floor(wage / ssPoint))) + ". More credits means a higher monthly benefit direction — the amount follows SSA's table for the year and is not shown here.", "Con el salario que ingresó, como máximo " + Math.min(ssMax, Math.floor(wage / ssPoint)) + " créditos este año (uno por cada " + money(ssPoint) + ", máximo " + ssMax + " al año); la cuenta de 40 llega como máximo a " + Math.min(ssTarget, points + Math.min(ssMax, Math.floor(wage / ssPoint))) + ". Más créditos apuntan a una mensualidad mayor: el monto sigue la tabla del SSA del año y aquí no se muestra.")
-      : tr("还差工资那一项：只有工资（W-2）算分，填了才说得出今年几分；存钱不加分。分越高，退休后月付的方向往上——具体按 SSA 当年表，这里不给金额。", "Wages are missing: only W-2 wages earn credits, so this cannot be estimated until you enter them; contributions earn none. More credits means a higher monthly benefit direction — the amount follows SSA's table for the year and is not shown here.", "Falta el salario: solo el salario W-2 suma créditos, así que no se puede estimar hasta que lo ingrese; aportar no suma. Más créditos apuntan a una mensualidad mayor: el monto sigue la tabla del SSA del año y aquí no se muestra."))
+    ? tr("分只按工资／自雇那部分记，一年最多 " + ssMax + " 分；攒到 " + ssTarget + " 分才够领退休金。分越高，退休后月付的方向往上——具体按 SSA 当年表，这里不给金额。", "Credits come only from wages/self-employment, at most " + ssMax + " a year; " + ssTarget + " credits is what retirement benefits need. More credits means a higher monthly benefit direction — the amount follows SSA's table for the year and is not shown here.", "Los créditos vienen solo de salarios o trabajo por cuenta propia, como máximo " + ssMax + " al año; se necesitan " + ssTarget + " para la jubilación. Más créditos apuntan a una mensualidad mayor: el monto sigue la tabla del SSA del año y aquí no se muestra.")
     : tr("分往前走，退休后月付的方向往上", "Credits move forward, so the monthly benefit direction rises", "Los créditos avanzan y la mensualidad apunta hacia arriba");
 
   var when1 = unlocked ? tr("12/31 前 401(k) 缴款到账；4/15 前 IRA 还能补", "401(k) deferrals must land by 12/31; IRA contributions can still be made by 4/15", "Las aportaciones al 401(k) deben entrar antes del 31/12; al IRA aún puede aportar hasta el 15/4") : gate;
@@ -2673,10 +2668,12 @@ function renderOutlook() {
 var PROC_PROFILE_KEY = "tpo_profile_v1";
 var PROC_FRAGS_KEY = "tpo_frags_v1";
 var PROC_CHECKED = "2026-11-10";
-var PROC_EDU_MAX = 4;
-var PROC_SS_POINT = 1890;      // SSA 2026：每 $1,890 记 1 分（核于 2026-11-10）
-var PROC_SS_MAX_YEAR = 4;      // SSA：一年最多 4 分
-var PROC_SS_TARGET = 40;       // SSA：领退休金要 40 分
+// 门槛只从 rules/graph.json 取，页面不写字面值。
+function procRules() { return (typeof mapRules === "function") ? mapRules() : null; }
+function procSsPoint() { var R = procRules(); return (R && R.credits && R.credits.ssa) ? R.credits.ssa.per_credit_usd : 0; }
+function procSsMaxYear() { var R = procRules(); return (R && R.credits && R.credits.ssa) ? R.credits.ssa.max_per_year : 0; }
+function procSsTarget() { var R = procRules(); return (R && R.credits && R.credits.ssa) ? R.credits.ssa.target : 0; }
+function procEduMax() { var R = procRules(); return (R && R.credits && R.credits.aotc) ? R.credits.aotc.max_tax_years_per_student : 0; }
 var PROC_STATUS_OPTIONS = ["single", "mfj", "mfs", "hoh"];
 var PROC_FLASH = "";
 
@@ -2769,42 +2766,42 @@ function procApplyPrefill(p) {
 }
 function procEduCells(used) {
   var h = "";
-  for (var i = 1; i <= PROC_EDU_MAX; i++) {
+  for (var i = 1; i <= procEduMax(); i++) {
     var cls = i <= used ? "used" : (i === used + 1 ? "now" : "gone");
     h += "<span class='proc-cell " + cls + "'>" + i + "</span>";
   }
   return h;
 }
 function procEduCap(used) {
-  if (used >= PROC_EDU_MAX) {
+  if (used >= procEduMax()) {
     return tr("AOTC 四年已用完 · 不可逆", "All four AOTC years used — irreversible", "Los cuatro años del AOTC usados: irreversible");
   }
   return tr(
-    "已用 " + used + " 年 · 今年第 " + (used + 1) + " 年，还剩 " + (PROC_EDU_MAX - used - 1) + " 年",
-    used + " used · this is year " + (used + 1) + ", " + (PROC_EDU_MAX - used - 1) + " left",
-    used + " usados · este es el año " + (used + 1) + ", quedan " + (PROC_EDU_MAX - used - 1)
+    "已用 " + used + " 年 · 今年第 " + (used + 1) + " 年，还剩 " + (procEduMax() - used - 1) + " 年",
+    used + " used · this is year " + (used + 1) + ", " + (procEduMax() - used - 1) + " left",
+    used + " usados · este es el año " + (used + 1) + ", quedan " + (procEduMax() - used - 1)
   );
 }
 function procSsCap(points) {
-  var left = Math.max(0, PROC_SS_TARGET - points);
-  if (!left) return tr("40 分已满", "40 credits reached", "40 créditos completos");
+  var left = Math.max(0, procSsTarget() - points);
+  if (!left) return tr(procSsTarget() + " 分已满", procSsTarget() + " credits reached", procSsTarget() + " créditos completos");
   return tr(
-    "现在 " + points + "/40 · 今年还能拿 " + Math.min(PROC_SS_MAX_YEAR, left) + " 分",
-    points + " of 40 now · up to " + Math.min(PROC_SS_MAX_YEAR, left) + " more this year",
-    points + " de 40 ahora · hasta " + Math.min(PROC_SS_MAX_YEAR, left) + " más este año"
+    "现在 " + points + "/" + procSsTarget() + " · 今年还能拿 " + Math.min(procSsMaxYear(), left) + " 分",
+    points + " of " + procSsTarget() + " now · up to " + Math.min(procSsMaxYear(), left) + " more this year",
+    points + " de " + procSsTarget() + " ahora · hasta " + Math.min(procSsMaxYear(), left) + " más este año"
   );
 }
 // 季票才看得到：越线预警 + 不可逆项。待归类不产生任何一条。
 function procWarn(id, p) {
   if (id === "edu") {
     var used = procInt(p.eduUsed, 0);
-    if (used >= PROC_EDU_MAX) {
+    if (used >= procEduMax()) {
       return [3, tr("AOTC 四年已经用完，这一笔不再增加这条线；LLC 没有年数上限。", "The AOTC's four years are used up; this payment no longer adds to that line — the LLC has no year limit.", "Los cuatro años del AOTC ya se usaron; este pago ya no suma a esa línea: el LLC no tiene límite de años.")];
     }
-    if (used === PROC_EDU_MAX - 1) {
-      return [3, tr("今年是 AOTC 第 4 年，最后一次；今年不付，这条线就用完了。", "This is the AOTC's year four — the last one. If it is not paid this year, the line is used up.", "Este es el cuarto año del AOTC, el último. Si no se paga este año, la línea se agota.")];
+    if (used === procEduMax() - 1) {
+      return [3, tr("今年是 AOTC 第 " + procEduMax() + " 年，最后一次；今年不付，这条线就用完了。", "This is the AOTC's year " + procEduMax() + " — the last one. If it is not paid this year, the line is used up.", "Este es el año " + procEduMax() + " del AOTC, el último. Si no se paga este año, la línea se agota.")];
     }
-    return [2, tr("今年是 AOTC 第 " + (used + 1) + " 年，4 年上限还剩 " + (PROC_EDU_MAX - used - 1) + " 年。", "This is AOTC year " + (used + 1) + "; " + (PROC_EDU_MAX - used - 1) + " of the four years are left.", "Este es el año " + (used + 1) + " del AOTC; quedan " + (PROC_EDU_MAX - used - 1) + " de los cuatro años.")];
+    return [2, tr("今年是 AOTC 第 " + (used + 1) + " 年，" + procEduMax() + " 年上限还剩 " + (procEduMax() - used - 1) + " 年。", "This is AOTC year " + (used + 1) + "; " + (procEduMax() - used - 1) + " of the " + procEduMax() + " years are left.", "Este es el año " + (used + 1) + " del AOTC; quedan " + (procEduMax() - used - 1) + " de los " + procEduMax() + " años.")];
   }
   if (id === "job" || id === "gain") {
     return [2, tr("这笔把收入往上推；收入一变，医保补贴就要在 8962 上重新对账，越过那条线是整份没有，不是少一点。", "This pushes income up. Once income changes, the health-insurance subsidy has to be reconciled on Form 8962; crossing that line means losing all of it, not a little.", "Esto sube los ingresos. Si cambian, el subsidio del seguro médico se concilia en el Formulario 8962; cruzar esa línea significa perderlo todo, no solo un poco.")];
@@ -2816,7 +2813,7 @@ function procWarn(id, p) {
     return [1, tr("这笔同时进所得税和自雇税两条线，也会给退休分加分。", "This lands on both the income-tax and self-employment-tax lines, and it also adds retirement credits.", "Esto entra en la línea del impuesto sobre la renta y en la del trabajo por cuenta propia, y además suma créditos de retiro.")];
   }
   if (id === "k401") {
-    return [1, tr("这是今年少数能主动把收入往下压的动作；退休分一年最多 4 分。", "This is one of the few moves this year that actively lowers income; retirement credits are capped at four a year.", "Es uno de los pocos movimientos del año que bajan los ingresos de forma activa; los créditos de retiro tienen un tope de cuatro al año.")];
+    return [1, tr("这是今年少数能主动把收入往下压的动作；退休分一年最多 " + procSsMaxYear() + " 分。", "This is one of the few moves this year that actively lowers income; retirement credits are capped at " + procSsMaxYear() + " a year.", "Es uno de los pocos movimientos del año que bajan los ingresos de forma activa; los créditos de retiro tienen un tope de " + procSsMaxYear() + " al año.")];
   }
   return null;
 }
@@ -2854,7 +2851,7 @@ function procHtml(unlocked) {
   var flash = PROC_FLASH;
   PROC_FLASH = "";
   var used = procInt(p.eduUsed, 0);
-  var points = Math.min(PROC_SS_TARGET, procInt(p.ssPoints, 0));
+  var points = Math.min(procSsTarget(), procInt(p.ssPoints, 0));
   var h = "<div class='proc-block'>";
   h += "<div class='proc-h'>" + esc(tr("去年那张表：先把画像填上", "Last year's return: start with your profile", "La declaración del año pasado: empiece con su perfil")) + "</div>";
   h += "<p class='proc-sub'>" + esc(tr("一次录入，明年接着用。只用来预填下面 9 项里的 5 项，随时可改。", "Enter it once and reuse it next year. It only prefills five of the nine fields below; you can change them anytime.", "Se ingresa una vez y se reutiliza el próximo año. Solo prellena cinco de los nueve campos de abajo; puede cambiarlos cuando quiera.")) + "</p>";
@@ -2877,15 +2874,15 @@ function procHtml(unlocked) {
   h += "<div class='proc-rings'>";
   h += "<div class='proc-ring'><span class='lab'>" + esc(tr("AOTC 前四年（按单个学生算）", "AOTC's first four years (per student)", "Los primeros cuatro años del AOTC (por estudiante)")) + "</span><span class='proc-cells'>" + procEduCells(used) + "</span>"
     + "<span class='proc-inline'>" + esc(tr("已用", "Used", "Usados")) + "</span><select id='procEduUsed' aria-label='" + esc(tr("已用几年", "Years already used", "Años ya usados")) + "'>";
-  for (var y = 0; y <= PROC_EDU_MAX; y++) h += "<option value='" + y + "'" + (y === used ? " selected" : "") + ">" + y + "</option>";
+  for (var y = 0; y <= procEduMax(); y++) h += "<option value='" + y + "'" + (y === used ? " selected" : "") + ">" + y + "</option>";
   h += "</select><span class='proc-cap'>" + esc(procEduCap(used)) + "</span></div>";
   h += "<div class='proc-ring'><span class='lab'>" + esc(tr("退休分（按你本人算）", "Retirement credits (yours)", "Créditos de retiro (los suyos)")) + "</span>"
-    + "<span class='proc-bar'><i style='width:" + Math.round(points / PROC_SS_TARGET * 100) + "%'></i></span>"
+    + "<span class='proc-bar'><i style='width:" + Math.round(points / procSsTarget() * 100) + "%'></i></span>"
     + "<input class='proc-num' id='procSsPoints' inputmode='numeric' min='0' max='40' value='" + points + "' aria-label='" + esc(tr("累计几分", "Credits so far", "Créditos acumulados")) + "'>"
     + "<span class='proc-cap'>" + esc(procSsCap(points)) + "</span></div>";
   h += "</div>";
   h += "<p class='proc-sub'>" + esc(tr("家里两个孩子在读：年数各算各的，这里填年数最少的那个。", "Two students: years count separately — enter the one with the fewest years left.", "Dos estudiantes: los años se cuentan por separado; ponga el que menos años tenga.")) + "</p>";
-  h += "<p class='proc-src'>" + esc(tr("退休分：SSA 2026，每 $" + PROC_SS_POINT.toLocaleString("en-US") + " 记 1 分，一年最多 4 分，领退休金要 40 分（核于 " + PROC_CHECKED + "）。教育抵免：AOTC 每个学生最多 4 个税年，且只限前四年本科阶段；LLC（终生学习抵免）没有年数上限（Pub 970 / Form 8863，核于 " + PROC_CHECKED + "）。", "Retirement credits: SSA 2026 — $" + PROC_SS_POINT.toLocaleString("en-US") + " earns one credit, up to four a year, 40 needed for retirement benefits (checked " + PROC_CHECKED + "). Education credit: the AOTC runs at most four tax years per student and only in the first four years of college; the LLC (lifetime learning credit) has no year limit (Pub 970 / Form 8863, checked " + PROC_CHECKED + ").", "Créditos de retiro: SSA 2026 — $" + PROC_SS_POINT.toLocaleString("en-US") + " dan un crédito, hasta cuatro al año, se necesitan 40 para la jubilación (verificado el " + PROC_CHECKED + "). Crédito educativo: el AOTC dura como máximo cuatro años fiscales por estudiante y solo en los primeros cuatro años de universidad; el LLC (crédito de aprendizaje permanente) no tiene límite de años (Pub 970 / Form 8863, verificado el " + PROC_CHECKED + ").")) + "</p>";
+  h += "<p class='proc-src'>" + esc(tr("退休分：SSA 2026，每 $" + procSsPoint().toLocaleString("en-US") + " 记 1 分，一年最多 " + procSsMaxYear() + " 分，领退休金要 " + procSsTarget() + " 分（核于 " + PROC_CHECKED + "）。教育抵免：AOTC 每个学生最多 " + procEduMax() + " 个税年，且只限前 " + procEduMax() + " 年本科阶段；LLC（终生学习抵免）没有年数上限（Pub 970 / Form 8863，核于 " + PROC_CHECKED + "）。", "Retirement credits: SSA 2026 — $" + procSsPoint().toLocaleString("en-US") + " earns one credit, up to " + procSsMaxYear() + " a year, " + procSsTarget() + " needed for retirement benefits (checked " + PROC_CHECKED + "). Education credit: the AOTC runs at most " + procEduMax() + " tax years per student and only in the first " + procEduMax() + " years of college; the LLC (lifetime learning credit) has no year limit (Pub 970 / Form 8863, checked " + PROC_CHECKED + ").", "Créditos de retiro: SSA 2026 — $" + procSsPoint().toLocaleString("en-US") + " dan un crédito, hasta " + procSsMaxYear() + " al año, se necesitan " + procSsTarget() + " para la jubilación (verificado el " + PROC_CHECKED + "). Crédito educativo: el AOTC dura como máximo " + procEduMax() + " años fiscales por estudiante y solo en los primeros " + procEduMax() + " años de universidad; el LLC (crédito de aprendizaje permanente) no tiene límite de años (Pub 970 / Form 8863, verificado el " + PROC_CHECKED + ").")) + "</p>";
 
   h += "<div class='proc-h' style='margin-top:16px'>" + esc(tr("今年随手记", "Log it as it happens", "Regístrelo sobre la marcha")) + "</div>";
   h += "<p class='proc-sub'>" + esc(tr("点一下就行，不用懂税。不填金额，只记类型；记多少笔都一样。", "One tap is enough — no tax knowledge needed. No amounts, just the type; any number of entries is the same.", "Basta un toque, sin saber de impuestos. Sin montos, solo el tipo; cualquier número de entradas cuesta lo mismo.")) + "</p>";
@@ -2941,8 +2938,8 @@ function procBind() {
     el.onchange = function () {
       var np = procProfileLoad();
       var v = el.value;
-      if (key === "ssPoints") v = String(Math.min(PROC_SS_TARGET, procInt(v, 0)));
-      if (key === "eduUsed") v = String(Math.min(PROC_EDU_MAX, procInt(v, 0)));
+      if (key === "ssPoints") v = String(Math.min(procSsTarget(), procInt(v, 0)));
+      if (key === "eduUsed") v = String(Math.min(procEduMax(), procInt(v, 0)));
       np[key] = v;
       procProfileSave(np);
       renderProcess();
