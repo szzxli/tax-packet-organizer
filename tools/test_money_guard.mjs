@@ -464,6 +464,45 @@ check("事件条三语：无 undefined / null，en/es 无中文", () => {
   sandbox.LANG = "zh";
 });
 
+// ---- 教育这条：已经用完 4 年时不许把话说反 ----
+check("AOTC 已用完 4 年：三语都不出现「第 5 年」，改说用完了", () => {
+  const keepProfile = sandbox.procProfileLoad;
+  sandbox.procProfileLoad = () => ({ ssPoints: "34", eduUsed: "4" });
+  try {
+    sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "12000" })));
+    for (const lang of ["zh", "en", "es"]) {
+      sandbox.LANG = lang;
+      const out = sandbox.outlookHtml(true);
+      const hit = out.match(/.{0,24}(第 5 年|year 5|año 5).{0,24}/i);
+      assert.ok(!hit, lang + " 出现「第 5 年」：" + (hit ? hit[0] : ""));
+      assert.ok(/已经用完|used up|ya se usaron/.test(out), lang + " 没写「用完」");
+      assert.ok(!/还剩 0 年|0 left|quedan 0/.test(out), lang + " 还在说「还剩 0 年」");
+    }
+    sandbox.LANG = "zh";
+  } finally {
+    sandbox.procProfileLoad = keepProfile;
+  }
+});
+check("AOTC 未用完（0–3 年）：句子与现在一字不差", () => {
+  const keepProfile = sandbox.procProfileLoad;
+  const expect = {
+    0: "今年用掉第 1 年，还剩 3 年",
+    1: "今年用掉第 2 年，还剩 2 年",
+    2: "今年用掉第 3 年，还剩 1 年",
+    3: "今年用掉第 4 年，还剩 0 年；如果今年就是第 4 年，2027 年这一项就没有了",
+  };
+  try {
+    for (const used of [0, 1, 2, 3]) {
+      sandbox.procProfileLoad = () => ({ ssPoints: "34", eduUsed: String(used) });
+      sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ tuition: "12000" })));
+      const out = sandbox.outlookMapHtml(true);
+      assert.ok(out.includes(expect[used]), used + " 年的文案变了，应为：" + expect[used]);
+    }
+  } finally {
+    sandbox.procProfileLoad = keepProfile;
+  }
+});
+
 // ---- 输出 ----
 let bad = 0;
 for (const [tag, msg] of results) {
