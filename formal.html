@@ -242,6 +242,19 @@ header{position:relative;padding-right:150px}
 #handoffSection,#priorCpaCard,#snapCard,#priorityDetails,#payView{display:none!important}
 .chk-red,.chk-yellow,.chk-green{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .chk-red{background:#c0392b}.chk-yellow{background:#d39e00}.chk-green{background:#1e7a4c}
+.eco-map{margin:6px 0 18px}
+.eco-head{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px}
+.eco-verdict{font-size:16px;line-height:1.5;font-weight:600}
+.eco-nums{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.eco-num{flex:1 1 150px;min-width:140px;border:1px solid var(--p-line,#dbe5ec);border-radius:10px;padding:8px 10px}
+.eco-num b{display:block;font-size:20px;line-height:1.2}
+.eco-num span{display:block;margin-top:4px;font-size:12px;color:#596c7d}
+.eco-path{border-left:3px solid var(--p-accent,#2fd4a0);padding:6px 10px;margin:0 0 12px;font-size:13px;line-height:1.5}
+.eco-step{display:flex;gap:10px;padding:8px 0;border-top:1px solid #22324433}
+.eco-when{flex:0 0 110px;font-weight:600;font-size:13px}
+.eco-what{flex:1;font-size:13px;line-height:1.5;color:#42566a}
+.eco-src{margin-top:10px;font-size:11px;color:#6b7d8d}
+@media(max-width:600px){.eco-when{flex-basis:84px}.eco-num{flex-basis:100%}}
 #checkPanel{background:#f8fbfd}
 #checkPanel table{font-size:12px}
 @media(max-width:600px){
@@ -621,6 +634,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <p class="notice ok"><b>免费整理与导出永久免费</b></p>
 <p class="muted small">整理完你会看到一个大概的数——退、补，还是差不多齐平；哪几项在推这个数；哪天之前改还来得及。基础整理永久免费，内测期免费，1 月公布价格。</p>
 
+<div id="ecoMap" class="eco-map"></div>
 <div id="planCards"></div>
 
 <h3>季票给三张规划卡，再做两件事</h3>
@@ -1239,6 +1253,76 @@ function planHas1095A(){
 function planCard(titleTag,title,q,body,boundary){
   return "<div class='plan-card'><div class='plan-tag'>"+esc(titleTag)+"</div><h4>"+esc(title)+"</h4>"+(q?"<p class='plan-q'>"+esc(q)+"</p>":"")+body+"<p class='plan-note'>"+esc(boundary)+"</p></div>";
 }
+// ── 生态地图（季票页顶部）：把你填的数和官方线放在一屏，顺序＝结论 → 三个数 → 关键路径 → 时间卡。
+// 只做算术与指向：不算税、不判资格、不预测福利；每个数字都能追到出处或你自己填的那一行。
+function ecoBadge(level,txt){
+  var cls=level==="ok"?"uploaded":(level==="near"?"pending":"");
+  return "<span class='badge"+(cls?" "+cls:"")+"'>"+esc(txt)+"</span>";
+}
+function ecoMapHtml(s){
+  s=s||{};
+  var st=s.status||"", inc=planAmount(s.income);
+  var b=(st&&inc!=null)?planBracket(st,inc):null;
+  var rate=b?b.rate:null, gap=b&&isFinite(b.hi)?(b.hi-inc):null;
+  var k401=planAmount(s.k401), ira=planAmount(s.ira);
+  var g401=k401!=null?(24500-k401):null, gira=ira!=null?(7500-ira):null;
+
+  var head, badge;
+  if(!b){
+    head=planLang("先填两个数——报税身份和应税收入，这张地图就会亮。","Fill in two things — filing status and taxable income — and this map lights up.","Complete dos datos —estado civil fiscal e ingreso gravable— y este mapa se enciende.");
+    badge=ecoBadge("none",planLang("等你填数","Waiting for your numbers","Esperando sus datos"));
+  }else if(gap!=null&&gap<=2000){
+    head=planFill(planLang("你就贴在下一条线边上：还差 {g} 进 {r}% 档。","You are right at the next line: {g} more moves you into the {r}% bracket.","Está justo en la línea siguiente: con {g} más entra al tramo del {r}%."),{g:planMoney(gap),r:b.higher});
+    badge=ecoBadge("near",planLang("就在线边上","Right at the line","Justo en la línea"));
+  }else if(gap!=null){
+    head=planFill(planLang("你在 {rate}% 档；离 {r}% 那条线还有 {g}。","You are in the {rate}% bracket; the next line ({r}%) is {g} away.","Está en el tramo del {rate}%; la línea siguiente ({r}%) está a {g}."),{rate:rate,r:b.higher,g:planMoney(gap)});
+    badge=ecoBadge("ok",planLang("余量清楚","Room to see","Margen claro"));
+  }else{
+    head=planFill(planLang("你在 {rate}% 档，已经是最高档；上面没有下一条线。","You are in the {rate}% bracket, the top one; there is no next line above.","Está en el tramo del {rate}%, el más alto; no hay línea siguiente."),{rate:rate});
+    badge=ecoBadge("ok",planLang("最高档","Top bracket","Tramo más alto"));
+  }
+
+  var n1=b?planLang(rate+"%",""+rate+"%",""+rate+"%"):"—";
+  var n1sub=planLang("往上一档多赚的部分，按这个比例算","Extra income above the line is taxed at this rate","El ingreso extra sobre la línea paga esta tasa");
+  var n2=gap!=null?planMoney(gap):"—";
+  var n2sub=planLang("到下一档还差这么多；不是建议你少赚","Room left before the next line — not advice to earn less","Margen antes del tramo siguiente: no es una recomendación");
+  var n3v=(g401!=null&&g401>0)?"401(k) "+planMoney(g401):((gira!=null&&gira>0)?"IRA "+planMoney(gira):"—");
+  var n3=(g401!=null||gira!=null)?n3v:"—";
+  var n3sub=planLang("退休账户离当年上限还差多少（2026 上限）","Room left under the yearly retirement limits (2026 limits)","Margen bajo los límites anuales de retiro (límites 2026)");
+
+  var path=planLang("应税收入 → 你所在的这一档 → 明年 4 月这张表 → 退休账户与退休后","Taxable income → your bracket → next April's return → retirement accounts and after","Ingreso gravable → su tramo → la declaración de abril → cuentas de retiro y después");
+
+  var cards=[
+    [planLang("现在","Now","Ahora"),planLang("两件今天能做的：把 401(k)/IRA 还差多少填满；把应税收入核到 1040 第 15 行。","Two things you can do today: fill the 401(k)/IRA gap; check taxable income against line 15 of Form 1040.","Dos cosas para hoy: completar el margen del 401(k)/IRA; verificar el ingreso gravable con la línea 15 del Formulario 1040.")],
+    [planLang("明年 4 月 15 日","April 15 next year","15 de abril del próximo año"),planLang("这张表在这里交；位置错了，改的是那一行，不是这张地图。","The return is filed here; if something is off, you fix that line, not this map.","La declaración se presenta aquí; si algo no cuadra, se corrige esa línea, no este mapa.")],
+    [planLang("10 月 15 日","October 15","15 de octubre"),planLang("延期截止；季票有效期也到这一天。","Extension deadline; the season pass runs to this day too.","Fecha límite de prórroga; el pase también llega hasta este día.")],
+    [planLang("退休后","After retirement","Después del retiro"),planLang("社保月付与退休账户取用是另一套规则；这一屏只标结构，不给金额。","Social Security benefits and withdrawals follow another rulebook; this screen marks structure only, no amounts.","El Seguro Social y los retiros siguen otro reglamento; esta pantalla solo marca estructura, sin montos.")]
+  ];
+  var cardsHtml=cards.map(function(c){
+    return "<div class='eco-step'><div class='eco-when'>"+esc(c[0])+"</div><div class='eco-what'>"+esc(c[1])+"</div></div>";
+  }).join("");
+
+  var src=planLang("税档：Rev. Proc. 2026-35 §3.01（核对 2026-11-11）；退休上限：页面既有的 2026 值。只标结构、不算税额、不判资格。","Brackets: Rev. Proc. 2026-35 §3.01 (checked 2026-11-11); retirement limits: the 2026 figures already used on this page. Structure only — no tax amount, no eligibility decision.","Tramos: Rev. Proc. 2026-35 §3.01 (verificado 2026-11-11); límites de retiro: los valores 2026 ya usados en esta página. Solo estructura: sin monto de impuesto ni decisión de elegibilidad.");
+
+  return "<div class='eco-head'><div class='eco-verdict'>"+esc(head)+"</div>"+badge+"</div>"+
+    "<div class='eco-nums'>"+
+      "<div class='eco-num'><b>"+esc(n1)+"</b><span>"+esc(n1sub)+"</span></div>"+
+      "<div class='eco-num'><b>"+esc(n2)+"</b><span>"+esc(n2sub)+"</span></div>"+
+      "<div class='eco-num'><b>"+esc(n3)+"</b><span>"+esc(n3sub)+"</span></div>"+
+    "</div>"+
+    "<div class='eco-path'>"+esc(path)+"</div>"+
+    "<div class='eco-steps'>"+cardsHtml+"</div>"+
+    "<div class='eco-src'>"+esc(src)+"</div>";
+}
+function renderEcoMap(){
+  var el=$("ecoMap");if(!el)return;
+  if(!hasPass()){
+    // 免费用户只看到这张地图是干什么的，不给任何数字（免费态只给方向）。
+    el.innerHTML="<div class='eco-head'><div class='eco-verdict'>"+esc(tr("这张地图把你自己填的数和官方线放在一屏：你在哪一档、离下一条线多远、退休账户还差多少。","This map puts your own numbers and the official lines on one screen: your bracket, how far the next line is, and the retirement room left.","Este mapa pone sus datos y las líneas oficiales en una pantalla: su tramo, qué tan lejos está la línea siguiente y cuánto margen de retiro queda."))+"</div>"+ecoBadge("none",tr("季票功能","Season pass","Pase de temporada"))+"</div><p><button type='button' class='secondary' onclick='goSub()'>"+esc(tr("去领取免费季票","Claim the free pass","Reclamar el pase gratis"))+"</button></p>";
+    return;
+  }
+  try{el.innerHTML=ecoMapHtml(planState());}catch(e){el.innerHTML="";}
+}
 function planCardsHtml(state,unlocked){
   var html="";
   var guide=planLang("补贴这张卡免费看，不登录也能填：位置 → 补贴 → 退休 → 政策，另外三张在季票里（内测期免费）。领取后在下面直接填；免费整理与导出不受影响，随时可用。","The subsidy card is free for everyone — fill it in without logging in: where you stand → subsidy → retirement → policy; the other three come with the season pass (free during beta). Claim the pass and fill them in below; free organizing and export are not affected.","La tarjeta de subsidio es gratis: puede completarla sin iniciar sesión. Posición → subsidio → retiro → política; las otras tres vienen con el pase (gratis durante la beta). Reclame el pase y complételas abajo; organizar y exportar gratis no se ven afectados.");
@@ -1369,6 +1453,7 @@ function updatePlanResults(){
   if(a)a.innerHTML=plan1Result(s);
   if(b)b.innerHTML=plan2Result(s);
   if(c)c.innerHTML=plan3Result(s);
+  if(typeof renderEcoMap==="function")renderEcoMap();
 }
 function bindPlanCards(){
   function field(id,name,isCheck){
