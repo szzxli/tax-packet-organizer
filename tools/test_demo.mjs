@@ -302,6 +302,20 @@ await withChrome(async (cdp) => {
         }
       });
 
+      check("出处行括号成对（三语）：" + tag, () => {
+        const t = geo.cardText;
+        const open = (t.match(/[（(]/g) || []).length;
+        const close = (t.match(/[）)]/g) || []).length;
+        assert.equal(open, close, "括号不成对：左 " + open + " 右 " + close);
+      });
+      check("第五行写清「每记 1 分要多赚」，并给 40 分合计 $3,200：" + tag, () => {
+        const t = geo.texts[4] || "";
+        assert.ok(t.includes("3,200"), "缺 40 分合计 3,200：" + t);
+        if (tag.startsWith("zh")) {
+          assert.ok(/每记 1 分要多赚/.test(t), "zh 没写清「每记 1 分要多赚」：" + t);
+          assert.ok(!/每分多 \$80/.test(t), "zh 还留着「每分多 $80」这种无主语句");
+        }
+      });
       check("没有判断句与金额承诺：" + tag, () => {
         const t = geo.cardText;
         for (const bad2 of ["建议你", "你应该", "你符合", "适合你", "最好", "保证", "一定能", "抵税", "你能退", "可退"]) {

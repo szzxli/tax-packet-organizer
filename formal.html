@@ -3524,7 +3524,7 @@ function renderDemo(){
         tr("收入 "+demoMoney(inc)+"，减掉合并申报的标准扣除 "+demoMoney(sd)+"，应税 "+demoMoney(taxable)+"。这一档 "+band.rate+"%"+(band.cap!=null?("，到 "+demoMoney(band.cap)+" 为止"):"（最高档）")+(band.next?("；再往上就进 "+band.next[1]+"%"):"")+"。",
            "Income "+demoMoney(inc)+", minus the "+demoMoney(sd)+" joint standard deduction, leaves "+demoMoney(taxable)+" taxable. This band is "+band.rate+"%"+(band.cap!=null?(", up to "+demoMoney(band.cap)):" (top band)")+(band.next?("; above that it is "+band.next[1]+"%"):"")+".",
            "Ingresos "+demoMoney(inc)+"; tras la deducción estándar conjunta de "+demoMoney(sd)+" quedan "+demoMoney(taxable)+" gravables. Este tramo es del "+band.rate+"%"+(band.cap!=null?(", hasta "+demoMoney(band.cap)):" (tramo superior)")+(band.next?("; por encima pasa al "+band.next[1]+"%"):"")+"."),
-        tr("2026 年联邦档位表（","2026 federal brackets (","Tramos federales de 2026 (")+(BR.source||"")+tr("，核于 ","; checked ","; verificado el ")+(BR.checked||"")+tr("）","", ""));
+        tr("2026 年联邦档位表（","2026 federal brackets (","Tramos federales de 2026 (")+(BR.source||"")+tr("，核于 ","; checked ","; verificado el ")+(BR.checked||"")+tr("）",")",")"));
     }else{
       push(tr("收入税档","Income and tax bracket","Ingresos y tramo"),tr("税档数没取到，待核。","Bracket figures not loaded — to be checked.","Cifras del tramo no cargadas: por verificar."),"");
     }
@@ -3562,10 +3562,10 @@ function renderDemo(){
     var NX=SSA.next||null;
     if(NX&&NX.per_credit_usd&&SSA.per_credit_usd){
       push(tr("以后几年会怎么变","How this changes in the coming years","Cómo cambia en los próximos años"),
-        tr(NX.tax_year+" 税年起每分从 "+demoMoney(SSA.per_credit_usd)+" 变成 "+demoMoney(NX.per_credit_usd)+"，"+ (NX.tax_year+1) +" 年报税时才用上；同样 "+(SSA.target||40)+" 分，每分多 "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+"。这条对今年的数没有影响。",
-           "From tax year "+NX.tax_year+" each credit goes from "+demoMoney(SSA.per_credit_usd)+" to "+demoMoney(NX.per_credit_usd)+", first used on the "+ (NX.tax_year+1) +" return; over "+(SSA.target||40)+" credits that is "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+" more per credit. This does not change this year's figures.",
-           "Desde el año fiscal "+NX.tax_year+" cada crédito pasa de "+demoMoney(SSA.per_credit_usd)+" a "+demoMoney(NX.per_credit_usd)+", y se usa por primera vez en la declaración de "+ (NX.tax_year+1) +"; con "+(SSA.target||40)+" créditos son "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+" más por crédito. Esto no cambia las cifras de este año."),
-        (NX.source||"")+tr("，核于 ","; checked ","; verificado el ")+(NX.checked||""),"sample");
+        tr(NX.tax_year+" 税年起每记 1 分要多赚 "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+"（"+demoMoney(SSA.per_credit_usd)+" → "+demoMoney(NX.per_credit_usd)+"），"+ (NX.tax_year+1) +" 年报税时才用上；同样 "+(SSA.target||40)+" 分，工资要多 "+demoMoney((NX.per_credit_usd-SSA.per_credit_usd)*(SSA.target||40))+"。这条对今年的数没有影响。",
+           "From tax year "+NX.tax_year+" each credit takes "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+" more in earnings ("+demoMoney(SSA.per_credit_usd)+" → "+demoMoney(NX.per_credit_usd)+"), first used on the "+ (NX.tax_year+1) +" return; the same "+(SSA.target||40)+" credits take "+demoMoney((NX.per_credit_usd-SSA.per_credit_usd)*(SSA.target||40))+" more in wages. This does not change this year's figures.",
+           "Desde el año fiscal "+NX.tax_year+" cada crédito exige "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+" más de ingreso ("+demoMoney(SSA.per_credit_usd)+" → "+demoMoney(NX.per_credit_usd)+"), y se usa por primera vez en la declaración de "+ (NX.tax_year+1) +"; los mismos "+(SSA.target||40)+" créditos exigen "+demoMoney((NX.per_credit_usd-SSA.per_credit_usd)*(SSA.target||40))+" más de salario. Esto no cambia las cifras de este año."),
+        tr("（","(","(")+(NX.source||"")+tr("，核于 ","; checked ","; verificado el ")+(NX.checked||"")+tr("）",")",")"),"sample");
     }
   }
   box.innerHTML=rows.map(function(r){
