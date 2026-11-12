@@ -3037,8 +3037,8 @@ function acaBarHtml(R, nowMs, unlocked){
   var amt=(nf&&nf.limit!=null)?"$"+Number(nf.limit).toLocaleString("en-US"):"";
   var lineTxt=(unlocked&&amt&&PL.coverage_year)
     ? tr("（"+PL.coverage_year+" 保障年四口之家 "+amt+"）",
-         " ("+amt+" for a household of four in coverage year "+PL.coverage_year+")",
-         " ("+amt+" para un hogar de cuatro en el año de cobertura "+PL.coverage_year+")")
+         " ("+amt+" for a household of four in coverage year "+PL.coverage_year+") ",
+         " ("+amt+" para un hogar de cuatro en el año de cobertura "+PL.coverage_year+") ")
     : "";
   var h="<p class=\"one-thing-lead\"><span class=\"one-badge\">"+esc(tr("开放期","Open now","Abierta"))+"</span><b>"+esc(tr((oe.coverage_year||"")+" 医保开放："+win, (oe.coverage_year||"")+" open enrollment: "+win, "Inscripción abierta "+(oe.coverage_year||"")+": "+win))+"</b></p>";
   h+="<p class=\"small muted\">"+esc(tr("基准银计划平均涨 "+pct+"%；收入过 400% 线，补贴没了。", "Benchmark silver premiums up "+pct+"% on average; above the 400% line, the subsidy is gone. ", "Las primas de referencia suben "+pct+"% en promedio; por encima de la línea del 400%, no hay subsidio. ")+lineTxt+tr("开放期见 ","Dates: ","Fechas: ")+(((oe.source_label||{})[LANG])||oe.source||"")+tr("；涨幅见 ","; premiums: ","; primas: ")+(((oe.premium_source_label||{})[LANG])||oe.premium_source||"")+tr("；核于 ","; checked ","; verificado el ")+(oe.checked||""))+"</p>";
@@ -3555,8 +3555,8 @@ function renderDemo(){
     var PLnext=PL.next||{}, nextFour=((PLnext.four_hundred_pct)||[]).filter(function(x){return x&&x.household_size===4;})[0];
     var nextLine=(nextFour&&nextFour.limit&&PLnext.coverage_year)
       ? tr("现在这个开放期选的是 "+PLnext.coverage_year+" 保障年，那一年按 "+PLnext.effective_tax_year+" 年贫困线算：四口之家 400% 线是 "+demoMoney(nextFour.limit)+"，比上面这个多 "+demoMoney(nextFour.limit-four.limit)+"。",
-           "The open enrollment running now is for coverage year "+PLnext.coverage_year+", which uses the "+PLnext.effective_tax_year+" poverty line: for a household of four the 400% line is "+demoMoney(nextFour.limit)+", "+demoMoney(nextFour.limit-four.limit)+" more than the figure above.",
-           "La inscripción abierta en curso es para el año de cobertura "+PLnext.coverage_year+", que usa la línea de pobreza de "+PLnext.effective_tax_year+": para un hogar de cuatro la línea del 400% es "+demoMoney(nextFour.limit)+", "+demoMoney(nextFour.limit-four.limit)+" más que la cifra anterior.")
+           " The open enrollment running now is for coverage year "+PLnext.coverage_year+", which uses the "+PLnext.effective_tax_year+" poverty line: for a household of four the 400% line is "+demoMoney(nextFour.limit)+", "+demoMoney(nextFour.limit-four.limit)+" more than the figure above.",
+           " La inscripción abierta en curso es para el año de cobertura "+PLnext.coverage_year+", que usa la línea de pobreza de "+PLnext.effective_tax_year+": para un hogar de cuatro la línea del 400% es "+demoMoney(nextFour.limit)+", "+demoMoney(nextFour.limit-four.limit)+" más que la cifra anterior.")
       : "";
     if(four&&four.limit){
       var over=inc>four.limit;
