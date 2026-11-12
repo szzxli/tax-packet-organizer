@@ -451,6 +451,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 
 <div class="card no-print" id="startCard" data-flow-step="1">
 <h2 class="start-title">报税材料，整理成一份能交出去的清单。</h2>
+<p class="start-trust">免费 · 不用登录 · 不需要懂税</p>
 </div>
 <div class="card no-print" id="demoCard" data-flow-step="1">
 <p class="demo-tag">样例家庭：已婚、两孩、加州。不是你的数。</p>
@@ -459,7 +460,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <input type="range" id="demoIncome" min="40000" max="250000" step="1000" value="120000">
 </div>
 <ul class="demo-rows" id="demoRows"></ul>
-<p class="demo-price">季票内测期免费，1 月公布价格。</p>
+<p class="demo-price">季票 = 免费的全部 + 你的结论、交出去前核对、规则变化提醒。内测免费，1 月公布价格。</p>
 <p class="demo-cta"><button type="button" id="demoSub">订阅季票 · 内测免费</button></p>
 <p class="demo-free"><a href="#" id="demoFree">先免费整理，不用订阅 →</a></p>
 <details class="demo-why"><summary>怎么用 · 季票含什么 · 这五行怎么算的</summary>
@@ -469,6 +470,11 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <li><span class="n">3</span><span class="do">交出去前核一遍</span><span class="get">导出 PDF，或发给会计师</span></li>
 </ol>
 <p class="demo-facts"><b>免费：</b>清单、提数、三种导出。<br><b>季票：</b>用你的数出结论、交出去前总核对、规则变化提醒。</p>
+<dl class="demo-faq">
+<dt>需要懂税吗？</dt><dd>不用。你只选今年发生了什么，清单和数字按规则算。</dd>
+<dt>会替我报税吗？</dt><dd>不会。只整理材料、核对清单；报税和签字由你或会计师。</dd>
+<dt>我的文件去哪？</dt><dd>只在这台设备上读，不上传；随时可以一键删除。</dd>
+</dl>
 <ul id="demoWhy"></ul>
 </details>
 </div>
@@ -1029,6 +1035,14 @@ Object.assign(I18N,{"报税材料，整理成一份能交出去的清单。":{"e
 "上面是样例家庭的数。季票内测期免费，1 月公布价格。":{"en":"Those are the sample household\u2019s numbers. The pass is free during beta; pricing announced in January.","es":"Esas son las cifras del hogar de ejemplo. El pase es gratis en beta; precios en enero."},
 "订阅季票 · 内测免费":{"en":"Subscribe \u00b7 free in beta","es":"Suscribirme \u00b7 gratis en beta"},
 "季票内测期免费，1 月公布价格。":{"en":"The pass is free during beta; pricing announced in January.","es":"El pase es gratis durante la beta; precios en enero."},
+"免费 · 不用登录 · 不需要懂税":{"en":"Free \u00b7 no login \u00b7 no tax knowledge needed","es":"Gratis \u00b7 sin cuenta \u00b7 sin saber de impuestos"},
+"季票 = 免费的全部 + 你的结论、交出去前核对、规则变化提醒。内测免费，1 月公布价格。":{"en":"The pass = everything free, plus your own answer, the pre-handoff check, and rule changes. Free in beta; pricing announced in January.","es":"El pase = todo lo gratis, más su respuesta, la verificación previa y los cambios de reglas. Gratis en beta; precios en enero."},
+"需要懂税吗？":{"en":"Do I need to know about taxes?","es":"\u00bfHay que saber de impuestos?"},
+"不用。你只选今年发生了什么，清单和数字按规则算。":{"en":"No. You just pick what changed this year; the checklist and figures come from the rules.","es":"No. Solo elige qué cambió este año; la lista y las cifras salen de las reglas."},
+"会替我报税吗？":{"en":"Does it file my return?","es":"\u00bfPresenta mi declaración?"},
+"不会。只整理材料、核对清单；报税和签字由你或会计师。":{"en":"No. It organizes and checks the packet; you or your accountant file and sign.","es":"No. Organiza y revisa el paquete; usted o su contador presenta y firma."},
+"我的文件去哪？":{"en":"Where do my files go?","es":"\u00bfA dónde van mis archivos?"},
+"只在这台设备上读，不上传；随时可以一键删除。":{"en":"They are read on this device only, never uploaded; delete everything in one click.","es":"Se leen solo en este dispositivo, nunca se suben; borre todo con un clic."},
 "怎么用 · 季票含什么 · 这五行怎么算的":{"en":"How it works \u00b7 what the pass adds \u00b7 how these five lines are worked out","es":"Cómo funciona \u00b7 qué añade el pase \u00b7 cómo se calculan estas cinco líneas"},
 "先免费整理，不用订阅 →":{"en":"Start free, no pass needed \u2192","es":"Empezar gratis, sin pase \u2192"},"这五行怎么算的 · 出处":{"en":"How these five lines are worked out · sources","es":"Cómo se calculan estas cinco líneas · fuentes"},"季票内测期免费，1 月公布价格；领取入口在登录后的季票页。":{"en":"The pass is free during beta; pricing is announced in January. Claim it on the pass page after you log in.","es":"El pase es gratis durante la beta; los precios se anuncian en enero. Se reclama en la página del pase tras iniciar sesión."}});
 Object.assign(I18N,{"不会写？用 AI 描述":{"en":"Not sure what to write? Use AI","es":"¿No sabe qué escribir? Use la IA"}});
@@ -5219,6 +5233,10 @@ body{background:var(--p-bg);-webkit-font-smoothing:antialiased;letter-spacing:.0
 #startCard{position:relative;padding:2px 4px!important;margin:8px 0 0!important;background:transparent!important;border:none!important;box-shadow:none!important}
 .start-title{font-size:clamp(18px,2.4vw,22px)!important;line-height:1.35!important;letter-spacing:-.01em;position:relative;margin:0!important;color:var(--p-text)!important}
 .start-sub{opacity:.95;font-size:15px;position:relative}
+.start-trust{margin:4px 0 0;font-size:12.5px;color:#8fa3b5;position:relative}
+#demoCard .demo-faq{margin:10px 0 0;font-size:12px;line-height:1.55}
+#demoCard .demo-faq dt{margin-top:7px;color:#c8d5df;font-weight:600}
+#demoCard .demo-faq dd{margin:1px 0 0;color:#8fa3b5}
 
 /* 顶栏按钮：原来深蓝字压在深底上（2.2:1），几乎看不见 */
 #navSubscribe,#navPay{opacity:1!important;color:var(--p-text)!important;border-color:var(--p-line)!important;background:transparent!important}
