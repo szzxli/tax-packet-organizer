@@ -175,6 +175,16 @@ await withChrome(async (cdp) => {
         });
         const entries = clickable(document);
         const cardEntries = Array.from(document.querySelectorAll("#demoCard button, #demoCard a[href]")).filter(el => el.offsetParent !== null);
+        const sx = document.getElementById("stickyPass");
+        const sxR = sx && sx.offsetParent !== null ? sx.getBoundingClientRect() : null;
+        const sxCs = sx ? getComputedStyle(sx) : null;
+        const sxContrast = sxCs ? (Math.max(lum(sxCs.color), lum(bgOf(sx)))+0.05)/(Math.min(lum(sxCs.color), lum(bgOf(sx)))+0.05) : 0;
+        const barBg = (() => { const bar = document.getElementById("stickyProgressAction"); return bar ? getComputedStyle(bar).backgroundColor : ""; })();
+        const primaryBtns = Array.from(document.querySelectorAll("button"))
+          .filter(b => b.offsetParent !== null)
+          .map(b => ({ id: b.id || "-", rc: b.getBoundingClientRect(), bg: getComputedStyle(b).backgroundColor }))
+          .filter(x => x.rc.bottom > 0 && x.rc.top < innerHeight && Math.round(x.rc.height) >= 44 && x.bg === barBg)
+          .map(x => x.id);
         return JSON.stringify({
           sw: d.scrollWidth, cw: d.clientWidth,
           cardHidden: card ? card.classList.contains("hidden") : null,
@@ -182,6 +192,8 @@ await withChrome(async (cdp) => {
           heights: rows.map(r => Math.round(r.getBoundingClientRect().height)),
           texts: rows.map(r => r.innerText.replace(/\\s+/g, " ").trim()),
           ctaText: pass.textContent.trim(),
+          stickyPass: sxR ? { text: sx.textContent.trim(), secondary: sx.classList.contains("secondary"), h: Math.round(sxR.height), w: Math.round(sxR.width), top: Math.round(sxR.top), bottom: Math.round(sxR.bottom), contrast: Math.round(sxContrast*100)/100 } : null,
+          primaryBtns: primaryBtns,
           passColor: cs.color, passBg: bgOf(pass),
           passTop: Math.round(pr.top), passH: Math.round(pr.height), contrast: Math.round(contrast*100)/100, rowsBottom,
           passText: (document.getElementById("demoPass") || { textContent: "" }).textContent.trim(),
@@ -226,6 +238,15 @@ await withChrome(async (cdp) => {
       });
       check("卡片内只有季票一条路，没有第二颗主按钮：" + tag, () => {
         assert.deepEqual(geo.cardEntries.slice().sort(), ["demoPass"], "卡片内入口：" + geo.cardEntries.join(","));
+      });
+      check("底栏同时给两条路：季票那条次级、≥44px、≥4.5:1、在首屏：" + tag, () => {
+        assert.ok(geo.stickyPass, "底栏没有季票入口（加载态两条路要同时看得见）");
+        assert.ok(geo.stickyPass.text.length > 0, "底栏季票入口没文案");
+        assert.ok(geo.stickyPass.secondary, "底栏季票入口不是次级样式：" + geo.stickyPass.text);
+        assert.ok(geo.stickyPass.h >= 44, "底栏季票入口高度不足 44px：" + geo.stickyPass.h);
+        assert.ok(geo.stickyPass.contrast >= 4.5, "底栏季票入口对比度只有 " + geo.stickyPass.contrast + ":1");
+        assert.ok(geo.stickyPass.top >= 0 && geo.stickyPass.bottom <= geo.vh, "底栏季票入口不在首屏：" + JSON.stringify(geo.stickyPass));
+        assert.deepEqual(geo.primaryBtns, ["stickyProgressAction"], "主按钮样式不止一颗：" + geo.primaryBtns.join(","));
       });
 
       // 三组收入各拖一次，比对数字
@@ -276,6 +297,39 @@ await withChrome(async (cdp) => {
           assert.ok(row.includes(nx.checked), "缺核实日 " + nx.checked + "：" + row);
           for (const bad3 of ["建议你", "你应该", "你符合", "符合条件", "eligible", "entitled"]) {
             assert.ok(!row.includes(bad3), "出现判断句：" + bad3);
+          }
+        });
+      }
+
+      // 两个保障年各说各的位置：128,000 / 130,000 / 133,000 卡在两条线之间
+      const curLim = graph.poverty_lines.four_hundred_pct.find((x) => x.household_size === 4).limit;
+      const nxtYr = graph.poverty_lines.next.coverage_year;
+      const nxtLim = graph.poverty_lines.next.four_hundred_pct.find((x) => x.household_size === 4).limit;
+      const curStr = money(curLim), nxtStr = money(nxtLim);
+      const esc$ = (s) => s.replace("$", "\\$");
+      for (const inc of [128000, 130000, 133000]) {
+        const row = await cdp.eval(`(() => {
+          const sl = document.getElementById("demoIncome");
+          sl.value = "${inc}"; sl.dispatchEvent(new Event("input", { bubbles: true }));
+          return JSON.stringify(document.getElementById("demoRows").children[1].innerText.replace(/\\s+/g, " ").trim());
+        })()`);
+        const posRe = (over) => (over ? "(上面|above it|por encima)" : "(下面|below it|por debajo)");
+        check("医保行两个保障年各给一次位置：@" + inc + " " + tag, () => {
+          assert.ok(row.includes(curStr), "2026 那条线没出现 " + curStr + "：" + row);
+          assert.ok(row.includes(nxtStr), nxtYr + " 那条线没出现 " + nxtStr + "：" + row);
+          assert.match(row, new RegExp("2026[\\s\\S]{0,90}" + esc$(curStr) + "[\\s\\S]{0,150}" + posRe(inc > curLim)),
+            "2026 那条线的位置没写对（收入 " + inc + "）：" + row);
+          assert.match(row, new RegExp(nxtYr + "[\\s\\S]{0,260}" + esc$(nxtStr) + "[\\s\\S]{0,200}" + posRe(inc > nxtLim)),
+            nxtYr + " 那条线的位置没写对（收入 " + inc + "）：" + row);
+          // 每一处「就没有了」都必须落在带年份的那一句里，不许留一句没有年号的总判
+          const gone = /(就没有了|no premium subsidy|no hay subsidio)/g;
+          let m;
+          while ((m = gone.exec(row))) {
+            const before = row.slice(Math.max(0, m.index - 220), m.index);
+            assert.ok(/20\d\d/.test(before), "有一句「就没有了」没带年号：" + row.slice(Math.max(0, m.index - 80), m.index + 20));
+          }
+          if (inc === 130000) {
+            assert.ok(inc > curLim && inc < nxtLim, "130,000 应正好卡在两条线之间（cur " + curLim + " / next " + nxtLim + "）");
           }
         });
       }

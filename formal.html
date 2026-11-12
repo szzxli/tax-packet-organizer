@@ -102,7 +102,7 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 #flowStepDescription{margin:4px 0 0;color:#596c7d;font-size:13px}
 .sticky-progress{position:fixed;z-index:20;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(760px,calc(100% - 24px));display:flex;align-items:center;gap:16px;padding:13px 16px;background:rgba(255,255,255,.97);border:1px solid #d9e4eb;border-radius:16px;box-shadow:0 10px 34px rgba(16,43,65,.2);backdrop-filter:blur(14px)}
 .sticky-copy{flex:1;min-width:0}.sticky-copy strong{display:block;color:var(--ink);font-size:14px}.sticky-copy p{margin:2px 0 0;color:#5a6d7d;font-size:12px}.progress-track{height:5px;margin-top:8px;overflow:hidden;border-radius:99px;background:#e6edf2}.progress-track span{display:block;width:0;height:100%;background:linear-gradient(90deg,#33896b,#5bb38d);border-radius:inherit;transition:width .25s ease}
-.sticky-progress button{white-space:nowrap;min-height:44px}#stickyProgressPrev{display:inline-block;margin-top:5px;color:#35546c;font-size:12px;text-decoration:underline}.sec-head{align-items:center;gap:10px}.sec-sum{line-height:1.35}.sec-head h2{font-size:17px}
+.sticky-progress button{white-space:nowrap;min-height:44px}#stickyProgressPrev{display:inline-block;margin-top:5px;color:#35546c;font-size:12px;text-decoration:underline}#stickyPass{flex:none;background:#fff;color:#16324f;border:1px solid #16324f;border-radius:999px;padding:0 13px;font-size:13px;font-weight:600;white-space:nowrap}#stickyPass:hover{background:#eef4fa}.sec-head{align-items:center;gap:10px}.sec-sum{line-height:1.35}.sec-head h2{font-size:17px}
 #demoCard .demo-rows{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
 #demoCard .demo-row{border:1px solid #e3ecf2;border-radius:12px;padding:10px 12px;background:#fafcfe}
 #demoCard .demo-row b{display:block;color:#16324f;font-size:14px}
@@ -764,6 +764,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 </div>
 <div id="stickyProgress" class="sticky-progress no-print hidden" aria-live="polite">
 <div class="sticky-copy"><strong id="stickyProgressTitle">继续整理</strong><p id="stickyProgressText"></p><div class="progress-track" aria-hidden="true"><span id="stickyProgressFill"></span></div><a href="#" id="stickyProgressPrev" class="hidden">‹ 上一步</a></div>
+<button id="stickyPass" type="button" class="secondary hidden">季票给什么</button>
 <button id="stickyProgressAction" type="button">继续</button>
 </div>
 
@@ -2497,11 +2498,20 @@ function renderStickyProgress(){
     onlyAction.onclick=function(){var b=$("btnMake");if(b)b.click();};
     var onlyPrev=$("stickyProgressPrev");
     if(onlyPrev){onlyPrev.classList.toggle("hidden",currentOrganizeStep<2);onlyPrev.textContent=tr("‹ 上一步","‹ Back","‹ Atrás");onlyPrev.onclick=function(e){if(e&&e.preventDefault)e.preventDefault();setOrganizeStep(currentOrganizeStep-1,true);};}
+    // 还没清单时，底栏并排给两条路：主按钮仍是「生成清单」，季票那条是次级。
+    // 有清单之后收起——后面每一步只留一件要做的事。
+    var passBtn=$("stickyPass");
+    if(passBtn){
+      passBtn.classList.remove("hidden");
+      passBtn.textContent=tr("季票给什么","What the pass gives","Qué da el pase");
+      passBtn.onclick=function(){try{track("demo_cta_pass");}catch(e){}goSub();};
+    }
     bar.classList.remove("hidden");
     return;
   }
   var pct=total?Math.round(done*100/total):0;
   var title=$("stickyProgressTitle"),text=$("stickyProgressText"),fill=$("stickyProgressFill"),action=$("stickyProgressAction"),prev=$("stickyProgressPrev");
+  var passBtn2=$("stickyPass"); if(passBtn2) passBtn2.classList.add("hidden");
   // 按钮永远指向「下一件要做的事」，并且与当前所在步分开算：第 2 步点到的是第 3 步，不许原地空转。
   var target="s3",label=tr("建立今年清单","Build this year's checklist","Crear la lista de este año"),message=tr("从去年表格或手头材料开始，先生成清单。","Start from last year's forms or the papers you have, and generate the checklist first.","Empiece con los formularios del año pasado o los papeles que tenga y genere primero la lista.");
   var left=total-done;
@@ -3550,20 +3560,25 @@ function renderDemo(){
     }
     // 2) 医保补贴 400% 线
     var four=(PL.four_hundred_pct||[]).filter(function(x){return x&&x.household_size===4;})[0];
-    // 开放期在选的是下一个保障年：那一年按「开放期第一天最近一次公布」的贫困线算（45 CFR 155.300），
+    // 两个保障年各有各的线，各说各的位置：只写一句「就没有了」会让卡在两条线之间的人读反。
+    // 开放期在选的是下一个保障年，那一年按「开放期第一天最近一次公布」的贫困线算（45 CFR 155.300），
     // 与上面这一行不是同一个年、也不是同一条线。数字只从 rules/graph.json 的 poverty_lines.next 取。
     var PLnext=PL.next||{}, nextFour=((PLnext.four_hundred_pct)||[]).filter(function(x){return x&&x.household_size===4;})[0];
-    var nextLine=(nextFour&&nextFour.limit&&PLnext.coverage_year)
-      ? tr("现在这个开放期选的是 "+PLnext.coverage_year+" 保障年，那一年按 "+PLnext.effective_tax_year+" 年贫困线算：四口之家 400% 线是 "+demoMoney(nextFour.limit)+"，比上面这个多 "+demoMoney(nextFour.limit-four.limit)+"。",
-           " The open enrollment running now is for coverage year "+PLnext.coverage_year+", which uses the "+PLnext.effective_tax_year+" poverty line: for a household of four the 400% line is "+demoMoney(nextFour.limit)+", "+demoMoney(nextFour.limit-four.limit)+" more than the figure above.",
-           " La inscripción abierta en curso es para el año de cobertura "+PLnext.coverage_year+", que usa la línea de pobreza de "+PLnext.effective_tax_year+": para un hogar de cuatro la línea del 400% es "+demoMoney(nextFour.limit)+", "+demoMoney(nextFour.limit-four.limit)+" más que la cifra anterior.")
+    var posClause=function(over){
+      return over
+        ? tr("在这条线上面，按现行规则这一年这项补贴就没有了。","is above it, so under the current rule there is no premium subsidy for that year.","está por encima, así que con la regla vigente no hay subsidio para ese año.")
+        : tr("在这条线下面。","is below it.","está por debajo.");
+    };
+    var nextLine=(nextFour&&nextFour.limit&&PLnext.coverage_year&&four&&four.limit)
+      ? tr("现在这个开放期选的是 "+PLnext.coverage_year+" 保障年，那一年按 "+PLnext.effective_tax_year+" 年贫困线算：四口之家 400% 线是 "+demoMoney(nextFour.limit)+"（比 "+four.coverage_year+" 那条线高 "+demoMoney(nextFour.limit-four.limit)+"）；样例收入 "+demoMoney(inc)+" "+posClause(inc>nextFour.limit),
+           " The open enrollment running now is for coverage year "+PLnext.coverage_year+", which uses the "+PLnext.effective_tax_year+" poverty line: for a household of four that 400% line is "+demoMoney(nextFour.limit)+" ("+demoMoney(nextFour.limit-four.limit)+" higher than the "+four.coverage_year+" line); the sample income of "+demoMoney(inc)+" "+posClause(inc>nextFour.limit),
+           " La inscripción abierta en curso es para el año de cobertura "+PLnext.coverage_year+", que usa la línea de pobreza de "+PLnext.effective_tax_year+": para un hogar de cuatro la línea del 400% es "+demoMoney(nextFour.limit)+" ("+demoMoney(nextFour.limit-four.limit)+" más que la línea de "+four.coverage_year+"); el ingreso de muestra de "+demoMoney(inc)+" "+posClause(inc>nextFour.limit))
       : "";
     if(four&&four.limit){
-      var over=inc>four.limit;
       push(tr("医保补贴的 400% 线","The 400% line for the subsidy","La línea del 400% del subsidio"),
-        tr("四口之家 "+four.coverage_year+" 保障年的 400% 线是 "+demoMoney(four.limit)+"。样例收入 "+demoMoney(inc)+" 在这条线的"+(over?"上面":"下面")+"；超过这条线，按现行规则这项补贴就没有了。",
-           "For a household of four the 400% line for coverage year "+four.coverage_year+" is "+demoMoney(four.limit)+". The sample income of "+demoMoney(inc)+" is "+(over?"above":"below")+" it; above that line the current rule provides no premium subsidy.",
-           "Para un hogar de cuatro la línea del 400% del año de cobertura "+four.coverage_year+" es "+demoMoney(four.limit)+". El ingreso de muestra de "+demoMoney(inc)+" está "+(over?"por encima":"por debajo")+"; por encima de esa línea la regla vigente no da subsidio.")+nextLine,
+        tr("四口之家 "+four.coverage_year+" 保障年的 400% 线是 "+demoMoney(four.limit)+"；样例收入 "+demoMoney(inc)+" "+posClause(inc>four.limit),
+           "For a household of four the 400% line for coverage year "+four.coverage_year+" is "+demoMoney(four.limit)+"; the sample income of "+demoMoney(inc)+" "+posClause(inc>four.limit),
+           "Para un hogar de cuatro la línea del 400% del año de cobertura "+four.coverage_year+" es "+demoMoney(four.limit)+"; el ingreso de muestra de "+demoMoney(inc)+" "+posClause(inc>four.limit))+nextLine,
         tr("26 U.S.C. §36B(c)(1)(A) × HHS 贫困线，核于 ","26 U.S.C. §36B(c)(1)(A) × HHS poverty line, checked ","26 U.S.C. §36B(c)(1)(A) × línea de pobreza de HHS, verificado el ")+(PL.checked||"")
           +(nextLine
             ? tr("；"+PLnext.coverage_year+" 保障年按 "+PLnext.effective_tax_year+" 年指南 ×4（ASPE，核于 ","; coverage year "+PLnext.coverage_year+" uses the "+PLnext.effective_tax_year+" guidelines ×4 (ASPE, checked ","; el año de cobertura "+PLnext.coverage_year+" usa la guía de "+PLnext.effective_tax_year+" ×4 (ASPE, verificado el ")+(PLnext.checked||"")+tr("）",")",")")
@@ -3605,7 +3620,7 @@ function renderDemo(){
 }
 // 两个 demo_ 名字都进了 EV_NAMES 与 Worker NAMES，服务端与 abacus 同时收：
 //   demo_drag        同一会话只记一次 —— abacus 计数 = 拖过的人次
-//   demo_cta_pass    点「季票给什么」的次数
+//   demo_cta_pass    点「季票给什么」的次数（样品卡内一颗 + 常驻底栏那颗，两处同一个动作）
 // 带 ?probe=1 打开时不记（闸门与环境自测用，避免污染分母）。
 function demoDragOnce(){
   try{if(sessionStorage.getItem("tpo_demo_drag")==="1")return;sessionStorage.setItem("tpo_demo_drag","1");}catch(e){}
