@@ -87,10 +87,13 @@ check("innerHTML 里的中文只能出现在 tr() 调用里", () => {
   assert.deepEqual(bad, [], "innerHTML 里仍有裸中文");
 });
 
-check("下拉选项：表号保留，非表号项目代码走 exCode()", () => {
-  assert.match(js, /o\.textContent=exCode\(f\[0\]\)\+" — "\+requestLabel\(f\[1\]\)/);
+check("下拉选项：人话打头、表号进括号", () => {
+  assert.match(js, /FORM_PLAIN\[f\[0\]\]/);
+  assert.match(js, /plain\+"（"\+f\[0\]\+"）"/);
+  assert.match(js, /plain\+" \("\+f\[0\]\+"\)"/);
   for (const code of ["W-2", "1099-K", "Schedule C", "1095-A", "1099-NEC"]) {
     assert.ok(html.includes(`"${code}"`), `表号 ${code} 应保持原样`);
+    assert.ok(new RegExp(`"${code}":\\[`).test(js), `表号 ${code} 缺人话标签`);
   }
 });
 
@@ -167,9 +170,9 @@ function trCallArity(src) {
   return bad;
 }
 
-function stickyText(lang, doneCount, total) {
+function stickyText(lang, doneCount, total, step = 2) {
   const el = () => ({ classList: { add() {}, remove() {}, toggle() {} }, style: {}, textContent: "", onclick: null });
-  const els = { stickyProgress: el(), stickyProgressTitle: el(), stickyProgressText: el(), stickyProgressFill: el(), stickyProgressAction: el() };
+  const els = { stickyProgress: el(), stickyProgressTitle: el(), stickyProgressText: el(), stickyProgressFill: el(), stickyProgressAction: el(), stickyProgressPrev: el() };
   const rows = Array.from({ length: total }, (_, k) => ({ ok: k < doneCount }));
   const sandbox = {
     Math,
@@ -177,15 +180,30 @@ function stickyText(lang, doneCount, total) {
     $: (id) => els[id],
     packet: { checklist: rows },
     currentPage: 1,
-    currentOrganizeStep: 2,
+    currentOrganizeStep: step,
     rowResolved: (r) => !!r.ok,
     navigateToSection() {},
+    setOrganizeStep() {},
     tr: (zh, en, es) => (lang === "en" ? en : lang === "es" ? es : zh),
   };
   vm.createContext(sandbox);
   vm.runInContext(fnSource(js, "renderStickyProgress"), sandbox, { filename: "sticky.js" });
   sandbox.renderStickyProgress();
   return els.stickyProgressText.textContent;
+}
+function stickyAction(lang, doneCount, total, step = 2) {
+  const el = () => ({ classList: { add() {}, remove() {}, toggle() {} }, style: {}, textContent: "", onclick: null });
+  const els = { stickyProgress: el(), stickyProgressTitle: el(), stickyProgressText: el(), stickyProgressFill: el(), stickyProgressAction: el(), stickyProgressPrev: el() };
+  const rows = Array.from({ length: total }, (_, k) => ({ ok: k < doneCount }));
+  const sandbox = {
+    Math, LANG: lang, $: (id) => els[id], packet: { checklist: rows }, currentPage: 1,
+    currentOrganizeStep: step, rowResolved: (r) => !!r.ok, navigateToSection() {}, setOrganizeStep() {},
+    tr: (zh, en, es) => (lang === "en" ? en : lang === "es" ? es : zh),
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(fnSource(js, "renderStickyProgress"), sandbox, { filename: "sticky.js" });
+  sandbox.renderStickyProgress();
+  return els.stickyProgressAction.textContent;
 }
 
 check("所有 tr() 调用都是三参（少一个西语就会显示 undefined）", () => {
@@ -206,6 +224,17 @@ check("进度条三语渲染：不出现 undefined / null / 中文", () => {
   assert.match(stickyText("es", 3, 3), /^Los 3 elementos están marcados/);
   assert.equal(stickyText("zh", 1, 3), "已完成 1 / 3 项 · 还有 2 项待处理。");
   assert.equal(stickyText("en", 1, 3), "Done: 1 / 3 · 2 still to handle.");
+});
+
+check("底部条按钮永远指向下一步，第 2 步不许原地空转", () => {
+  for (const lang of ["zh", "en", "es"]) {
+    const s2 = stickyAction(lang, 1, 3, 2);
+    assert.ok(/核对并导出|review & export|revisar y exportar/i.test(s2), lang + " 第 2 步按钮仍停在原地：" + s2);
+    const s3 = stickyAction(lang, 1, 3, 3);
+    assert.ok(/PDF/i.test(s3), lang + " 第 3 步按钮没说会下载：" + s3);
+  }
+  assert.equal(stickyAction("zh", 1, 3, 2), "核对并导出");
+  assert.equal(stickyAction("zh", 1, 3, 3), "下载清单 PDF");
 });
 
 check("州名与表名在行标题里按语言显示", () => {

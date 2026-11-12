@@ -317,11 +317,11 @@ check("规则图：400% 每行都带两个年度字段、出处与核实日", ()
   }
   for (const r of rows) assert.equal(r.limit, r.fpl * 4, "400% = 贫困线 ×4");
 });
-check("sw：图进了 APP_SHELL，缓存版本随图改动升到 v8", () => {
+check("sw：图进了 APP_SHELL，缓存版本随页面/图改动升到 v9", () => {
   const sw = fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8");
   assert.ok(sw.includes('"./rules/graph.json"'), "APP_SHELL 缺规则图");
   // 图是缓存优先；改了图不升版本，老用户会一直读到旧图（这轮就少了 brackets）。
-  assert.ok(sw.includes('"tax-packet-shell-v8"'), "改了规则图却没升 CACHE_NAME，旧图会被缓存盖住");
+  assert.ok(sw.includes('"tax-packet-shell-v9"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
   assert.ok(!sw.includes('"tax-packet-shell-v3"'), "CACHE_NAME 还停在 v3");
 });
 check("AI 文案进 DOM 前换成中性句，正常文案不动", () => {

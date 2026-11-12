@@ -102,9 +102,9 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 #flowStepDescription{margin:4px 0 0;color:#596c7d;font-size:13px}
 .sticky-progress{position:fixed;z-index:20;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(760px,calc(100% - 24px));display:flex;align-items:center;gap:16px;padding:13px 16px;background:rgba(255,255,255,.97);border:1px solid #d9e4eb;border-radius:16px;box-shadow:0 10px 34px rgba(16,43,65,.2);backdrop-filter:blur(14px)}
 .sticky-copy{flex:1;min-width:0}.sticky-copy strong{display:block;color:var(--ink);font-size:14px}.sticky-copy p{margin:2px 0 0;color:#5a6d7d;font-size:12px}.progress-track{height:5px;margin-top:8px;overflow:hidden;border-radius:99px;background:#e6edf2}.progress-track span{display:block;width:0;height:100%;background:linear-gradient(90deg,#33896b,#5bb38d);border-radius:inherit;transition:width .25s ease}
-.sticky-progress button{white-space:nowrap;min-height:44px}.sec-head{align-items:center;gap:10px}.sec-sum{line-height:1.35}.sec-head h2{font-size:17px}
+.sticky-progress button{white-space:nowrap;min-height:44px}#stickyProgressPrev{display:inline-block;margin-top:5px;color:#35546c;font-size:12px;text-decoration:underline}.sec-head{align-items:center;gap:10px}.sec-sum{line-height:1.35}.sec-head h2{font-size:17px}
 #pageNav{padding:12px 16px}.journey-guide+#appViewSections{scroll-margin-top:16px}
-@media(max-width:600px){main{padding:14px 10px 150px}.card{padding:16px 13px}.journey-guide{padding:15px;gap:12px}.journey-steps{gap:5px}.journey-steps .step-tab{padding:7px 9px;font-size:11px}.sticky-progress{bottom:max(8px,env(safe-area-inset-bottom));gap:10px;padding:10px 11px;border-radius:14px}.sticky-copy strong{font-size:13px}.sticky-copy p{font-size:11px}.sticky-progress button{padding:9px 11px;font-size:13px;max-width:145px;white-space:normal}.sec-head{align-items:flex-start;flex-wrap:wrap}.sec-head h2{flex-basis:100%}}
+@media(max-width:600px){main{padding:14px 10px 190px}.card{padding:16px 13px}.journey-guide{padding:15px;gap:12px}.journey-steps{gap:5px}.journey-steps .step-tab{padding:7px 9px;font-size:11px}.sticky-progress{bottom:max(8px,env(safe-area-inset-bottom));gap:10px;padding:10px 11px;border-radius:14px}.sticky-copy strong{font-size:13px}.sticky-copy p{font-size:11px}.sticky-progress button{padding:9px 11px;font-size:13px;max-width:145px;white-space:normal}#stickyProgressPrev{padding:0;font-size:11px;max-width:none;white-space:normal}#supportCard{margin-bottom:130px}.sec-head{align-items:flex-start;flex-wrap:wrap}.sec-head h2{flex-basis:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
 #heroBox h2{font-size:20px}
 #heroBox textarea{width:100%;font-size:16px;padding:12px;border-radius:12px;border:1px solid #bbb;min-height:76px}
@@ -724,7 +724,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 
 </div>
 <div id="stickyProgress" class="sticky-progress no-print hidden" aria-live="polite">
-<div class="sticky-copy"><strong id="stickyProgressTitle">继续整理</strong><p id="stickyProgressText"></p><div class="progress-track" aria-hidden="true"><span id="stickyProgressFill"></span></div></div>
+<div class="sticky-copy"><strong id="stickyProgressTitle">继续整理</strong><p id="stickyProgressText"></p><div class="progress-track" aria-hidden="true"><span id="stickyProgressFill"></span></div><a href="#" id="stickyProgressPrev" class="hidden">‹ 上一步</a></div>
 <button id="stickyProgressAction" type="button">继续</button>
 </div>
 
@@ -1061,6 +1061,45 @@ var EX_CODE={
 "延期缴款":["Extension payment","Pago de prórroga"],
 "IRS/州通知":["IRS/state notice","Aviso del IRS o estatal"]
 };
+// 下拉里一律人话打头、表号进括号：用户先认得「这是什么钱」，再决定要不要选。
+var FORM_PLAIN={
+"W-2":["工资单","Wages","Salarios"],
+"1099-INT":["银行利息","Bank interest","Intereses bancarios"],
+"1099-DIV":["股息分红","Dividends","Dividendos"],
+"1099-R":["退休金 / 年金","Retirement or pension","Jubilación o pensión"],
+"SSA-1099":["社保金","Social Security","Seguro Social"],
+"1099-B":["卖股票或基金","Sold stocks or funds","Venta de acciones o fondos"],
+"1099-G":["州退税或失业金","State refund or unemployment","Reembolso estatal o desempleo"],
+"1099-MISC":["其他收入（租金 / 版税 / 奖金）","Other income (rent, royalty, prize)","Otros ingresos (alquiler, regalías, premios)"],
+"1099-K":["平台收款","Platform payouts","Cobros de plataformas"],
+"1099-S":["卖房的结算单","Home sale closing","Cierre de venta de vivienda"],
+"1099-C":["被免除的债务","Cancelled debt","Deuda cancelada"],
+"1099-NEC":["接单 / 自雇收入","Freelance or self-employed income","Ingresos por cuenta propia"],
+"W-2G":["中奖记录","Gambling winnings","Premios de juego"],
+"Schedule C":["自雇收支","Self-employment income and costs","Ingresos y gastos por cuenta propia"],
+"Schedule E":["出租房收支","Rental property","Propiedad en alquiler"],
+"Schedule F":["农场收支","Farm","Granja"],
+"Schedule SE":["自雇税计算","Self-employment tax","Impuesto de trabajo autónomo"],
+"Schedule K-1":["合伙 / 公司分给你的那部分","Partnership or S-corp share","Parte de sociedad o S-corp"],
+"1098":["房贷利息","Mortgage interest","Intereses hipotecarios"],
+"1098-E":["学生贷款利息","Student loan interest","Intereses de préstamo estudiantil"],
+"1098-T":["学费","Tuition","Matrícula"],
+"Form 2441":["托育费用","Childcare costs","Gastos de cuidado infantil"],
+"房产税单":["房产税","Property tax","Impuesto predial"],
+"医疗收据":["医疗费用","Medical costs","Gastos médicos"],
+"捐赠收据":["捐赠","Donations","Donaciones"],
+"1095-A":["医保市场保单","Marketplace health plan","Plan de salud del mercado"],
+"1095-B/C":["医保覆盖证明","Proof of health coverage","Comprobante de cobertura médica"],
+"5498":["退休账户供款","Retirement contributions","Aportes de jubilación"],
+"5498-SA":["健康储蓄账户供款","HSA contributions","Aportes a la HSA"],
+"1099-SA":["健康储蓄账户取款","HSA withdrawals","Retiros de la HSA"],
+"预估税":["预估税缴款","Estimated tax payments","Pagos de impuesto estimado"],
+"延期缴款":["延期缴款","Extension payment","Pago de prórroga"],
+"IRS/州通知":["税局来信","IRS or state notice","Aviso del IRS o estatal"],
+"FinCEN 114 (FBAR)":["境外账户","Foreign accounts","Cuentas en el extranjero"],
+"Form 8938":["境外金融资产","Foreign financial assets","Activos financieros en el extranjero"],
+"Form 8621":["境外基金","Foreign funds","Fondos en el extranjero"]
+};
 function exCode(code){
   var s=String(code==null?"":code);
   if(LANG==="zh")return s;
@@ -1130,7 +1169,11 @@ var CHANGE_LABEL={
 function changeLabel(key){var c=CHANGES.filter(function(x){return x[0]===key;})[0];var lab=c&&c[2]?c[2]:key;if(LANG==="zh")return lab;var hit=CHANGE_LABEL[key];return hit?(LANG==="es"?hit[1]:hit[0]):(exText(lab)||lab);}
 function $(id){return document.getElementById(id)}
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
-function fillSelect(id){var s=$(id);if(!s)return;var keep=s.value;s.innerHTML="";FORM_MAP.forEach(function(f){var o=document.createElement("option");o.value=f[0];o.textContent=exCode(f[0])+" — "+requestLabel(f[1]);s.appendChild(o)});if(keep)s.value=keep}
+function fillSelect(id){var s=$(id);if(!s)return;var keep=s.value;s.innerHTML="";FORM_MAP.forEach(function(f){
+  var p=FORM_PLAIN[f[0]];var plain=p?(LANG==="es"?p[2]:(LANG==="en"?p[1]:p[0])):null;
+  var code=LANG==="zh"?f[0]:exCode(f[0]);
+  var text=plain?(LANG==="zh"?(plain+"（"+f[0]+"）"):(plain+" ("+code+")")):(exCode(f[0])+" — "+requestLabel(f[1]));
+  var o=document.createElement("option");o.value=f[0];o.textContent=text;s.appendChild(o)});if(keep)s.value=keep}
 fillSelect("lastForm");fillSelect("newForm");fillSelect("irsForm");
 function refreshFormSelects(){["lastForm","newForm","irsForm"].forEach(function(id){fillSelect(id)});}
 var memStore={};
@@ -2324,17 +2367,38 @@ function renderStickyProgress(){
     var onlyAction=$("stickyProgressAction");
     onlyAction.textContent=tr("生成清单","Generate checklist","Generar lista");
     onlyAction.onclick=function(){var b=$("btnMake");if(b)b.click();};
+    var onlyPrev=$("stickyProgressPrev");
+    if(onlyPrev){onlyPrev.classList.toggle("hidden",currentOrganizeStep<2);onlyPrev.textContent=tr("‹ 上一步","‹ Back","‹ Atrás");onlyPrev.onclick=function(e){if(e&&e.preventDefault)e.preventDefault();setOrganizeStep(currentOrganizeStep-1,true);};}
     bar.classList.remove("hidden");
     return;
   }
   var pct=total?Math.round(done*100/total):0;
-  var title=$("stickyProgressTitle"),text=$("stickyProgressText"),fill=$("stickyProgressFill"),action=$("stickyProgressAction");
+  var title=$("stickyProgressTitle"),text=$("stickyProgressText"),fill=$("stickyProgressFill"),action=$("stickyProgressAction"),prev=$("stickyProgressPrev");
+  // 按钮永远指向「下一件要做的事」，并且与当前所在步分开算：第 2 步点到的是第 3 步，不许原地空转。
   var target="s3",label=tr("建立今年清单","Build this year's checklist","Crear la lista de este año"),message=tr("从去年表格或手头材料开始，先生成清单。","Start from last year's forms or the papers you have, and generate the checklist first.","Empiece con los formularios del año pasado o los papeles que tenga y genere primero la lista.");
-  if(total>0&&done<total){target="s4";label=tr("继续补齐材料","Keep gathering","Seguir reuniendo");message=tr("已完成 ","Done: ","Hecho: ")+done+" / "+total+tr(" 项 · 还有 "," · "," · ")+(total-done)+tr(" 项待处理。"," still to handle."," aún por resolver.");}
-  else if(total>0){target="s6";label=tr("导出给会计师","Export to your accountant","Exportar a su contador");message=tr("全部 ","All ","Los ")+total+tr(" 项已标记为已备或不适用，可以导出给 CPA。"," items are marked ready or not applicable — you can export to your CPA."," elementos están marcados como listos o no aplicables: puede exportar a su CPA.");}
+  var left=total-done;
+  if(currentOrganizeStep>=3){
+    target="s6";
+    label=tr("下载清单 PDF","Download PDF","Descargar PDF");
+    message=left?tr("还有 ","Still ","Aún ")+left+tr(" 项没处理，先下载也能交。"," items open — you can export now."," abiertos: puede exportar ya."):tr("全部 ","All ","Los ")+total+tr(" 项已标记为已备或不适用，可以导出给 CPA。"," items are marked ready or not applicable — ready to export to your CPA."," elementos están marcados como listos o no aplicables: listo para exportar a su CPA.");
+    action.onclick=function(){var b=$("btnPrint");if(b)b.click();else navigateToSection("s6");};
+  }else if(currentOrganizeStep===2){
+    target="s6";
+    label=tr("核对并导出","Review & export","Revisar y exportar");
+    message=left?tr("已完成 ","Done: ","Hecho: ")+done+" / "+total+tr(" 项 · 还有 "," · "," · ")+left+tr(" 项待处理。"," still to handle."," aún por resolver."):tr("全部 ","All ","Los ")+total+tr(" 项已标记为已备或不适用。"," items are marked ready or not applicable."," elementos están marcados como listos o no aplicables.");
+    action.onclick=function(){navigateToSection("s6");};
+  }else if(total>0&&done<total){
+    target="s4";label=tr("继续补齐材料","Keep gathering","Seguir reuniendo");message=tr("已完成 ","Done: ","Hecho: ")+done+" / "+total+tr(" 项 · 还有 "," · "," · ")+left+tr(" 项待处理。"," still to handle."," aún por resolver.");
+    action.onclick=function(){navigateToSection(target);};
+  }else if(total>0){
+    target="s4";label=tr("继续补齐材料","Keep gathering","Seguir reuniendo");message=tr("全部 ","All ","Los ")+total+tr(" 项已标记为已备或不适用。"," items are marked ready or not applicable."," elementos están marcados como listos o no aplicables.");
+    action.onclick=function(){navigateToSection(target);};
+  }
   title.textContent=tr("第 "+currentOrganizeStep+" 步 / 共 3 步","Step "+currentOrganizeStep+" of 3","Paso "+currentOrganizeStep+" de 3");
   text.textContent=message;fill.style.width=pct+"%";action.textContent=label;
-  action.onclick=function(){navigateToSection(target);};
+  prev.classList.toggle("hidden",currentOrganizeStep<2);
+  prev.textContent=tr("‹ 上一步","‹ Back","‹ Atrás");
+  prev.onclick=function(e){if(e&&e.preventDefault)e.preventDefault();setOrganizeStep(currentOrganizeStep-1,true);};
   bar.classList.remove("hidden");
 }
 // OUTLOOK_LOGIC_START

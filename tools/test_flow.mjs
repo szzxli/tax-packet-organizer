@@ -130,6 +130,18 @@ await withChrome(async (cdp) => {
       const tag = lang + " " + w + "×" + h;
       await freshLoad(cdp, lang);
 
+      // 1a) 第 2 步的下拉：人话打头、表号进括号；en/es 不许漏中文
+      const opts = await cdp.eval(`(() => {
+        const s = document.getElementById('newForm');
+        const all = Array.from(s.options).map(o => o.textContent);
+        return { first: all[0], cjk: all.filter(t => /[\u4e00-\u9fff]/.test(t)).length, n: all.length };
+      })()`);
+      check("下拉人话打头、表号进括号：" + tag, () => {
+        if (lang === "zh") assert.match(opts.first, /^[\u4e00-\u9fff].*（.+）$/, "中文选项不是人话打头：" + opts.first);
+        else { assert.match(opts.first, /^[A-Za-z].*\(.+\)$/, "外文选项不是人话打头：" + opts.first); assert.equal(opts.cjk, 0, "外文下拉里还有 " + opts.cjk + " 项中文"); }
+        assert.ok(opts.n >= 30, "选项数量不对：" + opts.n);
+      });
+
       // 1b) 首屏副行：三语真渲染，不含分钟数、不夹中文
       const hero = await cdp.eval(`(() => {
         const subs = Array.from(document.querySelectorAll('.start-sub'));
@@ -241,27 +253,45 @@ await withChrome(async (cdp) => {
         assert.ok(skip.len >= 3, "只有 " + skip.len + " 项");
       });
 
-      // 3) 有清单时按钮说下一步
+      // 3) 有清单时按钮说下一步（此时已推进到第 2 步：按钮必须是去第 3 步）
       const withRows = await cdp.eval(`(() => ({
         action: document.getElementById('stickyProgressAction').textContent.trim(),
+        step: window.currentOrganizeStep,
         display: getComputedStyle(document.getElementById('stickyProgress')).display
       }))()`);
       check("有清单时按钮说下一步做什么：" + tag, () => {
         assert.notEqual(withRows.display, "none", "有清单时底部条不见了");
-        assert.ok(/继续补齐材料|keep gathering|seguir reuniendo/i.test(withRows.action), "按钮文案不对：" + withRows.action);
+        const ok = withRows.step >= 2
+          ? /核对并导出|review & export|revisar y exportar/i.test(withRows.action)
+          : /继续补齐材料|keep gathering|seguir reuniendo/i.test(withRows.action);
+        assert.ok(ok, `第 ${withRows.step} 步按钮文案不对：` + withRows.action);
       });
 
-      // 3b) 全部备齐 → 导出
-      const allDone = await cdp.eval(`(() => {
+      // 3b) 第 2 步点按钮 → 真的进第 3 步（不许原地空转）
+      const jumped = await cdp.eval(`(() => {
+        window.setOrganizeStep(2, false);
+        const before = window.currentOrganizeStep;
+        document.getElementById('stickyProgressAction').click();
+        return { before, after: window.currentOrganizeStep, action: document.getElementById('stickyProgressAction').textContent.trim() };
+      })()`);
+      check("第 2 步的按钮把人送到第 3 步：" + tag, () => {
+        assert.equal(jumped.after, 3, "点了没走：" + JSON.stringify(jumped));
+      });
+
+      // 3c) 第 3 步按钮说清会下载
+      const third = await cdp.eval(`(() => {
         (window.packet.checklist||[]).forEach(it => { it.status='uploaded'; });
-        renderStickyProgress();
+        window.setOrganizeStep(3, false);
         return { action: document.getElementById('stickyProgressAction').textContent.trim() };
       })()`);
-      check("全部备齐后按钮变成导出：" + tag, () => {
-        assert.ok(/导出给会计师|export to your accountant|exportar a su contador/i.test(allDone.action), "按钮文案不对：" + allDone.action);
+      check("第 3 步按钮变成下载：" + tag, () => {
+        assert.ok(/PDF|pdf/.test(third.action), "按钮文案不对：" + third.action);
       });
 
       // 5) 布局
+      // 平滑滚动会让测量落在动画中途：先关动画滚到底，再单独量一次最终布局。
+      await cdp.eval(`(() => { document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, document.body.scrollHeight); return 1; })()`);
+      await sleep(60);
       const geo = await cdp.eval(`(() => {
         window.scrollTo(0, document.body.scrollHeight);
         const d = document.documentElement;
