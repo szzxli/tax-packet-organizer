@@ -33,7 +33,8 @@ const TYPES = {
   ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg",
   ".webmanifest": "application/manifest+json", ".pdf": "application/pdf",
 };
-const server = http.createServer((req, res) => {
+const LIVE = (() => { const i = process.argv.indexOf("--live"); return i > 0 ? process.argv[i + 1] : null; })();
+const server = LIVE ? { listen(_p, _h, cb){ if (cb) cb(); }, address(){ return { port: 0 }; }, close(){} } : http.createServer((req, res) => {
   const url = new URL(req.url, "http://127.0.0.1");
   const file = path.join(root, decodeURIComponent(url.pathname));
   if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
@@ -119,7 +120,8 @@ const EXTRACT = `(() => {
 async function readPage(cdp, lang) {
   await cdp.send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true });
   await cdp.send("Page.enable");
-  await cdp.send("Page.navigate", { url: base + "/formal.html?lang=" + lang });
+  const target = LIVE ? LIVE + "?lang=" + lang : base + "/formal.html?lang=" + lang;
+  await cdp.send("Page.navigate", { url: target });
   let ready = false;
   for (let i = 0; i < 60 && !ready; i++) {
     await sleep(150);
@@ -204,7 +206,7 @@ if (process.argv.includes("--missing")) {
   await withChrome(async (cdp) => {
     await cdp.send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true });
     await cdp.send("Page.enable");
-    await cdp.send("Page.navigate", { url: base + "/formal.html?lang=en" });
+    await cdp.send("Page.navigate", { url: LIVE ? LIVE + "?lang=en" : base + "/formal.html?lang=en" });
     await sleep(2500);
     const res = await cdp.send("Runtime.evaluate", {
       returnByValue: true,
