@@ -3543,7 +3543,7 @@ function renderDemo(){
         tr("学费抵免里，AOTC 每个学生最多 "+AOTC.max_tax_years_per_student+" 个税年"+(AOTC.first_four_years_only?"、只限前四年本科":"")+"；另一项（LLC）"+(LLC.no_year_limit?"没有年数上限":"有年数上限")+"；样例两个孩子合计最多 "+yrs+" 个税年。"+demoPhaseoutLine(),
            "Of the two tuition credits, the AOTC covers at most "+AOTC.max_tax_years_per_student+" tax years per student"+(AOTC.first_four_years_only?" and only the first four years of college":"")+"; the other one (the LLC) "+(LLC.no_year_limit?"has no year limit":"does have a year limit")+"; with the sample's two children, at most "+yrs+" AOTC tax years in total. "+demoPhaseoutLine(),
            "De los dos créditos por matrícula, el AOTC cubre como máximo "+AOTC.max_tax_years_per_student+" años fiscales por estudiante"+(AOTC.first_four_years_only?" y solo los cuatro primeros años de universidad":"")+"; el otro (el LLC) "+(LLC.no_year_limit?"no tiene límite de años":"sí tiene límite de años")+"; con los dos hijos del ejemplo, como máximo "+yrs+" años fiscales de AOTC en total. "+demoPhaseoutLine()),
-        tr("Pub 970，核于 ","Pub 970, checked ","Pub 970, verificado el ")+(AOTC.checked||""));
+        tr("Pub 970，核于 ","Pub 970, checked ","Pub 970, verificado el ")+((AOTC.phaseout&&AOTC.phaseout.checked)||AOTC.checked||""));
     }
     // 4) 退休与社安记分
     if(SSA.per_credit_usd&&SSA.max_per_year){
