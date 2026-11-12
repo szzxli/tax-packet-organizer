@@ -439,7 +439,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div class="demo-slide">
 <label for="demoIncome" class="small muted">拖一下，看你的收入落在哪</label>
 <input type="range" id="demoIncome" min="40000" max="250000" step="1000" value="120000">
-<div class="demo-slide-line"><b id="demoIncomeNow">$120,000</b><select id="demoPreset" aria-label="从一个收入档开始" data-i18n-aria="从一个收入档开始"><option value="60000">从 6 万开始</option><option value="120000" selected>从 12 万开始</option><option value="200000">从 20 万开始</option></select></div>
+<div class="demo-slide-line"><b id="demoIncomeNow">$120,000</b></div>
 </div>
 <ul class="demo-rows" id="demoRows"></ul>
 <p class="small muted">上面全是样例数，跟着滑块变。换成你自己的数，才需要季票。</p>
@@ -3621,14 +3621,19 @@ function demoPhaseoutLine(){
   var sl=document.getElementById("demoIncome");
   var inc=sl?(Number(sl.value)||120000):120000;
   var m0=PO.mfj[0], m1=PO.mfj[1], X=demoMoney(inc);
-  var last = inc<m0
-    ? tr("样例收入 "+X+" 在合并申报那条线下面，这两项都不打折。","The sample income of "+X+" is below that line, so neither credit is reduced.","El ingreso de muestra de "+X+" está por debajo de esa línea, así que ningún crédito se reduce.")
+  return inc<m0
+    ? tr("样例收入 "+X+" 在这条线下面，两项都不打折。","The sample income of "+X+" is below the line, so neither credit is reduced.","El ingreso de muestra de "+X+" está por debajo, así que ningún crédito se reduce.")
     : (inc<=m1
-      ? tr("样例收入 "+X+" 落在合并申报的淘汰区间里，按比例减少。","The sample income of "+X+" falls inside the joint phase-out range, so both are reduced proportionally.","El ingreso de muestra de "+X+" cae dentro del rango de reducción conjunto, así que ambos se reducen de forma proporcional.")
-      : tr("样例收入 "+X+" 在合并申报那条线上面，这两项都是 0。","The sample income of "+X+" is above that line, so both are 0.","El ingreso de muestra de "+X+" está por encima de esa línea, así que ambos son 0."));
-  return tr("两项都有收入淘汰线：单身／户主 " + demoMoney(PO.single[0]) + "–" + demoMoney(PO.single[1]) + " 之间逐步减少，" + demoMoney(PO.single[1]) + " 以上没有；合并申报 " + demoMoney(m0) + "–" + demoMoney(m1) + " 之间逐步减少，" + demoMoney(m1) + " 以上没有。" + last,
-    "Both credits have an income phase-out line: phased out between " + demoMoney(PO.single[0]) + " and " + demoMoney(PO.single[1]) + " for single or head of household, and none at " + demoMoney(PO.single[1]) + " or more; between " + demoMoney(m0) + " and " + demoMoney(m1) + " for joint returns, and none at " + demoMoney(m1) + " or more. " + last,
-    "Ambos créditos tienen una línea de reducción por ingresos: se reducen entre " + demoMoney(PO.single[0]) + " y " + demoMoney(PO.single[1]) + " para soltero o cabeza de familia, y no hay nada desde " + demoMoney(PO.single[1]) + "; en conjunta entre " + demoMoney(m0) + " y " + demoMoney(m1) + ", y nada desde " + demoMoney(m1) + ". " + last);
+      ? tr("样例收入 "+X+" 落在淘汰区间里，按比例减少。","The sample income of "+X+" falls inside the phase-out range, so both are reduced proportionally.","El ingreso de muestra de "+X+" cae en el rango de reducción.")
+      : tr("样例收入 "+X+" 在这条线上面，两项都是 0。","The sample income of "+X+" is above the line, so both are 0.","El ingreso de muestra de "+X+" está por encima, así que ambos son 0."));
+}
+function demoPhaseoutRanges(){
+  var R=(typeof mapRules==="function")?mapRules():null;
+  var C=R&&R.credits||{}, PO=(C.aotc&&C.aotc.phaseout)||(C.llc&&C.llc.phaseout)||null;
+  if(!PO||!PO.mfj||!PO.single) return "";
+  return tr("淘汰线：单身／户主 "+demoMoney(PO.single[0])+"–"+demoMoney(PO.single[1])+"，合并 "+demoMoney(PO.mfj[0])+"–"+demoMoney(PO.mfj[1])+"。",
+            "Phase-out: "+demoMoney(PO.single[0])+"–"+demoMoney(PO.single[1])+" single/HoH, "+demoMoney(PO.mfj[0])+"–"+demoMoney(PO.mfj[1])+" joint.",
+            "Reducción: "+demoMoney(PO.single[0])+"–"+demoMoney(PO.single[1])+" soltero/jefe de hogar, "+demoMoney(PO.mfj[0])+"–"+demoMoney(PO.mfj[1])+" conjunta.");
 }
 function renderDemo(){
   var card=document.getElementById("demoCard");if(!card)return;
@@ -3669,9 +3674,9 @@ function renderDemo(){
         : tr("在这条线下面。","is below it.","está por debajo.");
     };
     var nextLine=(nextFour&&nextFour.limit&&PLnext.coverage_year&&four&&four.limit)
-      ? tr("现在这个开放期选的是 "+PLnext.coverage_year+" 保障年，那一年按 "+PLnext.effective_tax_year+" 年贫困线算：四口之家 400% 线是 "+demoMoney(nextFour.limit)+"（比 "+four.coverage_year+" 那条线高 "+demoMoney(nextFour.limit-four.limit)+"）；样例收入 "+demoMoney(inc)+" "+posClause(inc>nextFour.limit),
-           " The open enrollment running now is for coverage year "+PLnext.coverage_year+", which uses the "+PLnext.effective_tax_year+" poverty line: for a household of four that 400% line is "+demoMoney(nextFour.limit)+" ("+demoMoney(nextFour.limit-four.limit)+" higher than the "+four.coverage_year+" line); the sample income of "+demoMoney(inc)+" "+posClause(inc>nextFour.limit),
-           " La inscripción abierta en curso es para el año de cobertura "+PLnext.coverage_year+", que usa la línea de pobreza de "+PLnext.effective_tax_year+": para un hogar de cuatro la línea del 400% es "+demoMoney(nextFour.limit)+" ("+demoMoney(nextFour.limit-four.limit)+" más que la línea de "+four.coverage_year+"); el ingreso de muestra de "+demoMoney(inc)+" "+posClause(inc>nextFour.limit))
+      ? tr(PLnext.coverage_year+" 保障年那条线是 "+demoMoney(nextFour.limit)+"（比 "+four.coverage_year+" 高 "+demoMoney(nextFour.limit-four.limit)+"，按 "+PLnext.effective_tax_year+" 年指南）；你"+posClause(inc>nextFour.limit),
+           "Coverage year "+PLnext.coverage_year+" has a "+demoMoney(nextFour.limit)+" line ("+demoMoney(nextFour.limit-four.limit)+" higher, on the "+PLnext.effective_tax_year+" guidelines); your income "+posClause(inc>nextFour.limit),
+           "El año de cobertura "+PLnext.coverage_year+" tiene una línea de "+demoMoney(nextFour.limit)+" ("+demoMoney(nextFour.limit-four.limit)+" más, con la guía de "+PLnext.effective_tax_year+"); su ingreso "+posClause(inc>nextFour.limit))
       : "";
     if(four&&four.limit){
       push(tr("医保补贴的 400% 线","The 400% line for the subsidy","La línea del 400% del subsidio"),
@@ -3692,7 +3697,7 @@ function renderDemo(){
         tr("学费抵免里，AOTC 每个学生最多 "+AOTC.max_tax_years_per_student+" 个税年"+(AOTC.first_four_years_only?"、只限前四年本科":"")+"；另一项（LLC）"+(LLC.no_year_limit?"没有年数上限":"有年数上限")+"。样例两个孩子，AOTC 合计最多 "+yrs+" 个税年。"+demoPhaseoutLine(),
            "Of the two tuition credits, the AOTC covers at most "+AOTC.max_tax_years_per_student+" tax years per student"+(AOTC.first_four_years_only?" and only the first four years of college":"")+"; the other one (the LLC) "+(LLC.no_year_limit?"has no year limit":"does have a year limit")+". With the sample's two children, at most "+yrs+" AOTC tax years in total. "+demoPhaseoutLine(),
            "De los dos créditos por matrícula, el AOTC cubre como máximo "+AOTC.max_tax_years_per_student+" años fiscales por estudiante"+(AOTC.first_four_years_only?" y solo los cuatro primeros años de universidad":"")+"; el otro (el LLC) "+(LLC.no_year_limit?"no tiene límite de años":"sí tiene límite de años")+". Con los dos hijos del ejemplo, como máximo "+yrs+" años fiscales de AOTC en total. "+demoPhaseoutLine()),
-        tr("Pub 970，核于 ","Pub 970, checked ","Pub 970, verificado el ")+((AOTC.phaseout&&AOTC.phaseout.checked)||AOTC.checked||""));
+        tr("Pub 970，核于 ","Pub 970, checked ","Pub 970, verificado el ")+((AOTC.phaseout&&AOTC.phaseout.checked)||AOTC.checked||"")+" · "+demoPhaseoutRanges());
     }
     // 4) 退休与社安记分
     if(SSA.per_credit_usd&&SSA.max_per_year){
@@ -3726,7 +3731,7 @@ function demoDragOnce(){
   try{track("demo_drag");}catch(e2){}
 }
 $("demoIncome").addEventListener("input",function(){renderDemo();demoDragOnce();});
-$("demoPreset").addEventListener("change",function(){var sl=$("demoIncome");var v=Number(this.value);if(sl&&v){sl.value=String(v);renderDemo();}demoDragOnce();});
+
 $("demoPass").onclick=function(ev){if(ev&&ev.preventDefault)ev.preventDefault();try{track("demo_cta_pass");}catch(e2){}goSub();};
 $("btnAiOpen").onclick=function(e){e.preventDefault();var ai=$("aiCard");if(ai){ai.dataset.open="1";ai.classList.remove("hidden");ai.scrollIntoView({behavior:"smooth",block:"start"});}};
 // 首屏（第 1 页且还没有清单）不摆顶部导航：样品卡里已经有「整理我自己的」与「季票给什么」两条路。
