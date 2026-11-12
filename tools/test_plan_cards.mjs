@@ -345,6 +345,20 @@ check("页面级：单列“免费整理与导出永久免费”", () => {
   assert.ok(html.includes("<p class=\"notice ok\"><b>免费整理与导出永久免费</b></p>"), "缺单列一行");
 });
 
+check("FAQ：季票只讲三件，规划卡与盯梢这两个卖点名清零", () => {
+  const i = html.indexOf('id="faqCard"');
+  const j = html.indexOf("</div>", html.indexOf("季票包括什么？", i));
+  assert.ok(i > 0 && j > i, "找不到 FAQ 卡");
+  const faq = html.slice(i, j);
+  const line = html.slice(html.indexOf("季票包括什么？", i), html.indexOf("</p>", html.indexOf("季票包括什么？", i)));
+  for (const need of ["整理完那一屏", "交付前总核对", "次年打开还在", "内测中", "医保补贴", "不用领季票", "只在本页展示"]) {
+    assert.ok(line.includes(need), "FAQ 少了：" + need);
+  }
+  assert.ok(!faq.includes("三张规划卡"), "FAQ 还在讲三张规划卡");
+  assert.equal(html.split("三张规划卡").length - 1, 0, "全页仍有「三张规划卡」");
+  assert.equal(html.split("全年盯梢").length - 1, 0, "全页仍有「全年盯梢」");
+});
+
 check("页面级：订阅展示卡只讲「整理完那一屏」与「交付前总核对」两格", () => {
   assert.ok(html.includes("<h3>季票先把这一屏的钱讲清楚</h3>"), "缺新标题");
   assert.ok(html.includes("<h2>季票先告诉你：今年大概是退还是补</h2>"), "缺新卡标题");
