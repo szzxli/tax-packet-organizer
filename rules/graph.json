@@ -133,7 +133,23 @@
     "k401_limit": 24500,
     "effective_tax_year": 2026,
     "checked": "2026-11-08",
-    "source_url": "https://www.irs.gov/pub/irs-drop/n-25-67.pdf"
+    "source_url": "https://www.irs.gov/pub/irs-drop/n-25-67.pdf",
+    "next": {
+      "effective_tax_year": 2027,
+      "checked": "2026-11-12",
+      "source": "IRS IR-2026-136 / Notice 2026-66",
+      "source_url": "https://www.irs.gov/newsroom/401k-limit-increases-to-25500-for-2027-ira-limit-remains-7500",
+      "k401_limit": 25500,
+      "catch_up_50": 8500,
+      "catch_up_60_63": 11750,
+      "total_50_plus": 34000,
+      "ira_limit": 7500,
+      "ira_catch_up": 1100,
+      "simple_limit": 17500,
+      "simple_60_63": 5250,
+      "roth_phaseout_single": [158000, 173000],
+      "roth_phaseout_mfj": [250000, 260000]
+    }
   },
   "subsidy_cliff": {
     "rule": "premium tax credit limited to household income at or below 400% of the poverty line",

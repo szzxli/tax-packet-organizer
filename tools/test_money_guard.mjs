@@ -323,8 +323,8 @@ check("sw：图与价格文件进了 APP_SHELL，缓存版本随页面/图改动
   assert.ok(sw.includes('"./rules/graph.json"'), "APP_SHELL 缺规则图");
   assert.ok(sw.includes('"./pricing.json"'), "APP_SHELL 缺价格文件");
   // 图与页面是缓存优先；改了不升版本，老用户会一直读到旧内容（这轮是订阅区）。
-  assert.ok(sw.includes('"tax-packet-shell-v12"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
-  assert.ok(!sw.includes('"tax-packet-shell-v11"'), "CACHE_NAME 还停在 v11");
+  assert.ok(sw.includes('"tax-packet-shell-v13"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
+  assert.ok(!sw.includes('"tax-packet-shell-v12"'), "CACHE_NAME 还停在 v12");
 });
 check("AI 文案进 DOM 前换成中性句，正常文案不动", () => {
   const bad = sandbox.aiSafeText("You are eligible for this credit");
@@ -678,6 +678,50 @@ check("25F 不许读成学费多抵一笔", () => {
     assert.ok(/25F/.test(out), lang + " 没写 25F");
     const neg = lang === "zh" ? "不是家长学费抵免" : lang === "en" ? "not a tuition credit" : "no un crédito de matrícula";
     assert.ok(out.includes(neg), lang + " 25F 那句没写明不是学费抵免");
+  }
+  sandbox.LANG = "zh";
+});
+
+// ---- 2027 退休额度（IRS IR-2026-136，2026-11-12）----
+check("图：2026 不动、2027 另起一节且带税年与出处", () => {
+  const g = JSON.parse(fs.readFileSync(new URL("../rules/graph.json", import.meta.url), "utf8")).retirement;
+  assert.equal(g.k401_limit, 24500, "2026 的 401(k) 被覆盖了");
+  assert.equal(g.ira_limit, 7500, "2026 的 IRA 被覆盖了");
+  assert.equal(g.effective_tax_year, 2026, "2026 的税年被改了");
+  const n = g.next;
+  assert.ok(n, "缺 2027 那一节");
+  assert.equal(n.effective_tax_year, 2027, "2027 的税年不对");
+  assert.equal(n.checked, "2026-11-12", "2027 缺核实日");
+  assert.match(n.source_url, /irs\.gov/, "2027 缺出处链接");
+  assert.equal(n.k401_limit, 25500);
+  assert.equal(n.catch_up_50, 8500);
+  assert.equal(n.catch_up_60_63, 11750);
+  assert.equal(n.total_50_plus, 34000);
+  assert.equal(n.ira_limit, 7500);
+  assert.equal(n.simple_limit, 17500);
+});
+
+check("地图：2027 的数只在「以后会怎样」那一格，2026 那几列一个都没有（三语）", () => {
+  for (const lang of ["zh", "en", "es"]) {
+    sandbox.LANG = lang;
+    // 用户自己填 6,000，避免与 2027 的 8,500 补缴上限撞数
+    sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ retire: "6000" })));
+    const out = sandbox.outlookMapHtml(true);
+    const i = out.search(/退休账户|Put into retirement|Aportado a cuentas de retiro/);
+    assert.ok(i > 0, lang + " 没找到退休账户那一行");
+    const rowStart = out.lastIndexOf("<tr>", i);
+    const rowEnd = out.indexOf("</tr>", i);
+    const rows = out.slice(rowStart, rowEnd);
+    assert.ok(rows.includes("</th>"), lang + " 取到的不是一行：" + rows.slice(0, 80));
+    const cells = rows.split("<td").slice(1).map((c) => c.split("</td>")[0]);
+    assert.equal(cells.length, 4, lang + " 那一行不是 4 格：" + cells.length);
+    const future = cells[2];
+    for (const n of ["25,500", "8,500", "11,750", "34,000"]) assert.ok(future.includes(n), lang + " 以后那格缺 " + n);
+    const y2026 = cells[0] + cells[1] + cells[3];
+    for (const n of ["25,500", "8,500", "11,750"]) assert.ok(!y2026.includes(n), lang + " 2026 那几列混进了 2027 的数：" + n);
+    for (const bad of ["建议", "应该", "最好", "多存", "should", "recommend", "debería", "recomend"]) {
+      assert.ok(!future.toLowerCase().includes(bad.toLowerCase()), lang + " 以后那格出现建议句：" + bad);
+    }
   }
   sandbox.LANG = "zh";
 });
