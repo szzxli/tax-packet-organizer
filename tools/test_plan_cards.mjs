@@ -361,9 +361,16 @@ check("页面级：总核对标注“现在就能出结果”", () => {
   assert.ok(html.includes("<b>交付前总核对 · 现在就能出结果</b>"), "缺“现在就能出结果”");
 });
 
-check("页面级：对比表里补贴卡免费、其余三张仍在季票", () => {
-  assert.ok(html.includes("<tr><td>规划卡：补贴（1095-A / 8962）</td><td>✓</td><td>✓</td></tr>"), "补贴行不对");
-  assert.ok(html.includes("<tr><td>规划卡：税档 / 退休 / 政策</td><td>—</td><td>季票</td></tr>"), "其余三张行不对");
+check("页面级：功能对比表改成四节点交付节律（一行一个）", () => {
+  assert.ok(!html.includes("<h3>免费版 vs 季票</h3>"), "旧功能对比表还在");
+  const i = html.indexOf('<ol class="sub-timeline">');
+  const j = html.indexOf("</ol>", i);
+  assert.ok(i > 0 && j > i, "缺交付节律时间线");
+  const blk = html.slice(i, j);
+  assert.equal((blk.match(/<li/g) || []).length, 4, "时间线不是四个节点");
+  for (const kw of ["整理完", "交付前", "报税季", "次年打开"]) assert.ok(blk.includes(kw), "缺节点 " + kw);
+  assert.match(blk, /内测/, "账本上线前第 4 节点必须标内测");
+  assert.ok(!/2027/.test(blk), "时间线里出现 2027 数字");
 });
 
 check("i18n：新增静态文案均有英文与西语", () => {
