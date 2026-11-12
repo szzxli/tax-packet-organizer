@@ -325,6 +325,19 @@ header{position:relative;padding-right:150px}
 #payView{display:none!important}
 .chk-red,.chk-yellow,.chk-green{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .chk-red{background:#c0392b}.chk-yellow{background:#d39e00}.chk-green{background:#1e7a4c}
+.eco-map{margin:6px 0 18px}
+.eco-head{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px}
+.eco-verdict{font-size:16px;line-height:1.5;font-weight:600}
+.eco-nums{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.eco-num{flex:1 1 150px;min-width:140px;border:1px solid var(--p-line,#dbe5ec);border-radius:10px;padding:8px 10px}
+.eco-num b{display:block;font-size:20px;line-height:1.2}
+.eco-num span{display:block;margin-top:4px;font-size:12px;color:#596c7d}
+.eco-path{border-left:3px solid var(--p-accent,#2fd4a0);padding:6px 10px;margin:0 0 12px;font-size:13px;line-height:1.5}
+.eco-step{display:flex;gap:10px;padding:8px 0;border-top:1px solid #22324433}
+.eco-when{flex:0 0 110px;font-weight:600;font-size:13px}
+.eco-what{flex:1;font-size:13px;line-height:1.5;color:#42566a}
+.eco-src{margin-top:10px;font-size:11px;color:#6b7d8d}
+@media(max-width:600px){.eco-when{flex-basis:84px}.eco-num{flex-basis:100%}}
 #checkPanel{background:#f8fbfd}
 #checkPanel table{font-size:12px}
 @media(max-width:600px){
@@ -559,6 +572,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div class="card">
 <h2>今年要准备的材料（文件＋数字，一页）</h2>
 <p class="muted small">每行一项收入或一张表：先传证据、再填一个总数；成本、核对、不适用都收在“更多”里。全部“已备或不适用”就是整理完；没做完也能先导出，缺项会列在清单里。上传资料可以是电子档，也可以拍照上传：每行都有“上传文件”和“拍照上传”两个入口，手机上点拍照会直接调相机；电子档（PDF、.txt、.docx、.xlsx）上传后会即时读文字提数候选、由你确认后才记数字，并显示文件预览；拍照上传只预览、不提数，数字手动输入。老格式 .doc、.xls 不支持。同一笔收入只出现一次，不要重复填。</p>
+<div id="commuteRules" class="commute-rules small"></div>
 <p class="small muted">文件在你电脑上读取，不上传；账号里只存清单和你确认过的数字，不存原件、不提取 SSN。可一键删除。</p>
 <div class="row">
 <div><label for="newForm">新增今年项目：表类型</label><select id="newForm"></select></div>
@@ -727,6 +741,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <p class="muted small">整理完你会看到一个大概的数——退、补，还是差不多齐平；哪几项在推这个数；哪天之前改还来得及。基础整理永久免费，内测期免费，1 月公布价格。</p>
 <div id="pricingTiers" class="pricing-tiers hidden"></div>
 
+<div id="ecoMap" class="eco-map"></div>
 <div id="planCards"></div>
 
 <h3>季票先把这一屏的钱讲清楚</h3>
@@ -1602,11 +1617,78 @@ function planState(){
   return {status:s.status||"",income:s.income==null?"":String(s.income),marketplace:!!s.marketplace,chgUp:!!s.chgUp,chgSize:!!s.chgSize,chgSame:!!s.chgSame,chgUnsure:!!s.chgUnsure,household:s.household==null?"":String(s.household),k401:s.k401==null?"":String(s.k401),ira:s.ira==null?"":String(s.ira),agi:s.agi==null?"":String(s.agi)};
 }
 function savePlanState(s){save(planStateKey(),s);}
+// ── 生态地图（季票页顶部）：自己的数 + 图里的官方线，一屏排到退休后。
+// 数字只来自 rules/graph.json 与用户输入；图没到就不出这一屏，不拿内置值顶上。
+function ecoBadge(level,txt){
+  var cls=level==="ok"?"uploaded":(level==="near"?"pending":"");
+  return "<span class='badge"+(cls?" "+cls:"")+"'>"+esc(txt)+"</span>";
+}
+function ecoMapHtml(s){
+  s=s||{};
+  var R=mapRules()||{}, BR=R.brackets||{}, RET=R.retirement||{};
+  if(!BR.single||RET.k401_limit==null)return "";
+  var st=s.status||"", inc=planAmount(s.income);
+  var b=(st&&inc!=null)?planBracket(st,inc):null;
+  var rate=b?b.rate:null, gap=b&&isFinite(b.hi)?(b.hi-inc):null;
+  var k401=planAmount(s.k401), ira=planAmount(s.ira);
+  var g401=k401!=null?(RET.k401_limit-k401):null, gira=ira!=null?(RET.ira_limit-ira):null;
+  var by=BR.effective_tax_year||"", ry=RET.effective_tax_year||"";
+
+  var head,badge;
+  if(!b){
+    head=planLang("先填两个数——报税身份和应税收入，这张地图就会亮。","Fill in two things — filing status and taxable income — and this map lights up.","Complete dos datos —estado civil fiscal e ingreso gravable— y este mapa se enciende.");
+    badge=ecoBadge("none",planLang("等你填数","Waiting for your numbers","Esperando sus datos"));
+  }else if(gap!=null&&gap<=2000){
+    head=planFill(planLang("你就贴在下一条线边上：还差 {g} 进 {r}% 档。","You are right at the next line: {g} more moves you into the {r}% bracket.","Está justo en la línea siguiente: con {g} más entra al tramo del {r}%."),{g:planMoney(gap),r:b.higher});
+    badge=ecoBadge("near",planLang("就在线边上","Right at the line","Justo en la línea"));
+  }else if(gap!=null){
+    head=planFill(planLang("你在 {rate}% 档；离 {r}% 那条线还有 {g}。","You are in the {rate}% bracket; the next line ({r}%) is {g} away.","Está en el tramo del {rate}%; la línea siguiente ({r}%) está a {g}."),{rate:rate,r:b.higher,g:planMoney(gap)});
+    badge=ecoBadge("ok",planLang("余量清楚","Room to see","Margen claro"));
+  }else{
+    head=planFill(planLang("你在 {rate}% 档，已经是最高档；上面没有下一条线。","You are in the {rate}% bracket, the top one; there is no next line above.","Está en el tramo del {rate}%, el más alto; no hay línea siguiente."),{rate:rate});
+    badge=ecoBadge("ok",planLang("最高档","Top bracket","Tramo más alto"));
+  }
+
+  var n1=b?String(rate)+"%":"—";
+  var n2=gap!=null?planMoney(gap):"—";
+  var n3=(g401!=null&&g401>0)?("401(k) "+planMoney(g401)):((gira!=null&&gira>0)?("IRA "+planMoney(gira)):"—");
+
+  var path=planLang("应税收入 → 你所在的这一档 → 明年 4 月这张表 → 退休账户与退休后","Taxable income → your bracket → next April's return → retirement accounts and after","Ingreso gravable → su tramo → la declaración de abril → cuentas de retiro y después");
+
+  var cards=[
+    [planLang("现在","Now","Ahora"),planLang("两件今天能做的：把 401(k)/IRA 还差多少填满；把应税收入核到 1040 第 15 行。","Two things you can do today: fill the 401(k)/IRA gap; check taxable income against line 15 of Form 1040.","Dos cosas para hoy: completar el margen del 401(k)/IRA; verificar el ingreso gravable con la línea 15 del Formulario 1040.")],
+    [planLang("明年 4 月 15 日","April 15 next year","15 de abril del próximo año"),planLang("这张表在这里交；位置不对，改的是那一行，不是这张地图。","The return is filed here; if something is off, you fix that line, not this map.","La declaración se presenta aquí; si algo no cuadra, se corrige esa línea, no este mapa.")],
+    [planLang("10 月 15 日","October 15","15 de octubre"),planLang("延期截止；季票有效期也到这一天。","Extension deadline; the season pass runs to this day too.","Fecha límite de prórroga; el pase también llega hasta este día.")],
+    [planLang("退休后","After retirement","Después del retiro"),planLang("社保月付与退休账户取用是另一套规则；这一屏只标结构，不给金额。","Social Security benefits and withdrawals follow another rulebook; this screen marks structure only, no amounts.","El Seguro Social y los retiros siguen otro reglamento; esta pantalla solo marca estructura, sin montos.")]
+  ];
+  var cardsHtml=cards.map(function(c){return "<div class='eco-step'><div class='eco-when'>"+esc(c[0])+"</div><div class='eco-what'>"+esc(c[1])+"</div></div>";}).join("");
+
+  var src=planLang("档位 " + by + " 税年（" + (BR.source||"") + "，核于 " + (BR.checked||"") + "）；退休上限 " + ry + " 税年（核于 " + (RET.checked||"") + "）。只标结构、不算税额、不判资格。","Brackets: tax year " + by + " (" + (BR.source||"") + ", checked " + (BR.checked||"") + "); retirement limits: tax year " + ry + " (checked " + (RET.checked||"") + "). Structure only — no tax amount, no eligibility decision.","Tramos: año fiscal " + by + " (" + (BR.source||"") + ", verificado el " + (BR.checked||"") + "); límites de retiro: año fiscal " + ry + " (verificado el " + (RET.checked||"") + "). Solo estructura: sin monto de impuesto ni decisión de elegibilidad.");
+
+  return "<div class='eco-head'><div class='eco-verdict'>"+esc(head)+"</div>"+badge+"</div>"+
+    "<div class='eco-nums'>"+
+      "<div class='eco-num'><b>"+esc(n1)+"</b><span>"+esc(planLang("往上一档多赚的部分，按这个比例算","Extra income above the line is taxed at this rate","El ingreso extra sobre la línea paga esta tasa"))+"</span></div>"+
+      "<div class='eco-num'><b>"+esc(n2)+"</b><span>"+esc(planLang("到下一档还差这么多；不是建议你少赚","Room left before the next line — not advice to earn less","Margen antes del tramo siguiente: no es una recomendación"))+"</span></div>"+
+      "<div class='eco-num'><b>"+esc(n3)+"</b><span>"+esc(planLang("退休账户离当年上限还差多少","Room left under this year's retirement limits","Margen bajo los límites de retiro de este año"))+"</span></div>"+
+    "</div>"+
+    "<div class='eco-path'>"+esc(path)+"</div>"+
+    "<div class='eco-steps'>"+cardsHtml+"</div>"+
+    "<div class='eco-src'>"+esc(src)+"</div>";
+}
+function renderEcoMap(){
+  var el=$("ecoMap");if(!el)return;
+  if(!hasPass()){
+    el.innerHTML="<div class='eco-head'><div class='eco-verdict'>"+esc(tr("这张地图把你自己填的数和官方线放在一屏：你在哪一档、离下一条线多远、退休账户还差多少。","This map puts your own numbers and the official lines on one screen: your bracket, how far the next line is, and the retirement room left.","Este mapa pone sus datos y las líneas oficiales en una pantalla: su tramo, qué tan lejos está la línea siguiente y cuánto margen de retiro queda."))+"</div>"+ecoBadge("none",tr("季票功能","Season pass","Pase de temporada"))+"</div><p><button type='button' class='secondary' onclick='goSub()'>"+esc(tr("去领取免费季票","Claim the free pass","Reclamar el pase gratis"))+"</button></p>";
+    return;
+  }
+  try{el.innerHTML=ecoMapHtml(planState());}catch(e){el.innerHTML="";}
+}
 function updatePlanResults(){
   var a=$("plan1Out"),b=$("plan2Out"),c=$("plan3Out"),s=planState();
   if(a)a.innerHTML=plan1Result(s);
   if(b)b.innerHTML=plan2Result(s);
   if(c)c.innerHTML=plan3Result(s);
+  if(typeof renderEcoMap==="function")renderEcoMap();
 }
 function bindPlanCards(){
   function field(id,name,isCheck){
@@ -2076,6 +2158,19 @@ function computeWarnings(){
   });
   return w;
 }
+// 交通与通勤：员工与自雇两套规则差别最大的一块，必须显式列出「不能抵」的那一半。
+function renderCommuteRules(){
+  var el=$("commuteRules");if(!el)return;
+  var rows=[
+    ["x",tr("家 ↔ 固定工作地点：不能抵。通勤是个人费用，路上打电话、顺路谈工作也不改变这一点（IRS Pub. 463）。","Home ↔ your regular workplace: not deductible. Commuting is a personal expense; phone calls or business talk during the trip do not change that (IRS Pub. 463).","Casa ↔ su lugar de trabajo habitual: no deducible. El traslado es un gasto personal; llamar o hablar de trabajo durante el trayecto no lo cambia (IRS Pub. 463).")],
+    ["v",tr("一天跑两处工作地点：两处之间的路费能抵（同上）。","Two workplaces in one day: the cost of getting from one to the other is deductible (same source).","Dos lugares de trabajo en un día: el costo de ir de uno a otro es deducible (misma fuente).")],
+    ["v",tr("自雇业务用车：能抵，但要有里程记录；费率查 IRS 标准里程费率页，本页不写数字。","Business use of a car when self-employed: deductible, but keep a mileage log; check the IRS standard mileage rate page — this page does not print a rate.","Uso comercial del automóvil si trabaja por cuenta propia: deducible, pero lleve un registro de millas; consulte la página de tarifas estándar del IRS: esta página no imprime una tarifa.")],
+    ["x",tr("W-2 员工未报销的交通、差旅、通勤：2026 税年仍然不能抵（26 U.S.C. §67(h)；Pub. L. 119-21 删掉了 2025 年的截止日）。","Unreimbursed transportation, travel, and commuting for W-2 employees: still not deductible for tax year 2026 (26 U.S.C. §67(h); Pub. L. 119-21 removed the 2025 end date).","Transporte, viajes y traslados no reembolsados de empleados W-2: siguen sin ser deducibles para el año fiscal 2026 (26 U.S.C. §67(h); la Pub. L. 119-21 eliminó la fecha límite de 2025).")]
+  ];
+  el.innerHTML="<div class='notice'><b>"+esc(tr("交通与通勤：能不能抵","Transportation and commuting: what is deductible","Transporte y traslados: qué es deducible"))+"</b><ul style='margin:6px 0 4px 18px;padding:0'>"+
+    rows.map(function(r){return "<li>"+(r[0]==="v"?"✓ ":"✕ ")+esc(r[1])+"</li>";}).join("")+
+    "</ul><span class='muted'>"+esc(tr("来源：IRS Pub. 463；26 U.S.C. §67(h)；核对 2026-11-11。只列规则，不算你能抵多少。","Sources: IRS Pub. 463; 26 U.S.C. §67(h); checked 2026-11-11. Rules only — this does not compute what you can deduct.","Fuentes: IRS Pub. 463; 26 U.S.C. §67(h); verificado 2026-11-11. Solo reglas: no calcula cuánto puede deducir."))+"</span></div>";
+}
 function renderWarnings(){
   if(!packet)return;
   var box=$("warnBox");if(!box)return;
@@ -2275,7 +2370,7 @@ function renderFollowUp(){
   };
 }
 function applyOrganizeStep(){if(currentPage!==1)return;var wrap=$("appViewSections");if(!wrap)return;for(var i=0;i<wrap.children.length;i++){var c=wrap.children[i];if(c.className.indexOf("card")<0)continue;var showCard=c.id!=="subCard"&&Number(c.dataset.flowStep||0)===currentOrganizeStep;c.classList.toggle("hidden",!showCard);}}
-function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,renderForeign,renderPricing,renderDemo,applyCollapse,syncNavChrome];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
+function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderCommuteRules,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,renderForeign,renderPricing,renderDemo,applyCollapse,syncNavChrome];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
 function secKeyFromH2(t){
   if(t.indexOf("州税范围")>=0)return "s3b";
   if(t.indexOf("去年有什么")>=0)return "s3";

@@ -9,15 +9,26 @@
     "starts": "2026-11-01",
     "ends": "2027-01-15",
     "avg_benchmark_premium_increase_pct": 13,
-    "benchmark_increase_by_platform": {"healthcare_gov_pct": 11, "state_marketplaces_pct": 16},
+    "benchmark_increase_by_platform": {
+      "healthcare_gov_pct": 11,
+      "state_marketplaces_pct": 16
+    },
     "cliff_400pct": true,
     "note": "开放期日期见 CMS 2027 事实单原文：begins on November 1, 2026, and runs through January 15, 2027。13% 与 11%/16% 的拆分见 KFF 2026-11-06——CMS 那份事实单里没有这两个数，所以分成两个出处，不并成一处。2027 保障年的贫困线金额未出，页面不写任何 2027 的 400% 线金额。",
     "source": "CMS, Plan Year 2027 Marketplace Plans and Prices Fact Sheet",
     "source_url": "https://www.cms.gov/newsroom/fact-sheets/plan-year-2027-marketplace-plans-prices-fact-sheet-0",
     "premium_source": "KFF, 9 things to watch for the 2027 ACA open enrollment period, 2026-11-06",
     "premium_source_url": "https://www.kff.org/affordable-care-act/9-things-to-watch-for-the-2027-aca-open-enrollment-period/",
-    "source_label": {"zh": "CMS 2027 事实单", "en": "CMS 2027 fact sheet", "es": "ficha de CMS 2027"},
-    "premium_source_label": {"zh": "KFF 2026-11-06", "en": "KFF 2026-11-06", "es": "KFF 2026-11-06"},
+    "source_label": {
+      "zh": "CMS 2027 事实单",
+      "en": "CMS 2027 fact sheet",
+      "es": "ficha de CMS 2027"
+    },
+    "premium_source_label": {
+      "zh": "KFF 2026-11-06",
+      "en": "KFF 2026-11-06",
+      "es": "KFF 2026-11-06"
+    },
     "checked": "2026-11-12"
   },
   "brackets": {
@@ -26,11 +37,265 @@
     "source": "Rev. Proc. 2025-32",
     "source_url": "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf",
     "note": "2026 税年联邦个人所得税档位，按应税收入。每组为 [该档上限（含）, 税率%]，最高档上限为 null（无上限）。不在 filing_statuses 里的身份按 single。",
-    "filing_statuses": ["single", "mfj", "mfs", "hoh"],
-    "single": [[12400, 10], [50400, 12], [105700, 22], [201775, 24], [256225, 32], [640600, 35], [null, 37]],
-    "mfj": [[24800, 10], [100800, 12], [211400, 22], [403550, 24], [512450, 32], [768700, 35], [null, 37]],
-    "mfs": [[12400, 10], [50400, 12], [105700, 22], [201775, 24], [256225, 32], [384350, 35], [null, 37]],
-    "hoh": [[17700, 10], [67450, 12], [105700, 22], [201775, 24], [256200, 32], [640600, 35], [null, 37]]
+    "filing_statuses": [
+      "single",
+      "mfj",
+      "mfs",
+      "hoh"
+    ],
+    "single": [
+      [
+        12400,
+        10
+      ],
+      [
+        50400,
+        12
+      ],
+      [
+        105700,
+        22
+      ],
+      [
+        201775,
+        24
+      ],
+      [
+        256225,
+        32
+      ],
+      [
+        640600,
+        35
+      ],
+      [
+        null,
+        37
+      ]
+    ],
+    "mfj": [
+      [
+        24800,
+        10
+      ],
+      [
+        100800,
+        12
+      ],
+      [
+        211400,
+        22
+      ],
+      [
+        403550,
+        24
+      ],
+      [
+        512450,
+        32
+      ],
+      [
+        768700,
+        35
+      ],
+      [
+        null,
+        37
+      ]
+    ],
+    "mfs": [
+      [
+        12400,
+        10
+      ],
+      [
+        50400,
+        12
+      ],
+      [
+        105700,
+        22
+      ],
+      [
+        201775,
+        24
+      ],
+      [
+        256225,
+        32
+      ],
+      [
+        384350,
+        35
+      ],
+      [
+        null,
+        37
+      ]
+    ],
+    "hoh": [
+      [
+        17700,
+        10
+      ],
+      [
+        67450,
+        12
+      ],
+      [
+        105700,
+        22
+      ],
+      [
+        201775,
+        24
+      ],
+      [
+        256200,
+        32
+      ],
+      [
+        640600,
+        35
+      ],
+      [
+        null,
+        37
+      ]
+    ]
+  },
+  "brackets_2027": {
+    "effective_tax_year": 2027,
+    "checked": "2026-11-11",
+    "source": "Rev. Proc. 2026-35",
+    "source_url": "https://www.irs.gov/pub/irs-drop/rp-26-35.pdf",
+    "note": "2027 税年联邦个人所得税档位，逐档抄自 §3.01，格式与 brackets 相同。页面尚未切到这张表：切换要同时换标准扣除与标年份的句子，单独换档位会混用两年。",
+    "filing_statuses": [
+      "single",
+      "mfj",
+      "mfs",
+      "hoh"
+    ],
+    "single": [
+      [
+        12800,
+        10
+      ],
+      [
+        52025,
+        12
+      ],
+      [
+        109125,
+        22
+      ],
+      [
+        208325,
+        24
+      ],
+      [
+        264550,
+        32
+      ],
+      [
+        661375,
+        35
+      ],
+      [
+        null,
+        37
+      ]
+    ],
+    "mfj": [
+      [
+        25600,
+        10
+      ],
+      [
+        104050,
+        12
+      ],
+      [
+        218250,
+        22
+      ],
+      [
+        416650,
+        24
+      ],
+      [
+        529100,
+        32
+      ],
+      [
+        793650,
+        35
+      ],
+      [
+        null,
+        37
+      ]
+    ],
+    "mfs": [
+      [
+        12800,
+        10
+      ],
+      [
+        52025,
+        12
+      ],
+      [
+        109125,
+        22
+      ],
+      [
+        208325,
+        24
+      ],
+      [
+        264550,
+        32
+      ],
+      [
+        396825,
+        35
+      ],
+      [
+        null,
+        37
+      ]
+    ],
+    "hoh": [
+      [
+        18250,
+        10
+      ],
+      [
+        69650,
+        12
+      ],
+      [
+        109100,
+        22
+      ],
+      [
+        208300,
+        24
+      ],
+      [
+        264550,
+        32
+      ],
+      [
+        661350,
+        35
+      ],
+      [
+        null,
+        37
+      ]
+    ]
   },
   "events": [
     {
@@ -173,9 +438,18 @@
       "checked": "2026-11-08",
       "source_url": "https://www.irs.gov/publications/p970",
       "phaseout": {
-        "single": [80000, 90000],
-        "hoh": [80000, 90000],
-        "mfj": [160000, 180000],
+        "single": [
+          80000,
+          90000
+        ],
+        "hoh": [
+          80000,
+          90000
+        ],
+        "mfj": [
+          160000,
+          180000
+        ],
         "effective_tax_year": 2026,
         "checked": "2026-11-12",
         "source_url": "https://www.irs.gov/publications/p970",
@@ -189,9 +463,18 @@
       "checked": "2026-11-08",
       "source_url": "https://www.irs.gov/publications/p970",
       "phaseout": {
-        "single": [80000, 90000],
-        "hoh": [80000, 90000],
-        "mfj": [160000, 180000],
+        "single": [
+          80000,
+          90000
+        ],
+        "hoh": [
+          80000,
+          90000
+        ],
+        "mfj": [
+          160000,
+          180000
+        ],
         "effective_tax_year": 2026,
         "checked": "2026-11-12",
         "source_url": "https://www.irs.gov/publications/p970",
@@ -218,8 +501,14 @@
       "ira_catch_up": 1100,
       "simple_limit": 17500,
       "simple_60_63": 5250,
-      "roth_phaseout_single": [158000, 173000],
-      "roth_phaseout_mfj": [250000, 260000]
+      "roth_phaseout_single": [
+        158000,
+        173000
+      ],
+      "roth_phaseout_mfj": [
+        250000,
+        260000
+      ]
     }
   },
   "subsidy_cliff": {
@@ -470,15 +759,134 @@
   ],
   "ai_scope": {
     "note": "AI 清单的语义闸门：只有描述里出现 when 里的情形，这张表才允许出现；reject 里的词只要出现在描述或模型给的 payer/why/prepare 里，这条直接丢。不在本表里的表不受这两条约束（W-2、1099-INT 这类常见收入表）。",
-    "1098": {"when": ["房贷", "按揭", "mortgage", "home loan", "housing loan"], "reject": ["大学", "学费", "tuition", "college", "university", "学校"]},
-    "1098-T": {"when": ["学费", "大学", "college", "university", "tuition", "学校", "在读", "孩子上"], "reject": []},
-    "1098-E": {"when": ["学生贷款", "助学贷款", "student loan"], "reject": []},
-    "1099-MISC": {"when": ["租金", "rent", "稿费", "royalt", "奖金", "prize", "其他收入", "other income"], "reject": ["uber", "lyft", "滴滴", "网约车", "外卖", "doordash", "instacart", "接单"]},
-    "1099-NEC": {"when": ["自雇", "self-employ", "freelanc", "接单", "uber", "lyft", "doordash", "instacart", "contract", "副业", "1099-nec"], "reject": []},
-    "1099-K": {"when": ["uber", "lyft", "平台", "platform", "paypal", "venmo", "ebay", "etsy", "收款", "gig"], "reject": []},
-    "Schedule C": {"when": ["自雇", "self-employ", "freelanc", "副业", "接单", "uber", "lyft", "doordash", "instacart", "生意", "business", "现金收入", "cash"], "reject": []},
-    "Schedule E": {"when": ["房租", "出租", "租金", "rental", "rent"], "reject": []},
-    "房产税单": {"when": ["房", "property", "房贷", "出租"], "reject": []}
+    "1098": {
+      "when": [
+        "房贷",
+        "按揭",
+        "mortgage",
+        "home loan",
+        "housing loan"
+      ],
+      "reject": [
+        "大学",
+        "学费",
+        "tuition",
+        "college",
+        "university",
+        "学校"
+      ]
+    },
+    "1098-T": {
+      "when": [
+        "学费",
+        "大学",
+        "college",
+        "university",
+        "tuition",
+        "学校",
+        "在读",
+        "孩子上"
+      ],
+      "reject": []
+    },
+    "1098-E": {
+      "when": [
+        "学生贷款",
+        "助学贷款",
+        "student loan"
+      ],
+      "reject": []
+    },
+    "1099-MISC": {
+      "when": [
+        "租金",
+        "rent",
+        "稿费",
+        "royalt",
+        "奖金",
+        "prize",
+        "其他收入",
+        "other income"
+      ],
+      "reject": [
+        "uber",
+        "lyft",
+        "滴滴",
+        "网约车",
+        "外卖",
+        "doordash",
+        "instacart",
+        "接单"
+      ]
+    },
+    "1099-NEC": {
+      "when": [
+        "自雇",
+        "self-employ",
+        "freelanc",
+        "接单",
+        "uber",
+        "lyft",
+        "doordash",
+        "instacart",
+        "contract",
+        "副业",
+        "1099-nec"
+      ],
+      "reject": []
+    },
+    "1099-K": {
+      "when": [
+        "uber",
+        "lyft",
+        "平台",
+        "platform",
+        "paypal",
+        "venmo",
+        "ebay",
+        "etsy",
+        "收款",
+        "gig"
+      ],
+      "reject": []
+    },
+    "Schedule C": {
+      "when": [
+        "自雇",
+        "self-employ",
+        "freelanc",
+        "副业",
+        "接单",
+        "uber",
+        "lyft",
+        "doordash",
+        "instacart",
+        "生意",
+        "business",
+        "现金收入",
+        "cash"
+      ],
+      "reject": []
+    },
+    "Schedule E": {
+      "when": [
+        "房租",
+        "出租",
+        "租金",
+        "rental",
+        "rent"
+      ],
+      "reject": []
+    },
+    "房产税单": {
+      "when": [
+        "房",
+        "property",
+        "房贷",
+        "出租"
+      ],
+      "reject": []
+    }
   },
   "standard_deduction": {
     "single": 16100,
