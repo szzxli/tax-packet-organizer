@@ -264,6 +264,20 @@ await withChrome(async (cdp) => {
           assert.ok(all.includes(e.credit) && all.includes(e.next), "社安两个年度的分值不全");
           assert.ok(all.includes(e.need), "没出现一年记满所需的工资 " + e.need);
         });
+        check("医保行给出 2027 保障年那条线并标出与上面这年的差额：" + tag + " @" + inc, () => {
+          const row = got.texts[1] || "";
+          const nx = graph.poverty_lines.next;
+          const nf = nx.four_hundred_pct.find((x) => x.household_size === 4);
+          const cur = graph.poverty_lines.four_hundred_pct.find((x) => x.household_size === 4);
+          assert.ok(nf && cur, "规则图缺四口之家那行");
+          assert.ok(row.includes(money(nf.limit)), "缺 2027 保障年的线 " + money(nf.limit) + "：" + row);
+          assert.ok(row.includes(money(nf.limit - cur.limit)), "缺差额 " + money(nf.limit - cur.limit) + "：" + row);
+          assert.ok(row.includes(String(nx.coverage_year)), "没写 2027 保障年：" + row);
+          assert.ok(row.includes(nx.checked), "缺核实日 " + nx.checked + "：" + row);
+          for (const bad3 of ["建议你", "你应该", "你符合", "符合条件", "eligible", "entitled"]) {
+            assert.ok(!row.includes(bad3), "出现判断句：" + bad3);
+          }
+        });
       }
 
       const after = await cdp.eval(`(() => {

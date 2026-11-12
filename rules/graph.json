@@ -100,7 +100,55 @@
       }
     ],
     "step_per_extra_person": 5500,
-    "step_limit_per_extra_person": 22000
+    "step_limit_per_extra_person": 22000,
+    "next": {
+      "program": "HHS poverty guidelines, 2026, 48 contiguous states + DC",
+      "effective_tax_year": 2026,
+      "coverage_year": 2027,
+      "checked": "2026-11-12",
+      "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines",
+      "note": "保障年 2027 用 2026 年贫困线，依据 45 CFR 155.300：Federal poverty level means the most recently published Federal poverty level as of the first day of the annual open enrollment period for coverage in a QHP。开放期 2026-11-01 开始、选的是 2027 保障年，所以用 2026 年指南。",
+      "step_per_extra_person": 5680,
+      "step_limit_per_extra_person": 22720,
+      "four_hundred_pct": [
+        {
+          "household_size": 1,
+          "fpl": 15960,
+          "limit": 63840,
+          "effective_tax_year": 2026,
+          "coverage_year": 2027,
+          "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines",
+          "checked": "2026-11-12"
+        },
+        {
+          "household_size": 2,
+          "fpl": 21640,
+          "limit": 86560,
+          "effective_tax_year": 2026,
+          "coverage_year": 2027,
+          "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines",
+          "checked": "2026-11-12"
+        },
+        {
+          "household_size": 3,
+          "fpl": 27320,
+          "limit": 109280,
+          "effective_tax_year": 2026,
+          "coverage_year": 2027,
+          "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines",
+          "checked": "2026-11-12"
+        },
+        {
+          "household_size": 4,
+          "fpl": 33000,
+          "limit": 132000,
+          "effective_tax_year": 2026,
+          "coverage_year": 2027,
+          "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines",
+          "checked": "2026-11-12"
+        }
+      ]
+    }
   },
   "credits": {
     "ssa": {

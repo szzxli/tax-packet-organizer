@@ -318,13 +318,40 @@ check("规则图：400% 每行都带两个年度字段、出处与核实日", ()
   }
   for (const r of rows) assert.equal(r.limit, r.fpl * 4, "400% = 贫困线 ×4");
 });
+check("贫困线：2027 保障年那组在图里（按 2026 年指南 ×4），上面那组不动", () => {
+  const p = graph.poverty_lines, n = p.next;
+  assert.ok(n, "缺 poverty_lines.next（2027 保障年）");
+  assert.equal(n.coverage_year, 2027);
+  assert.equal(n.effective_tax_year, 2026, "保障年 2027 应使用 2026 年贫困线");
+  assert.equal(n.checked, "2026-11-12");
+  assert.match(n.source_url, /^https:\/\/aspe\.hhs\.gov\//, "缺 ASPE 出处");
+  assert.ok(/45 CFR 155\.300/.test(n.note || ""), "note 没写 45 CFR 155.300");
+  assert.equal(n.step_per_extra_person, 5680);
+  assert.equal(n.step_limit_per_extra_person, 5680 * 4);
+  const fpl = { 1: 15960, 2: 21640, 3: 27320, 4: 33000 };
+  assert.equal(n.four_hundred_pct.length, 4, "应给 1–4 人四行");
+  for (const row of n.four_hundred_pct) {
+    assert.equal(row.fpl, fpl[row.household_size], "2026 年指南第 " + row.household_size + " 人对不上");
+    assert.equal(row.limit, row.fpl * 4, "400% 应为贫困线 ×4");
+    assert.equal(row.coverage_year, 2027);
+    assert.equal(row.effective_tax_year, 2026);
+    assert.match(row.checked, /^\d{4}-\d{2}-\d{2}$/, "缺核实日");
+  }
+  assert.equal(p.coverage_year, 2026, "旧的 2026 保障年那组不该被改");
+  assert.equal(p.four_hundred_pct.find((r) => r.household_size === 4).limit, 128600);
+});
+check("页面不内置新贫困线的数：132000 / 63840 / 86560 / 109280 全 0 处", () => {
+  for (const bad of ["132000", "132,000", "63840", "63,840", "86560", "86,560", "109280", "109,280"]) {
+    assert.equal(html.includes(bad), false, "页面里内置了 " + bad + "，应当只从规则图取");
+  }
+});
 check("sw：图与价格文件进了 APP_SHELL，缓存版本随页面/图改动升到 v11", () => {
   const sw = fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8");
   assert.ok(sw.includes('"./rules/graph.json"'), "APP_SHELL 缺规则图");
   assert.ok(sw.includes('"./pricing.json"'), "APP_SHELL 缺价格文件");
   // 图与页面是缓存优先；改了不升版本，老用户会一直读到旧内容（这轮是订阅区）。
-  assert.ok(sw.includes('"tax-packet-shell-v16"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
-  assert.ok(!sw.includes('"tax-packet-shell-v15"'), "CACHE_NAME 还停在 v15");
+  assert.ok(sw.includes('"tax-packet-shell-v17"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
+  assert.ok(!sw.includes('"tax-packet-shell-v16"'), "CACHE_NAME 还停在 v16");
 });
 check("AI 文案进 DOM 前换成中性句，正常文案不动", () => {
   const bad = sandbox.aiSafeText("You are eligible for this credit");
@@ -664,6 +691,33 @@ check("开放期：三句齐、带出处与核实日、没有 2027 的 400% 线�
   sandbox.LANG = "zh";
 });
 
+check("开放期：2027 保障年那条线只在季票态出现，数字来自图", () => {
+  const nx = graph.poverty_lines.next;
+  const amt = "$" + nx.four_hundred_pct.find((r) => r.household_size === 4).limit.toLocaleString("en-US");
+  for (const lang of ["zh", "en", "es"]) {
+    sandbox.LANG = lang;
+    const free = sandbox.acaBarBlockHtml(OE_NOW);
+    assert.ok(!/\$[\d]/.test(free), lang + " 免费态出现金额");
+    const paid = sandbox.acaBarBlockHtml(OE_NOW, true);
+    assert.ok(paid.includes(amt), lang + " 季票态没有 2027 保障年那条线：" + paid.slice(0, 200));
+    assert.ok(/2027/.test(paid), lang + " 季票态没写 2027 保障年");
+    assert.ok(!/3,400/.test(paid), lang + " 差额不该在开放期条里重复（它属于样品行）");
+    for (const bad of ["建议你", "你应该", "你符合", "eligible", "entitled"]) {
+      assert.ok(!paid.includes(bad), lang + " 出现判断句：" + bad);
+    }
+  }
+  sandbox.LANG = "zh";
+});
+check("免费态（即使填了数）整块不出现 2027 那条线的金额", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ income: "130000" })));
+  for (const lang of ["zh", "en", "es"]) {
+    sandbox.LANG = lang;
+    const out = sandbox.outlookHtml(false);
+    assert.ok(!out.includes("132,000"), lang + " 免费态出现 2027 那条线");
+    assert.ok(!/\$[\d]/.test(out), lang + " 免费态出现金额：" + out.slice(0, 120));
+  }
+  sandbox.LANG = "zh";
+});
 check("两块提案：标提案、不标生效、带出处与核实日、没有判断句", () => {
   for (const lang of ["zh", "en", "es"]) {
     sandbox.LANG = lang;

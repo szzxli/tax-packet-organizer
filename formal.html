@@ -3026,20 +3026,28 @@ function acaWindow(R, nowMs){
   var now=(nowMs==null)?Date.now():nowMs;
   return (now>=st&&now<=en)?oe:null;
 }
-// 开放期是公开事实：免费与付费都出，不靠季票才给。日期与涨幅只从 rules/graph.json 取。
-function acaBarHtml(R, nowMs){
+// 开放期是公开事实：日期与涨幅免费与付费都出，不靠季票才给。
+// 只有「这个保障年的 400% 线是多少」这一个数按三层金额口径走：免费不给，季票给。
+function acaBarHtml(R, nowMs, unlocked){
   var oe=acaWindow(R, nowMs); if(!oe) return "";
   var win=acaMmdd(oe.starts)+"–"+acaMmdd(oe.ends);
   var byP=(oe.benchmark_increase_by_platform||{});
   var pct=oe.avg_benchmark_premium_increase_pct;
+  var PL=(R.poverty_lines||{}).next||{}, nf=((PL.four_hundred_pct)||[]).filter(function(x){return x&&x.household_size===4;})[0];
+  var amt=(nf&&nf.limit!=null)?"$"+Number(nf.limit).toLocaleString("en-US"):"";
+  var lineTxt=(unlocked&&amt&&PL.coverage_year)
+    ? tr("（"+PL.coverage_year+" 保障年四口之家 "+amt+"）",
+         " ("+amt+" for a household of four in coverage year "+PL.coverage_year+")",
+         " ("+amt+" para un hogar de cuatro en el año de cobertura "+PL.coverage_year+")")
+    : "";
   var h="<p class=\"one-thing-lead\"><span class=\"one-badge\">"+esc(tr("开放期","Open now","Abierta"))+"</span><b>"+esc(tr((oe.coverage_year||"")+" 医保开放："+win, (oe.coverage_year||"")+" open enrollment: "+win, "Inscripción abierta "+(oe.coverage_year||"")+": "+win))+"</b></p>";
-  h+="<p class=\"small muted\">"+esc(tr("基准银计划平均涨 "+pct+"%；收入过 400% 线，补贴没了。", "Benchmark silver premiums up "+pct+"% on average; above the 400% line, the subsidy is gone. ", "Las primas de referencia suben "+pct+"% en promedio; por encima de la línea del 400%, no hay subsidio. ")+tr("开放期见 ","Dates: ","Fechas: ")+(((oe.source_label||{})[LANG])||oe.source||"")+tr("；涨幅见 ","; premiums: ","; primas: ")+(((oe.premium_source_label||{})[LANG])||oe.premium_source||"")+tr("；核于 ","; checked ","; verificado el ")+(oe.checked||""))+"</p>";
+  h+="<p class=\"small muted\">"+esc(tr("基准银计划平均涨 "+pct+"%；收入过 400% 线，补贴没了。", "Benchmark silver premiums up "+pct+"% on average; above the 400% line, the subsidy is gone. ", "Las primas de referencia suben "+pct+"% en promedio; por encima de la línea del 400%, no hay subsidio. ")+lineTxt+tr("开放期见 ","Dates: ","Fechas: ")+(((oe.source_label||{})[LANG])||oe.source||"")+tr("；涨幅见 ","; premiums: ","; primas: ")+(((oe.premium_source_label||{})[LANG])||oe.premium_source||"")+tr("；核于 ","; checked ","; verificado el ")+(oe.checked||""))+"</p>";
   return h;
 }
 // 开放期单独一条，放在 IRS 事件条上面：两者互不挤占，事件条那两行的契约不动。
-function acaBarBlockHtml(nowMs){
+function acaBarBlockHtml(nowMs, unlocked){
   var R = mapRules(); if (!R) return "";
-  var inner = acaBarHtml(R, nowMs); if (!inner) return "";
+  var inner = acaBarHtml(R, nowMs, unlocked); if (!inner) return "";
   return "<div id=\"openEnrollBar\" class=\"one-thing\">" + inner + "</div>";
 }
 function policyBarHtml(unlocked, nowMs, compact) {
@@ -3103,8 +3111,9 @@ function outlookEmptyState(s) {
 // 首屏那块不属于任何一步：currentPage===1 就渲染。空态只给一句提示 + 输入，一个金额都不出。
 function outlookHtml(unlocked) {
   var s = outlookLoad(), empty = outlookEmptyState(s);
-  // 开放期这条与填没填数无关：窗口开着就出（新访客也要看到）
-  var h = acaBarBlockHtml() + (empty ? policyBarHtml(unlocked, null, true) : "") + "<div id=\"outlookEmpty\" class=\"one-thing" + (empty ? "" : " hidden") + "\">";
+  // 开放期这条与填没填数无关：窗口开着就出（新访客也要看到）。
+  // 但「2027 保障年那条线是多少」这个数是金额，空态一个金额都不出 → 只有填了数且持有季票时才给。
+  var h = acaBarBlockHtml(null, unlocked && !empty) + (empty ? policyBarHtml(unlocked, null, true) : "") + "<div id=\"outlookEmpty\" class=\"one-thing" + (empty ? "" : " hidden") + "\">";
   h += "<p class=\"one-thing-lead\"><b>" + esc(tr("填这三个数，就知道你今年落在哪一格", "Fill these three numbers and you will see where this year lands", "Con estos tres números verá dónde cae este año")) + "</b></p>";
   h += "<p class=\"small muted\">" + esc(tr("收入、已经扣掉的税、学费，各填一个大概数就行；只存这台浏览器。", "Income, the tax already withheld, and tuition — rough figures are enough; they stay in this browser.", "Ingresos, el impuesto ya retenido y la matrícula: basta con cifras aproximadas; se quedan en este navegador.")) + "</p>";
   h += "</div>";
@@ -3541,13 +3550,24 @@ function renderDemo(){
     }
     // 2) 医保补贴 400% 线
     var four=(PL.four_hundred_pct||[]).filter(function(x){return x&&x.household_size===4;})[0];
+    // 开放期在选的是下一个保障年：那一年按「开放期第一天最近一次公布」的贫困线算（45 CFR 155.300），
+    // 与上面这一行不是同一个年、也不是同一条线。数字只从 rules/graph.json 的 poverty_lines.next 取。
+    var PLnext=PL.next||{}, nextFour=((PLnext.four_hundred_pct)||[]).filter(function(x){return x&&x.household_size===4;})[0];
+    var nextLine=(nextFour&&nextFour.limit&&PLnext.coverage_year)
+      ? tr("现在这个开放期选的是 "+PLnext.coverage_year+" 保障年，那一年按 "+PLnext.effective_tax_year+" 年贫困线算：四口之家 400% 线是 "+demoMoney(nextFour.limit)+"，比上面这个多 "+demoMoney(nextFour.limit-four.limit)+"。",
+           "The open enrollment running now is for coverage year "+PLnext.coverage_year+", which uses the "+PLnext.effective_tax_year+" poverty line: for a household of four the 400% line is "+demoMoney(nextFour.limit)+", "+demoMoney(nextFour.limit-four.limit)+" more than the figure above.",
+           "La inscripción abierta en curso es para el año de cobertura "+PLnext.coverage_year+", que usa la línea de pobreza de "+PLnext.effective_tax_year+": para un hogar de cuatro la línea del 400% es "+demoMoney(nextFour.limit)+", "+demoMoney(nextFour.limit-four.limit)+" más que la cifra anterior.")
+      : "";
     if(four&&four.limit){
       var over=inc>four.limit;
       push(tr("医保补贴的 400% 线","The 400% line for the subsidy","La línea del 400% del subsidio"),
         tr("四口之家 "+four.coverage_year+" 保障年的 400% 线是 "+demoMoney(four.limit)+"。样例收入 "+demoMoney(inc)+" 在这条线的"+(over?"上面":"下面")+"；超过这条线，按现行规则这项补贴就没有了。",
            "For a household of four the 400% line for coverage year "+four.coverage_year+" is "+demoMoney(four.limit)+". The sample income of "+demoMoney(inc)+" is "+(over?"above":"below")+" it; above that line the current rule provides no premium subsidy.",
-           "Para un hogar de cuatro la línea del 400% del año de cobertura "+four.coverage_year+" es "+demoMoney(four.limit)+". El ingreso de muestra de "+demoMoney(inc)+" está "+(over?"por encima":"por debajo")+"; por encima de esa línea la regla vigente no da subsidio."),
-        tr("26 U.S.C. §36B(c)(1)(A) × HHS 贫困线，核于 ","26 U.S.C. §36B(c)(1)(A) × HHS poverty line, checked ","26 U.S.C. §36B(c)(1)(A) × línea de pobreza de HHS, verificado el ")+(PL.checked||""));
+           "Para un hogar de cuatro la línea del 400% del año de cobertura "+four.coverage_year+" es "+demoMoney(four.limit)+". El ingreso de muestra de "+demoMoney(inc)+" está "+(over?"por encima":"por debajo")+"; por encima de esa línea la regla vigente no da subsidio.")+nextLine,
+        tr("26 U.S.C. §36B(c)(1)(A) × HHS 贫困线，核于 ","26 U.S.C. §36B(c)(1)(A) × HHS poverty line, checked ","26 U.S.C. §36B(c)(1)(A) × línea de pobreza de HHS, verificado el ")+(PL.checked||"")
+          +(nextLine
+            ? tr("；"+PLnext.coverage_year+" 保障年按 "+PLnext.effective_tax_year+" 年指南 ×4（ASPE，核于 ","; coverage year "+PLnext.coverage_year+" uses the "+PLnext.effective_tax_year+" guidelines ×4 (ASPE, checked ","; el año de cobertura "+PLnext.coverage_year+" usa la guía de "+PLnext.effective_tax_year+" ×4 (ASPE, verificado el ")+(PLnext.checked||"")+tr("）",")",")")
+            : ""));
     }else{
       push(tr("医保补贴的 400% 线","The 400% line for the subsidy","La línea del 400% del subsidio"),tr("四口之家的这条线规则图里没有，待核。","The rule file has no line for a household of four — to be checked.","El archivo de reglas no tiene la línea para un hogar de cuatro: por verificar."),"");
     }
