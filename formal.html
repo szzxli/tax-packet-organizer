@@ -100,24 +100,27 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 .journey-steps .step-tab.active{background:#16324f;color:#fff;border-color:#16324f}
 .journey-steps .step-tab.done::after{content:" ✓"}
 #flowStepDescription{margin:4px 0 0;color:#596c7d;font-size:13px}
-.sticky-progress{position:fixed;z-index:20;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(760px,calc(100% - 24px));display:flex;align-items:center;gap:16px;padding:13px 16px;background:rgba(255,255,255,.97);border:1px solid #d9e4eb;border-radius:16px;box-shadow:0 10px 34px rgba(16,43,65,.2);backdrop-filter:blur(14px)}
-.sticky-copy{flex:1;min-width:0}.sticky-copy strong{display:block;color:var(--ink);font-size:14px}.sticky-copy p{margin:2px 0 0;color:#5a6d7d;font-size:12px}.progress-track{height:5px;margin-top:8px;overflow:hidden;border-radius:99px;background:#e6edf2}.progress-track span{display:block;width:0;height:100%;background:linear-gradient(90deg,#33896b,#5bb38d);border-radius:inherit;transition:width .25s ease}
-.sticky-progress button{white-space:nowrap;min-height:44px}#stickyProgressPrev{display:inline-block;margin-top:5px;color:#35546c;font-size:12px;text-decoration:underline}#stickyPass{flex:none;background:#fff;color:#16324f;border:1px solid #16324f;border-radius:999px;padding:0 13px;font-size:13px;font-weight:600;white-space:nowrap}#stickyPass:hover{background:#eef4fa}.sec-head{align-items:center;gap:10px}.sec-sum{line-height:1.35}.sec-head h2{font-size:17px}
-#demoCard .demo-rows{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
-#demoCard .demo-row{border:1px solid #e3ecf2;border-radius:12px;padding:10px 12px;background:#fafcfe}
-#demoCard .demo-row b{display:block;color:#16324f;font-size:14px}
-#demoCard .demo-row p{margin:4px 0 0;font-size:13px;line-height:1.55;color:#33475a}
-#demoCard .demo-row .src{display:block;margin-top:5px;font-size:11px;color:#6b7f90}
-#demoCard .demo-row.sample{background:#f5fbf8;border-color:#d7ece1}
-#demoCard input[type=range]{width:100%;margin:6px 0 2px}
+.sticky-progress{position:fixed;z-index:20;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(760px,calc(100% - 24px));display:flex;align-items:center;gap:16px;padding:13px 16px;background:rgba(15,20,27,.97);border:1px solid #232e3a;border-radius:16px;box-shadow:0 10px 34px rgba(0,0,0,.45);backdrop-filter:blur(14px);color:#e6edf3}
+.sticky-copy{flex:1;min-width:0}.sticky-copy strong{display:block;color:#e6edf3;font-size:14px}.sticky-copy p{margin:2px 0 0;color:#93a3b5;font-size:12px}.progress-track{height:5px;margin-top:8px;overflow:hidden;border-radius:99px;background:#1e2a36}.progress-track span{display:block;width:0;height:100%;background:linear-gradient(90deg,#33896b,#5bb38d);border-radius:inherit;transition:width .25s ease}
+.sticky-progress button{white-space:nowrap;min-height:44px}#stickyProgressPrev{display:inline-block;margin-top:5px;color:#35546c;font-size:12px;text-decoration:underline}#stickyPass{flex:none;background:transparent;color:#e6edf3;border:1px solid #2f4557;border-radius:999px;padding:0 13px;font-size:13px;font-weight:600;white-space:nowrap}#stickyPass:hover{background:#18242f}.sec-head{align-items:center;gap:10px}.sec-sum{line-height:1.35}.sec-head h2{font-size:17px}
+/* 样品与提案：跟页面同一套深色，一条线一行、用细线分隔，不做五张白卡。 */
+#demoCard .demo-rows{list-style:none;margin:14px 0 0;padding:0;border:1px solid #232e3a;border-radius:12px;background:#0f141b;overflow:hidden}
+#demoCard .demo-row{padding:12px 14px;border-top:1px solid #1b2530;background:transparent}
+#demoCard .demo-row:first-child{border-top:0}
+#demoCard .demo-row b{display:block;color:#e6edf3;font-size:14px;font-weight:600}
+#demoCard .demo-row p{margin:4px 0 0;font-size:13px;line-height:1.6;color:#aebecd}
+#demoCard .demo-row .src{display:block;margin-top:6px;font-size:11px;color:#7d8fa1}
+#demoCard .demo-row.sample{background:#0e1a17}
+#demoCard input[type=range]{width:100%;margin:6px 0 2px;accent-color:#2fd4a0}
+#demoCard select{background:#0f141b;color:#e6edf3;border-color:#2f4557}
 #demoCard .demo-slide-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-#demoCard .demo-slide-line b{font-size:18px;color:#16324f}
+#demoCard .demo-slide-line b{font-size:18px;color:#e6edf3}
 .map-notes{margin-top:10px;display:grid;gap:6px}
-.map-notes details{border:1px solid #e3ecf2;border-radius:10px;padding:8px 10px;background:#fafcfe}
-.map-notes summary{cursor:pointer;color:#35546c}
+.map-notes details{border:1px solid #232e3a;border-radius:10px;padding:8px 10px;background:#0f141b}
+.map-notes summary{cursor:pointer;color:#a8bccd}
 #demoCard .demo-paths{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:12px 0 0}
-#demoCard #demoPass{min-height:44px;padding:11px 18px;font-size:15px;font-weight:600;color:#16324f;background:#fff;border:1px solid #16324f;border-radius:10px;cursor:pointer}
-#demoCard #demoPass:hover{background:#eef4fa}
+#demoCard #demoPass{min-height:44px;padding:11px 18px;font-size:15px;font-weight:600;color:#e6edf3;background:transparent;border:1px solid #2f4557;border-radius:10px;cursor:pointer}
+#demoCard #demoPass:hover{background:#18242f}
 #pageNav button.nav-active{background:#eef4fa;box-shadow:inset 0 -2px 0 #16324f}
 .lang-switch.lang-footer{position:static;margin:22px 0 6px;padding:0;background:transparent;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
 .lang-switch.lang-footer .lang-globe{color:#5a6d7d}
@@ -5177,8 +5180,8 @@ body{background:var(--p-bg);-webkit-font-smoothing:antialiased;letter-spacing:.0
 .sec-head:hover{background:rgba(255,255,255,.04)!important}
 
 /* 底部进度条：原来浅字压浅底（1.1:1） */
-#stickyProgressTitle{color:#16324f!important;opacity:1!important}
-#stickyProgressText{color:#3c5060!important}
+#stickyProgressTitle{color:#e6edf3!important;opacity:1!important}
+#stickyProgressText{color:#a8bccd!important}
 
 /* 交付前核对：浅底 + 浅字，等于空白。改成一张深色页上的白纸 */
 #checkPanel{background:#f8fbfd!important;border:1px solid #d6e0e8!important;color:#16324f!important}
