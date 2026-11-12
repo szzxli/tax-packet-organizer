@@ -887,7 +887,7 @@ function track(name,props){
 // 服务端落库：攒够 8 条或 3 秒发一次，页面要走时用 keepalive 再补一发。
 // 只发服务端白名单里的名字（与 Worker 的 NAMES 一致）；不在表里的动作仍只落本机与 abacus 计数。
 // 同站、无 cookie（credentials omit）、失败静默：埋点坏了也不许影响页面。
-var EV_NAMES={open:1,generate:1,save:1,export:1,export_done:1,pass_claimed:1,"flow-step1":1,"flow-step2":1,"flow-step3":1,"flow-step4":1,"flow-step5":1};
+var EV_NAMES={open:1,generate:1,save:1,export:1,export_done:1,pass_claimed:1,"flow-step1":1,"flow-step2":1,"flow-step3":1,"flow-step4":1,"flow-step5":1,"demo_drag":1,"demo_cta_free":1,"demo_cta_pass":1};
 var EV_Q=[],EV_TIMER=0;
 function evBase(){try{if(typeof TpoApi!=="undefined"&&TpoApi.base)return TpoApi.base;}catch(e){}return "https://tax-packet-api.szzxli711.workers.dev";}
 function evFlush(){
@@ -3539,7 +3539,7 @@ function renderDemo(){
     // 5) 以后会怎样（样例，也给结果）
     var NX=SSA.next||null;
     if(NX&&NX.per_credit_usd&&SSA.per_credit_usd){
-      push(tr("以后会怎样","What it means later","Qué significa después"),
+      push(tr("以后会怎样（2027 起）","What it means later (from 2027)","Qué significa después (desde 2027)"),
         tr(NX.tax_year+" 税年起每分从 "+demoMoney(SSA.per_credit_usd)+" 变成 "+demoMoney(NX.per_credit_usd)+"，"+ (NX.tax_year+1) +" 年报税时才用上；同样 "+(SSA.target||40)+" 分，每分多 "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+"。这条对今年的数没有影响。",
            "From tax year "+NX.tax_year+" each credit goes from "+demoMoney(SSA.per_credit_usd)+" to "+demoMoney(NX.per_credit_usd)+", first used on the "+ (NX.tax_year+1) +" return; over "+(SSA.target||40)+" credits that is "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+" more per credit. This does not change this year's figures.",
            "Desde el año fiscal "+NX.tax_year+" cada crédito pasa de "+demoMoney(SSA.per_credit_usd)+" a "+demoMoney(NX.per_credit_usd)+", y se usa por primera vez en la declaración de "+ (NX.tax_year+1) +"; con "+(SSA.target||40)+" créditos son "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+" más por crédito. Esto no cambia las cifras de este año."),

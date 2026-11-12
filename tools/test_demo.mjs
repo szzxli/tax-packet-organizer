@@ -181,6 +181,8 @@ await withChrome(async (cdp) => {
           ctaCovered: !(hit && (hit === cta || cta.contains(hit))),
           entries: entries.map(el => (el.id || el.tagName) + ":" + (el.textContent || "").trim().slice(0, 12)),
           cardEntries: cardEntries.map(el => el.id || el.tagName),
+          sliderTop: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().top) : null; })(),
+          vh: innerHeight,
           cardText: card ? card.innerText : "",
           pageText: document.body.innerText
         });
@@ -199,6 +201,10 @@ await withChrome(async (cdp) => {
       check("主按钮没被遮：" + tag, () => {
         assert.ok(geo.ctaText.length > 0, "主按钮没文案");
         if (geo.ctaInView) assert.ok(!geo.ctaCovered, "主按钮被别的元素盖住");
+      });
+      check("滑块在首屏：" + tag, () => {
+        assert.ok(geo.sliderTop != null, "没量到滑块");
+        assert.ok(geo.sliderTop < geo.vh - 120, "滑块被推到首屏外：top=" + geo.sliderTop + "，阈值 " + (geo.vh - 120));
       });
       check("首屏可点入口 ≤5：" + tag, () => {
         assert.ok(geo.entries.length <= 5, "入口 " + geo.entries.length + " 个：" + geo.entries.join(" / "));
@@ -317,9 +323,18 @@ check("埋点：三个 demo_ 名字在页面里，EV_NAMES 里 0 个", () => {
   assert.equal((src.match(/"demo_cta"/g) || []).length, 0, "页面里还有旧单名 \"demo_cta\"");
   const m = src.match(/var EV_NAMES=\{([^}]*)\}/);
   assert.ok(m, "找不到 EV_NAMES 定义");
-  for (const name of ["demo_drag", "demo_cta_free", "demo_cta_pass", "demo_cta"]) {
-    assert.ok(!m[1].includes(name), "EV_NAMES 里混进了：" + name);
+  for (const name of ["demo_drag", "demo_cta_free", "demo_cta_pass"]) {
+    assert.ok(m[1].includes('"' + name + '"'), "EV_NAMES 里没有：" + name);
   }
+  assert.ok(!m[1].includes("demo_cta\""), "EV_NAMES 里还有旧单名 demo_cta");
+  // Worker 白名单同批：三个名字都在，旧单名 0
+  const w = fs.readFileSync(path.join(root, "backend", "worker", "index.js"), "utf8");
+  const wm = w.match(/const NAMES = \[([^\]]*)\]/);
+  assert.ok(wm, "找不到 Worker 的 NAMES");
+  for (const name of ["demo_drag", "demo_cta_free", "demo_cta_pass"]) {
+    assert.ok(wm[1].includes('"' + name + '"'), "Worker 白名单里没有：" + name);
+  }
+  assert.ok(!wm[1].includes('"demo_cta"'), "Worker 白名单里还有 demo_cta");
 });
 
 // 四行名字必须与第 3 步地图逐字一致：生成清单 → 进第 3 步 → 读地图行头与列头
@@ -360,7 +375,10 @@ for (const c of demoTitleCmp) {
     assert.ok(c.mapRows.length >= 4, "地图行头没取到：" + JSON.stringify(c.mapRows));
     const want = [c.mapRows[0], c.mapRows[1], c.mapRows[2], c.mapRows[c.mapRows.length - 1]];
     for (let i = 0; i < 4; i++) assert.equal(c.titles[i], want[i], "第 " + (i + 1) + " 行：「" + c.titles[i] + "」≠ 地图「" + want[i] + "」");
-    assert.ok(c.mapHead.includes(c.titles[4]), "第五行「" + c.titles[4] + "」不在地图的列名里：" + c.mapHead.join(" / "));
+    for (const t of c.titles.slice(0, 4)) {
+      assert.ok(!/1095-A|8962|AOTC|LLC/.test(t), "行名里还有表号缩写：" + t);
+    }
+    assert.ok(/2027/.test(c.titles[4]) && /以后会怎样|What it means later|Qué significa después/.test(c.titles[4]), "第五行没写成「以后会怎样（2027 起）」：" + c.titles[4]);
   });
 }
 
