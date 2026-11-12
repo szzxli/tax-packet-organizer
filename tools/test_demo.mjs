@@ -182,6 +182,7 @@ await withChrome(async (cdp) => {
           entries: entries.map(el => (el.id || el.tagName) + ":" + (el.textContent || "").trim().slice(0, 12)),
           cardEntries: cardEntries.map(el => el.id || el.tagName),
           sliderTop: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().top) : null; })(),
+          sliderBottom: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().bottom) : null; })(),
           vh: innerHeight,
           cardText: card ? card.innerText : "",
           pageText: document.body.innerText
@@ -202,9 +203,9 @@ await withChrome(async (cdp) => {
         assert.ok(geo.ctaText.length > 0, "主按钮没文案");
         if (geo.ctaInView) assert.ok(!geo.ctaCovered, "主按钮被别的元素盖住");
       });
-      check("滑块在首屏：" + tag, () => {
-        assert.ok(geo.sliderTop != null, "没量到滑块");
-        assert.ok(geo.sliderTop < geo.vh - 120, "滑块被推到首屏外：top=" + geo.sliderTop + "，阈值 " + (geo.vh - 120));
+      check("滑块在首屏（底边 ≤ 视口高）：" + tag, () => {
+        assert.ok(geo.sliderBottom != null, "没量到滑块");
+        assert.ok(geo.sliderBottom <= geo.vh, "滑块底边超出视口：bottom=" + geo.sliderBottom + "，视口 " + geo.vh);
       });
       check("首屏可点入口 ≤5：" + tag, () => {
         assert.ok(geo.entries.length <= 5, "入口 " + geo.entries.length + " 个：" + geo.entries.join(" / "));
@@ -378,7 +379,10 @@ for (const c of demoTitleCmp) {
     for (const t of c.titles.slice(0, 4)) {
       assert.ok(!/1095-A|8962|AOTC|LLC/.test(t), "行名里还有表号缩写：" + t);
     }
-    assert.ok(/2027/.test(c.titles[4]) && /以后会怎样|What it means later|Qué significa después/.test(c.titles[4]), "第五行没写成「以后会怎样（2027 起）」：" + c.titles[4]);
+    for (const t of c.titles) {
+      assert.ok(!/以后会怎样|What it means later|Qué significa después/.test(t), "行名用了地图的列名：「" + t + "」");
+    }
+    assert.ok(/以后几年|coming years|próximos años/.test(c.titles[4]), "第五行没写成「以后几年会怎么变」：" + c.titles[4]);
   });
 }
 
