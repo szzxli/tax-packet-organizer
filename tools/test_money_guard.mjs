@@ -405,6 +405,14 @@ check("付费事件条：两行（徽标+标题 ／ 生效年·出处），没�
   assert.ok(/<a href="https:\/\/www\.federalregister\.gov[^"]*"[^>]*>/.test(bar), "出处没挂成链接");
   assert.ok(!bar.includes("最晚"), "还留着单独的截止日那行：" + bar);
 });
+check("空态那版（compact）：14 天内出、到期同样不出", () => {
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ income: "", withheld: "" })));
+  const fresh = sandbox.policyBarHtml(true, NOW_NEW, true);
+  assert.ok(fresh.includes('id="policyBar"'), "compact 在窗口内没出：" + fresh.slice(0, 80));
+  assert.ok(!/\$[\d]/.test(fresh), "compact 带了金额：" + fresh);
+  assert.equal(sandbox.policyBarHtml(true, NOW_OLD, true), "", "compact 过期了还在出");
+});
+
 check("付费事件条：14 天后整条不出", () => {
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state()));
   assert.equal(barOf(true, NOW_OLD), "", "过期了还在首屏");
