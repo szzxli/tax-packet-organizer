@@ -157,12 +157,14 @@ await withChrome(async (cdp) => {
         const cta = document.getElementById("demoCta");
         const cr = cta.getBoundingClientRect();
         const hit = document.elementFromPoint(Math.round(cr.left + cr.width/2), Math.round(cr.top + cr.height/2));
-        // 首屏区域 = 顶部导航 + 开场卡 + 样品卡；不含语言切换（界面 chrome）与常驻底栏（常驻动作）
-        const entries = Array.from(document.querySelectorAll("#pageNav button, #pageNav a[href], #startCard button, #startCard a[href], #demoCard button, #demoCard a[href]")).filter(el => {
+        // 可点元素＝渲染后真正能点的：range / select / button / a[href]，只要在首屏视口内就计
+        const clickable = (root) => Array.from(root.querySelectorAll('input[type=range],select,button,a[href]')).filter(el => {
           if (el.offsetParent === null) return false;
-          if (el.closest(".lang-switch") || el.closest("#stickyProgress")) return false;
-          return true;
+          const r = el.getBoundingClientRect();
+          return r.bottom > 0 && r.top < innerHeight;
         });
+        const entries = clickable(document);
+        const cardEntries = Array.from(document.querySelectorAll("#demoCard button, #demoCard a[href]")).filter(el => el.offsetParent !== null);
         return JSON.stringify({
           sw: d.scrollWidth, cw: d.clientWidth,
           cardHidden: card ? card.classList.contains("hidden") : null,
@@ -178,7 +180,7 @@ await withChrome(async (cdp) => {
           ctaInView: cr.top < innerHeight && cr.bottom > 0,
           ctaCovered: !(hit && (hit === cta || cta.contains(hit))),
           entries: entries.map(el => (el.id || el.tagName) + ":" + (el.textContent || "").trim().slice(0, 12)),
-          entriesInView: Array.from(document.querySelectorAll("button,a[href]")).filter(el => el.offsetParent !== null && !el.closest(".lang-switch") && !el.closest("#stickyProgress") && (() => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; })()).map(el => el.id || el.tagName),
+          cardEntries: cardEntries.map(el => el.id || el.tagName),
           cardText: card ? card.innerText : "",
           pageText: document.body.innerText
         });
@@ -198,8 +200,11 @@ await withChrome(async (cdp) => {
         assert.ok(geo.ctaText.length > 0, "主按钮没文案");
         if (geo.ctaInView) assert.ok(!geo.ctaCovered, "主按钮被别的元素盖住");
       });
-      check("首屏可点入口 ≤5（不含语言切换与常驻底栏）：" + tag, () => {
+      check("首屏可点入口 ≤5：" + tag, () => {
         assert.ok(geo.entries.length <= 5, "入口 " + geo.entries.length + " 个：" + geo.entries.join(" / "));
+      });
+      check("卡片内只有两条路（整理我自己的 + 季票给什么）：" + tag, () => {
+        assert.deepEqual(geo.cardEntries.slice().sort(), ["demoCta", "demoPass"], "卡片内入口：" + geo.cardEntries.join(","));
       });
 
       // 三组收入各拖一次，比对数字
@@ -243,6 +248,20 @@ await withChrome(async (cdp) => {
       })()`);
       check("拖动后那行真的变（医保补贴）：" + tag, () => {
         assert.equal(after.same, false, "把收入从 20 万拖到 4 万，这一行没变");
+      });
+      const ctaHit = await cdp.eval(`(() => {
+        const sl = document.getElementById("demoIncome");
+        sl.scrollIntoView({ block: "center", behavior: "auto" });
+        sl.value = "140000";
+        sl.dispatchEvent(new Event("input", { bubbles: true }));
+        const cta = document.getElementById("demoCta");
+        const r = cta.getBoundingClientRect();
+        const hit = document.elementFromPoint(Math.round(r.left + r.width/2), Math.round(r.top + r.height/2));
+        return JSON.stringify({ top: Math.round(r.top), bottom: Math.round(r.bottom), vh: innerHeight, hit: !!(hit && (hit === cta || cta.contains(hit))) });
+      })()`);
+      check("拖完 CTA 在视口内且点得到：" + tag, () => {
+        assert.ok(ctaHit.top >= 0 && ctaHit.bottom <= ctaHit.vh, "CTA 不在视口内：top=" + ctaHit.top + " bottom=" + ctaHit.bottom + " vh=" + ctaHit.vh);
+        assert.equal(ctaHit.hit, true, "CTA 中心点被别的元素盖住");
       });
       check("拖完到点按钮之间 0 次跳页：" + tag, () => {
         assert.ok(after.pageSame, "拖动把页面切走了");
@@ -295,6 +314,7 @@ check("埋点：三个 demo_ 名字在页面里，EV_NAMES 里 0 个", () => {
   for (const name of ["demo_drag", "demo_cta_free", "demo_cta_pass"]) {
     assert.ok(src.includes('"' + name + '"'), "页面里找不到事件名：" + name);
   }
+  assert.equal((src.match(/"demo_cta"/g) || []).length, 0, "页面里还有旧单名 \"demo_cta\"");
   const m = src.match(/var EV_NAMES=\{([^}]*)\}/);
   assert.ok(m, "找不到 EV_NAMES 定义");
   for (const name of ["demo_drag", "demo_cta_free", "demo_cta_pass", "demo_cta"]) {

@@ -226,7 +226,8 @@ await withChrome(async (cdp) => {
         assert.equal(ui.seeTag, "", "「看看要准备什么」又冒出来了：" + ui.seeTag);
         assert.ok(ui.firstArea <= 5, "首屏区域入口超过 5 个：" + ui.firstArea);
         assert.ok(ui.inView <= 7, "首屏可见按钮超过 7 个：" + ui.inView);
-        assert.ok(ui.inView >= 4, "首屏按钮少得离谱，可能整块没渲染：" + ui.inView);
+        // 首屏现在只留样品卡两颗入口 + 常驻底栏（顶部导航在无清单时收起），按「这两颗在不在」判，不按个数判
+        assert.ok(ui.inView >= 2, "首屏按钮少得离谱，可能整块没渲染：" + ui.inView);
       });
 
       // 4a) 选「没有变化」→ ≥3 项

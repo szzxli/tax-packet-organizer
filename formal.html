@@ -118,6 +118,10 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 #demoCard .demo-paths{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:14px 0 0}
 #demoCard .demo-pass{font-size:14px;color:#35546c;text-decoration:underline}
 #pageNav button.nav-active{background:#eef4fa;box-shadow:inset 0 -2px 0 #16324f}
+.lang-switch.lang-footer{position:static;margin:22px 0 6px;padding:0;background:transparent;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
+.lang-switch.lang-footer .lang-globe{color:#5a6d7d}
+.lang-switch.lang-footer button{color:#16324f;border:1px solid #9fb3c6;background:#fff;border-radius:999px;padding:4px 12px;font-size:12px}
+.lang-switch.lang-footer button.active{background:#16324f;color:#fff}
 #pageNav{padding:12px 16px}.journey-guide+#appViewSections{scroll-margin-top:16px}
 @media(max-width:600px){main{padding:14px 10px 190px}.card{padding:16px 13px}.journey-guide{padding:15px;gap:12px}.journey-steps{gap:5px}.journey-steps .step-tab{padding:7px 9px;font-size:11px}.sticky-progress{bottom:max(8px,env(safe-area-inset-bottom));gap:10px;padding:10px 11px;border-radius:14px}.sticky-copy strong{font-size:13px}.sticky-copy p{font-size:11px}.sticky-progress button{padding:9px 11px;font-size:13px;max-width:145px;white-space:normal}#stickyProgressPrev{padding:0;font-size:11px;max-width:none;white-space:normal}#supportCard{margin-bottom:180px}.sec-head{align-items:flex-start;flex-wrap:wrap}.sec-head h2{flex-basis:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
@@ -412,14 +416,10 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 </div>
 </div>
 
-<div class="card no-print" id="startCard">
-<h2 class="start-title">把今年的报税材料，整理成一份能交出去的清单。</h2>
-<p class="start-sub start-lead">不少人报完才发现，一年差了几百到上千美元。可能是多交，也可能少交——填完才知道你是哪一种。</p>
-<p class="start-sub">说一句今年变了什么，不用登录。先给你一份基础的，答完几句就变成你自己的。</p>
-</div>
 <div class="card no-print" id="demoCard" data-flow-step="1">
-<h2>先看一个样例：收入变一变，四件事跟着变</h2>
+<h2>先看一个样例：收入变一变，五件事跟着变</h2>
 <p class="muted small">样例家庭：已婚合并申报、两个孩子、加州。这是样例家庭，不是你的数。</p>
+<p class="demo-paths"><button id="demoCta" type="button">整理我自己的 →</button> <a href="#" id="demoPass" class="demo-pass">季票给什么</a></p>
 <div class="demo-slide">
 <label for="demoIncome" class="small muted">拖一下，看你的收入落在哪</label>
 <input type="range" id="demoIncome" min="40000" max="250000" step="1000" value="120000">
@@ -427,7 +427,11 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 </div>
 <ul class="demo-rows" id="demoRows"></ul>
 <p class="small muted">上面全是样例数，跟着滑块变。换成你自己的数，才需要季票。</p>
-<p class="demo-paths"><button id="demoCta" type="button">整理我自己的 →</button> <a href="#" id="demoPass" class="demo-pass">季票给什么</a></p>
+</div>
+<div class="card no-print" id="startCard">
+<h2 class="start-title">把今年的报税材料，整理成一份能交出去的清单。</h2>
+<p class="start-sub start-lead">不少人报完才发现，一年差了几百到上千美元。可能是多交，也可能少交——填完才知道你是哪一种。</p>
+<p class="start-sub">说一句今年变了什么，不用登录。先给你一份基础的，答完几句就变成你自己的。</p>
 </div>
 
 <div class="card no-print">
@@ -840,7 +844,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <p class="small"><b>你的数据归你所有：</b>文件不上传，仅匿名统计访问与点击；账号内容加密存储、账号隔离、一键可删。</p><details><summary class="small">数据怎么处理</summary><p class="small">注册后，你的清单、上传记录与确认数字存在你的账号里，传输与存储加密，账号之间隔离；文件内容不上传，只在本机读取，不拿去训练、不给第三方；识别只提取表类型；全程不提取、不保存社保号，金额只来自你确认的证据数字；你可以一键删除自己的包和文件记录。仅匿名统计访问与点击（来源标记、事件类型），不含文件内容、不含金额。Transcript 对齐只做你自己上传版，不直连 IRS、不爬 IRS、不宣称一键提交。</p></details>
 
 <div id="printArea"></div>
-<div class="lang-switch no-print"><span class="lang-globe" aria-hidden="true">🌐</span><button type="button" data-lang-btn="zh" class="active">中文</button><button type="button" data-lang-btn="en">English</button><button type="button" data-lang-btn="es">Español</button></div>
+<div class="lang-switch lang-footer no-print"><span class="lang-globe" aria-hidden="true">🌐</span><button type="button" data-lang-btn="zh" class="active">中文</button><button type="button" data-lang-btn="en">English</button><button type="button" data-lang-btn="es">Español</button></div>
 </main>
 <script src="api.js"></script>
 <script>
@@ -1020,7 +1024,7 @@ Object.assign(I18N,{"可交":{"en":"Ready","es":"Listo"},
 "我的订单":{"en":"My orders","es":"Mis pedidos"},
 "暂无订单。":{"en":"No orders yet.","es":"Aún no hay pedidos."},
 "三件：整理完那一屏（今年退还是补、五条线各在哪，带原文与核实日）、交付前总核对（可交／不可交 + 缺项表，可重跑）、次年打开还在（内测中）。医保补贴那张卡所有人都能用，不用领季票。提醒类（缺项、规则变化、截止日）目前只在本页展示，不发邮件、不推送。免费版已含清单、上传、提数、三种导出、封面+复核签字，整理与导出永久免费；季票内测期免费，1 月公布价格。":{"en":"Three things: the money screen (refund or owed, where each of the five lines stands, with the source and the date it was checked), the pre-delivery check (ready / not ready + missing-items table, re-runnable), and next year's packet still there (in beta). The subsidy card is available to everyone — no season pass needed. Reminders (missing items, rule changes, deadlines) are shown on this page only for now: no emails, no push notifications. The free version already includes the checklist, uploads, figure extraction, three exports, and cover + review signature; organizing and export are free forever. The season pass is free during beta; prices are announced in January.","es":"Tres cosas: la pantalla del dinero (devolución o pago, dónde está cada una de las cinco líneas, con la fuente y la fecha de verificación), la verificación previa (listo / no listo + tabla de faltantes, repetible) y el paquete del año siguiente que sigue ahí (en beta). La tarjeta de subsidio la puede usar cualquiera: no hace falta el pase. Los recordatorios (faltantes, cambios de reglas, fechas límite) solo se muestran en esta página por ahora: sin correos ni notificaciones. La versión gratuita ya incluye la lista, las cargas, la extracción de cifras, tres exportaciones y portada + firma de revisión; organizar y exportar es gratis para siempre. El pase es gratis durante la beta; los precios se anuncian en enero."}});
-Object.assign(I18N,{"先看一个样例：收入变一变，四件事跟着变":{"en":"A sample first: change the income, four things move","es":"Primero un ejemplo: cambie el ingreso y se mueven cuatro cosas"},
+Object.assign(I18N,{"先看一个样例：收入变一变，五件事跟着变":{"en":"A sample first: change the income, five things move","es":"Primero un ejemplo: cambie el ingreso y se mueven cinco cosas"},
 "样例家庭：已婚合并申报、两个孩子、加州。这是样例家庭，不是你的数。":{"en":"Sample household: married filing jointly, two children, California. This is a sample household, not your numbers.","es":"Hogar de ejemplo: matrimonio en declaración conjunta, dos hijos, California. Es un hogar de ejemplo, no sus cifras."},
 "样例家庭今年的收入":{"en":"The sample household's income this year","es":"Los ingresos del hogar de ejemplo este año"},
 "从一个收入档开始":{"en":"Start from an income level","es":"Empiece por un nivel de ingresos"},
@@ -2268,7 +2272,7 @@ function renderFollowUp(){
   };
 }
 function applyOrganizeStep(){if(currentPage!==1)return;var wrap=$("appViewSections");if(!wrap)return;for(var i=0;i<wrap.children.length;i++){var c=wrap.children[i];if(c.className.indexOf("card")<0)continue;var showCard=c.id!=="subCard"&&Number(c.dataset.flowStep||0)===currentOrganizeStep;c.classList.toggle("hidden",!showCard);}}
-function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,renderForeign,renderPricing,renderDemo,applyCollapse];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
+function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,renderForeign,renderPricing,renderDemo,applyCollapse,syncNavChrome];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
 function secKeyFromH2(t){
   if(t.indexOf("州税范围")>=0)return "s3b";
   if(t.indexOf("去年有什么")>=0)return "s3";
@@ -2726,10 +2730,10 @@ function outlookMapRow(head, pos, push, future, when) {
 // 两块提案折叠：标题沿用地图的行名，放在地图下方；与地图分开放，免费态的「只给方向」判据仍只覆盖表格本身。
 function mapNotesHtml() {
   var h = "<div class=\"map-notes\" id=\"mapNotes\">";
-  h += "<details class=\"small\"><summary>" + esc(tr("医保补贴（1095-A / 8962）· 身份条件（提案）", "Subsidy (1095-A / 8962) · who qualifies (proposal)", "Subsidio (1095-A / 8962) · quién califica (propuesta)")) + "</summary>"
+  h += "<details class=\"small\"><summary>" + esc(tr("医保补贴的身份条件（提案）", "Who can get the subsidy (proposal)", "Quién puede recibir el subsidio (propuesta)")) + "</summary>"
     + "<p class=\"small muted\">" + esc(tr("2027 起，只有公民、国民、特定合法居留身份才拿得到这项补贴（提案，未定稿）。", "Starting 2027, only U.S. citizens, U.S. nationals, and certain lawfully present non-citizens could receive this subsidy (proposal, not final).", "Desde 2027, solo ciudadanos, nacionales y ciertos no ciudadanos con presencia legal podrían recibir este subsidio (propuesta, no definitiva).")) + "</p>"
     + "<p class=\"small muted\">" + esc(tr("出处：Treasury/IRS IR-2026-121，2026-10-14；联邦公报 2026-10-15；核于 2026-11-12", "Source: Treasury/IRS IR-2026-121, 2026-10-14; Federal Register 2026-10-15; checked 2026-11-12", "Fuente: Treasury/IRS IR-2026-121, 2026-10-14; Registro Federal 2026-10-15; verificado el 2026-11-12")) + "</p></details>";
-  h += "<details class=\"small\"><summary>" + esc(tr("教育（AOTC / LLC）· 两条提案与一项新抵免", "Education (AOTC / LLC) · two proposals and one new credit", "Educación (AOTC / LLC) · dos propuestas y un crédito nuevo")) + "</summary>"
+  h += "<details class=\"small\"><summary>" + esc(tr("孩子学费抵免的两条提案与一项新抵免", "Two proposals and one new credit on the tuition credits", "Dos propuestas y un crédito nuevo sobre los créditos de matrícula")) + "</summary>"
     + "<p class=\"small muted\">" + esc(tr("退税那一部分可能被列为「联邦公共福利」；按提案，须具备法定移民身份才可领取（提案，未定稿）。", "The refundable part could be classed as a federal public benefit; under the proposal, only people with a defined immigration status could receive it (proposal, not final).", "La parte reembolsable podría clasificarse como beneficio público federal; según la propuesta, solo quien tenga estatus migratorio reconocido podría recibirla (propuesta, no definitiva).")) + "</p>"
     + "<p class=\"small muted\">" + esc(tr("另有一项 25F「联邦奖学金抵免」，2027 税年起生效：它是捐钱给奖学金机构换来的抵免，不是家长学费抵免，不能当成学费多抵一笔。", "There is also a new §25F education freedom tax credit, effective from tax year 2027: it is for donating to scholarship-granting organizations, not a tuition credit for parents — it is not another credit on tuition.", "También hay un nuevo crédito §25F de libertad educativa, vigente desde el año fiscal 2027: es por donar a organizaciones de becas, no un crédito de matrícula para padres; no es otro crédito sobre la matrícula.")) + "</p>"
     + "<p class=\"small muted\">" + esc(tr("出处：REG-119882-25，91 FR 53812，2026-08-20；IRS §25F 临时细则，2026-10-02；核于 2026-11-12", "Source: REG-119882-25, 91 FR 53812, 2026-08-20; IRS §25F temporary rules, 2026-10-02; checked 2026-11-12", "Fuente: REG-119882-25, 91 FR 53812, 2026-08-20; normas temporales del IRS §25F, 2026-10-02; verificado el 2026-11-12")) + "</p></details>";
@@ -2846,11 +2850,11 @@ function outlookMapHtml(unlocked) {
   var h = "<h3>" + esc(tr("今年这张地图：改一个数，看它推得动哪几条", "This year's map: change one number, see which lines it moves", "El mapa de este año: cambie un número y vea qué líneas mueve")) + "</h3>";
   h += "<p class=\"muted small\">" + esc(tr("五条线都只用你上面填的数；不新增输入。", "All five lines use only the numbers you already filled in — nothing new to enter.", "Las cinco líneas usan solo los números que ya llenó: nada nuevo que ingresar.")) + "</p>";
   h += "<div class=\"map-wrap\"><table class=\"map-table\"><thead><tr><th></th><th>" + esc(tr("你现在的位置", "Where you stand", "Dónde está")) + "</th><th>" + esc(tr("这个数推得动哪一条", "What this number moves", "Qué mueve este número")) + "</th><th>" + esc(tr("以后会怎样", "What it means later", "Qué significa después")) + "</th><th>" + esc(tr("最晚哪天还能改", "Last day to change it", "Último día para cambiarlo")) + "</th></tr></thead><tbody>";
-  h += outlookMapRow(tr("收入 / 税档", "Income / bracket", "Ingresos / tramo"), pos1, push1, f1, when1);
-  h += outlookMapRow(tr("医保补贴（1095-A / 8962）", "Subsidy (1095-A / 8962)", "Subsidio (1095-A / 8962)"), pos2, push2, f2, when2);
-  h += outlookMapRow(tr("教育（AOTC / LLC）", "Education (AOTC / LLC)", "Educación (AOTC / LLC)"), pos3, push3, f3, when3);
+  h += outlookMapRow(tr("收入税档", "Income and tax bracket", "Ingresos y tramo"), pos1, push1, f1, when1);
+  h += outlookMapRow(tr("医保补贴的 400% 线", "The 400% line for the subsidy", "La línea del 400% del subsidio"), pos2, push2, f2, when2);
+  h += outlookMapRow(tr("孩子学费的两项抵免", "The two tuition credits", "Los dos créditos por matrícula"), pos3, push3, f3, when3);
   h += outlookMapRow(tr("退休账户今年放了多少", "Put into retirement accounts this year", "Aportado a cuentas de retiro este año"), pos4a, push4a, f4a, when4a);
-  h += outlookMapRow(tr("今年记了几分（40 分 ≈ 10 年）", "Credits this year (40 ≈ 10 years)", "Créditos de este año (40 ≈ 10 años)"), pos4b, push4b, f4b, when4b);
+  h += outlookMapRow(tr("退休金要的记分", "Credits toward your retirement", "Créditos para su jubilación"), pos4b, push4b, f4b, when4b);
   h += "</tbody></table></div>";
 
   var P = R.poverty_lines || {}, A = R.credits.aotc || {}, S = R.credits.ssa || {}, BR = R.brackets || {};
@@ -3494,30 +3498,30 @@ function renderDemo(){
     // 1) 收入税档
     var sd=SD.mfj, taxable=(sd!=null)?Math.max(0,inc-sd):null, band=(taxable!=null)?demoBand(BR.mfj,taxable):null;
     if(sd!=null&&band){
-      push(tr("收入 / 税档","Income / bracket","Ingresos / tramo"),
+      push(tr("收入税档","Income and tax bracket","Ingresos y tramo"),
         tr("收入 "+demoMoney(inc)+"，减掉合并申报的标准扣除 "+demoMoney(sd)+"，应税 "+demoMoney(taxable)+"。这一档 "+band.rate+"%"+(band.cap!=null?("，到 "+demoMoney(band.cap)+" 为止"):"（最高档）")+(band.next?("；再往上就进 "+band.next[1]+"%"):"")+"。",
            "Income "+demoMoney(inc)+", minus the "+demoMoney(sd)+" joint standard deduction, leaves "+demoMoney(taxable)+" taxable. This band is "+band.rate+"%"+(band.cap!=null?(", up to "+demoMoney(band.cap)):" (top band)")+(band.next?("; above that it is "+band.next[1]+"%"):"")+".",
            "Ingresos "+demoMoney(inc)+"; tras la deducción estándar conjunta de "+demoMoney(sd)+" quedan "+demoMoney(taxable)+" gravables. Este tramo es del "+band.rate+"%"+(band.cap!=null?(", hasta "+demoMoney(band.cap)):" (tramo superior)")+(band.next?("; por encima pasa al "+band.next[1]+"%"):"")+"."),
-        tr("2026 年联邦档位表（","2026 federal brackets (","Tramos federales de 2026 (")+(BR.source||"")+tr("，核于 ","，checked ","，verificado el ")+(BR.checked||"")+"）");
+        tr("2026 年联邦档位表（","2026 federal brackets (","Tramos federales de 2026 (")+(BR.source||"")+tr("，核于 ","; checked ","; verificado el ")+(BR.checked||"")+tr("）","", ""));
     }else{
-      push(tr("收入 / 税档","Income / bracket","Ingresos / tramo"),tr("税档数没取到，待核。","Bracket figures not loaded — to be checked.","Cifras del tramo no cargadas: por verificar."),"");
+      push(tr("收入税档","Income and tax bracket","Ingresos y tramo"),tr("税档数没取到，待核。","Bracket figures not loaded — to be checked.","Cifras del tramo no cargadas: por verificar."),"");
     }
     // 2) 医保补贴 400% 线
     var four=(PL.four_hundred_pct||[]).filter(function(x){return x&&x.household_size===4;})[0];
     if(four&&four.limit){
       var over=inc>four.limit;
-      push(tr("医保补贴（1095-A / 8962）","Subsidy (1095-A / 8962)","Subsidio (1095-A / 8962)"),
+      push(tr("医保补贴的 400% 线","The 400% line for the subsidy","La línea del 400% del subsidio"),
         tr("四口之家 "+four.coverage_year+" 保障年的 400% 线是 "+demoMoney(four.limit)+"。样例收入 "+demoMoney(inc)+" 在这条线的"+(over?"上面":"下面")+"；超过这条线，按现行规则这项补贴就没有了。",
            "For a household of four the 400% line for coverage year "+four.coverage_year+" is "+demoMoney(four.limit)+". The sample income of "+demoMoney(inc)+" is "+(over?"above":"below")+" it; above that line the current rule provides no premium subsidy.",
            "Para un hogar de cuatro la línea del 400% del año de cobertura "+four.coverage_year+" es "+demoMoney(four.limit)+". El ingreso de muestra de "+demoMoney(inc)+" está "+(over?"por encima":"por debajo")+"; por encima de esa línea la regla vigente no da subsidio."),
         tr("26 U.S.C. §36B(c)(1)(A) × HHS 贫困线，核于 ","26 U.S.C. §36B(c)(1)(A) × HHS poverty line, checked ","26 U.S.C. §36B(c)(1)(A) × línea de pobreza de HHS, verificado el ")+(PL.checked||""));
     }else{
-      push(tr("医保补贴（1095-A / 8962）","Subsidy (1095-A / 8962)","Subsidio (1095-A / 8962)"),tr("四口之家的这条线规则图里没有，待核。","The rule file has no line for a household of four — to be checked.","El archivo de reglas no tiene la línea para un hogar de cuatro: por verificar."),"");
+      push(tr("医保补贴的 400% 线","The 400% line for the subsidy","La línea del 400% del subsidio"),tr("四口之家的这条线规则图里没有，待核。","The rule file has no line for a household of four — to be checked.","El archivo de reglas no tiene la línea para un hogar de cuatro: por verificar."),"");
     }
     // 3) 孩子学费
     if(AOTC.max_tax_years_per_student){
       var yrs=AOTC.max_tax_years_per_student*2;
-      push(tr("教育（AOTC / LLC）","Education (AOTC / LLC)","Educación (AOTC / LLC)"),
+      push(tr("孩子学费的两项抵免","The two tuition credits","Los dos créditos por matrícula"),
         tr("学费抵免里，AOTC 每个学生最多 "+AOTC.max_tax_years_per_student+" 个税年"+(AOTC.first_four_years_only?"、只限前四年本科":"")+"；另一项（LLC）"+(LLC.no_year_limit?"没有年数上限":"有年数上限")+"。样例两个孩子，AOTC 合计最多 "+yrs+" 个税年。这一行跟收入无关，只看每个孩子已经用掉几年。",
            "Of the two tuition credits, the AOTC covers at most "+AOTC.max_tax_years_per_student+" tax years per student"+(AOTC.first_four_years_only?" and only the first four years of college":"")+"; the other one (the LLC) "+(LLC.no_year_limit?"has no year limit":"does have a year limit")+". With the sample's two children, at most "+yrs+" AOTC tax years in total. This line does not depend on income — only on how many years each child has already used.",
            "De los dos créditos por matrícula, el AOTC cubre como máximo "+AOTC.max_tax_years_per_student+" años fiscales por estudiante"+(AOTC.first_four_years_only?" y solo los cuatro primeros años de universidad":"")+"; el otro (el LLC) "+(LLC.no_year_limit?"no tiene límite de años":"sí tiene límite de años")+". Con los dos hijos del ejemplo, como máximo "+yrs+" años fiscales de AOTC en total. Esta línea no depende de los ingresos: solo de cuántos años ha usado cada hijo."),
@@ -3526,7 +3530,7 @@ function renderDemo(){
     // 4) 退休与社安记分
     if(SSA.per_credit_usd&&SSA.max_per_year){
       var need=SSA.per_credit_usd*SSA.max_per_year;
-      push(tr("今年记了几分（40 分 ≈ 10 年）","Credits this year (40 ≈ 10 years)","Créditos de este año (40 ≈ 10 años)"),
+      push(tr("退休金要的记分","Credits toward your retirement","Créditos para su jubilación"),
         tr("2026 年每 "+demoMoney(SSA.per_credit_usd)+" 工资记 1 分，一年最多 "+SSA.max_per_year+" 分，退休金要 "+(SSA.target||40)+" 分。样例收入 "+demoMoney(inc)+"：一年能记满 "+SSA.max_per_year+" 分（"+demoMoney(need)+" 就够）。",
            "In 2026 each "+demoMoney(SSA.per_credit_usd)+" of wages earns one credit, at most "+SSA.max_per_year+" a year, and "+ (SSA.target||40) +" credits are needed for retirement benefits. With the sample income of "+demoMoney(inc)+": a full "+SSA.max_per_year+" credits a year ("+demoMoney(need)+" is enough).",
            "En 2026 cada "+demoMoney(SSA.per_credit_usd)+" de salario suma un crédito, máximo "+SSA.max_per_year+" al año, y hacen falta "+(SSA.target||40)+" créditos para la jubilación. Con el ingreso de muestra de "+demoMoney(inc)+": los "+SSA.max_per_year+" créditos del año ("+demoMoney(need)+" basta)."),
@@ -3558,6 +3562,12 @@ $("demoPreset").addEventListener("change",function(){var sl=$("demoIncome");var 
 $("demoCta").onclick=function(){try{track("demo_cta_free");}catch(e){}var t=$("heroText");if(t){t.scrollIntoView({behavior:"smooth",block:"center"});t.focus();}};
 $("demoPass").onclick=function(ev){if(ev&&ev.preventDefault)ev.preventDefault();try{track("demo_cta_pass");}catch(e2){}goSub();};
 $("btnAiOpen").onclick=function(e){e.preventDefault();var ai=$("aiCard");if(ai){ai.dataset.open="1";ai.classList.remove("hidden");ai.scrollIntoView({behavior:"smooth",block:"start"});}};
+// 首屏（第 1 页且还没有清单）不摆顶部导航：样品卡里已经有「整理我自己的」与「季票给什么」两条路。
+function syncNavChrome(){
+  var nav=document.getElementById("pageNav"); if(!nav) return;
+  var noList=!(typeof packet!=="undefined"&&packet&&packet.checklist&&packet.checklist.length);
+  nav.classList.toggle("hidden", currentPage===1 && noList);
+}
 function showPage(p){
   // 卡 2 对所有人免费可见：订阅页未登录也能看能填；只有支付页（3）要求登录。
   if(p===3&&isGuest()){pendingPage=p;showAuth();return;}
@@ -3582,6 +3592,7 @@ function showPage(p){
   });
   if(p===2 && packet){ if(!packet.collapsed) packet.collapsed={}; packet.collapsed.sub=false; savePacket(); applyCollapse(); renderSubStatus(); renderPlanCards(); }
   if(p===3) renderOrders();
+  try{syncNavChrome();}catch(e){}
   updateStepTabs();
   renderStickyProgress();
 }

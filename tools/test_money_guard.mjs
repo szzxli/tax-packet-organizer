@@ -122,7 +122,7 @@ check("免费态：只有方向，没有金额/区间/推手/时点", () => {
 check("地图：季票态四条线 × 四格，位置/联动/未来/截止日都在", () => {
   sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(state({ dep: "1", tuition: "12000", mkt: "12", premium: "8400", retire: "5000" })));
   const out = sandbox.outlookMapHtml(true);
-  for (const k of ["收入 / 税档", "医保补贴（1095-A / 8962）", "教育（AOTC / LLC）", "退休账户今年放了多少", "今年记了几分（40 分 ≈ 10 年）"]) assert.ok(out.includes(k), "缺这一行：" + k);
+  for (const k of ["收入税档", "医保补贴的 400% 线", "孩子学费的两项抵免", "退休账户今年放了多少", "退休金要的记分"]) assert.ok(out.includes(k), "缺这一行：" + k);
   assert.equal((out.match(/<tr>/g) || []).length, 6, "应为表头 1 + 五条线 5 行");
   assert.equal((out.match(/<td\b/g) || []).length, 20, "五条线各应四格（共 20 个 td）");
   assert.equal((out.match(/data-label=/g) || []).length, 20, "每个格子都该带列名，手机上竖排时才读得懂");
