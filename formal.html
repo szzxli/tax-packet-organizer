@@ -405,7 +405,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 #demoRows li span:nth-of-type(3){display:none}
 
 /* 首屏只留四个可点：输入、生成、订阅、折叠 */
-#tagGrid{display:none}
+#tagGrid{display:none!important}
 #demoCard .demo-cta{margin:10px 0 0}
 </style>
 </head>
@@ -505,9 +505,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div class="demo-slide-line"><label for="demoIncome" class="small muted">拖动看收入落在哪</label><b id="demoIncomeNow">$120,000</b></div>
 <input type="range" id="demoIncome" min="40000" max="250000" step="1000" value="120000">
 </div>
-<ul class="demo-rows" id="demoRows"></ul>
-<p class="demo-convert small muted">换成你的数，这五行就是你的；季票再加一屏：今年退还是补、哪几项在推、哪天之前还能改。</p>
-<p class="demo-cta"><button type="button" id="demoSub2">订阅季票 · 内测免费</button></p>
+<p class="demo-convert small muted">换成你的数，这五行就是你的；季票再加一屏：今年退还是补、哪几项在推、哪天之前还能改。</p><p class="demo-cta"><button type="button" id="demoSub2">订阅季票 · 内测免费</button></p><ul class="demo-rows" id="demoRows"></ul>
 <p class="demo-cta"><button type="button" id="demoSub">订阅季票 · 内测免费</button></p>
 <details class="demo-why"><summary>怎么用 · 季票含什么 · 这五行怎么算的</summary>
 <ol class="demo-steps">
