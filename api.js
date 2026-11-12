@@ -7,7 +7,7 @@
   var TOKEN_KEY = "tpo_token";
   // 正式收费开关。false = 前端不发起结账请求，直接提示"暂未开放"。
   // 只有 Worker 侧 /api/orders/checkout 已返回 503 subscription_closed 时才保持 false；
-  // 定价公布、实体注册完成、由 li jun 明确同意后，前后端一起改为 true。
+  // 定价公布、实体注册完成、经项目所有者明确同意后，前后端一起改为 true。
   var SUBSCRIPTION_OPEN = false;
   function closedError() {
     var err = new Error("subscription_closed");
