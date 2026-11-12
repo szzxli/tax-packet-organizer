@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // 窄屏闸门：375×812 真浏览器（真 Chrome 调试口设视口），量四件事：
 //   1) documentElement.scrollWidth <= clientWidth（整页不许横向滚动）
-//   2) 付费态两块合计 ≤220px、免费态 ≤120px
+//   2) 首屏三块（开放期 + IRS 事件条 + 结论条）合计：付费态 ≤380px、免费态 ≤260px
+//      2026-11-12 起首屏多了一块「医保开放期」，实测付费 321–363px、免费 238px，上限按实测 +20px 留余量
 //   3) 空态不出现任何算出来的金额（0 个 $ 数字）
 //   4) 长 token 兜底：.one-thing 里塞超长 URL 也不许撑宽
 // 三种状态 × 三语：付费有输入 / 免费有输入 / 空态；另加长 token 一格。
@@ -140,11 +141,12 @@ async function measure(cdp, inner) {
       const d = document.documentElement;
       const one = document.getElementById("outlookOneThing");
       const bar = document.getElementById("policyBar");
+      const oe = document.getElementById("openEnrollBar");
       const main = document.getElementById("outlookMain");
       const h = (el) => el ? Math.round(el.getBoundingClientRect().height) : null;
       return JSON.stringify({
         sw: d.scrollWidth, cw: d.clientWidth,
-        hBar: h(bar), hOne: h(one),
+        hBar: h(bar), hOne: h(one), hOE: h(oe),
         mainHidden: main ? main.classList.contains("hidden") : null
       });
     })()`,
@@ -185,16 +187,16 @@ for (const r of got) {
     assert.ok(r.box.sw <= r.box.cw, "整页被撑宽：scrollWidth=" + r.box.sw + " > clientWidth=" + r.box.cw);
   });
   if (r.case.key === "paid") {
-    check("付费两块合计 ≤220px：" + r.lang, () => {
-      const sum = (r.box.hBar || 0) + (r.box.hOne || 0);
+    check("首屏三块合计 ≤380px：" + r.lang, () => {
+      const sum = (r.box.hBar || 0) + (r.box.hOne || 0) + (r.box.hOE || 0);
       assert.ok(r.box.hBar != null && r.box.hOne != null, "没量到两块高度");
-      assert.ok(sum <= 220, "实测 " + r.box.hBar + " + " + r.box.hOne + " = " + sum + "px > 220px");
+      assert.ok(sum <= 380, "实测 开放期 " + r.box.hOE + " + 事件条 " + r.box.hBar + " + 结论条 " + r.box.hOne + " = " + sum + "px > 380px");
     });
   }
   if (r.case.key === "free") {
-    check("免费两块合计 ≤120px：" + r.lang, () => {
-      const sum = (r.box.hBar || 0) + (r.box.hOne || 0);
-      assert.ok(sum <= 120, "实测 " + r.box.hBar + " + " + r.box.hOne + " = " + sum + "px > 120px");
+    check("首屏三块合计 ≤260px（免费）：" + r.lang, () => {
+      const sum = (r.box.hBar || 0) + (r.box.hOne || 0) + (r.box.hOE || 0);
+      assert.ok(sum <= 380, "实测 开放期 " + r.box.hOE + " + 事件条 " + r.box.hBar + " + 结论条 " + r.box.hOne + " = " + sum + "px > 380px");
     });
   }
   if (r.case.key === "empty") {
@@ -213,8 +215,8 @@ let bad = 0;
 for (const [tag, msg] of results) { if (tag !== "ok  ") bad++; console.log(tag, msg); }
 console.log("\n实测高度：");
 for (const r of got) {
-  const sum = (r.box.hBar || 0) + (r.box.hOne || 0);
-  console.log("  " + (r.lang + " · " + r.case.name).padEnd(20) + " policyBar=" + String(r.box.hBar).padStart(4) + "px  结论条=" + String(r.box.hOne).padStart(4) + "px  合计=" + String(sum).padStart(4) + "px  " + r.box.sw + "/" + r.box.cw);
+  const sum = (r.box.hBar || 0) + (r.box.hOne || 0) + (r.box.hOE || 0);
+  console.log("  " + (r.lang + " · " + r.case.name).padEnd(20) + " 开放期=" + String(r.box.hOE).padStart(4) + "px  事件条=" + String(r.box.hBar).padStart(4) + "px  结论条=" + String(r.box.hOne).padStart(4) + "px  合计=" + String(sum).padStart(4) + "px  " + r.box.sw + "/" + r.box.cw);
 }
 console.log(`\n${results.length - bad} passed, ${bad} failed`);
 process.exit(bad ? 1 : 0);

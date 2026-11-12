@@ -3,6 +3,18 @@
   "built": "2026-11-10",
   "tax_year": 2026,
   "note": "页面只从这里取门槛与出处；数字不抄进 js，也不抄进测试。每条带有效税年、适用保障年、出处与核实日。",
+  "open_enrollment": {
+    "program": "ACA Marketplace open enrollment for coverage year 2027",
+    "coverage_year": 2027,
+    "starts": "2026-11-01",
+    "ends": "2027-01-15",
+    "avg_benchmark_premium_increase_pct": 13,
+    "benchmark_increase_by_platform": {"healthcare_gov_pct": 11, "state_marketplaces_pct": 16},
+    "cliff_400pct": true,
+    "note": "CMS 2027 事实单：开放期 begins November 1, 2026, runs through January 15, 2027。涨幅为最终基准银计划平均；400% 悬崖已回归。2027 保障年的贫困线金额未出，页面不写任何 2027 的 400% 线金额。",
+    "source": "KFF, 9 things to watch for the 2027 ACA open enrollment period, 2026-11-06",
+    "checked": "2026-11-12"
+  },
   "brackets": {
     "effective_tax_year": 2026,
     "checked": "2026-11-03",

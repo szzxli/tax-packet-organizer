@@ -323,8 +323,8 @@ check("sw：图与价格文件进了 APP_SHELL，缓存版本随页面/图改动
   assert.ok(sw.includes('"./rules/graph.json"'), "APP_SHELL 缺规则图");
   assert.ok(sw.includes('"./pricing.json"'), "APP_SHELL 缺价格文件");
   // 图与页面是缓存优先；改了不升版本，老用户会一直读到旧内容（这轮是订阅区）。
-  assert.ok(sw.includes('"tax-packet-shell-v11"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
-  assert.ok(!sw.includes('"tax-packet-shell-v10"'), "CACHE_NAME 还停在 v10");
+  assert.ok(sw.includes('"tax-packet-shell-v12"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
+  assert.ok(!sw.includes('"tax-packet-shell-v11"'), "CACHE_NAME 还停在 v11");
 });
 check("AI 文案进 DOM 前换成中性句，正常文案不动", () => {
   const bad = sandbox.aiSafeText("You are eligible for this credit");
@@ -618,6 +618,68 @@ check("AI 失败路径三语都有出路（换说法 / 自己按表名加）", (
   assert.ok(!/[\u4e00-\u9fff]/.test(m[1] + m[2]), "en/es 里夹了中文");
   assert.equal(html.indexOf("AI 未接通，请稍后再试"), -1, "旧句还在");
   assert.equal(html.indexOf("AI 暂时没生成出来，请稍后再试"), -1, "旧句还在");
+});
+
+// ---- 2026-11-12 政策三处 ----
+const OE_NOW = Date.UTC(2026, 10, 12);      // 开放期内
+const OE_BEFORE = Date.UTC(2026, 9, 20);    // 开放期之前
+const OE_AFTER = Date.UTC(2027, 0, 20);     // 开放期之后
+
+check("开放期：窗口内出、窗口外不出（三语）", () => {
+  for (const lang of ["zh", "en", "es"]) {
+    sandbox.LANG = lang;
+    const inside = sandbox.acaBarBlockHtml(OE_NOW);
+    assert.ok(inside.includes('id="openEnrollBar"'), lang + " 窗口内没出这块");
+    assert.ok(inside.length > 80, lang + " 块里几乎没字");
+    for (const [name, t] of [["之前", OE_BEFORE], ["之后", OE_AFTER]]) {
+      assert.equal(sandbox.acaBarBlockHtml(t), "", lang + " 窗口" + name + "还在出");
+    }
+  }
+  sandbox.LANG = "zh";
+});
+
+check("开放期：三句齐、带出处与核实日、没有 2027 的 400% 线金额", () => {
+  for (const lang of ["zh", "en", "es"]) {
+    sandbox.LANG = lang;
+    const out = sandbox.acaBarBlockHtml(OE_NOW);
+    assert.ok(/11\/1/.test(out) && /1\/15/.test(out), lang + " 缺开放期日期");
+    assert.ok(out.includes("13"), lang + " 缺涨幅 13%");
+    assert.ok(/400%/.test(out), lang + " 缺 400% 线这句");
+    assert.ok(out.includes("KFF") && out.includes("2026-11-06"), lang + " 缺 KFF 出处");
+    assert.ok(/2026-11-12/.test(out), lang + " 缺核实日");
+    assert.ok(!/\$[\d]/.test(out), lang + " 出现金额：" + out.slice(0, 120));
+    assert.ok(!/2027[^<]{0,12}\$/.test(out), lang + " 出现 2027 的钱数");
+  }
+  sandbox.LANG = "zh";
+});
+
+check("两块提案：标提案、不标生效、带出处与核实日、没有判断句", () => {
+  for (const lang of ["zh", "en", "es"]) {
+    sandbox.LANG = lang;
+    const out = sandbox.mapNotesHtml();
+    assert.equal((out.match(/<details/g) || []).length, 2, lang + " 折叠不是两块");
+    assert.ok(out.includes("IR-2026-121"), lang + " 补贴那条缺出处");
+    assert.ok(out.includes("REG-119882-25") && out.includes("53812"), lang + " 教育那条缺出处");
+    assert.equal((out.match(/2026-11-12/g) || []).length, 2, lang + " 核实日不是两条都有");
+    const proposal = lang === "zh" ? "提案" : lang === "en" ? "proposal" : "propuesta";
+    assert.ok(out.includes(proposal), lang + " 没标提案");
+    for (const bad of ["建议你", "你应该", "你符合", "符合条件", "eligible", "entitled"]) {
+      assert.ok(!out.includes(bad), lang + " 出现判断句：" + bad);
+    }
+    assert.ok(!/\$[\d]/.test(out), lang + " 出现金额");
+  }
+  sandbox.LANG = "zh";
+});
+
+check("25F 不许读成学费多抵一笔", () => {
+  for (const lang of ["zh", "en", "es"]) {
+    sandbox.LANG = lang;
+    const out = sandbox.mapNotesHtml();
+    assert.ok(/25F/.test(out), lang + " 没写 25F");
+    const neg = lang === "zh" ? "不是家长学费抵免" : lang === "en" ? "not a tuition credit" : "no un crédito de matrícula";
+    assert.ok(out.includes(neg), lang + " 25F 那句没写明不是学费抵免");
+  }
+  sandbox.LANG = "zh";
 });
 
 // ---- 输出 ----
