@@ -170,11 +170,17 @@ await withChrome(async (cdp) => {
           heights: rows.map(r => Math.round(r.getBoundingClientRect().height)),
           texts: rows.map(r => r.innerText.replace(/\\s+/g, " ").trim()),
           ctaText: cta.textContent.trim(),
+          passText: (document.getElementById("demoPass") || { textContent: "" }).textContent.trim(),
+          passHidden: (() => { const el = document.getElementById("demoPass"); return !el || el.offsetParent === null; })(),
+          pageNow: (typeof currentPage !== "undefined" ? currentPage : null),
+          stepNow: (typeof currentOrganizeStep !== "undefined" ? currentOrganizeStep : null),
+          overlay: Array.from(document.querySelectorAll('[role="dialog"], .modal, .overlay, .onboarding, .coach')).filter(el => el.offsetParent !== null).length,
           ctaInView: cr.top < innerHeight && cr.bottom > 0,
           ctaCovered: !(hit && (hit === cta || cta.contains(hit))),
           entries: entries.map(el => (el.id || el.tagName) + ":" + (el.textContent || "").trim().slice(0, 12)),
           entriesInView: Array.from(document.querySelectorAll("button,a[href]")).filter(el => el.offsetParent !== null && !el.closest(".lang-switch") && !el.closest("#stickyProgress") && (() => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; })()).map(el => el.id || el.tagName),
-          cardText: card ? card.innerText : ""
+          cardText: card ? card.innerText : "",
+          pageText: document.body.innerText
         });
       })()`);
       seen.push({ tag, geo });
@@ -224,12 +230,37 @@ await withChrome(async (cdp) => {
       const after = await cdp.eval(`(() => {
         const sl = document.getElementById("demoIncome");
         const first = document.getElementById("demoRows").children[1].innerText;
+        const page0 = typeof currentPage !== "undefined" ? currentPage : null;
+        const step0 = typeof currentOrganizeStep !== "undefined" ? currentOrganizeStep : null;
+        const y0 = Math.round(window.scrollY);
         sl.value = "40000"; sl.dispatchEvent(new Event("input", { bubbles: true }));
         const low = document.getElementById("demoRows").children[1].innerText;
-        return JSON.stringify({ same: first === low, low });
+        return JSON.stringify({ same: first === low, low,
+          pageSame: page0 === (typeof currentPage !== "undefined" ? currentPage : null),
+          stepSame: step0 === (typeof currentOrganizeStep !== "undefined" ? currentOrganizeStep : null),
+          scrollSame: y0 === Math.round(window.scrollY),
+          overlay: Array.from(document.querySelectorAll('[role="dialog"], .modal, .overlay, .onboarding, .coach')).filter(el => el.offsetParent !== null).length });
       })()`);
       check("拖动后那行真的变（医保补贴）：" + tag, () => {
         assert.equal(after.same, false, "把收入从 20 万拖到 4 万，这一行没变");
+      });
+      check("拖完到点按钮之间 0 次跳页：" + tag, () => {
+        assert.ok(after.pageSame, "拖动把页面切走了");
+        assert.ok(after.stepSame, "拖动把步骤切走了");
+        assert.ok(after.scrollSame, "拖动让页面滚动了");
+        assert.equal(after.overlay, 0, "拖动弹出了引导层／弹窗");
+      });
+      check("两条路同级可见（整理我自己的 + 季票给什么）：" + tag, () => {
+        assert.ok(geo.ctaText.length > 0, "主按钮没文案");
+        assert.ok(geo.passText.length > 0, "次级入口没文案");
+        assert.equal(geo.passHidden, false, "次级入口被藏起来了");
+        assert.equal(geo.overlay, 0, "首屏就盖了弹窗／引导层");
+      });
+      check("没有「使用说明／教程」这类段落标题：" + tag, () => {
+        const t = geo.pageText;
+        for (const word of ["使用说明", "教程", "三步上手", "操作指南", "新手指引", "How to use", "Tutorial", "Cómo usar", "Tutorial de uso"]) {
+          assert.ok(!t.includes(word), "出现段落标题：" + word);
+        }
       });
 
       check("没有判断句与金额承诺：" + tag, () => {
@@ -258,7 +289,54 @@ await withChrome(async (cdp) => {
   }
 });
 
+// 四行名字必须与第 3 步地图逐字一致：生成清单 → 进第 3 步 → 读地图行头与列头
+const demoTitleCmp = [];
+await withChrome(async (cdp) => {
+  await cdp.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+  await cdp.send("Page.enable");
+  for (const lang of LANGS) {
+    await cdp.send("Page.navigate", { url: LIVE ? LIVE + "?lang=" + lang : base + "/formal.html?lang=" + lang });
+    for (let i = 0; i < 80; i++) {
+      await sleep(120);
+      const r = await cdp.send("Runtime.evaluate", { returnByValue: true, expression: 'document.readyState === "complete" && document.getElementById("demoRows") && document.getElementById("demoRows").children.length === 5' });
+      if (r.result.value === true) break;
+    }
+    const got = await cdp.eval(`(() => {
+      const titles = Array.from(document.querySelectorAll("#demoRows li b")).map(b => b.textContent.trim());
+      const chips = document.querySelectorAll("#tagGrid .tag-btn");
+      for (let i = 0; i < Math.min(3, chips.length); i++) chips[i].click();
+      const mk = document.getElementById("btnMake"); if (mk) mk.click();
+      return JSON.stringify({ titles });
+    })()`);
+    await sleep(700);
+    const map = await cdp.eval(`(() => {
+      const vals = { ol_dep: "1", ol_income: "120000", ol_withheld: "9000", ol_tuition: "20000", ol_retire: "6000", ol_mkt: "12", ol_premium: "8400", ol_mortgage: "14000" };
+      Object.keys(vals).forEach(k => { const e = document.getElementById(k); if (e) { e.value = vals[k]; e.dispatchEvent(new Event("input", { bubbles: true })); } });
+      if (typeof renderOutlook === "function") renderOutlook();
+      setOrganizeStep(3, false); renderAll();
+      const rows = Array.from(document.querySelectorAll("#outlookMap tbody th")).map(th => th.textContent.trim());
+      const head = Array.from(document.querySelectorAll("#outlookMap thead th")).map(th => th.textContent.trim());
+      return JSON.stringify({ rows, head });
+    })()`);
+    demoTitleCmp.push({ lang, titles: got.titles, mapRows: map.rows, mapHead: map.head });
+  }
+});
+
+for (const c of demoTitleCmp) {
+  check("四行名字与第 3 步地图逐字一致：" + c.lang, () => {
+    assert.ok(c.mapRows.length >= 4, "地图行头没取到：" + JSON.stringify(c.mapRows));
+    const want = [c.mapRows[0], c.mapRows[1], c.mapRows[2], c.mapRows[c.mapRows.length - 1]];
+    for (let i = 0; i < 4; i++) assert.equal(c.titles[i], want[i], "第 " + (i + 1) + " 行：「" + c.titles[i] + "」≠ 地图「" + want[i] + "」");
+    assert.ok(c.mapHead.includes(c.titles[4]), "第五行「" + c.titles[4] + "」不在地图的列名里：" + c.mapHead.join(" / "));
+  });
+}
+
 for (const [tag, msg] of results) console.log(tag, msg);
+console.log("\n与地图的逐字对照：");
+for (const c of demoTitleCmp) {
+  console.log("  " + c.lang + " 样品：" + c.titles.join(" | "));
+  console.log("  " + c.lang + " 地图：" + [c.mapRows[0], c.mapRows[1], c.mapRows[2], c.mapRows[c.mapRows.length - 1], c.mapHead.filter(Boolean).join(" / ")].join(" | "));
+}
 console.log("\n首屏入口清单（不含语言切换与常驻底栏）：");
 for (const s of seen) console.log("  " + s.tag.padEnd(14) + s.geo.entries.length + " 个：" + s.geo.entries.join(" / "));
 console.log("\n" + (results.length - bad) + " passed, " + bad + " failed");

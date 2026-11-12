@@ -431,10 +431,12 @@ export default {
           text(it.path, 200),
           text(it.device, 20),
           text(it.anon, 64).slice(0, 16),
+          // demo_cta 用它分 free / pass 两条路；其它事件留空
+          text(it.target, 16),
         ]);
       }
       try {
-        await env.DB.batch(rows.map((r) => env.DB.prepare("INSERT INTO events (ts, name, utm_source, utm_medium, utm_campaign, path, device, anon) VALUES (?,?,?,?,?,?,?,?)").bind(...r)));
+        await env.DB.batch(rows.map((r) => env.DB.prepare("INSERT INTO events (ts, name, utm_source, utm_medium, utm_campaign, path, device, anon, target) VALUES (?,?,?,?,?,?,?,?,?)").bind(...r)));
       } catch {
         // 埋点写失败不向外抛细节：前端本来就不等这个响应，报错只会把噪音留在日志里。
         return bad("write_failed", 500);

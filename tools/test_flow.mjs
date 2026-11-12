@@ -199,7 +199,7 @@ await withChrome(async (cdp) => {
         // 首屏入口：开场卡的按钮挪到样品卡，样品卡那颗是唯一主入口；重复的样例链接已删
         const demoCta = document.getElementById('demoCta');
         const firstArea = Array.from(document.querySelectorAll('#pageNav button, #pageNav a[href], #startCard button, #startCard a[href], #demoCard button, #demoCard a[href]')).filter(el => el.offsetParent !== null);
-        const firstPrimary = firstArea.filter(el => !el.classList.contains('secondary')).length;
+        const firstPrimary = firstArea.filter(el => el.tagName === 'BUTTON' && !el.classList.contains('secondary')).length;
         const demoPrimary = demoCta && !demoCta.classList.contains('secondary') ? 1 : 0;
         const stepTitles = [];
         for (const st of [1,2,3]) { setOrganizeStep(st,false); stepTitles.push(document.getElementById('stickyProgressTitle').textContent.trim()); }
