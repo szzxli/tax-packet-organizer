@@ -560,6 +560,8 @@ check("空态：只给一句提示 + 去填按钮，不出金额、不出标题�
       assert.ok(!out.includes('id="outlookMain"'), lang + " 空态还把估算那块渲染出来了");
       assert.ok(!out.includes("<h2>"), lang + " 空态还出了 h2");
       assert.ok(!out.includes("outlookMap"), lang + " 空态还渲染了地图容器");
+      assert.ok(/id="policyBar"/.test(out), lang + " 空态没有事件条（政策变化不该藏在填数之后）");
+      assert.ok(/id="openEnrollBar"/.test(out), lang + " 空态没有开放期条");
     }
   }
   sandbox.LANG = "zh";

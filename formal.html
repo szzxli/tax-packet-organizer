@@ -3040,11 +3040,20 @@ function acaBarBlockHtml(nowMs){
   var inner = acaBarHtml(R, nowMs); if (!inner) return "";
   return "<div id=\"openEnrollBar\" class=\"one-thing\">" + inner + "</div>";
 }
-function policyBarHtml(unlocked, nowMs) {
+function policyBarHtml(unlocked, nowMs, compact) {
   var R = mapRules(); if (!R) return "";
   var now = (nowMs == null) ? Date.now() : nowMs;
   var s = outlookLoad(), prof = {};
   try { if (typeof procProfileLoad === "function") prof = procProfileLoad() || {}; } catch (err) { prof = {}; }
+  // compact：空态（还没填数）只给一句话，不带任何金额；付费用户也不在这里推销季票
+  if (compact) {
+    var anyC = policyFreshAll(R, now);
+    if (!anyC.length) return "";
+    var hintC = unlocked
+      ? tr("IRS 有一条变化；填完这三项数，就能看到它落在你哪一格、什么时候生效。", "There is an IRS change; once you fill the three numbers you will see which line it lands on and when it starts.", "Hay un cambio del IRS; al llenar los tres números verá en qué punto cae y cuándo entra en vigor.")
+      : tr("IRS 今年有变化。季票看落在你哪一格。", "The IRS made a change this year. The pass shows which line it lands on.", "El IRS hizo un cambio este año. El pase muestra en qué punto cae.");
+    return "<div id=\"policyBar\" class=\"one-thing one-thing-hint\"><p class=\"small muted\">" + esc(hintC) + "</p></div>";
+  }
   if (!unlocked) {
     var landed = policySplit(R, s, prof, now).fresh;
     var anyFresh = policyFreshAll(R, now);
@@ -3093,7 +3102,7 @@ function outlookEmptyState(s) {
 function outlookHtml(unlocked) {
   var s = outlookLoad(), empty = outlookEmptyState(s);
   // 开放期这条与填没填数无关：窗口开着就出（新访客也要看到）
-  var h = acaBarBlockHtml() + "<div id=\"outlookEmpty\" class=\"one-thing" + (empty ? "" : " hidden") + "\">";
+  var h = acaBarBlockHtml() + (empty ? policyBarHtml(unlocked, null, true) : "") + "<div id=\"outlookEmpty\" class=\"one-thing" + (empty ? "" : " hidden") + "\">";
   h += "<p class=\"one-thing-lead\"><b>" + esc(tr("填这三个数，就知道你今年落在哪一格", "Fill these three numbers and you will see where this year lands", "Con estos tres números verá dónde cae este año")) + "</b></p>";
   h += "<p class=\"small muted\">" + esc(tr("收入、已经扣掉的税、学费，各填一个大概数就行；只存这台浏览器。", "Income, the tax already withheld, and tuition — rough figures are enough; they stay in this browser.", "Ingresos, el impuesto ya retenido y la matrícula: basta con cifras aproximadas; se quedan en este navegador.")) + "</p>";
   h += "</div>";

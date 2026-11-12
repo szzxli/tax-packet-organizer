@@ -205,7 +205,7 @@ for (const r of got) {
       assert.ok(!r.inner.includes('id="btnOutlookGo"'), "空态还渲染了多余的主按钮");
       assert.ok(r.inner.includes('id="outlookInputs"'), "空态没有输入区");
       assert.equal(r.box.mainHidden, null, "空态还把估算/地图那块渲染出来了");
-      assert.equal(r.box.hBar, null, "空态还渲染了事件条");
+      // 空态现在必须有事件条（政策变化不藏在填数之后）——见上面那条断言
       assert.equal(r.box.hOne, null, "空态还渲染了常驻结论条");
     });
   }
