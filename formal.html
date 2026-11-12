@@ -266,6 +266,17 @@ select option{background:#0f141b;color:#e6edf3}
 .map-table th,.map-table td{border:1px solid #2a3441;padding:8px;text-align:left;vertical-align:top;color:#e6edf3;overflow-wrap:anywhere}
 .map-table thead th{background:#0f141b;font-weight:600;font-size:12px;color:#93a3b5}
 .map-table tbody th{width:20%;background:#0f141b;font-weight:600}
+/* 手机上不横拖：每一条线变成一张竖排小卡，四格从上到下读，列名用 data-label 顶在每格前面。 */
+@media(max-width:600px){
+.map-wrap{overflow-x:visible}
+.map-table{display:block;min-width:0;width:100%;border-collapse:separate}
+.map-table thead{display:none}
+.map-table tbody,.map-table tr{display:block}
+.map-table tbody tr{border:1px solid #2a3441;border-radius:12px;margin:0 0 10px;padding:10px 11px}
+.map-table tbody th{display:block;width:auto;background:transparent;border:0;padding:0 0 6px;font-size:14px}
+.map-table tbody td{display:block;border:0;padding:5px 0 0;font-size:13px;line-height:1.5;white-space:normal;overflow-wrap:anywhere}
+.map-table tbody td::before{content:attr(data-label);display:block;font-size:11px;color:#93a3b5;margin-bottom:1px}
+}
 #startCard{background:linear-gradient(160deg,#16324f,#2a6db0);color:#fff;border:none;padding:26px 24px}
 #startCard .start-kicker{margin:0 0 8px;font-size:12px;letter-spacing:.12em;opacity:.8}
 #startCard .start-title{margin:0 0 10px;font-size:30px;line-height:1.25;color:#fff}
@@ -2593,7 +2604,13 @@ function outlookBracket(status, taxable) {
   }
 }
 function outlookMapRow(head, pos, push, future, when) {
-  return "<tr><th>" + esc(head) + "</th><td>" + esc(pos) + "</td><td>" + esc(push) + "</td><td>" + esc(future) + "</td><td>" + esc(when) + "</td></tr>";
+  // data-label 只在手机上用：表格改成竖排卡片时，每格前面要能看见这一列叫什么。
+  var L = function (zh, en, es) { return ' data-label="' + esc(tr(zh, en, es)).replace(/"/g, "&quot;") + '"'; };
+  return "<tr><th>" + esc(head) + "</th>"
+    + "<td" + L("你现在的位置", "Where you stand", "Dónde está") + ">" + esc(pos) + "</td>"
+    + "<td" + L("这个数推得动哪一条", "What this number moves", "Qué mueve este número") + ">" + esc(push) + "</td>"
+    + "<td" + L("以后会怎样", "What it means later", "Qué significa después") + ">" + esc(future) + "</td>"
+    + "<td" + L("最晚哪天还能改", "Last day to change it", "Último día para cambiarlo") + ">" + esc(when) + "</td></tr>";
 }
 function outlookMapHtml(unlocked) {
   var s = outlookLoad(), e = outlookEstimate(s);

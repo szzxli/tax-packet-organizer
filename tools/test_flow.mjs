@@ -310,6 +310,33 @@ await withChrome(async (cdp) => {
         assert.ok(geo.lastBottom != null, "没找到可见输入");
         assert.ok(geo.lastBottom <= geo.barTop + 1, "被遮了：" + geo.lastBottom + " > " + geo.barTop);
       });
+
+      // 6) 今年这张地图：手机上不许横向拖，四格要有列名
+      const map = await cdp.eval(`(() => {
+        const vals = { ol_dep:'1', ol_income:'120000', ol_withheld:'9000', ol_tuition:'20000', ol_retire:'6000', ol_mkt:'12', ol_premium:'8400', ol_mortgage:'14000' };
+        Object.keys(vals).forEach(k => { const e = document.getElementById(k); if (e) { e.value = vals[k]; e.dispatchEvent(new Event('input',{bubbles:true})); } });
+        if (typeof renderOutlook === 'function') renderOutlook();
+        const mp = document.getElementById('outlookMap');
+        if (!mp) return { exists: false };
+        const wrap = mp.querySelector('.map-wrap'), table = mp.querySelector('.map-table');
+        const tds = Array.from(mp.querySelectorAll('tbody td'));
+        return {
+          exists: true,
+          rows: mp.querySelectorAll('tbody tr').length,
+          wrapSW: wrap ? wrap.scrollWidth : null,
+          wrapCW: wrap ? wrap.clientWidth : null,
+          tableW: table ? Math.round(table.getBoundingClientRect().width) : null,
+          missingLabel: tds.filter(td => !td.getAttribute('data-label')).length,
+          labels: Array.from(new Set(tds.map(td => td.getAttribute('data-label'))))
+        };
+      })()`);
+      check("地图在手机上不横向拖：" + tag, () => {
+        assert.ok(map.exists, "地图没渲染出来");
+        assert.equal(map.rows, 5, "地图行数不对：" + map.rows);
+        assert.ok(map.wrapSW <= map.wrapCW + 1, "地图要横拖：" + map.wrapSW + " > " + map.wrapCW);
+        assert.equal(map.missingLabel, 0, map.missingLabel + " 个格子没有列名");
+        assert.equal(map.labels.length, 4, "列名不是 4 个：" + JSON.stringify(map.labels));
+      });
     }
   }
 });

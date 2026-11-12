@@ -90,7 +90,7 @@ check("innerHTML 里的中文只能出现在 tr() 调用里", () => {
 check("下拉选项：人话打头、表号进括号", () => {
   assert.match(js, /FORM_PLAIN\[f\[0\]\]/);
   assert.match(js, /plain\+"（"\+f\[0\]\+"）"/);
-  assert.match(js, /plain\+" \("\+f\[0\]\+"\)"/);
+  assert.match(js, /plain\+" \("\+code\+"\)"/);
   for (const code of ["W-2", "1099-K", "Schedule C", "1095-A", "1099-NEC"]) {
     assert.ok(html.includes(`"${code}"`), `表号 ${code} 应保持原样`);
     assert.ok(new RegExp(`"${code}":\\[`).test(js), `表号 ${code} 缺人话标签`);

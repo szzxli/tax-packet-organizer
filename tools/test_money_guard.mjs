@@ -124,7 +124,8 @@ check("地图：季票态四条线 × 四格，位置/联动/未来/截止日都
   const out = sandbox.outlookMapHtml(true);
   for (const k of ["收入 / 税档", "医保补贴（1095-A / 8962）", "教育（AOTC / LLC）", "退休账户今年放了多少", "今年记了几分（40 分 ≈ 10 年）"]) assert.ok(out.includes(k), "缺这一行：" + k);
   assert.equal((out.match(/<tr>/g) || []).length, 6, "应为表头 1 + 五条线 5 行");
-  assert.equal((out.match(/<td>/g) || []).length, 20, "五条线各应四格（共 20 个 td）");
+  assert.equal((out.match(/<td\b/g) || []).length, 20, "五条线各应四格（共 20 个 td）");
+  assert.equal((out.match(/data-label=/g) || []).length, 20, "每个格子都该带列名，手机上竖排时才读得懂");
   assert.ok(out.includes("以后会怎样"), "表头缺「以后会怎样」");
   assert.ok(out.includes("% 档"), "缺档位");
   assert.ok(out.includes("$12,000"), "缺学费位置");
@@ -317,11 +318,11 @@ check("规则图：400% 每行都带两个年度字段、出处与核实日", ()
   }
   for (const r of rows) assert.equal(r.limit, r.fpl * 4, "400% = 贫困线 ×4");
 });
-check("sw：图进了 APP_SHELL，缓存版本随页面/图改动升到 v9", () => {
+check("sw：图进了 APP_SHELL，缓存版本随页面/图改动升到 v10", () => {
   const sw = fs.readFileSync(new URL("../sw.js", import.meta.url), "utf8");
   assert.ok(sw.includes('"./rules/graph.json"'), "APP_SHELL 缺规则图");
   // 图是缓存优先；改了图不升版本，老用户会一直读到旧图（这轮就少了 brackets）。
-  assert.ok(sw.includes('"tax-packet-shell-v9"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
+  assert.ok(sw.includes('"tax-packet-shell-v10"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
   assert.ok(!sw.includes('"tax-packet-shell-v3"'), "CACHE_NAME 还停在 v3");
 });
 check("AI 文案进 DOM 前换成中性句，正常文案不动", () => {
