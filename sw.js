@@ -1,4 +1,4 @@
-const CACHE_NAME = "tax-packet-shell-v18";
+const CACHE_NAME = "tax-packet-shell-v19";
 const CACHE_PREFIX = "tax-packet-shell-";
 const APP_SHELL = [
   "./formal.html",

@@ -102,25 +102,39 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 #flowStepDescription{margin:4px 0 0;color:#596c7d;font-size:13px}
 .sticky-progress{position:fixed;z-index:20;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(760px,calc(100% - 24px));display:flex;align-items:center;gap:16px;padding:13px 16px;background:rgba(15,20,27,.97);border:1px solid #232e3a;border-radius:16px;box-shadow:0 10px 34px rgba(0,0,0,.45);backdrop-filter:blur(14px);color:#e6edf3}
 .sticky-copy{flex:1;min-width:0}.sticky-copy strong{display:block;color:#e6edf3;font-size:14px}.sticky-copy p{margin:2px 0 0;color:#93a3b5;font-size:12px}.progress-track{height:5px;margin-top:8px;overflow:hidden;border-radius:99px;background:#1e2a36}.progress-track span{display:block;width:0;height:100%;background:linear-gradient(90deg,#33896b,#5bb38d);border-radius:inherit;transition:width .25s ease}
-.sticky-progress button{white-space:nowrap;min-height:44px}#stickyProgressPrev{display:inline-block;margin-top:5px;color:#35546c;font-size:12px;text-decoration:underline}#stickyPass{flex:none;background:transparent;color:#e6edf3;border:1px solid #2f4557;border-radius:999px;padding:0 13px;font-size:13px;font-weight:600;white-space:nowrap}#stickyPass:hover{background:#18242f}.sec-head{align-items:center;gap:10px}.sec-sum{line-height:1.35}.sec-head h2{font-size:17px}
-/* 样品与提案：跟页面同一套深色，一条线一行、用细线分隔，不做五张白卡。 */
-#demoCard .demo-rows{list-style:none;margin:14px 0 0;padding:0;border:1px solid #232e3a;border-radius:12px;background:#0f141b;overflow:hidden}
-#demoCard .demo-row{padding:12px 14px;border-top:1px solid #1b2530;background:transparent}
+.sticky-progress button{white-space:nowrap;min-height:44px}#stickyProgressPrev{display:inline-block;margin-top:5px;color:#35546c;font-size:12px;text-decoration:underline}.sec-head{align-items:center;gap:10px}.sec-sum{line-height:1.35}.sec-head h2{font-size:17px}
+/* 样品：一行一条（标签 / 数值 / 一句说明），长解释与出处收进折叠，首屏只留一屏。 */
+#demoCard .demo-tag{margin:0 0 6px;font-size:12px;color:#8fa3b5}
+#demoCard{padding:12px 12px!important}
+#demoCard .demo-rows{list-style:none;margin:10px 0 0;padding:0;border:1px solid #232e3a;border-radius:12px;background:#0f141b;overflow:hidden}
+#demoCard .demo-row{display:grid;grid-template-columns:1fr auto;gap:1px 10px;padding:6px 12px;border-top:1px solid #1b2530;background:transparent}
 #demoCard .demo-row:first-child{border-top:0}
-#demoCard .demo-row b{display:block;color:#e6edf3;font-size:14px;font-weight:600}
-#demoCard .demo-row p{margin:4px 0 0;font-size:13px;line-height:1.6;color:#aebecd}
-#demoCard .demo-row .src{display:block;margin-top:6px;font-size:11px;color:#7d8fa1}
+#demoCard .demo-row .lbl{grid-column:1;font-size:13px;color:#aebecd}
+#demoCard .demo-row .val{grid-column:2;text-align:right;font-size:15px;font-weight:700;color:#e6edf3;font-variant-numeric:tabular-nums}
+#demoCard .demo-row .note{grid-column:1/-1;font-size:11px;color:#7d8fa1}
 #demoCard .demo-row.sample{background:#0e1a17}
+#demoCard .demo-decide{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 0}
+#demoCard .demo-decide>div{border:1px solid #232e3a;border-radius:12px;padding:8px 10px;background:#0f141b}
+#demoCard .demo-decide b{display:block;font-size:11px;letter-spacing:.04em;color:#8fa3b5;margin-bottom:5px}
+#demoCard .demo-decide ul{list-style:none;margin:0;padding:0}
+#demoCard .demo-decide li{position:relative;font-size:13px;line-height:1.5;color:#dbe6ef;padding:2px 0 2px 12px}
+#demoCard .demo-decide li::before{content:"·";position:absolute;left:1px;color:#2fd4a0}
+#demoCard .demo-price{margin:7px 0 0;font-size:12px;color:#8fa3b5}
+#demoCard .demo-cta{margin:8px 0 0}
+#demoCard #demoCta{width:100%;min-height:46px;font-size:16px}
+#demoCard details{margin-top:8px;border-top:1px solid #1b2530;padding-top:7px}
+#demoCard summary{cursor:pointer;font-size:12px;color:#8fa3b5}
+#demoCard .demo-why ul{list-style:none;margin:8px 0 0;padding:0}
+#demoCard .demo-why li{font-size:12px;line-height:1.6;color:#93a3b5;padding:6px 0;border-top:1px solid #16202a}
+#demoCard .demo-why li b{display:block;color:#c8d5df;font-weight:600}
+#demoCard .demo-why .src{display:block;margin-top:3px;font-size:11px;color:#6f8091}
 #demoCard input[type=range]{width:100%;margin:6px 0 2px;accent-color:#2fd4a0}
 #demoCard select{background:#0f141b;color:#e6edf3;border-color:#2f4557}
-#demoCard .demo-slide-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-#demoCard .demo-slide-line b{font-size:18px;color:#e6edf3}
+#demoCard .demo-slide-line{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#demoCard .demo-slide-line b{font-size:17px;color:#e6edf3;font-variant-numeric:tabular-nums}
 .map-notes{margin-top:10px;display:grid;gap:6px}
 .map-notes details{border:1px solid #232e3a;border-radius:10px;padding:8px 10px;background:#0f141b}
 .map-notes summary{cursor:pointer;color:#a8bccd}
-#demoCard .demo-paths{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:12px 0 0}
-#demoCard #demoPass{min-height:44px;padding:11px 18px;font-size:15px;font-weight:600;color:#e6edf3;background:transparent;border:1px solid #2f4557;border-radius:10px;cursor:pointer}
-#demoCard #demoPass:hover{background:#18242f}
 #pageNav button.nav-active{background:#eef4fa;box-shadow:inset 0 -2px 0 #16324f}
 .lang-switch.lang-footer{position:static;margin:22px 0 6px;padding:0;background:transparent;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
 .lang-switch.lang-footer .lang-globe{color:#5a6d7d}
@@ -369,7 +383,6 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 .site-head p{margin:5px 0 0;font-size:13px;color:rgba(255,255,255,.8);max-width:640px}
 .site-head .lang-switch{position:static;margin:0;background:rgba(255,255,255,.12);padding:3px 6px;border-radius:999px;flex:none}
 @media(max-width:600px){header.site-head{padding:12px 12px;gap:8px}.site-head .brand-row{flex:1 0 100%;gap:8px}.site-head .brand-word{font-size:20px}.site-head .brand-mark{width:34px;height:34px}.site-head .lang-switch{margin-left:auto}.site-head p{display:none}}
-@media(max-width:600px){header.site-head .brand-copy p{display:block}}
 </style>
 </head>
 <body>
@@ -391,7 +404,6 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div class="brand-copy">
 <h1 class="brand-word"><span>Clear<span class="ctf-to">To</span><span class="ctf-file">File</span></span><span class="brand-zh">可交</span></h1>
 <p>列出你今年要交出去的报税材料清单。导出后自己核对，或请会计师复核。</p>
-<p class="small">文件只在你电脑上读取，不上传；可一键删除。</p>
 </div>
 </div>
 
@@ -433,22 +445,26 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 </div>
 </div>
 
+<div class="card no-print" id="startCard" data-flow-step="1">
+<h2 class="start-title">报税材料，整理成一份能交出去的清单。</h2>
+</div>
 <div class="card no-print" id="demoCard" data-flow-step="1">
-<h2>收入变一变，下面几行跟着变</h2>
-<p class="muted small">样例家庭：已婚合并申报、两个孩子、加州。这是样例家庭，不是你的数。</p>
+<p class="demo-tag">样例家庭：已婚、两孩、加州。不是你的数。</p>
 <div class="demo-slide">
-<label for="demoIncome" class="small muted">拖一下，看你的收入落在哪</label>
+<div class="demo-slide-line"><label for="demoIncome" class="small muted">拖动看收入落在哪</label><b id="demoIncomeNow">$120,000</b></div>
 <input type="range" id="demoIncome" min="40000" max="250000" step="1000" value="120000">
-<div class="demo-slide-line"><b id="demoIncomeNow">$120,000</b></div>
 </div>
 <ul class="demo-rows" id="demoRows"></ul>
-<p class="small muted">上面全是样例数，跟着滑块变。换成你自己的数，才需要季票。</p>
-<p class="demo-paths"><button type="button" id="demoPass" class="secondary">季票给什么</button></p>
+<div class="demo-decide">
+<div><b>免费 · 永久</b><ul><li>今年要备的清单</li><li>上传后自动提数</li><li>导出三种格式</li></ul></div>
+<div><b>季票 · 内测免费</b><ul><li>用你的数出结论</li><li>交出去前总核对</li><li>规则变化，本页提醒</li></ul></div>
 </div>
-<div class="card no-print" id="startCard">
-<h2 class="start-title">把今年的报税材料，整理成一份能交出去的清单。</h2>
-<p class="start-sub start-lead">不少人报完才发现，一年差了几百到上千美元。可能是多交，也可能少交——填完才知道你是哪一种。</p>
-<p class="start-sub">说一句今年变了什么，不用登录。先给你一份基础的，答完几句就变成你自己的。</p>
+<p class="demo-price">上面是样例家庭的数。内测期免费，1 月公布价格。</p>
+<p class="demo-cta"><button type="button" id="demoCta">免费生成我的清单</button></p>
+<details class="demo-why"><summary>这五行怎么算的 · 出处</summary>
+<ul id="demoWhy"></ul>
+<p class="small muted">季票内测期免费，1 月公布价格；领取入口在登录后的季票页。</p>
+</details>
 </div>
 
 <div class="card no-print">
@@ -783,7 +799,6 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 </div>
 <div id="stickyProgress" class="sticky-progress no-print hidden" aria-live="polite">
 <div class="sticky-copy"><strong id="stickyProgressTitle">继续整理</strong><p id="stickyProgressText"></p><div class="progress-track" aria-hidden="true"><span id="stickyProgressFill"></span></div><a href="#" id="stickyProgressPrev" class="hidden">‹ 上一步</a></div>
-<button id="stickyPass" type="button" class="secondary hidden">季票给什么</button>
 <button id="stickyProgressAction" type="button">继续</button>
 </div>
 
@@ -843,7 +858,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div class="card">
 <h2>支付与订单</h2>
 <p class="notice warn"><b>支付：</b>本站不保存你的完整卡号。点“确认支付”完成购买，季票生效后有效期至 2027 年 10 月 15 日。</p>
-<p class="small"><b>季票包含：</b>整理完那一屏（今年退还是补、五条线各在哪）· 交付前总核对。医保补贴那张卡免费。免费整理与导出永久免费；内测期免费，1 月公布价格。</p>
+<p class="small"><b>季票包含：</b>用你的数出结论（今年退还是补、五条线各在哪）· 交出去前总核对 · 规则变化本页提醒。免费整理与导出永久免费；补贴那张卡免费；内测期免费，1 月公布价格。</p>
 <p class="small"><b>购买流程：</b>1 选套餐 → 2 确认订单 → 3 支付 → 4 查看收据。</p>
 <div class="notice" id="paySubCard"></div>
 <div class="row">
@@ -994,7 +1009,7 @@ Object.assign(I18N,{"季票先把这一屏的钱讲清楚":{"en":"The season pas
 Object.assign(I18N,{"列出你今年要交出去的报税材料清单。导出后自己核对，或请会计师复核。":{"en":"List the tax documents you'll hand over this year. After exporting, check them yourself or have your accountant review them.","es":"Enumere los documentos fiscales que entregará este año. Después de exportar, revíselos usted mismo o pida a su contador que los revise."},"交得出去":{"en":"Ready to hand over","es":"Listo para entregar"},"自己报税直接导出，给会计师也能用。":{"en":"Export it yourself for self-filing, or hand it to your accountant.","es":"Expórtelo para declarar por su cuenta o entréguelo a su contador."},"一页封面 + 明细 + 复核签字，自己报税直接导出，给会计师也能用，不用自己拼。":{"en":"A cover page, details, and a review signature — export it yourself for self-filing, or hand it to your accountant, without assembling anything.","es":"Una portada, el detalle y una firma de revisión: expórtelo para declarar por su cuenta o entréguelo a su contador, sin armar nada."},"导出：一份能交出去的清单":{"en":"Export: a checklist you can hand over","es":"Exportar: una lista lista para entregar"},"下载清单 PDF（交得出去）":{"en":"Download checklist PDF (ready to hand over)","es":"Descargar PDF de la lista (listo para entregar)"},"报税材料包 · 交得出去":{"en":"Tax packet · ready to hand over","es":"Paquete fiscal · listo para entregar"},"内测期免费，1 月公布价格。":{"en":"Free during beta; pricing announced in January.","es":"Gratis durante la beta; precios en enero."},"内测期免费，1 月公布价格。1 个包；同一账号第二个包可选。按季一次性、默认不自动续，有效期至当年 10 月 15 日延期截止日。":{"en":"Free during beta; pricing announced in January. 1 packet; a second packet on the same account is optional. One payment per season, no auto-renewal by default, valid until the October 15 extension deadline.","es":"Gratis durante la beta; precios en enero. 1 paquete; el segundo paquete en la misma cuenta es opcional. Un solo pago por temporada, sin renovación automática por defecto, válido hasta la fecha límite de prórroga del 15 de octubre."},"定位：干干净净把材料交出去。基础整理永久免费；订阅按季一次，内测期免费，1 月公布价格；1 个包，第二个包可选，不自动续，有效期至当年 10 月 15 日延期截止日。":{"en":"Positioning: hand over your materials cleanly. Basic organizing is free forever; the pass is billed once per season, free during beta, pricing announced in January; 1 packet, optional second packet, no auto-renewal, valid until the October 15 extension deadline.","es":"Enfoque: entregue sus materiales limpios. La organización básica es gratis para siempre; el pase se cobra una vez por temporada, gratis durante la beta, precios en enero; 1 paquete, segundo opcional, sin renovación automática, válido hasta la fecha límite de prórroga del 15 de octubre."},"要确认的三件事":{"en":"Three things to confirm","es":"Tres cosas que confirmar"},"自己报税就按这三条核对；交给会计师就把这三条问清楚。":{"en":"If you file yourself, check these three; if you hand it to your accountant, ask them these three.","es":"Si declara por su cuenta, revise estas tres; si se lo entrega a su contador, pregúntele estas tres."},"复核签字（会计师或本人）：________　日期：________":{"en":"Review signature (accountant or yourself): ________　Date: ________","es":"Firma de revisión (contador o usted): ________　Fecha: ________"},"1 个包":{"en":"1 packet","es":"1 paquete"},"2 个包（第二个包）":{"en":"2 packets (second packet)","es":"2 paquetes (segundo paquete)"}});
 Object.assign(I18N,{"不用登录 · 进度只存这台浏览器。只整理、不算税、不报税、不给税务结论；清单最后由你或会计师复核。":{"en":"No login needed · progress is stored only in this browser. We only organize — we don't calculate tax, file returns, or give tax advice; you or your accountant review the final checklist.","es":"No necesita iniciar sesión · el progreso se guarda solo en este navegador. Solo organizamos: no calculamos impuestos, no presentamos declaraciones ni damos asesoría fiscal; usted o su contador revisan la lista final."}});
 Object.assign(I18N,{"把今年报税要准备的材料整理成一份清单，导出后自己核对，或给会计师对照着填。只整理、不算税、不报税、不给税务结论；清单最后由你或会计师复核。":{"en":"It organizes the materials you need for this year's taxes into one checklist; export it to check yourself or give it to your accountant. We only organize — we don't calculate tax, file returns, or give tax advice; you or your accountant review the final checklist.","es":"Organiza los materiales que necesita para los impuestos de este año en una sola lista; expórtela para revisarla usted mismo o entregarla a su contador. Solo organizamos: no calculamos impuestos, no presentamos declaraciones ni damos asesoría fiscal; usted o su contador revisan la lista final."}});
-Object.assign(I18N,{"把今年的报税材料，整理成一份能交出去的清单。":{"en":"Turn this year's tax paperwork into a checklist you can hand over.","es":"Convierta los documentos fiscales de este año en una lista que pueda entregar."},"不少人报完才发现，一年差了几百到上千美元。可能是多交，也可能少交——填完才知道你是哪一种。":{"en":"Plenty of people only find out after they file that they were off by a few hundred, sometimes over a thousand, dollars. Maybe you paid too much, maybe too little — filling it in is how you find out which.","es":"Mucha gente se entera al declarar de que la diferencia era de cientos de dólares, a veces más de mil. Puede que haya pagado de más, o de menos: lo sabe cuando lo llena."},"说一句今年变了什么，不用登录。先给你一份基础的，答完几句就变成你自己的。":{"en":"Describe what changed this year. No login. You get a basic list first; answer a few questions and it becomes yours.","es":"Cuente qué cambió este año. Sin cuenta. Primero le damos una lista básica; con unas respuestas queda hecha a su medida."},"把今年的材料放进来":{"en":"Bring in this year's documents","es":"Traer los documentos de este año"},"看看要准备什么":{"en":"See what you'll need","es":"Ver qué necesitará"},"点选今年有过的，或用一句话写下来；拿不准的写进「不确定事项」，后面会追问。":{"en":"Tap what applies this year, or write it in one sentence; if you're not sure, put it under “Uncertain items” — we'll follow up.","es":"Toque lo que aplique este año o escríbalo en una frase; si no está seguro, anótelo en «Asuntos inciertos» y le preguntaremos después."},"申报身份变了":{"en":"Filing status changed","es":"Cambió el estado civil fiscal"},"抚养人减少":{"en":"Dependent removed","es":"Se quitó un dependiente"},"没有变化":{"en":"No changes","es":"Sin cambios"},"登录后，未登录时做的包会自动带进你的账号。":{"en":"After you log in, the packet you made while logged out is brought into your account.","es":"Después de iniciar sesión, el paquete que hizo sin sesión se traslada a su cuenta."}});
+Object.assign(I18N,{"报税材料，整理成一份能交出去的清单。":{"en":"Turn this year's paperwork into one packet you can hand over.","es":"Convierta los papeles de este año en un paquete que pueda entregar."},"不少人报完才发现，一年差了几百到上千美元。可能是多交，也可能少交——填完才知道你是哪一种。":{"en":"Plenty of people only find out after they file that they were off by a few hundred, sometimes over a thousand, dollars. Maybe you paid too much, maybe too little — filling it in is how you find out which.","es":"Mucha gente se entera al declarar de que la diferencia era de cientos de dólares, a veces más de mil. Puede que haya pagado de más, o de menos: lo sabe cuando lo llena."},"说一句今年变了什么，不用登录。先给你一份基础的，答完几句就变成你自己的。":{"en":"Describe what changed this year. No login. You get a basic list first; answer a few questions and it becomes yours.","es":"Cuente qué cambió este año. Sin cuenta. Primero le damos una lista básica; con unas respuestas queda hecha a su medida."},"把今年的材料放进来":{"en":"Bring in this year's documents","es":"Traer los documentos de este año"},"看看要准备什么":{"en":"See what you'll need","es":"Ver qué necesitará"},"点选今年有过的，或用一句话写下来；拿不准的写进「不确定事项」，后面会追问。":{"en":"Tap what applies this year, or write it in one sentence; if you're not sure, put it under “Uncertain items” — we'll follow up.","es":"Toque lo que aplique este año o escríbalo en una frase; si no está seguro, anótelo en «Asuntos inciertos» y le preguntaremos después."},"申报身份变了":{"en":"Filing status changed","es":"Cambió el estado civil fiscal"},"抚养人减少":{"en":"Dependent removed","es":"Se quitó un dependiente"},"没有变化":{"en":"No changes","es":"Sin cambios"},"登录后，未登录时做的包会自动带进你的账号。":{"en":"After you log in, the packet you made while logged out is brought into your account.","es":"Después de iniciar sesión, el paquete que hizo sin sesión se traslada a su cuenta."},"样例家庭：已婚、两孩、加州。不是你的数。":{"en":"Sample household: married, two children, California. Not your numbers.","es":"Hogar de ejemplo: casados, dos hijos, California. No son sus cifras."},"拖动看收入落在哪":{"en":"Drag to see where you land","es":"Mueva para ver dónde cae"},"免费 · 永久":{"en":"Free · forever","es":"Gratis · para siempre"},"季票 · 内测免费":{"en":"Pass · free in beta","es":"Pase · gratis en beta"},"今年要备的清单":{"en":"This year's checklist","es":"Lista del año"},"上传后自动提数":{"en":"Figures auto-filled","es":"Cifras al subir"},"导出三种格式":{"en":"Three exports","es":"Tres formatos"},"用你的数出结论":{"en":"Your own numbers","es":"Sus cifras"},"交出去前总核对":{"en":"Pre-handoff check","es":"Chequeo previo"},"规则变化，本页提醒":{"en":"Rule changes shown","es":"Cambios de reglas"},"上面是样例家庭的数。内测期免费，1 月公布价格。":{"en":"Those are the sample household's numbers. Free during beta; pricing announced in January.","es":"Esas son las cifras del hogar de ejemplo. Gratis en beta; precios en enero."},"免费生成我的清单":{"en":"Build my checklist — free","es":"Crear mi lista — gratis"},"这五行怎么算的 · 出处":{"en":"How these five lines are worked out · sources","es":"Cómo se calculan estas cinco líneas · fuentes"},"季票内测期免费，1 月公布价格；领取入口在登录后的季票页。":{"en":"The pass is free during beta; pricing is announced in January. Claim it on the pass page after you log in.","es":"El pase es gratis durante la beta; los precios se anuncian en enero. Se reclama en la página del pase tras iniciar sesión."}});
 Object.assign(I18N,{"不会写？用 AI 描述":{"en":"Not sure what to write? Use AI","es":"¿No sabe qué escribir? Use la IA"}});
 Object.assign(I18N,{"整理完你会看到一个大概的数——退、补，还是差不多齐平；哪几项在推这个数；哪天之前改还来得及。基础整理永久免费，内测期免费，1 月公布价格。":{"en":"When it's done you get a rough number — refund, owed, or about even — plus what's pushing it and the last day you can still change it. Basic organizing is free forever; free during beta, pricing announced in January.","es":"Al terminar ve un número aproximado —devolución, pago o casi parejo— y también qué lo está empujando y hasta qué día puede corregirlo. La organización básica es gratis para siempre; gratis durante la beta, precios en enero."},"免费永久包含":{"en":"Free forever","es":"Gratis para siempre"},"清单生成、逐项上传、本地提数、三种导出":{"en":"Checklist generation, item uploads, local figure extraction, three exports","es":"Generación de lista, carga por elemento, extracción local de cifras, tres exportaciones"},"封面 + 复核签字页":{"en":"Cover + review signature page","es":"Portada + página de firma de revisión"},"明年复用：打开自动带出去年清单":{"en":"Reuse next year: last year's checklist is carried over automatically","es":"Reutilizar el próximo año: la lista del año pasado se traslada automáticamente"},"季票给三张卡，再做两件事":{"en":"The pass gives you three cards, then two things to do","es":"El pase le da tres tarjetas y luego dos cosas por hacer"},"点一次，输出「可交 / 不可交 + 缺项表」；可重跑，只报告不改数据。":{"en":"One click outputs “ready / not ready + missing-items table”; rerunnable, report only, never changes data.","es":"Un clic muestra «listo / no listo + tabla de faltantes»; se puede repetir, solo informa y no cambia datos."},"缺项、规则变化命中你的表、截止日；目前只在本页展示，不发邮件、不推送。":{"en":"Missing items, rule changes that hit your forms, deadlines; shown on this page only — automatic reminders are not connected yet.","es":"Faltantes, cambios de reglas que afectan sus formularios y fechas límite; solo en esta página: sin correos ni notificaciones."},"交付前总核对（可交/不可交 + 缺项表）":{"en":"Pre-delivery check (ready/not ready + missing-items table)","es":"Verificación previa (listo/no listo + tabla de faltantes)"},"内测中":{"en":"Beta","es":"Beta"},"免费版帮你整理材料，季票帮你减少遗漏":{"en":"The free version helps you organize; the pass helps you miss less","es":"La versión gratis le ayuda a organizar; el pase le ayuda a no omitir nada"},"基础整理和导出永久免费；季票帮你交付前再核对一遍，并全年盯住变化。":{"en":"Basic organizing and exports are free forever; the pass adds a pre-delivery check and a year-round watch.","es":"La organización básica y las exportaciones son gratis para siempre; el pase añade una verificación previa y una vigilancia todo el año."},"可交 / 不可交 + 缺项表，可重跑。":{"en":"Ready / not ready + missing-items table; rerunnable.","es":"Listo / no listo + tabla de faltantes; se puede repetir."},"缺项、规则变化、截止日；目前只在本页展示，不发邮件、不推送。":{"en":"Missing items, rule changes, deadlines; automatic reminders are not connected yet.","es":"Faltantes, cambios de reglas y fechas límite; los recordatorios automáticos aún no están conectados."},"内测期免费，1 月公布价格。登录后领取免费季票。":{"en":"Free during beta; pricing announced in January. Log in to claim a free pass.","es":"Gratis durante la beta; precios en enero. Inicie sesión para reclamar un pase gratis."},"领取免费季票后解锁（内测期免费）：这是季票功能。":{"en":"Claim a free pass to unlock (free during beta): this is a season-pass feature.","es":"Reclame un pase gratis para desbloquear (gratis durante la beta): es una función del pase."},"点一次，输出可交 / 不可交和缺项表；可重跑，只报告不改状态。":{"en":"One click outputs ready / not ready and a missing-items table; rerunnable, report only.","es":"Un clic muestra listo / no listo y una tabla de faltantes; se puede repetir, solo informa."},"运行交付前总核对":{"en":"Run pre-delivery check","es":"Ejecutar verificación previa"},"交付前总核对":{"en":"Pre-delivery check","es":"Verificación previa"},"内测中：目前只在本页展示，未接自动提醒/邮件。":{"en":"Beta: shown on this page only; automatic reminders/email are not connected yet.","es":"Beta: solo se muestra en esta página; los recordatorios automáticos/correo aún no están conectados."}});
 Object.assign(I18N,{"核对报告：":{"en":"Check report:","es":"Informe de verificación:"},"盯梢：":{"en":"Watch:","es":"Vigilancia:"},"1 页，逐表红/黄/绿 + 可交/不可交 + 缺项清单（每项写去哪拿）；可重跑、可打印/存 PDF。":{"en":"One page: red/yellow/green per form, ready/not ready, and a missing-items list with where to get each one; rerunnable, printable / save as PDF.","es":"Una página: rojo/amarillo/verde por formulario, listo/no listo y lista de faltantes con dónde obtener cada uno; se puede repetir, imprimir / guardar en PDF."},"3–5 次（表到齐、4/15 前两周、10/15 前两周、你的表今年规则变了）；不是天天推。目前只在本页展示，不发邮件、不推送。":{"en":"3–5 times (forms complete, two weeks before 4/15, two weeks before 10/15, a rule change for your forms); not daily. Shown on this page only — no emails, no push notifications.","es":"3–5 veces (formularios completos, dos semanas antes del 4/15, dos semanas antes del 10/15, un cambio de regla para sus formularios); no a diario. Solo en esta página, sin correos ni notificaciones."},"只查结构：表在不在、数字填没填、表数对不对、凭证有没有；不判断数字真伪、不算税。":{"en":"Structure only: is the form there, is the number filled, does it match the form amount, is there a voucher; it does not judge whether numbers are true and does not calculate tax.","es":"Solo estructura: si el formulario está, si la cifra está puesta, si coincide con el importe del formulario y si hay comprobante; no juzga la veracidad ni calcula impuestos."},"交之前核一遍":{"en":"Check before handing over","es":"Verificar antes de entregar"},"计划 3–5 次：表到齐、4/15 前两周、10/15 前两周、你的表今年规则变了；不是天天推。目前只在本页展示，不发邮件、不推送。":{"en":"Planned 3–5 times: forms complete, two weeks before 4/15, two weeks before 10/15, a rule change for your forms; not daily. Shown on this page only; automatic sending is not connected.","es":"Previstas 3–5 veces: formularios completos, dos semanas antes del 4/15, dos semanas antes del 10/15, un cambio de regla para sus formularios; no a diario. Solo se muestra en esta página; el envío automático no está conectado."},"在导出前或交出去前开通；领取后同一页出报告。":{"en":"Unlock before export or handoff; the report appears on the same page after claiming.","es":"Actívelo antes de exportar o entregar; el informe aparece en la misma página tras reclamarlo."},"季票功能（内测期免费）：在导出前开通后可用。":{"en":"Pass feature (free during beta): available after unlocking before export.","es":"Función del pase (gratis durante la beta): disponible tras activarla antes de exportar."},"去导出前开通":{"en":"Go unlock before export","es":"Ir a activar antes de exportar"},"领取免费季票并核对":{"en":"Claim a free pass and run the check","es":"Reclamar pase gratis y verificar"},"打印 / 存 PDF":{"en":"Print / save PDF","es":"Imprimir / guardar PDF"},"交付前总核对报告":{"en":"Pre-delivery check report","es":"Informe de verificación previa"}});
@@ -1041,7 +1056,7 @@ Object.assign(I18N,{"可交":{"en":"Ready","es":"Listo"},
 "优先工具支持（季票权益）":{"en":"Priority tool support (season-pass benefit)","es":"Soporte prioritario de la herramienta (beneficio del pase)"},
 "优先支持请求（提交后标「季票优先」发给支持，回复到你登录的邮箱）":{"en":"Priority support requests (tagged as season-pass priority and sent to support after you submit; replies go to your login email)","es":"Solicitudes de soporte prioritario (se marcan como prioridad del pase y se envían al soporte al enviarlas; la respuesta llega a su correo de inicio de sesión)"},
 "提交优先请求":{"en":"Submit a priority request","es":"Enviar una solicitud prioritaria"},
-"整理完那一屏（今年退还是补、五条线各在哪）· 交付前总核对。医保补贴那张卡免费。免费整理与导出永久免费；内测期免费，1 月公布价格。":{"en":"The money screen (refund or owed, where each of the five lines stands) · the pre-delivery check. The subsidy card is free for everyone. Organizing and export are free forever; free during beta, pricing announced in January.","es":"La pantalla del dinero (devolución o pago, dónde está cada una de las cinco líneas) · la verificación previa. La tarjeta de subsidio es gratis para todos. Organizar y exportar gratis para siempre; gratis durante la beta, precios en enero."},
+"用你的数出结论（今年退还是补、五条线各在哪）· 交出去前总核对 · 规则变化本页提醒。免费整理与导出永久免费；补贴那张卡免费；内测期免费，1 月公布价格。":{"en":"Your numbers, your answer (refund or owed, where each of the five lines stands) · the pre-delivery check · rule changes shown on this page. Organizing and export are free forever; the subsidy card is free for everyone; free during beta, pricing announced in January.","es":"Sus cifras, su respuesta (devolución o pago, dónde está cada una de las cinco líneas) · la verificación previa · cambios de reglas mostrados en esta página. Organizar y exportar gratis para siempre; la tarjeta de subsidio es gratis para todos; gratis durante la beta, precios en enero."},
 "暂无收据。支付完成后收据会出现在这里。":{"en":"No receipts yet. A receipt appears here after payment.","es":"Aún no hay recibos. El recibo aparecerá aquí después del pago."},
 "我的订单":{"en":"My orders","es":"Mis pedidos"},
 "暂无订单。":{"en":"No orders yet.","es":"Aún no hay pedidos."},
@@ -2589,6 +2604,9 @@ function renderStickyProgress(){
   if(!packet||currentPage!==1){bar.classList.add("hidden");return;}
   var rows=packet.checklist||[],total=rows.length,done=rows.filter(rowResolved).length;
   if(!total){
+    // 第 1 步还没有清单：首屏卡里那颗按钮就是这一步唯一的入口，底栏不出现。
+    // 到了第 2/3 步还没有清单，仍然在底栏说清「先生成清单」，否则底栏是个空壳。
+    if(currentOrganizeStep===1){bar.classList.add("hidden");return;}
     $("stickyProgressTitle").textContent=tr("第 "+currentOrganizeStep+" 步 / 共 3 步","Step "+currentOrganizeStep+" of 3","Paso "+currentOrganizeStep+" de 3");
     $("stickyProgressText").textContent=tr("先生成今年清单","Generate this year\u2019s checklist first","Genere primero la lista de este año");
     $("stickyProgressFill").style.width="0%";
@@ -2596,21 +2614,12 @@ function renderStickyProgress(){
     onlyAction.textContent=tr("生成清单","Generate checklist","Generar lista");
     onlyAction.onclick=function(){var b=$("btnMake");if(b)b.click();};
     var onlyPrev=$("stickyProgressPrev");
-    if(onlyPrev){onlyPrev.classList.toggle("hidden",currentOrganizeStep<2);onlyPrev.textContent=tr("‹ 上一步","‹ Back","‹ Atrás");onlyPrev.onclick=function(e){if(e&&e.preventDefault)e.preventDefault();setOrganizeStep(currentOrganizeStep-1,true);};}
-    // 还没清单时，底栏并排给两条路：主按钮仍是「生成清单」，季票那条是次级。
-    // 有清单之后收起——后面每一步只留一件要做的事。
-    var passBtn=$("stickyPass");
-    if(passBtn){
-      passBtn.classList.remove("hidden");
-      passBtn.textContent=tr("季票给什么","What the pass gives","Qué da el pase");
-      passBtn.onclick=function(){try{track("demo_cta_pass");}catch(e){}goSub();};
-    }
+    if(onlyPrev){onlyPrev.classList.remove("hidden");onlyPrev.textContent=tr("‹ 上一步","‹ Back","‹ Atrás");onlyPrev.onclick=function(e){if(e&&e.preventDefault)e.preventDefault();setOrganizeStep(currentOrganizeStep-1,true);};}
     bar.classList.remove("hidden");
     return;
   }
   var pct=total?Math.round(done*100/total):0;
   var title=$("stickyProgressTitle"),text=$("stickyProgressText"),fill=$("stickyProgressFill"),action=$("stickyProgressAction"),prev=$("stickyProgressPrev");
-  var passBtn2=$("stickyPass"); if(passBtn2) passBtn2.classList.add("hidden");
   // 按钮永远指向「下一件要做的事」，并且与当前所在步分开算：第 2 步点到的是第 3 步，不许原地空转。
   var target="s3",label=tr("建立今年清单","Build this year's checklist","Crear la lista de este año"),message=tr("从去年表格或手头材料开始，先生成清单。","Start from last year's forms or the papers you have, and generate the checklist first.","Empiece con los formularios del año pasado o los papeles que tenga y genere primero la lista.");
   var left=total-done;
@@ -2968,7 +2977,7 @@ function outlookMapHtml(unlocked) {
   h += "<div class=\"map-wrap\"><table class=\"map-table\"><thead><tr><th></th><th>" + esc(tr("你现在的位置", "Where you stand", "Dónde está")) + "</th><th>" + esc(tr("这个数推得动哪一条", "What this number moves", "Qué mueve este número")) + "</th><th>" + esc(tr("以后会怎样", "What it means later", "Qué significa después")) + "</th><th>" + esc(tr("最晚哪天还能改", "Last day to change it", "Último día para cambiarlo")) + "</th></tr></thead><tbody>";
   h += outlookMapRow(tr("收入税档", "Income and tax bracket", "Ingresos y tramo"), pos1, push1, f1, when1);
   h += outlookMapRow(tr("医保补贴的 400% 线", "The 400% line for the subsidy", "La línea del 400% del subsidio"), pos2, push2, f2, when2);
-  h += outlookMapRow(tr("孩子学费的两项抵免", "The two tuition credits", "Los dos créditos por matrícula"), pos3, push3, f3, when3);
+  h += outlookMapRow(tr("孩子学费的两项抵免", "The two tuition credits", "Créditos por matrícula"), pos3, push3, f3, when3);
   h += outlookMapRow(tr("退休账户今年放了多少", "Put into retirement accounts this year", "Aportado a cuentas de retiro este año"), pos4a, push4a, f4a, when4a);
   h += outlookMapRow(tr("退休金要的记分", "Credits toward your retirement", "Créditos para su jubilación"), pos4b, push4b, f4b, when4b);
   h += "</tbody></table></div>";
@@ -3643,9 +3652,11 @@ function renderDemo(){
   var now=document.getElementById("demoIncomeNow");if(now)now.textContent=demoMoney(inc);
   var box=document.getElementById("demoRows");if(!box)return;
   var rows=[];
-  function push(title,body,src,cls){rows.push({t:title,p:body,s:src,c:cls||""});}
+  // 每行三件：标签、数值、一句说明。整句与出处进卡底折叠，首屏只留一屏。
+  function push(t,v,n,p,s,cls){rows.push({t:t,v:v,n:n,p:p,s:s,c:cls||""});}
   if(!R){
     push(tr("规则图没读到","Rule file not loaded","No se cargó el archivo de reglas"),
+         tr("待核","N/A","N/D"),tr("没拿内置数字顶上","No numbers filled in from memory","No se rellenaron de memoria"),
          tr("这五行先不出数，也没拿内置数字顶上。","These five lines show no numbers, and none were filled in from memory.","Estas cinco líneas no muestran cifras y no se rellenaron de memoria."),
          "");
   }else{
@@ -3655,12 +3666,15 @@ function renderDemo(){
     var sd=SD.mfj, taxable=(sd!=null)?Math.max(0,inc-sd):null, band=(taxable!=null)?demoBand(BR.mfj,taxable):null;
     if(sd!=null&&band){
       push(tr("收入税档","Income and tax bracket","Ingresos y tramo"),
+        band.rate+"%",
+        tr("应税 "+demoMoney(taxable),"Taxable "+demoMoney(taxable),"Gravable "+demoMoney(taxable)),
         tr("收入 "+demoMoney(inc)+"，减掉合并申报的标准扣除 "+demoMoney(sd)+"，应税 "+demoMoney(taxable)+"。这一档 "+band.rate+"%"+(band.cap!=null?("，到 "+demoMoney(band.cap)+" 为止"):"（最高档）")+(band.next?("；再往上就进 "+band.next[1]+"%"):"")+"。",
            "Income "+demoMoney(inc)+", minus the "+demoMoney(sd)+" joint standard deduction, leaves "+demoMoney(taxable)+" taxable. This band is "+band.rate+"%"+(band.cap!=null?(", up to "+demoMoney(band.cap)):" (top band)")+(band.next?("; above that it is "+band.next[1]+"%"):"")+".",
            "Ingresos "+demoMoney(inc)+"; tras la deducción estándar conjunta de "+demoMoney(sd)+" quedan "+demoMoney(taxable)+" gravables. Este tramo es del "+band.rate+"%"+(band.cap!=null?(", hasta "+demoMoney(band.cap)):" (tramo superior)")+(band.next?("; por encima pasa al "+band.next[1]+"%"):"")+"."),
         tr("2026 年联邦档位表（","2026 federal brackets (","Tramos federales de 2026 (")+(BR.source||"")+tr("，核于 ","; checked ","; verificado el ")+(BR.checked||"")+tr("）",")",")"));
     }else{
-      push(tr("收入税档","Income and tax bracket","Ingresos y tramo"),tr("税档数没取到，待核。","Bracket figures not loaded — to be checked.","Cifras del tramo no cargadas: por verificar."),"");
+      push(tr("收入税档","Income and tax bracket","Ingresos y tramo"),tr("待核","N/A","N/D"),tr("税档数没取到","Bracket figures not loaded","Cifras del tramo no cargadas"),
+        tr("税档数没取到，待核。","Bracket figures not loaded — to be checked.","Cifras del tramo no cargadas: por verificar."),"");
     }
     // 2) 医保补贴 400% 线
     var four=(PL.four_hundred_pct||[]).filter(function(x){return x&&x.household_size===4;})[0];
@@ -3680,6 +3694,8 @@ function renderDemo(){
       : "";
     if(four&&four.limit){
       push(tr("医保补贴的 400% 线","The 400% line for the subsidy","La línea del 400% del subsidio"),
+        inc>four.limit?tr("超线 "+demoMoney(inc-four.limit),"+"+demoMoney(inc-four.limit),"+"+demoMoney(inc-four.limit)):tr("线内","Inside","Dentro"),
+        tr("四口线 "+demoMoney(four.limit),"Line "+demoMoney(four.limit)+" (4)","Línea "+demoMoney(four.limit)+" (4)"),
         tr("四口之家 "+four.coverage_year+" 保障年的 400% 线是 "+demoMoney(four.limit)+"；样例收入 "+demoMoney(inc)+" "+posClause(inc>four.limit),
            "For a household of four the 400% line for coverage year "+four.coverage_year+" is "+demoMoney(four.limit)+"; the sample income of "+demoMoney(inc)+" "+posClause(inc>four.limit),
            "Para un hogar de cuatro la línea del 400% del año de cobertura "+four.coverage_year+" es "+demoMoney(four.limit)+"; el ingreso de muestra de "+demoMoney(inc)+" "+posClause(inc>four.limit))+nextLine,
@@ -3688,12 +3704,17 @@ function renderDemo(){
             ? tr("；"+PLnext.coverage_year+" 保障年按 "+PLnext.effective_tax_year+" 年指南 ×4（ASPE，核于 ","; coverage year "+PLnext.coverage_year+" uses the "+PLnext.effective_tax_year+" guidelines ×4 (ASPE, checked ","; el año de cobertura "+PLnext.coverage_year+" usa la guía de "+PLnext.effective_tax_year+" ×4 (ASPE, verificado el ")+(PLnext.checked||"")+tr("）",")",")")
             : ""));
     }else{
-      push(tr("医保补贴的 400% 线","The 400% line for the subsidy","La línea del 400% del subsidio"),tr("四口之家的这条线规则图里没有，待核。","The rule file has no line for a household of four — to be checked.","El archivo de reglas no tiene la línea para un hogar de cuatro: por verificar."),"");
+      push(tr("医保补贴的 400% 线","The 400% line for the subsidy","La línea del 400% del subsidio"),tr("待核","N/A","N/D"),tr("四口那条线规则图里没有","No line for a household of four","No hay línea para hogar de cuatro"),
+        tr("四口之家的这条线规则图里没有，待核。","The rule file has no line for a household of four — to be checked.","El archivo de reglas no tiene la línea para un hogar de cuatro: por verificar."),"");
     }
     // 3) 孩子学费
+    var po=(AOTC.phaseout||LLC.phaseout||{}).mfj;
+    var poPos=po?(inc<po[0]?tr("两项都在","Both apply","Ambos aplican"):(inc<=po[1]?tr("按比例减","Reduced","Se reducen"):tr("都是 $0","Both $0","Ambos $0"))):tr("待核","N/A","N/D");
     if(AOTC.max_tax_years_per_student){
       var yrs=AOTC.max_tax_years_per_student*2;
-      push(tr("孩子学费的两项抵免","The two tuition credits","Los dos créditos por matrícula"),
+      push(tr("孩子学费的两项抵免","The two tuition credits","Créditos por matrícula"),
+        poPos,
+        po?tr("淘汰线 "+demoMoney(po[0])+" 起","Starts "+demoMoney(po[0]),"Desde "+demoMoney(po[0])):tr("淘汰线待核","Phase-out to check","Reducción por verificar"),
         tr("学费抵免里，AOTC 每个学生最多 "+AOTC.max_tax_years_per_student+" 个税年"+(AOTC.first_four_years_only?"、只限前四年本科":"")+"；另一项（LLC）"+(LLC.no_year_limit?"没有年数上限":"有年数上限")+"。样例两个孩子，AOTC 合计最多 "+yrs+" 个税年。"+demoPhaseoutLine(),
            "Of the two tuition credits, the AOTC covers at most "+AOTC.max_tax_years_per_student+" tax years per student"+(AOTC.first_four_years_only?" and only the first four years of college":"")+"; the other one (the LLC) "+(LLC.no_year_limit?"has no year limit":"does have a year limit")+". With the sample's two children, at most "+yrs+" AOTC tax years in total. "+demoPhaseoutLine(),
            "De los dos créditos por matrícula, el AOTC cubre como máximo "+AOTC.max_tax_years_per_student+" años fiscales por estudiante"+(AOTC.first_four_years_only?" y solo los cuatro primeros años de universidad":"")+"; el otro (el LLC) "+(LLC.no_year_limit?"no tiene límite de años":"sí tiene límite de años")+". Con los dos hijos del ejemplo, como máximo "+yrs+" años fiscales de AOTC en total. "+demoPhaseoutLine()),
@@ -3703,6 +3724,8 @@ function renderDemo(){
     if(SSA.per_credit_usd&&SSA.max_per_year){
       var need=SSA.per_credit_usd*SSA.max_per_year;
       push(tr("退休金要的记分","Credits toward your retirement","Créditos para su jubilación"),
+        tr(SSA.max_per_year+" 分/年",SSA.max_per_year+"/yr",SSA.max_per_year+"/año"),
+        tr(demoMoney(need)+" 就够",demoMoney(need)+" is enough",demoMoney(need)+" basta"),
         tr("2026 年每 "+demoMoney(SSA.per_credit_usd)+" 工资记 1 分，一年最多 "+SSA.max_per_year+" 分，退休金要 "+(SSA.target||40)+" 分。样例收入 "+demoMoney(inc)+"：一年能记满 "+SSA.max_per_year+" 分（"+demoMoney(need)+" 就够）。",
            "In 2026 each "+demoMoney(SSA.per_credit_usd)+" of wages earns one credit, at most "+SSA.max_per_year+" a year, and "+ (SSA.target||40) +" credits are needed for retirement benefits. With the sample income of "+demoMoney(inc)+": a full "+SSA.max_per_year+" credits a year ("+demoMoney(need)+" is enough).",
            "En 2026 cada "+demoMoney(SSA.per_credit_usd)+" de salario suma un crédito, máximo "+SSA.max_per_year+" al año, y hacen falta "+(SSA.target||40)+" créditos para la jubilación. Con el ingreso de muestra de "+demoMoney(inc)+": los "+SSA.max_per_year+" créditos del año ("+demoMoney(need)+" basta)."),
@@ -3711,7 +3734,9 @@ function renderDemo(){
     // 5) 以后会怎样（样例，也给结果）
     var NX=SSA.next||null;
     if(NX&&NX.per_credit_usd&&SSA.per_credit_usd){
-      push(tr("以后几年会怎么变","How this changes in the coming years","Cómo cambia en los próximos años"),
+      push(tr("以后几年","Coming years","Próximos años"),
+        tr(NX.tax_year+" 起 · 每分多 "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd),NX.tax_year+" on · +"+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+"/credit",NX.tax_year+" en adelante · +"+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+"/crédito"),
+        "",
         tr(NX.tax_year+" 税年起每记 1 分要多赚 "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+"（"+demoMoney(SSA.per_credit_usd)+" → "+demoMoney(NX.per_credit_usd)+"），"+ (NX.tax_year+1) +" 年报税时才用上；同样 "+(SSA.target||40)+" 分，工资要多 "+demoMoney((NX.per_credit_usd-SSA.per_credit_usd)*(SSA.target||40))+"。这条对今年的数没有影响。",
            "From tax year "+NX.tax_year+" each credit takes "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+" more in earnings ("+demoMoney(SSA.per_credit_usd)+" → "+demoMoney(NX.per_credit_usd)+"), first used on the "+ (NX.tax_year+1) +" return; the same "+(SSA.target||40)+" credits take "+demoMoney((NX.per_credit_usd-SSA.per_credit_usd)*(SSA.target||40))+" more in wages. This does not change this year's figures.",
            "Desde el año fiscal "+NX.tax_year+" cada crédito exige "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+" más de ingreso ("+demoMoney(SSA.per_credit_usd)+" → "+demoMoney(NX.per_credit_usd)+"), y se usa por primera vez en la declaración de "+ (NX.tax_year+1) +"; los mismos "+(SSA.target||40)+" créditos exigen "+demoMoney((NX.per_credit_usd-SSA.per_credit_usd)*(SSA.target||40))+" más de salario. Esto no cambia las cifras de este año."),
@@ -3719,20 +3744,39 @@ function renderDemo(){
     }
   }
   box.innerHTML=rows.map(function(r){
-    return "<li class='demo-row "+r.c+"'><b>"+esc(r.t)+"</b><p>"+esc(r.p)+"</p>"+(r.s?("<span class='src'>"+esc(r.s)+"</span>"):"")+"</li>";
+    return "<li class='demo-row "+r.c+"'><span class='lbl'>"+esc(r.t)+"</span><span class='val'>"+esc(r.v)+"</span><span class='note'>"+esc(r.n)+"</span></li>";
+  }).join("");
+  var why=document.getElementById("demoWhy");
+  if(why)why.innerHTML=rows.map(function(r){
+    return "<li><b>"+esc(r.t)+"</b>"+esc(r.p)+(r.s?("<span class='src'>"+esc(r.s)+"</span>"):"")+"</li>";
   }).join("");
 }
 // 两个 demo_ 名字都进了 EV_NAMES 与 Worker NAMES，服务端与 abacus 同时收：
 //   demo_drag        同一会话只记一次 —— abacus 计数 = 拖过的人次
-//   demo_cta_pass    点「季票给什么」的次数（样品卡内一颗 + 常驻底栏那颗，两处同一个动作）
+//   demo_cta_pass    点季票入口的次数
 // 带 ?probe=1 打开时不记（闸门与环境自测用，避免污染分母）。
 function demoDragOnce(){
   try{if(sessionStorage.getItem("tpo_demo_drag")==="1")return;sessionStorage.setItem("tpo_demo_drag","1");}catch(e){}
   try{track("demo_drag");}catch(e2){}
 }
+// 收入写进地址栏：刷新或分享回来还是同一个数；只改 URL，不发请求。
+try{var demoQ=new URLSearchParams(location.search).get("income");var demoSl=document.getElementById("demoIncome");if(demoQ&&demoSl&&Number(demoQ)>=Number(demoSl.min)&&Number(demoQ)<=Number(demoSl.max))demoSl.value=String(Math.round(Number(demoQ)/1000)*1000);}catch(e){}
 $("demoIncome").addEventListener("input",function(){renderDemo();demoDragOnce();});
+$("demoIncome").addEventListener("change",function(){try{var u=new URL(location.href);u.searchParams.set("income",this.value);history.replaceState(null,"",u.pathname+u.search+u.hash);}catch(e){}});
 
-$("demoPass").onclick=function(ev){if(ev&&ev.preventDefault)ev.preventDefault();try{track("demo_cta_pass");}catch(e2){}goSub();};
+// 首屏那颗主按钮走到「说一句今年变了什么」：已经写了或点过就直接生成，否则把人带到表单并给一句话说明。
+$("demoCta").onclick=function(){
+  var txt=document.getElementById("heroText"),sel=document.querySelectorAll("#tagGrid .tag-btn.on");
+  if((txt&&txt.value.trim())||sel.length){var b=document.getElementById("btnMake");if(b)b.click();return;}
+  var hero=document.getElementById("heroBox");
+  if(hero)hero.scrollIntoView({behavior:"smooth",block:"start"});
+  if(txt)try{txt.focus({preventScroll:true});}catch(e){txt.focus();}
+  var msg=document.getElementById("tagMsg");
+  if(msg)msg.textContent=tr("写一句今年变了什么，或点选下面的情况。","Write one line about this year, or tap the situations below.","Escriba una línea sobre este año o toque las situaciones de abajo.");
+};
+// 点开「这五行怎么算的」＝看季票与出处的那一刻，记一次；同一会话重复点不重复记。
+var demoWhyEl=document.querySelector("#demoCard details");
+if(demoWhyEl)demoWhyEl.addEventListener("toggle",function(){if(this.open){try{track("demo_cta_pass");}catch(e){}}});
 $("btnAiOpen").onclick=function(e){e.preventDefault();var ai=$("aiCard");if(ai){ai.dataset.open="1";ai.classList.remove("hidden");ai.scrollIntoView({behavior:"smooth",block:"start"});}};
 // 首屏（第 1 页且还没有清单）不摆顶部导航：样品卡里已经有「整理我自己的」与「季票给什么」两条路。
 function syncNavChrome(){
@@ -5151,10 +5195,9 @@ body{background:var(--p-bg);-webkit-font-smoothing:antialiased;letter-spacing:.0
 .card{transition:border-color .2s ease,box-shadow .2s ease}
 .card:hover{border-color:#2c4258}
 
-/* 首屏：大标题 + 一点薄荷光晕 */
-#startCard{position:relative;overflow:hidden;padding:clamp(22px,4vw,40px)!important}
-#startCard::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(47,212,160,.28),transparent 70%);pointer-events:none}
-.start-title{font-size:clamp(22px,3.4vw,32px)!important;line-height:1.3!important;letter-spacing:-.01em;position:relative}
+/* 首屏：一句定位，不占一屏；标题就是那一句，不做大色块 */
+#startCard{position:relative;padding:2px 4px!important;margin:8px 0 0!important;background:transparent!important;border:none!important;box-shadow:none!important}
+.start-title{font-size:clamp(18px,2.4vw,22px)!important;line-height:1.35!important;letter-spacing:-.01em;position:relative;margin:0!important;color:var(--p-text)!important}
 .start-sub{opacity:.95;font-size:15px;position:relative}
 
 /* 顶栏按钮：原来深蓝字压在深底上（2.2:1），几乎看不见 */

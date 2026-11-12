@@ -142,21 +142,16 @@ await withChrome(async (cdp) => {
         assert.ok(opts.n >= 30, "选项数量不对：" + opts.n);
       });
 
-      // 1b) 首屏副行：三语真渲染，不含分钟数、不夹中文
+      // 1b) 首屏：一句话定位 + 样例说明，三语真渲染；不含时间承诺、不夹中文
       const hero = await cdp.eval(`(() => {
-        const subs = Array.from(document.querySelectorAll('.start-sub'));
-        const el = subs[subs.length-1];
-        return el ? el.textContent.trim() : "";
+        const a = document.getElementById('startCard'), b = document.getElementById('demoCard');
+        return ((a ? a.textContent : '') + ' ' + (b ? b.textContent : '')).replace(/\\s+/g, ' ').trim();
       })()`);
-      check("首屏副行三语读得通、无分钟数：" + tag, () => {
-        assert.ok(hero.length > 0, "没取到首屏副行");
-        assert.ok(!/\d+\s*(分钟|minutes?|minutos)/i.test(hero), "副行还有分钟数：" + hero);
-        if (lang === "zh") assert.ok(hero.includes("先给你一份基础的"), "中文没写「先给一份基础的」：" + hero);
-        if (lang === "en") assert.ok(/basic list first/i.test(hero), "英文没写「先给一份基础的」：" + hero);
-        if (lang === "es") {
-          assert.ok(/lista básica/i.test(hero), "西语没写「先给一份基础的」：" + hero);
-          assert.ok(!/[\u4e00-\u9fff]/.test(hero), "西语回退成中文了：" + hero);
-        }
+      check("首屏三语读得通、无时间承诺、样例标明不是你的数：" + tag, () => {
+        assert.ok(hero.length > 0, "没取到首屏文案");
+        assert.ok(!/\d+\s*(分钟|minutes?|minutos)/i.test(hero), "首屏还有时间承诺：" + hero.slice(0, 120));
+        assert.ok(/不是你的数|not your numbers|no son sus cifras/i.test(hero), "样例没说明不是你的数：" + hero.slice(0, 160));
+        if (lang === "es") assert.ok(!/[\u4e00-\u9fff]/.test(hero), "西语回退成中文了：" + hero.slice(0, 160));
       });
 
       // 2) 第 1 步无清单：底部条可见 + 文案 + 按钮
@@ -167,17 +162,16 @@ await withChrome(async (cdp) => {
           title: document.getElementById('stickyProgressTitle').textContent.trim(),
           text: document.getElementById('stickyProgressText').textContent.trim(),
           action: document.getElementById('stickyProgressAction').textContent.trim(),
+          cardCta: (document.getElementById('demoCta') || { textContent: "" }).textContent.trim(),
           len: (window.packet.checklist||[]).length
         };
       })()`);
-      check("第 1 步无清单时底部条可见：" + tag, () => {
-        assert.notEqual(empty.display, "none", "底部条被藏了");
+      check("第 1 步无清单时底栏不出现（入口在样品卡里）：" + tag, () => {
+        assert.equal(empty.display, "none", "底栏又出来了，首屏会变成两颗入口");
         assert.equal(empty.len, 0, "起点不该有清单");
-        assert.ok(/1/.test(empty.title), "标题没写第几步：" + empty.title);
       });
-      check("无清单时按钮是「生成清单」：" + tag, () => {
-        assert.ok(/生成清单|generate checklist|generar lista/i.test(empty.action), "按钮文案不对：" + empty.action);
-        assert.ok(/先生成今年清单|checklist first|lista de este año/i.test(empty.text), "说明文案不对：" + empty.text);
+      check("第 1 步的主按钮是「免费生成我的清单」：" + tag, () => {
+        assert.ok(/免费生成我的清单|Build my checklist|Crear mi lista/i.test(empty.cardCta), "按钮文案不对：" + empty.cardCta);
       });
 
       // 2b) 底栏只有一条；左边那行写步骤；第 1 步主入口只有一个
@@ -188,7 +182,7 @@ await withChrome(async (cdp) => {
         const startBtns = vis('#startCard button');
         const startPrimary = startBtns.filter(b => !b.classList.contains('secondary')).length;
         const barBtn = document.getElementById('stickyProgressAction');
-        const barPrimary = barBtn && !barBtn.classList.contains('secondary') ? 1 : 0;
+        const barPrimary = barBtn && barBtn.offsetParent !== null && !barBtn.classList.contains('secondary') ? 1 : 0;
         const inView = Array.from(document.querySelectorAll('button')).filter(b => {
           if (b.offsetParent === null) return false;
           const r = b.getBoundingClientRect();
@@ -214,23 +208,20 @@ await withChrome(async (cdp) => {
         assert.equal(ui.bars.length, 1, "还在两条底栏：" + ui.bars.join(","));
         assert.equal(ui.bars[0], "stickyProgress", "留下的不是 stickyProgress");
       });
-      check("底栏左边那行写第几步：" + tag, () => {
-        for (let i = 0; i < 3; i++) {
+      check("底栏左边那行写第几步（第 2、3 步）：" + tag, () => {
+        for (let i = 1; i < 3; i++) {
           assert.ok(ui.stepTitles[i].includes(String(i + 1)), "第 " + (i + 1) + " 步标题不对：" + ui.stepTitles[i]);
         }
       });
-      check("第 1 步只有一个主入口：" + tag, () => {
-        assert.equal(ui.startBtns, 0, "开场卡里又长出按钮了：" + ui.startBtns);
-        assert.equal(ui.hasDemoCta, false, "样品卡里还有第二颗主按钮（demoCta）");
-        assert.equal(ui.hasDemoPass, true, "样品卡没有季票入口");
-        assert.equal(ui.demoPassPrimary, 0, "季票入口被做成了主按钮样式");
-        assert.equal(ui.firstPrimary, 0, "首屏区域里还有 " + ui.firstPrimary + " 颗主按钮（应只剩底部常驻那颗）");
-        assert.equal(ui.barPrimary, 1, "底栏那颗不是唯一主按钮");
+      check("第 1 步只有一个主入口（样品卡里那颗）：" + tag, () => {
+        assert.equal(ui.startBtns, 0, "定位句那块里又长出按钮了：" + ui.startBtns);
+        assert.equal(ui.hasDemoCta, true, "样品卡里没有主按钮（demoCta）");
+        assert.equal(ui.demoPrimary, 1, "样品卡那颗不是主按钮样式");
+        assert.equal(ui.hasDemoPass, false, "季票入口又做成按钮了（应只在出处折叠里）");
+        assert.equal(ui.firstPrimary, 1, "首屏区域的主按钮不是一颗：" + ui.firstPrimary);
+        assert.equal(ui.barPrimary, 0, "底栏那颗不该出现");
         assert.equal(ui.seeTag, "", "「看看要准备什么」又冒出来了：" + ui.seeTag);
-        assert.ok(ui.firstArea <= 5, "首屏区域入口超过 5 个：" + ui.firstArea);
-        assert.ok(ui.inView <= 7, "首屏可见按钮超过 7 个：" + ui.inView);
-        // 首屏只剩常驻底栏那一颗（季票入口在五行之后、卡内主按钮已删），按存在与否判，不按个数判
-        assert.ok(ui.inView >= 1, "首屏按钮少得离谱，可能整块没渲染：" + ui.inView);
+        assert.ok(ui.firstArea <= 3, "首屏区域入口超过 3 个：" + ui.firstArea);
       });
 
       // 4a) 选「没有变化」→ ≥3 项

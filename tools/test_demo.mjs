@@ -158,57 +158,59 @@ await withChrome(async (cdp) => {
         const d = document.documentElement;
         const card = document.getElementById("demoCard");
         const rows = Array.from(document.querySelectorAll("#demoRows li"));
-        const pass = document.getElementById("demoPass");
-        const pr = pass.getBoundingClientRect();
+        const why = Array.from(document.querySelectorAll("#demoWhy li"));
+        const cta = document.getElementById("demoCta");
+        const pr = cta.getBoundingClientRect();
         const hit = document.elementFromPoint(Math.round(pr.left + pr.width/2), Math.round(pr.top + pr.height/2));
         const lum = (c) => { const nums = (String(c).match(/[\\d.]+/g) || ["255","255","255"]).map(Number).slice(0,3); while (nums.length < 3) nums.push(255); const m = nums.map(v => { v/=255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); }); return 0.2126*m[0]+0.7152*m[1]+0.0722*m[2]; };
-        const cs = getComputedStyle(pass);
+        const cs = getComputedStyle(cta);
         const bgOf = (el) => { let n = el; while (n && n !== document.documentElement) { const b = getComputedStyle(n).backgroundColor; if (b && b !== "rgba(0, 0, 0, 0)" && b !== "transparent") return b; n = n.parentElement; } return "rgb(255,255,255)"; };
-        const L1 = lum(cs.color), L2 = lum(bgOf(pass));
+        const L1 = lum(cs.color), L2 = lum(bgOf(cta));
         const contrast = (Math.max(L1,L2)+0.05)/(Math.min(L1,L2)+0.05);
         const rowsBottom = rows.length ? Math.round(rows[rows.length-1].getBoundingClientRect().bottom) : 0;
-        // 可点元素＝渲染后真正能点的：range / select / button / a[href]，只要在首屏视口内就计
-        const clickable = (root) => Array.from(root.querySelectorAll('input[type=range],select,button,a[href]')).filter(el => {
+        const whyEl = card.querySelector("details");
+        const whySummary = whyEl ? whyEl.querySelector("summary") : null;
+        const whyR = whySummary ? whySummary.getBoundingClientRect() : null;
+        // 首屏可点元素＝首屏区域（页面顶部到样品卡底边）里真正能点的：range / select / button / a[href] / summary
+        const cardBottom = card.getBoundingClientRect().bottom + window.scrollY;
+        const clickable = (root) => Array.from(root.querySelectorAll('input[type=range],select,button,a[href],summary')).filter(el => {
           if (el.offsetParent === null) return false;
           const r = el.getBoundingClientRect();
-          return r.bottom > 0 && r.top < innerHeight;
+          return (r.top + window.scrollY) < cardBottom && r.bottom > 0;
         });
         const entries = clickable(document);
-        const cardEntries = Array.from(document.querySelectorAll("#demoCard button, #demoCard a[href]")).filter(el => el.offsetParent !== null);
-        const sx = document.getElementById("stickyPass");
-        const sxR = sx && sx.offsetParent !== null ? sx.getBoundingClientRect() : null;
-        const sxCs = sx ? getComputedStyle(sx) : null;
-        const sxContrast = sxCs ? (Math.max(lum(sxCs.color), lum(bgOf(sx)))+0.05)/(Math.min(lum(sxCs.color), lum(bgOf(sx)))+0.05) : 0;
-        const barBg = (() => { const bar = document.getElementById("stickyProgressAction"); return bar ? getComputedStyle(bar).backgroundColor : ""; })();
+        const cardEntries = Array.from(document.querySelectorAll("#demoCard button, #demoCard a[href], #demoCard summary")).filter(el => el.offsetParent !== null);
+        const bar = document.getElementById("stickyProgress");
+        const barShown = bar && !bar.classList.contains("hidden") && bar.offsetParent !== null;
         const primaryBtns = Array.from(document.querySelectorAll("button"))
           .filter(b => b.offsetParent !== null)
-          .map(b => ({ id: b.id || "-", rc: b.getBoundingClientRect(), bg: getComputedStyle(b).backgroundColor }))
-          .filter(x => x.rc.bottom > 0 && x.rc.top < innerHeight && Math.round(x.rc.height) >= 44 && x.bg === barBg)
+          .filter(b => !b.classList.contains("secondary"))
+          .map(b => ({ id: b.id || "-", rc: b.getBoundingClientRect() }))
+          .filter(x => x.rc.bottom > 0 && x.rc.top < innerHeight && Math.round(x.rc.height) >= 44)
           .map(x => x.id);
         return JSON.stringify({
           sw: d.scrollWidth, cw: d.clientWidth,
           cardHidden: card ? card.classList.contains("hidden") : null,
           rows: rows.length,
           heights: rows.map(r => Math.round(r.getBoundingClientRect().height)),
-          texts: rows.map(r => r.innerText.replace(/\\s+/g, " ").trim()),
-          ctaText: pass.textContent.trim(),
-          stickyPass: sxR ? { text: sx.textContent.trim(), secondary: sx.classList.contains("secondary"), h: Math.round(sxR.height), w: Math.round(sxR.width), top: Math.round(sxR.top), bottom: Math.round(sxR.bottom), contrast: Math.round(sxContrast*100)/100 } : null,
+          texts: why.map(r => r.textContent.replace(/\\s+/g, " ").trim()),
+          rowTexts: rows.map(r => r.innerText.replace(/\\s+/g, " ").trim()),
+          ctaText: cta.textContent.trim(),
           primaryBtns: primaryBtns,
-          passColor: cs.color, passBg: bgOf(pass),
-          passTop: Math.round(pr.top), passH: Math.round(pr.height), contrast: Math.round(contrast*100)/100, rowsBottom,
-          passText: (document.getElementById("demoPass") || { textContent: "" }).textContent.trim(),
-          passHidden: (() => { const el = document.getElementById("demoPass"); return !el || el.offsetParent === null; })(),
-          pageNow: (typeof currentPage !== "undefined" ? currentPage : null),
-          stepNow: (typeof currentOrganizeStep !== "undefined" ? currentOrganizeStep : null),
-          overlay: Array.from(document.querySelectorAll('[role="dialog"], .modal, .overlay, .onboarding, .coach')).filter(el => el.offsetParent !== null).length,
-          passInView: pr.top < innerHeight && pr.bottom > 0,
-          passHit: !!(hit && (hit === pass || pass.contains(hit))),
+          barShown: barShown,
+          ctaColor: cs.color, ctaBg: bgOf(cta),
+          ctaTop: Math.round(pr.top), ctaH: Math.round(pr.height), contrast: Math.round(contrast*100)/100, rowsBottom,
+          whyText: whySummary ? whySummary.textContent.trim() : "",
+          whyTop: whyR ? Math.round(whyR.top) : null,
+          whyContrast: (() => { const c2 = whySummary ? getComputedStyle(whySummary) : null; return c2 ? Math.round(((Math.max(lum(c2.color), lum(bgOf(whySummary)))+0.05)/(Math.min(lum(c2.color), lum(bgOf(whySummary)))+0.05))*100)/100 : 0; })(),
+          ctaInView: pr.top >= 0 && pr.bottom <= innerHeight,
+          ctaHit: !!(hit && (hit === cta || cta.contains(hit))),
           entries: entries.map(el => (el.id || el.tagName) + ":" + (el.textContent || "").trim().slice(0, 12)),
           cardEntries: cardEntries.map(el => el.id || el.tagName),
           sliderTop: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().top) : null; })(),
           sliderBottom: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().bottom) : null; })(),
           vh: innerHeight,
-          cardText: card ? card.innerText : "",
+          cardText: card ? card.textContent : "",
           pageText: document.body.innerText
         });
       })()`);
@@ -217,45 +219,47 @@ await withChrome(async (cdp) => {
       check("样品卡在首屏且没被隐藏：" + tag, () => {
         assert.equal(geo.cardHidden, false, "样品卡是 hidden");
         assert.ok(geo.rows === 5, "行数不是 5：" + geo.rows);
-        assert.ok(geo.heights.every((x) => x > 24), "有行高度异常：" + geo.heights.join(","));
+        assert.ok(geo.heights.every((x) => x >= 28 && x <= 64), "行太高，一屏放不下：" + geo.heights.join(","));
       });
       check("不横向溢出：" + tag, () => {
         assert.equal(geo.cw, w, "视口不是 " + w + "（实际 " + geo.cw + "）");
         assert.ok(geo.sw <= geo.cw, "被撑宽 " + geo.sw + " > " + geo.cw);
       });
-      check("季票入口：44px 高、对比度 ≥4.5、在五行之后：" + tag, () => {
-        assert.ok(geo.ctaText.length > 0, "季票入口没文案");
-        assert.ok(geo.passH >= 44, "季票入口高度不足 44px：" + geo.passH);
-        assert.ok(geo.contrast >= 4.5, "季票入口对比度只有 " + geo.contrast + ":1（字 " + geo.passColor + "，底 " + geo.passBg + "）");
-        assert.ok(geo.passTop > geo.rowsBottom, "季票入口没在五行之后：pass=" + geo.passTop + " rowsBottom=" + geo.rowsBottom);
+      check("主按钮：48px、对比度 ≥4.5、在五行与两栏事实之后、首屏看得见：" + tag, () => {
+        assert.ok(geo.ctaText.length > 0, "主按钮没文案");
+        assert.ok(geo.ctaH >= 44, "主按钮高度不足 44px：" + geo.ctaH);
+        assert.ok(geo.contrast >= 4.5, "主按钮对比度只有 " + geo.contrast + ":1（字 " + geo.ctaColor + "，底 " + geo.ctaBg + "）");
+        assert.ok(geo.ctaTop > geo.rowsBottom, "主按钮没在五行之后：cta=" + geo.ctaTop + " rowsBottom=" + geo.rowsBottom);
+        assert.ok(geo.ctaInView, "首屏看不见整颗主按钮：ctaBottom=" + (geo.ctaTop + geo.ctaH) + " 视口 " + geo.vh);
+        assert.ok(geo.ctaHit, "主按钮被别的元素盖住");
       });
       check("滑块在首屏（底边 ≤ 视口高）：" + tag, () => {
         assert.ok(geo.sliderBottom != null, "没量到滑块");
         assert.ok(geo.sliderBottom <= geo.vh, "滑块底边超出视口：bottom=" + geo.sliderBottom + "，视口 " + geo.vh);
       });
-      check("首屏可点入口 ≤5：" + tag, () => {
-        assert.ok(geo.entries.length <= 5, "入口 " + geo.entries.length + " 个：" + geo.entries.join(" / "));
+      check("首屏可点入口 = 3（滑块、主按钮、出处折叠）：" + tag, () => {
+        assert.ok(geo.entries.length === 3, "入口 " + geo.entries.length + " 个：" + geo.entries.join(" / "));
       });
-      check("卡片内只有季票一条路，没有第二颗主按钮：" + tag, () => {
-        assert.deepEqual(geo.cardEntries.slice().sort(), ["demoPass"], "卡片内入口：" + geo.cardEntries.join(","));
+      check("卡片内只有一颗主按钮 + 一个出处折叠：" + tag, () => {
+        assert.deepEqual(geo.cardEntries.slice().sort(), ["demoCta", "SUMMARY"].sort(), "卡片内入口：" + geo.cardEntries.join(","));
+        assert.ok(geo.whyText.length > 0, "出处折叠没有标题");
+        assert.ok(geo.whyTop >= geo.rowsBottom, "出处折叠没在五行之后");
       });
-      check("底栏同时给两条路：季票那条次级、≥44px、≥4.5:1、在首屏：" + tag, () => {
-        assert.ok(geo.stickyPass, "底栏没有季票入口（加载态两条路要同时看得见）");
-        assert.ok(geo.stickyPass.text.length > 0, "底栏季票入口没文案");
-        assert.ok(geo.stickyPass.secondary, "底栏季票入口不是次级样式：" + geo.stickyPass.text);
-        assert.ok(geo.stickyPass.h >= 44, "底栏季票入口高度不足 44px：" + geo.stickyPass.h);
-        assert.ok(geo.stickyPass.contrast >= 4.5, "底栏季票入口对比度只有 " + geo.stickyPass.contrast + ":1");
-        assert.ok(geo.stickyPass.top >= 0 && geo.stickyPass.bottom <= geo.vh, "底栏季票入口不在首屏：" + JSON.stringify(geo.stickyPass));
-        assert.deepEqual(geo.primaryBtns, ["stickyProgressAction"], "主按钮样式不止一颗：" + geo.primaryBtns.join(","));
+      check("第 1 步无清单时底栏不出现，不并排第二颗：" + tag, () => {
+        assert.equal(geo.barShown, false, "底栏又出来了（首屏应只剩卡内那一颗）");
+        assert.deepEqual(geo.primaryBtns, ["demoCta"], "主按钮样式不止一颗：" + geo.primaryBtns.join(","));
       });
 
-      // 三组收入各拖一次，比对数字
+      // 三组收入各拖一次，比对数字（整句在卡底「这五行怎么算的」折叠里，读 textContent）
       for (const inc of [70000, 120000, 200000]) {
         const got = await cdp.eval(`(() => {
           const sl = document.getElementById("demoIncome");
           sl.value = "${inc}";
           sl.dispatchEvent(new Event("input", { bubbles: true }));
-          return JSON.stringify({ texts: Array.from(document.querySelectorAll("#demoRows li")).map(r => r.innerText.replace(/\\s+/g, " ").trim()) });
+          return JSON.stringify({
+            texts: Array.from(document.querySelectorAll("#demoWhy li")).map(r => r.textContent.replace(/\\s+/g, " ").trim()),
+            rows: Array.from(document.querySelectorAll("#demoRows li")).map(r => r.innerText.replace(/\\s+/g, " ").trim())
+          });
         })()`);
         const e = expectFor(inc);
         check("教育行给出淘汰区间并报位置：@" + inc + " " + tag, () => {
@@ -311,7 +315,7 @@ await withChrome(async (cdp) => {
         const row = await cdp.eval(`(() => {
           const sl = document.getElementById("demoIncome");
           sl.value = "${inc}"; sl.dispatchEvent(new Event("input", { bubbles: true }));
-          return JSON.stringify(document.getElementById("demoRows").children[1].innerText.replace(/\\s+/g, " ").trim());
+          return JSON.stringify(document.querySelectorAll("#demoWhy li")[1].textContent.replace(/\\s+/g, " ").trim());
         })()`);
         const posRe = (over) => (over ? "(上面|above it|por encima)" : "(下面|below it|por debajo)");
         check("医保行两个保障年各给一次位置：@" + inc + " " + tag, () => {
@@ -336,26 +340,32 @@ await withChrome(async (cdp) => {
 
       const after = await cdp.eval(`(() => {
         const sl = document.getElementById("demoIncome");
-        const first = document.getElementById("demoRows").children[1].innerText;
+        sl.value = "70000"; sl.dispatchEvent(new Event("input", { bubbles: true }));
+        const first = document.querySelectorAll("#demoRows li")[1].innerText;
         const page0 = typeof currentPage !== "undefined" ? currentPage : null;
         const step0 = typeof currentOrganizeStep !== "undefined" ? currentOrganizeStep : null;
         const y0 = Math.round(window.scrollY);
-        sl.value = "40000"; sl.dispatchEvent(new Event("input", { bubbles: true }));
-        const low = document.getElementById("demoRows").children[1].innerText;
+        sl.value = "200000"; sl.dispatchEvent(new Event("input", { bubbles: true }));
+        sl.dispatchEvent(new Event("change", { bubbles: true }));
+        const low = document.querySelectorAll("#demoRows li")[1].innerText;
         return JSON.stringify({ same: first === low, low,
           pageSame: page0 === (typeof currentPage !== "undefined" ? currentPage : null),
           stepSame: step0 === (typeof currentOrganizeStep !== "undefined" ? currentOrganizeStep : null),
           scrollSame: y0 === Math.round(window.scrollY),
+          urlHasIncome: /income=200000/.test(location.search),
           overlay: Array.from(document.querySelectorAll('[role="dialog"], .modal, .overlay, .onboarding, .coach')).filter(el => el.offsetParent !== null).length });
       })()`);
-      check("拖动后那行真的变（医保补贴）：" + tag, () => {
-        assert.equal(after.same, false, "把收入从 20 万拖到 4 万，这一行没变");
+      check("拖动后那行真的变（医保补贴 7 万 → 20 万）：" + tag, () => {
+        assert.equal(after.same, false, "把收入从 7 万拖到 20 万，这一行没变");
       });
       check("拖完到点按钮之间 0 次跳页：" + tag, () => {
         assert.ok(after.pageSame, "拖动把页面切走了");
         assert.ok(after.stepSame, "拖动把步骤切走了");
         assert.ok(after.scrollSame, "拖动让页面滚动了");
         assert.equal(after.overlay, 0, "拖动弹出了引导层／弹窗");
+      });
+      check("松开后收入写进地址栏：" + tag, () => {
+        assert.ok(after.urlHasIncome, "地址栏没有 income=200000：" + "（回访 / 分享要对得上同一个数）");
       });
       check("没有「使用说明／教程」这类段落标题：" + tag, () => {
         const t = geo.pageText;
@@ -410,11 +420,7 @@ check("教育行不许再说「跟收入无关」，四个门槛数只在规则�
   assert.equal((src.match(/跟收入无关|does not depend on income|no depende de los ingresos/g) || []).length, 0, "页面里还有「跟收入无关」这类话");
   assert.equal((src.match(/五件事|five things|cinco cosas/g) || []).length, 0, "标题里还有「五件事」这类绝对说法");
   const h2 = (src.match(/<h2>[^<]*下面几行跟着变[^<]*<\/h2>/) || [""])[0];
-  assert.ok(h2, "找不到样品卡的标题");
-  assert.ok(h2.includes("下面几行跟着变"), "标题没换成「下面几行跟着变」：" + h2);
-  for (const bad of ["全部", "都跟着", "每一条"]) {
-    assert.equal(h2.includes(bad), false, "标题里出现绝对说法：" + bad);
-  }
+  assert.equal(h2, "", "样品卡里又长回标题了（定位句只有一句，在样品卡上面）：" + h2);
   for (const re of [/80,000/, /90,000/, /160,000/, /180,000/, /\$\s?80000\b/, /\$\s?90000\b/, /\$\s?160000\b/, /\$\s?180000\b/]) {
     assert.ok(!re.test(src), "页面源码里写死了门槛数：" + re);
   }
@@ -483,7 +489,7 @@ await withChrome(async (cdp) => {
       if (r.result.value === true) break;
     }
     const got = await cdp.eval(`(() => {
-      const titles = Array.from(document.querySelectorAll("#demoRows li b")).map(b => b.textContent.trim());
+      const titles = Array.from(document.querySelectorAll("#demoRows li .lbl")).map(b => b.textContent.trim());
       const chips = document.querySelectorAll("#tagGrid .tag-btn");
       for (let i = 0; i < Math.min(3, chips.length); i++) chips[i].click();
       const mk = document.getElementById("btnMake"); if (mk) mk.click();
@@ -514,7 +520,7 @@ for (const c of demoTitleCmp) {
     for (const t of c.titles) {
       assert.ok(!/以后会怎样|What it means later|Qué significa después/.test(t), "行名用了地图的列名：「" + t + "」");
     }
-    assert.ok(/以后几年|coming years|próximos años/.test(c.titles[4]), "第五行没写成「以后几年会怎么变」：" + c.titles[4]);
+    assert.ok(/以后几年|[Cc]oming years|[Pp]róximos años/.test(c.titles[4]), "第五行的名字不是「以后几年」这一类：" + c.titles[4]);
   });
 }
 
