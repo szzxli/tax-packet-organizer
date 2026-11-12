@@ -695,6 +695,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <h2>报税季票</h2>
 <p class="notice ok"><b>免费整理与导出永久免费</b></p>
 <p class="muted small">整理完你会看到一个大概的数——退、补，还是差不多齐平；哪几项在推这个数；哪天之前改还来得及。基础整理永久免费，内测期免费，1 月公布价格。</p>
+<div id="pricingTiers" class="pricing-tiers hidden"></div>
 
 <div id="planCards"></div>
 
@@ -1476,6 +1477,49 @@ function planHandoffHtml(s){
     "<p class='small'>https://tax.ucplan.org/</p>";
 }
 // PLAN_CARDS_LOGIC_END
+// PRICING_LOGIC_START
+// 价格结构只在 pricing.json：页面不写数字。visible:false 的一档不渲染；
+// 名字、周期、触发条件空着就整行不出，不输出占位符，也不出 undefined。
+function pricingText(v,lang){
+  if(v==null)return "";
+  if(typeof v==="string")return v;
+  var s=v[lang==="en"?"en":(lang==="es"?"es":"zh")];
+  if(s==null)s=v.zh;
+  return s==null?"":String(s);
+}
+function pricingMoney(price,currency){
+  if(price==null||price==="")return "";
+  var n=Number(price);
+  if(!isFinite(n))return "";
+  return (currency&&currency!=="USD"?(currency+" "):"$")+n.toLocaleString("en-US");
+}
+function pricingTierHtml(t,lang,currency){
+  if(!t||t.visible!==true)return "";
+  var name=pricingText(t.name,lang);
+  if(!name)return "";            // 没名字这一档就不出，不拿空壳占位
+  var money=pricingMoney(t.price,currency);
+  var period=money?pricingText(t.period,lang):"";
+  var trigger=pricingText(t.trigger,lang);
+  return "<div class='pricing-tier' data-tier='"+esc(t.tier_id||"")+"'>"+
+    "<div class='pricing-name'>"+esc(name)+"</div>"+
+    (money?"<div class='pricing-price'>"+esc(money)+(period?" <span class='pricing-period'>"+esc(period)+"</span>":"")+"</div>":"")+
+    (trigger?"<div class='pricing-trigger'>"+esc(trigger)+"</div>":"")+
+    "</div>";
+}
+function pricingHtml(data,lang){
+  if(!data||!data.tiers||!data.tiers.length)return "";
+  var currency=pricingText(data.currency,"zh")||"USD";
+  var out="";
+  for(var i=0;i<data.tiers.length;i++){out+=pricingTierHtml(data.tiers[i],lang,data.currency||currency);}
+  return out;
+}
+function renderPricing(){
+  var box=document.getElementById("pricingTiers");
+  if(!box)return;
+  box.innerHTML=pricingHtml(window.PRICING||null,LANG);
+  box.classList.toggle("hidden",!box.innerHTML.trim());
+}
+// PRICING_LOGIC_END
 function planStateKey(){return "tpo_plancards_"+(currentUser||"guest");}
 function planState(){
   var s=load(planStateKey(),{})||{};
@@ -2155,7 +2199,7 @@ function renderFollowUp(){
   };
 }
 function applyOrganizeStep(){if(currentPage!==1)return;var wrap=$("appViewSections");if(!wrap)return;for(var i=0;i<wrap.children.length;i++){var c=wrap.children[i];if(c.className.indexOf("card")<0)continue;var showCard=c.id!=="subCard"&&Number(c.dataset.flowStep||0)===currentOrganizeStep;c.classList.toggle("hidden",!showCard);}}
-function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,renderForeign,applyCollapse];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
+function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,renderForeign,renderPricing,applyCollapse];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
 function secKeyFromH2(t){
   if(t.indexOf("州税范围")>=0)return "s3b";
   if(t.indexOf("去年有什么")>=0)return "s3";
@@ -4697,6 +4741,13 @@ try{captureZh();var _sl=window.__TPO_LANG||null;if(!_sl){try{_sl=localStorage.ge
     try { renderPlanCards(); } catch (e2) {}
   }).catch(function () {});
 
+  // 价格结构只在 pricing.json：取不到就不出价格块，页面上一个数字都不补。
+  fetch("./pricing.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (p) {
+    if (!p || !p.tiers) return;
+    window.PRICING = p;
+    try { renderPricing(); } catch (e) {}
+  }).catch(function () {});
+
   var q=new URLSearchParams(window.location.search||"");
   var ret=q.get("paid")==="1"?"paid":(q.get("canceled")==="1"?"canceled":null);
   if(ret){try{history.replaceState(null,"",window.location.pathname+window.location.hash);}catch(e){}}
@@ -4778,6 +4829,12 @@ body{background:var(--p-bg);-webkit-font-smoothing:antialiased;letter-spacing:.0
 .sub-trust{margin:0 0 8px!important;color:#9fb0c0!important;font-size:13px;line-height:1.45}
 @media(max-width:600px){.sub-trust{font-size:12px}}
 .sub-cta{margin:0}
+.pricing-tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:10px 0}
+.pricing-tier{border:1px solid var(--p-line);border-radius:12px;padding:12px 14px;background:#111a24}
+.pricing-name{color:var(--p-text);font-weight:700}
+.pricing-price{color:var(--p-accent);font-size:20px;font-weight:700;margin-top:2px}
+.pricing-period{color:var(--p-sub);font-size:12px;font-weight:400}
+.pricing-trigger{color:var(--p-sub);font-size:13px;margin-top:4px}
 textarea{line-height:1.6}
 :focus-visible{outline:2px solid var(--p-accent)!important;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}#coverPreviewCard .cover-preview{transform:none!important}}

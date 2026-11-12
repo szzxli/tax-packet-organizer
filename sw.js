@@ -1,8 +1,9 @@
-const CACHE_NAME = "tax-packet-shell-v10";
+const CACHE_NAME = "tax-packet-shell-v11";
 const CACHE_PREFIX = "tax-packet-shell-";
 const APP_SHELL = [
   "./formal.html",
   "./rules/graph.json",
+  "./pricing.json",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

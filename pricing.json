@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "currency": "USD",
+  "updated": "2026-11-11",
+  "note": "价格只在这里改。visible:false 的档不渲染；price 填数字（美元，整数），空值不渲染占位符。改完不用动 formal.html。",
+  "tiers": [
+    {
+      "tier_id": "free",
+      "name": { "zh": "免费", "en": "Free", "es": "Gratis" },
+      "price": null,
+      "period": null,
+      "trigger": {
+        "zh": "整理 + 只给方向，不给个人数字",
+        "en": "Organize, plus direction only — no personal numbers",
+        "es": "Organizar y solo la dirección, sin cifras personales"
+      },
+      "visible": false
+    },
+    {
+      "tier_id": "season",
+      "name": { "zh": "季票", "en": "Season pass", "es": "Pase de temporada" },
+      "price": null,
+      "period": null,
+      "trigger": {
+        "zh": "整理完那一屏 · 交付前总核对",
+        "en": "The money screen · pre-delivery check",
+        "es": "La pantalla del dinero · verificación previa"
+      },
+      "visible": false
+    },
+    {
+      "tier_id": "cpa",
+      "name": { "zh": "会计对接", "en": "Accountant handoff", "es": "Entrega al contador" },
+      "price": null,
+      "period": null,
+      "trigger": null,
+      "visible": false
+    }
+  ]
+}
