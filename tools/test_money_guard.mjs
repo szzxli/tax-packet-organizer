@@ -323,8 +323,8 @@ check("sw：图与价格文件进了 APP_SHELL，缓存版本随页面/图改动
   assert.ok(sw.includes('"./rules/graph.json"'), "APP_SHELL 缺规则图");
   assert.ok(sw.includes('"./pricing.json"'), "APP_SHELL 缺价格文件");
   // 图与页面是缓存优先；改了不升版本，老用户会一直读到旧内容（这轮是订阅区）。
-  assert.ok(sw.includes('"tax-packet-shell-v13"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
-  assert.ok(!sw.includes('"tax-packet-shell-v12"'), "CACHE_NAME 还停在 v12");
+  assert.ok(sw.includes('"tax-packet-shell-v14"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
+  assert.ok(!sw.includes('"tax-packet-shell-v13"'), "CACHE_NAME 还停在 v13");
 });
 check("AI 文案进 DOM 前换成中性句，正常文案不动", () => {
   const bad = sandbox.aiSafeText("You are eligible for this credit");

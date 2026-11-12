@@ -223,6 +223,14 @@ await withChrome(async (cdp) => {
           return JSON.stringify({ texts: Array.from(document.querySelectorAll("#demoRows li")).map(r => r.innerText.replace(/\\s+/g, " ").trim()) });
         })()`);
         const e = expectFor(inc);
+        check("教育行给出淘汰区间并报位置：@" + inc + " " + tag, () => {
+          const edu = got.texts[2] || "";
+          for (const n of ["80,000", "90,000", "160,000", "180,000"]) {
+            assert.ok(edu.includes(n), "教育行缺淘汰区间 " + n + "：" + edu.slice(0, 160));
+          }
+          const side = inc >= 180000 ? /上面|above|por encima/ : inc <= 80000 ? /下面|below|por debajo/ : /区间|inside|dentro|下面|below|por debajo|上面|above|por encima/;
+          assert.ok(side.test(edu), "教育行没报样例收入在哪一侧（收入 " + inc + "）：" + edu.slice(0, 200));
+        });
         check("五行数字与规则图一致：" + tag + " @" + inc, () => {
           const all = got.texts.join(" | ");
           assert.ok(all.includes(e.aid), "没出现收入 " + e.aid);
@@ -316,6 +324,14 @@ await withChrome(async (cdp) => {
 });
 
 // 阶段 A：三个 demo_ 名字在页面里、EV_NAMES 里 0 个（服务端一条都不发）
+check("教育行不许再说「跟收入无关」，四个门槛数只在规则图里", () => {
+  const src = fs.readFileSync(path.join(root, "formal.html"), "utf8");
+  assert.equal((src.match(/跟收入无关|does not depend on income|no depende de los ingresos/g) || []).length, 0, "页面里还有「跟收入无关」这类话");
+  for (const re of [/80,000/, /90,000/, /160,000/, /180,000/, /\$\s?80000\b/, /\$\s?90000\b/, /\$\s?160000\b/, /\$\s?180000\b/]) {
+    assert.ok(!re.test(src), "页面源码里写死了门槛数：" + re);
+  }
+});
+
 check("埋点：三个 demo_ 名字在页面里，EV_NAMES 里 0 个", () => {
   const src = fs.readFileSync(path.join(root, "formal.html"), "utf8");
   for (const name of ["demo_drag", "demo_cta_free", "demo_cta_pass"]) {

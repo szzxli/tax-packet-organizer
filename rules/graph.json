@@ -118,14 +118,32 @@
       "first_four_years_only": true,
       "effective_tax_year": 2026,
       "checked": "2026-11-08",
-      "source_url": "https://www.irs.gov/publications/p970"
+      "source_url": "https://www.irs.gov/publications/p970",
+      "phaseout": {
+        "single": [80000, 90000],
+        "hoh": [80000, 90000],
+        "mfj": [160000, 180000],
+        "effective_tax_year": 2026,
+        "checked": "2026-11-12",
+        "source_url": "https://www.irs.gov/publications/p970",
+        "note": "Pub 970（2025 版）正文：MAGI 在 80,000–90,000（合并申报 160,000–180,000）之间逐步减少，达到上限即无。这两组金额是法定固定值、不随通胀调整；2026 税年 IRS 若改表以 IRS 公布为准。"
+      }
     },
     "llc": {
       "no_year_limit": true,
       "covers_graduate_tuition": true,
       "effective_tax_year": 2026,
       "checked": "2026-11-08",
-      "source_url": "https://www.irs.gov/publications/p970"
+      "source_url": "https://www.irs.gov/publications/p970",
+      "phaseout": {
+        "single": [80000, 90000],
+        "hoh": [80000, 90000],
+        "mfj": [160000, 180000],
+        "effective_tax_year": 2026,
+        "checked": "2026-11-12",
+        "source_url": "https://www.irs.gov/publications/p970",
+        "note": "Pub 970（2025 版）正文：MAGI 在 80,000–90,000（合并申报 160,000–180,000）之间逐步减少，达到上限即无。这两组金额是法定固定值、不随通胀调整；2026 税年 IRS 若改表以 IRS 公布为准。"
+      }
     }
   },
   "retirement": {
