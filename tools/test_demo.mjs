@@ -159,7 +159,7 @@ await withChrome(async (cdp) => {
         const card = document.getElementById("demoCard");
         const rows = Array.from(document.querySelectorAll("#demoRows li"));
         const why = Array.from(document.querySelectorAll("#demoWhy li"));
-        const cta = document.getElementById("demoCta");
+        const cta = document.getElementById("demoSub");
         const pr = cta.getBoundingClientRect();
         const hit = document.elementFromPoint(Math.round(pr.left + pr.width/2), Math.round(pr.top + pr.height/2));
         const lum = (c) => { const nums = (String(c).match(/[\\d.]+/g) || ["255","255","255"]).map(Number).slice(0,3); while (nums.length < 3) nums.push(255); const m = nums.map(v => { v/=255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); }); return 0.2126*m[0]+0.7152*m[1]+0.0722*m[2]; };
@@ -225,8 +225,8 @@ await withChrome(async (cdp) => {
         assert.equal(geo.cw, w, "视口不是 " + w + "（实际 " + geo.cw + "）");
         assert.ok(geo.sw <= geo.cw, "被撑宽 " + geo.sw + " > " + geo.cw);
       });
-      check("主按钮：48px、对比度 ≥4.5、在五行与两栏事实之后、首屏看得见：" + tag, () => {
-        assert.ok(geo.ctaText.length > 0, "主按钮没文案");
+      check("订阅按钮：≥44px、对比度 ≥4.5、在五行与三步之后、首屏看得见：" + tag, () => {
+        assert.ok(geo.ctaText.length > 0, "订阅按钮没文案");
         assert.ok(geo.ctaH >= 44, "主按钮高度不足 44px：" + geo.ctaH);
         assert.ok(geo.contrast >= 4.5, "主按钮对比度只有 " + geo.contrast + ":1（字 " + geo.ctaColor + "，底 " + geo.ctaBg + "）");
         assert.ok(geo.ctaTop > geo.rowsBottom, "主按钮没在五行之后：cta=" + geo.ctaTop + " rowsBottom=" + geo.rowsBottom);
@@ -237,17 +237,17 @@ await withChrome(async (cdp) => {
         assert.ok(geo.sliderBottom != null, "没量到滑块");
         assert.ok(geo.sliderBottom <= geo.vh, "滑块底边超出视口：bottom=" + geo.sliderBottom + "，视口 " + geo.vh);
       });
-      check("首屏可点入口 = 3（滑块、主按钮、出处折叠）：" + tag, () => {
-        assert.ok(geo.entries.length === 3, "入口 " + geo.entries.length + " 个：" + geo.entries.join(" / "));
+      check("首屏可点入口 = 4（滑块、订阅按钮、免费文字链接、出处折叠）：" + tag, () => {
+        assert.ok(geo.entries.length === 4, "入口 " + geo.entries.length + " 个：" + geo.entries.join(" / "));
       });
-      check("卡片内只有一颗主按钮 + 一个出处折叠：" + tag, () => {
-        assert.deepEqual(geo.cardEntries.slice().sort(), ["demoCta", "SUMMARY"].sort(), "卡片内入口：" + geo.cardEntries.join(","));
+      check("卡片内一颗醒目按钮（订阅）+ 免费文字链接 + 出处折叠：" + tag, () => {
+        assert.deepEqual(geo.cardEntries.slice().sort(), ["demoFree", "demoSub", "SUMMARY"].sort(), "卡片内入口：" + geo.cardEntries.join(","));
         assert.ok(geo.whyText.length > 0, "出处折叠没有标题");
         assert.ok(geo.whyTop >= geo.rowsBottom, "出处折叠没在五行之后");
       });
       check("第 1 步无清单时底栏不出现，不并排第二颗：" + tag, () => {
         assert.equal(geo.barShown, false, "底栏又出来了（首屏应只剩卡内那一颗）");
-        assert.deepEqual(geo.primaryBtns, ["demoCta"], "主按钮样式不止一颗：" + geo.primaryBtns.join(","));
+        assert.deepEqual(geo.primaryBtns, ["demoSub"], "醒目按钮不止一颗：" + geo.primaryBtns.join(","));
       });
 
       // 三组收入各拖一次，比对数字（整句在卡底「这五行怎么算的」折叠里，读 textContent）

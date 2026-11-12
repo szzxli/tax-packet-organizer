@@ -162,7 +162,8 @@ await withChrome(async (cdp) => {
           title: document.getElementById('stickyProgressTitle').textContent.trim(),
           text: document.getElementById('stickyProgressText').textContent.trim(),
           action: document.getElementById('stickyProgressAction').textContent.trim(),
-          cardCta: (document.getElementById('demoCta') || { textContent: "" }).textContent.trim(),
+          cardCta: (document.getElementById('demoSub') || { textContent: "" }).textContent.trim(),
+          freeLink: (document.getElementById('demoFree') || { tagName: "" }).tagName,
           len: (window.packet.checklist||[]).length
         };
       })()`);
@@ -170,8 +171,9 @@ await withChrome(async (cdp) => {
         assert.equal(empty.display, "none", "底栏又出来了，首屏会变成两颗入口");
         assert.equal(empty.len, 0, "起点不该有清单");
       });
-      check("第 1 步的主按钮是「免费生成我的清单」：" + tag, () => {
-        assert.ok(/免费生成我的清单|Build my checklist|Crear mi lista/i.test(empty.cardCta), "按钮文案不对：" + empty.cardCta);
+      check("第 1 步唯一的醒目按钮是订阅，免费只留文字链接：" + tag, () => {
+        assert.ok(/订阅季票|Subscribe|Suscribirme/i.test(empty.cardCta), "醒目按钮不是订阅：" + empty.cardCta);
+        assert.equal(empty.freeLink, "A", "免费那条不是文字链接：" + empty.freeLink);
       });
 
       // 2b) 底栏只有一条；左边那行写步骤；第 1 步主入口只有一个
@@ -191,18 +193,18 @@ await withChrome(async (cdp) => {
         const title = document.getElementById('stickyProgressTitle').textContent.trim();
         const seeTag = (document.getElementById('btnSee') || {}).tagName || '';
         // 首屏入口：开场卡的按钮挪到样品卡，样品卡那颗是唯一主入口；重复的样例链接已删
-        const demoCta = document.getElementById('demoCta'); // 已删：留着取 null，断言用
-        const demoPass = document.getElementById('demoPass');
+        const demoSub = document.getElementById('demoSub'); // 首屏唯一醒目按钮
+        const demoFree = document.getElementById('demoFree'); // 免费走文字链接
         const firstArea = Array.from(document.querySelectorAll('#pageNav button, #pageNav a[href], #startCard button, #startCard a[href], #demoCard button, #demoCard a[href]')).filter(el => el.offsetParent !== null);
         const firstPrimary = firstArea.filter(el => el.tagName === 'BUTTON' && !el.classList.contains('secondary')).length;
-        const demoPrimary = demoCta && !demoCta.classList.contains('secondary') ? 1 : 0;
-        const demoPassPrimary = demoPass && !demoPass.classList.contains('secondary') ? 1 : 0;
+        const demoPrimary = demoSub && !demoSub.classList.contains('secondary') ? 1 : 0;
+        const freeIsLink = demoFree && demoFree.tagName === 'A' ? 1 : 0;
         const stepTitles = [];
         for (const st of [1,2,3]) { setOrganizeStep(st,false); stepTitles.push(document.getElementById('stickyProgressTitle').textContent.trim()); }
         setOrganizeStep(1,false);
         return { bars, startBtns: startBtns.length, startPrimary, barPrimary, inView: inView.length,
                  title, seeTag, stepTitles, firstArea: firstArea.length, firstPrimary, demoPrimary,
-                 hasDemoCta: !!demoCta, hasDemoPass: !!demoPass, demoPassPrimary };
+                 hasDemoSub: !!demoSub, freeIsLink };
       })()`);
       check("底栏只有一条（stickyProgress 和 stepPager 不同时在）：" + tag, () => {
         assert.equal(ui.bars.length, 1, "还在两条底栏：" + ui.bars.join(","));
@@ -213,12 +215,12 @@ await withChrome(async (cdp) => {
           assert.ok(ui.stepTitles[i].includes(String(i + 1)), "第 " + (i + 1) + " 步标题不对：" + ui.stepTitles[i]);
         }
       });
-      check("第 1 步只有一个主入口（样品卡里那颗）：" + tag, () => {
+      check("第 1 步只有一个醒目按钮（订阅），免费是文字链接：" + tag, () => {
         assert.equal(ui.startBtns, 0, "定位句那块里又长出按钮了：" + ui.startBtns);
-        assert.equal(ui.hasDemoCta, true, "样品卡里没有主按钮（demoCta）");
-        assert.equal(ui.demoPrimary, 1, "样品卡那颗不是主按钮样式");
-        assert.equal(ui.hasDemoPass, false, "季票入口又做成按钮了（应只在出处折叠里）");
-        assert.equal(ui.firstPrimary, 1, "首屏区域的主按钮不是一颗：" + ui.firstPrimary);
+        assert.equal(ui.hasDemoSub, true, "样品卡里没有订阅按钮（demoSub）");
+        assert.equal(ui.demoPrimary, 1, "订阅那颗不是醒目样式");
+        assert.equal(ui.freeIsLink, 1, "免费那条不是文字链接");
+        assert.equal(ui.firstPrimary, 1, "首屏区域的醒目按钮不是一颗：" + ui.firstPrimary);
         assert.equal(ui.barPrimary, 0, "底栏那颗不该出现");
         assert.equal(ui.seeTag, "", "「看看要准备什么」又冒出来了：" + ui.seeTag);
         assert.ok(ui.firstArea <= 3, "首屏区域入口超过 3 个：" + ui.firstArea);
