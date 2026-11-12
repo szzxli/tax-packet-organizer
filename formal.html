@@ -3543,7 +3543,7 @@ function renderDemo(){
         tr(NX.tax_year+" 税年起每分从 "+demoMoney(SSA.per_credit_usd)+" 变成 "+demoMoney(NX.per_credit_usd)+"，"+ (NX.tax_year+1) +" 年报税时才用上；同样 "+(SSA.target||40)+" 分，每分多 "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+"。这条对今年的数没有影响。",
            "From tax year "+NX.tax_year+" each credit goes from "+demoMoney(SSA.per_credit_usd)+" to "+demoMoney(NX.per_credit_usd)+", first used on the "+ (NX.tax_year+1) +" return; over "+(SSA.target||40)+" credits that is "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+" more per credit. This does not change this year's figures.",
            "Desde el año fiscal "+NX.tax_year+" cada crédito pasa de "+demoMoney(SSA.per_credit_usd)+" a "+demoMoney(NX.per_credit_usd)+", y se usa por primera vez en la declaración de "+ (NX.tax_year+1) +"; con "+(SSA.target||40)+" créditos son "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+" más por crédito. Esto no cambia las cifras de este año."),
-        (NX.source||"")+tr("，核于 ","，checked ","，verificado el ")+(NX.checked||""),"sample");
+        (NX.source||"")+tr("，核于 ","; checked ","; verificado el ")+(NX.checked||""),"sample");
     }
   }
   box.innerHTML=rows.map(function(r){
