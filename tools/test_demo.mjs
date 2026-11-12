@@ -289,6 +289,19 @@ await withChrome(async (cdp) => {
   }
 });
 
+// 阶段 A：三个 demo_ 名字在页面里、EV_NAMES 里 0 个（服务端一条都不发）
+check("埋点：三个 demo_ 名字在页面里，EV_NAMES 里 0 个", () => {
+  const src = fs.readFileSync(path.join(root, "formal.html"), "utf8");
+  for (const name of ["demo_drag", "demo_cta_free", "demo_cta_pass"]) {
+    assert.ok(src.includes('"' + name + '"'), "页面里找不到事件名：" + name);
+  }
+  const m = src.match(/var EV_NAMES=\{([^}]*)\}/);
+  assert.ok(m, "找不到 EV_NAMES 定义");
+  for (const name of ["demo_drag", "demo_cta_free", "demo_cta_pass", "demo_cta"]) {
+    assert.ok(!m[1].includes(name), "EV_NAMES 里混进了：" + name);
+  }
+});
+
 // 四行名字必须与第 3 步地图逐字一致：生成清单 → 进第 3 步 → 读地图行头与列头
 const demoTitleCmp = [];
 await withChrome(async (cdp) => {

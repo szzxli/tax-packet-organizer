@@ -3546,10 +3546,17 @@ function renderDemo(){
     return "<li class='demo-row "+r.c+"'><b>"+esc(r.t)+"</b><p>"+esc(r.p)+"</p>"+(r.s?("<span class='src'>"+esc(r.s)+"</span>"):"")+"</li>";
   }).join("");
 }
-$("demoIncome").addEventListener("input",function(){renderDemo();if(!demoDragged){demoDragged=true;try{track("demo_drag");}catch(e){}}});
-$("demoPreset").addEventListener("change",function(){var sl=$("demoIncome");var v=Number(this.value);if(sl&&v){sl.value=String(v);renderDemo();}});
-$("demoCta").onclick=function(){try{track("demo_cta",{target:"free"});}catch(e){}var t=$("heroText");if(t){t.scrollIntoView({behavior:"smooth",block:"center"});t.focus();}};
-$("demoPass").onclick=function(ev){if(ev&&ev.preventDefault)ev.preventDefault();try{track("demo_cta",{target:"pass"});}catch(e2){}goSub();};
+// 三个 demo_ 名字只走 abacus（不进 EV_NAMES，服务端一条都不发）：
+//   demo_drag        同一会话只记一次 —— abacus 计数 = 拖过的人次
+//   demo_cta_free / demo_cta_pass  两条路各自计数，比值就是「拖过的人里谁选了哪条」
+function demoDragOnce(){
+  try{if(sessionStorage.getItem("tpo_demo_drag")==="1")return;sessionStorage.setItem("tpo_demo_drag","1");}catch(e){}
+  try{track("demo_drag");}catch(e2){}
+}
+$("demoIncome").addEventListener("input",function(){renderDemo();demoDragOnce();});
+$("demoPreset").addEventListener("change",function(){var sl=$("demoIncome");var v=Number(this.value);if(sl&&v){sl.value=String(v);renderDemo();}demoDragOnce();});
+$("demoCta").onclick=function(){try{track("demo_cta_free");}catch(e){}var t=$("heroText");if(t){t.scrollIntoView({behavior:"smooth",block:"center"});t.focus();}};
+$("demoPass").onclick=function(ev){if(ev&&ev.preventDefault)ev.preventDefault();try{track("demo_cta_pass");}catch(e2){}goSub();};
 $("btnAiOpen").onclick=function(e){e.preventDefault();var ai=$("aiCard");if(ai){ai.dataset.open="1";ai.classList.remove("hidden");ai.scrollIntoView({behavior:"smooth",block:"start"});}};
 function showPage(p){
   // 卡 2 对所有人免费可见：订阅页未登录也能看能填；只有支付页（3）要求登录。

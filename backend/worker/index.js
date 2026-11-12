@@ -414,7 +414,7 @@ export default {
       const list = Array.isArray(b) ? b : (Array.isArray(b && b.events) ? b.events : null);
       if (!list) return bad("bad_events");
       if (list.length < 1 || list.length > 20) return bad("bad_batch");
-      const NAMES = ["open", "generate", "save", "export", "export_done", "pass_claimed", "flow-step1", "flow-step2", "flow-step3", "flow-step4", "flow-step5", "demo_drag", "demo_cta"];
+      const NAMES = ["open", "generate", "save", "export", "export_done", "pass_claimed", "flow-step1", "flow-step2", "flow-step3", "flow-step4", "flow-step5"];
       const now = Date.now();
       const text = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
       const rows = [];
