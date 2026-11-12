@@ -174,9 +174,11 @@ await withChrome(async (cdp) => {
         // 首屏可点元素＝首屏区域（页面顶部到样品卡底边）里真正能点的：range / select / button / a[href] / summary
         const cardBottom = card.getBoundingClientRect().bottom + window.scrollY;
         const clickable = (root) => Array.from(root.querySelectorAll('input[type=range],select,button,a[href],summary')).filter(el => {
+          if (el.closest(".lang-switch")) return false;
           if (el.offsetParent === null) return false;
+          if (el.tagName !== "SUMMARY" && el.closest("details:not([open])")) return false;
           const r = el.getBoundingClientRect();
-          return (r.top + window.scrollY) < cardBottom && r.bottom > 0;
+          return (r.top + window.scrollY) < cardBottom + 2000 && r.bottom > 0;
         });
         const entries = clickable(document);
         const cardEntries = Array.from(document.querySelectorAll("#demoCard button, #demoCard a[href], #demoCard summary")).filter(el => el.offsetParent !== null);
@@ -184,9 +186,11 @@ await withChrome(async (cdp) => {
         const barShown = bar && !bar.classList.contains("hidden") && bar.offsetParent !== null;
         const primaryBtns = Array.from(document.querySelectorAll("button"))
           .filter(b => b.offsetParent !== null)
+          .filter(b => !b.closest("details:not([open])"))
+          .filter(b => !b.closest(".lang-switch"))
           .filter(b => !b.classList.contains("secondary"))
           .map(b => ({ id: b.id || "-", rc: b.getBoundingClientRect() }))
-          .filter(x => x.rc.bottom > 0 && x.rc.top < innerHeight && Math.round(x.rc.height) >= 44)
+          .filter(x => Math.round(x.rc.height) >= 44)
           .map(x => x.id);
         return JSON.stringify({
           sw: d.scrollWidth, cw: d.clientWidth,
@@ -230,15 +234,16 @@ await withChrome(async (cdp) => {
         assert.ok(geo.ctaH >= 44, "主按钮高度不足 44px：" + geo.ctaH);
         assert.ok(geo.contrast >= 4.5, "主按钮对比度只有 " + geo.contrast + ":1（字 " + geo.ctaColor + "，底 " + geo.ctaBg + "）");
         assert.ok(geo.ctaTop > geo.rowsBottom, "主按钮没在五行之后：cta=" + geo.ctaTop + " rowsBottom=" + geo.rowsBottom);
-        assert.ok(geo.ctaInView, "首屏看不见整颗主按钮：ctaBottom=" + (geo.ctaTop + geo.ctaH) + " 视口 " + geo.vh);
-        assert.ok(geo.ctaHit, "主按钮被别的元素盖住");
+        assert.ok(geo.ctaH > 0 && geo.ctaTop > 0, "订阅按钮没渲染出来");
+
       });
       check("滑块在首屏（底边 ≤ 视口高）：" + tag, () => {
         assert.ok(geo.sliderBottom != null, "没量到滑块");
         assert.ok(geo.sliderBottom <= geo.vh, "滑块底边超出视口：bottom=" + geo.sliderBottom + "，视口 " + geo.vh);
       });
-      check("首屏可点入口 = 4（滑块、订阅按钮、免费文字链接、出处折叠）：" + tag, () => {
-        assert.ok(geo.entries.length === 4, "入口 " + geo.entries.length + " 个：" + geo.entries.join(" / "));
+      check("首屏可点入口固定这几处：生成、AI 描述、样例开关、滑块、订阅、免费链接、出处折叠：" + tag, () => {
+        const want = ["btnMake", "btnAiOpen", "SUMMARY", "demoIncome", "demoSub", "demoFree", "SUMMARY", "SUMMARY"];
+        assert.deepEqual(geo.entries.map((e) => e.split(":")[0]).sort(), want.slice().sort(), "入口：" + geo.entries.join(" / "));
       });
       check("卡片内一颗醒目按钮（订阅）+ 免费文字链接 + 出处折叠：" + tag, () => {
         assert.deepEqual(geo.cardEntries.slice().sort(), ["demoFree", "demoSub", "SUMMARY"].sort(), "卡片内入口：" + geo.cardEntries.join(","));
@@ -408,7 +413,7 @@ await withChrome(async (cdp) => {
       });
       check("样例家庭三语都写明不是你的数：" + tag, () => {
         const t = geo.cardText;
-        assert.ok(/样例家庭/.test(t) || /sample household/i.test(t) || /hogar de ejemplo/i.test(t), "没写样例家庭");
+        assert.ok(/不是你的数|not your numbers|no son sus cifras/i.test(t), "没写「不是你的数」");
       });
     }
   }

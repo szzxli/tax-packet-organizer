@@ -614,16 +614,13 @@ check("步骤名已改，全页 0 处「完成判据」「必做：」", () => {
   assert.equal(html.indexOf("01 建清单"), -1, "还有旧步骤名");
 });
 
-check("第 1 步三个默认选项：都在、都有三语、跳过会记一笔", () => {
+check("第 1 步：不再并排三颗快捷按钮，入口只有一个输入框 + 标签 + 一颗生成按钮", () => {
   for (const id of ["btnHqSame", "btnHqTalk", "btnHqSkip"]) {
-    assert.ok(html.includes('id="' + id + '"'), "缺按钮：" + id);
+    assert.ok(!html.includes('id="' + id + '"'), "第 1 步又长回并排按钮：" + id);
   }
-  for (const k of ["今年和去年差不多", "有变化，我来说", "还没想好，先跳过"]) {
-    const m = html.match(new RegExp('"' + k + '": \\{"en": "([^"]+)", "es": "([^"]+)"\\}'));
-    assert.ok(m && m[1] && m[2], "选项缺 en/es：" + k);
-  }
-  assert.ok(html.includes("不确定就先跳过，随时回来补。"), "缺「不确定就先跳过」那行");
-  assert.ok(/packet\.changesSkip=true/.test(html), "跳过没有记录状态");
+  assert.ok(html.includes('id="heroText"'), "缺一句话输入框");
+  assert.ok(html.includes('id="tagGrid"'), "缺标签组");
+  assert.ok(html.includes('id="btnMake"'), "缺生成按钮");
 });
 
 // ---- 首屏不写死时间承诺 ----

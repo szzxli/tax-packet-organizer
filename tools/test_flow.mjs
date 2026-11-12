@@ -249,15 +249,23 @@ await withChrome(async (cdp) => {
         });
       }
 
-      // 4b) 选「先跳过」→ ≥3 项
+      // 4b) 一句没写、一个标签没点，直接点生成 → 给提示、不编清单
       await freshLoad(cdp, lang);
-      const skip = await cdp.eval(`(() => {
-        document.getElementById('btnHqSkip').click();
-        return {len:(window.packet.checklist||[]).length};
+      const empty2 = await cdp.eval(`(() => {
+        document.getElementById('btnMake').click();
+        return {len:(window.packet.checklist||[]).length, msg:(document.getElementById('tagMsg')||{textContent:''}).textContent.trim()};
       })()`);
-      check("选「先跳过」拿到 ≥3 项：" + tag, () => {
-        assert.ok(skip.len >= 3, "只有 " + skip.len + " 项");
+      check("空着点生成：不编清单，只给一句提示：" + tag, () => {
+        assert.equal(empty2.len, 0, "什么都没选却生成了 " + empty2.len + " 项");
+        assert.ok(empty2.msg.length > 0, "点了没反应，也没有提示");
       });
+      // 复原：后面几条要用「已有清单」的状态
+      await cdp.eval(`(() => {
+        const t = document.querySelector('#tagGrid .tag-btn[data-phrase="我今年没有变化。"]');
+        if (t && !t.classList.contains('on')) t.click();
+        document.getElementById('btnMake').click();
+        return true;
+      })()`);
 
       // 3) 有清单时按钮说下一步（此时已推进到第 2 步：按钮必须是去第 3 步）
       const withRows = await cdp.eval(`(() => ({

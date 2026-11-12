@@ -104,6 +104,19 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 .sticky-copy{flex:1;min-width:0}.sticky-copy strong{display:block;color:#e6edf3;font-size:14px}.sticky-copy p{margin:2px 0 0;color:#93a3b5;font-size:12px}.progress-track{height:5px;margin-top:8px;overflow:hidden;border-radius:99px;background:#1e2a36}.progress-track span{display:block;width:0;height:100%;background:linear-gradient(90deg,#33896b,#5bb38d);border-radius:inherit;transition:width .25s ease}
 .sticky-progress button{white-space:nowrap;min-height:44px}#stickyProgressPrev{display:inline-block;margin-top:5px;color:#35546c;font-size:12px;text-decoration:underline}.sec-head{align-items:center;gap:10px}.sec-sum{line-height:1.35}.sec-head h2{font-size:17px}
 /* 样品：一行一条（标签 / 数值 / 一句说明），长解释与出处收进折叠，首屏只留一屏。 */
+/* 首屏模式：整页只剩「一句话 / 输入框 / 样例」，生成清单后所有卡自动回来 */
+body.tpo-first #appView > .card:not(#startCard):not(#heroBox):not(#demoCard){display:none!important}
+body.tpo-first #appViewSections,body.tpo-first #appView > .journey-guide{display:none!important}
+#heroBox.llm{padding:14px 12px!important}
+#heroBox .llm-q{margin:0 0 10px;font-size:19px;line-height:1.35}
+#heroBox .llm-input{display:grid;grid-template-columns:1fr;gap:8px;align-items:end}
+#heroBox .llm-input textarea{min-height:96px;font-size:16px;line-height:1.5;border-radius:14px;padding:12px 14px;resize:vertical}
+#heroBox #btnMake{width:100%;min-height:50px;font-size:16px;border-radius:12px;background:transparent;color:#2fd4a0;border:1.5px solid #2fd4a0;font-weight:700}
+#heroBox #btnMake:hover{background:rgba(47,212,160,.12)}
+#heroBox .llm-hint{margin:8px 0 0;font-size:12px;color:#8fa3b5}
+#heroBox .llm-hint a{color:#2fd4a0;text-decoration:none}
+#heroBox .llm-more{margin-top:8px;border-top:1px solid #1b2530;padding-top:8px}
+#heroBox .llm-more summary{cursor:pointer;font-size:12px;color:#8fa3b5}
 #demoCard .demo-tag{margin:0 0 6px;font-size:12px;color:#8fa3b5}
 #demoCard{padding:12px 12px!important}
 #demoCard .demo-rows{list-style:none;margin:10px 0 0;padding:0;border:1px solid #232e3a;border-radius:12px;background:#0f141b;overflow:hidden}
@@ -453,8 +466,34 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <h2 class="start-title">报税材料，整理成一份能交出去的清单。</h2>
 <p class="start-trust">免费 · 不用登录 · 不需要懂税</p>
 </div>
+<div class="card no-print llm" id="heroBox">
+<h2 class="llm-q">今年有什么变化？</h2>
+<div class="llm-input">
+<textarea id="heroText" rows="3" data-i18n-ph="例如：我今年换了工作，孩子上了大学，还搬到了德州。一句话就够。" placeholder="例如：我今年换了工作，孩子上了大学，还搬到了德州。一句话就够。"></textarea>
+<button id="btnMake" type="button" class="secondary">生成我的清单</button>
+</div>
+<p class="llm-hint">只写变化，不用写数字；数字后面再填。 <a href="#" id="btnAiOpen">不会写？用 AI 描述</a></p>
+<details class="llm-more"><summary>不知道怎么写？点选今年有的情况</summary>
+<div class="tag-grid" id="tagGrid">
+<button type="button" class="tag-btn" data-form="W-2" data-phrase="我今年有工资。">有工资</button>
+<button type="button" class="tag-btn" data-form="1099-INT" data-phrase="我今年有银行利息。">银行利息</button>
+<button type="button" class="tag-btn" data-form="1099-B" data-phrase="我今年有股票投资。">股票投资</button>
+<button type="button" class="tag-btn" data-form="" data-phrase="我今年卖房了。">卖了房</button>
+<button type="button" class="tag-btn" data-form="Schedule E" data-phrase="我今年开始收房租了。">收房租</button>
+<button type="button" class="tag-btn" data-form="Schedule C" data-phrase="我今年有自雇或副业收入。">自雇/副业</button>
+<button type="button" class="tag-btn" data-form="" data-phrase="我今年孩子出生了，多了一个抚养人。">孩子出生</button>
+<button type="button" class="tag-btn" data-form="" data-phrase="我今年结婚了。">结婚了</button>
+<button type="button" class="tag-btn" data-form="" data-phrase="我今年搬到了另一个州。">换了州</button>
+<button type="button" class="tag-btn" data-form="1099-R" data-phrase="我今年领了退休金。">退休金</button>
+<button type="button" class="tag-btn" data-form="1098-T" data-phrase="我今年交了学费。">学费</button>
+<button type="button" class="tag-btn" data-form="" data-phrase="我今年的申报身份变了。">申报身份变了</button><button type="button" class="tag-btn" data-form="" data-phrase="我今年的抚养人减少了。">抚养人减少</button><button type="button" class="tag-btn" data-form="" data-phrase="我今年没有变化。">没有变化</button></div>
+<div class="row"><div><label for="heroState">在哪个州报税（本版只支持 10 个州）</label><select id="heroState"><option value="">不选（先不填）</option></select></div></div>
+</details>
+<p id="tagMsg" class="small"></p>
+</div>
+
 <div class="card no-print" id="demoCard" data-flow-step="1">
-<p class="demo-tag">样例家庭：已婚、两孩、加州。不是你的数。</p>
+<p class="demo-tag">一句话进来，会看到这一屏。下面是样例：已婚、两孩、加州，不是你的数。</p>
 <div class="demo-slide">
 <div class="demo-slide-line"><label for="demoIncome" class="small muted">拖动看收入落在哪</label><b id="demoIncomeNow">$120,000</b></div>
 <input type="range" id="demoIncome" min="40000" max="250000" step="1000" value="120000">
@@ -518,34 +557,6 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <p class="small muted">复核签字（会计师或本人）：________　日期：________</p>
 </div>
 <p class="small muted">先看交付物，再动手。</p>
-</div>
-
-<div class="card no-print" id="heroBox">
-<div class="row" id="heroQuick">
-<button type="button" class="secondary" id="btnHqSame">今年和去年差不多</button>
-<button type="button" class="secondary" id="btnHqTalk">有变化，我来说</button>
-<button type="button" class="secondary" id="btnHqSkip">还没想好，先跳过</button>
-</div>
-<p class="small muted">不确定就先跳过，随时回来补。</p>
-<label for="heroText">今年有什么变化？</label>
-<textarea id="heroText" data-i18n-ph="例如：我今年卖房了，中国老家房产怎么报税？" placeholder="例如：我今年卖房了，中国老家房产怎么报税？"></textarea>
-<p class="small muted">点选今年有过的，或用一句话写下来；拿不准的写进「不确定事项」，后面会追问。</p>
-<p class="small"><a href="#" id="btnAiOpen">不会写？用 AI 描述</a></p>
-<div class="tag-grid" id="tagGrid">
-<button type="button" class="tag-btn" data-form="W-2" data-phrase="我今年有工资。">有工资</button>
-<button type="button" class="tag-btn" data-form="1099-INT" data-phrase="我今年有银行利息。">银行利息</button>
-<button type="button" class="tag-btn" data-form="1099-B" data-phrase="我今年有股票投资。">股票投资</button>
-<button type="button" class="tag-btn" data-form="" data-phrase="我今年卖房了。">卖了房</button>
-<button type="button" class="tag-btn" data-form="Schedule E" data-phrase="我今年开始收房租了。">收房租</button>
-<button type="button" class="tag-btn" data-form="Schedule C" data-phrase="我今年有自雇或副业收入。">自雇/副业</button>
-<button type="button" class="tag-btn" data-form="" data-phrase="我今年孩子出生了，多了一个抚养人。">孩子出生</button>
-<button type="button" class="tag-btn" data-form="" data-phrase="我今年结婚了。">结婚了</button>
-<button type="button" class="tag-btn" data-form="" data-phrase="我今年搬到了另一个州。">换了州</button>
-<button type="button" class="tag-btn" data-form="1099-R" data-phrase="我今年领了退休金。">退休金</button>
-<button type="button" class="tag-btn" data-form="1098-T" data-phrase="我今年交了学费。">学费</button>
-<button type="button" class="tag-btn" data-form="" data-phrase="我今年的申报身份变了。">申报身份变了</button><button type="button" class="tag-btn" data-form="" data-phrase="我今年的抚养人减少了。">抚养人减少</button><button type="button" class="tag-btn" data-form="" data-phrase="我今年没有变化。">没有变化</button></div>
-<div class="row"><div><label for="heroState">在哪个州报税（本版只支持 10 个州）</label><select id="heroState"><option value="">不选（先不填）</option></select></div></div>
-<p><button id="btnMake">生成今年清单</button> <span id="tagMsg" class="small"></span></p>
 </div>
 
 <div class="card no-print hidden" id="sampleCard">
@@ -1021,7 +1032,11 @@ Object.assign(I18N,{"季票先把这一屏的钱讲清楚":{"en":"The season pas
 Object.assign(I18N,{"列出你今年要交出去的报税材料清单。导出后自己核对，或请会计师复核。":{"en":"List the tax documents you'll hand over this year. After exporting, check them yourself or have your accountant review them.","es":"Enumere los documentos fiscales que entregará este año. Después de exportar, revíselos usted mismo o pida a su contador que los revise."},"交得出去":{"en":"Ready to hand over","es":"Listo para entregar"},"自己报税直接导出，给会计师也能用。":{"en":"Export it yourself for self-filing, or hand it to your accountant.","es":"Expórtelo para declarar por su cuenta o entréguelo a su contador."},"一页封面 + 明细 + 复核签字，自己报税直接导出，给会计师也能用，不用自己拼。":{"en":"A cover page, details, and a review signature — export it yourself for self-filing, or hand it to your accountant, without assembling anything.","es":"Una portada, el detalle y una firma de revisión: expórtelo para declarar por su cuenta o entréguelo a su contador, sin armar nada."},"导出：一份能交出去的清单":{"en":"Export: a checklist you can hand over","es":"Exportar: una lista lista para entregar"},"下载清单 PDF（交得出去）":{"en":"Download checklist PDF (ready to hand over)","es":"Descargar PDF de la lista (listo para entregar)"},"报税材料包 · 交得出去":{"en":"Tax packet · ready to hand over","es":"Paquete fiscal · listo para entregar"},"内测期免费，1 月公布价格。":{"en":"Free during beta; pricing announced in January.","es":"Gratis durante la beta; precios en enero."},"内测期免费，1 月公布价格。1 个包；同一账号第二个包可选。按季一次性、默认不自动续，有效期至当年 10 月 15 日延期截止日。":{"en":"Free during beta; pricing announced in January. 1 packet; a second packet on the same account is optional. One payment per season, no auto-renewal by default, valid until the October 15 extension deadline.","es":"Gratis durante la beta; precios en enero. 1 paquete; el segundo paquete en la misma cuenta es opcional. Un solo pago por temporada, sin renovación automática por defecto, válido hasta la fecha límite de prórroga del 15 de octubre."},"定位：干干净净把材料交出去。基础整理永久免费；订阅按季一次，内测期免费，1 月公布价格；1 个包，第二个包可选，不自动续，有效期至当年 10 月 15 日延期截止日。":{"en":"Positioning: hand over your materials cleanly. Basic organizing is free forever; the pass is billed once per season, free during beta, pricing announced in January; 1 packet, optional second packet, no auto-renewal, valid until the October 15 extension deadline.","es":"Enfoque: entregue sus materiales limpios. La organización básica es gratis para siempre; el pase se cobra una vez por temporada, gratis durante la beta, precios en enero; 1 paquete, segundo opcional, sin renovación automática, válido hasta la fecha límite de prórroga del 15 de octubre."},"要确认的三件事":{"en":"Three things to confirm","es":"Tres cosas que confirmar"},"自己报税就按这三条核对；交给会计师就把这三条问清楚。":{"en":"If you file yourself, check these three; if you hand it to your accountant, ask them these three.","es":"Si declara por su cuenta, revise estas tres; si se lo entrega a su contador, pregúntele estas tres."},"复核签字（会计师或本人）：________　日期：________":{"en":"Review signature (accountant or yourself): ________　Date: ________","es":"Firma de revisión (contador o usted): ________　Fecha: ________"},"1 个包":{"en":"1 packet","es":"1 paquete"},"2 个包（第二个包）":{"en":"2 packets (second packet)","es":"2 paquetes (segundo paquete)"}});
 Object.assign(I18N,{"不用登录 · 进度只存这台浏览器。只整理、不算税、不报税、不给税务结论；清单最后由你或会计师复核。":{"en":"No login needed · progress is stored only in this browser. We only organize — we don't calculate tax, file returns, or give tax advice; you or your accountant review the final checklist.","es":"No necesita iniciar sesión · el progreso se guarda solo en este navegador. Solo organizamos: no calculamos impuestos, no presentamos declaraciones ni damos asesoría fiscal; usted o su contador revisan la lista final."}});
 Object.assign(I18N,{"把今年报税要准备的材料整理成一份清单，导出后自己核对，或给会计师对照着填。只整理、不算税、不报税、不给税务结论；清单最后由你或会计师复核。":{"en":"It organizes the materials you need for this year's taxes into one checklist; export it to check yourself or give it to your accountant. We only organize — we don't calculate tax, file returns, or give tax advice; you or your accountant review the final checklist.","es":"Organiza los materiales que necesita para los impuestos de este año en una sola lista; expórtela para revisarla usted mismo o entregarla a su contador. Solo organizamos: no calculamos impuestos, no presentamos declaraciones ni damos asesoría fiscal; usted o su contador revisan la lista final."}});
-Object.assign(I18N,{"报税材料，整理成一份能交出去的清单。":{"en":"Turn this year's paperwork into one packet you can hand over.","es":"Convierta los papeles de este año en un paquete que pueda entregar."},"不少人报完才发现，一年差了几百到上千美元。可能是多交，也可能少交——填完才知道你是哪一种。":{"en":"Plenty of people only find out after they file that they were off by a few hundred, sometimes over a thousand, dollars. Maybe you paid too much, maybe too little — filling it in is how you find out which.","es":"Mucha gente se entera al declarar de que la diferencia era de cientos de dólares, a veces más de mil. Puede que haya pagado de más, o de menos: lo sabe cuando lo llena."},"说一句今年变了什么，不用登录。先给你一份基础的，答完几句就变成你自己的。":{"en":"Describe what changed this year. No login. You get a basic list first; answer a few questions and it becomes yours.","es":"Cuente qué cambió este año. Sin cuenta. Primero le damos una lista básica; con unas respuestas queda hecha a su medida."},"把今年的材料放进来":{"en":"Bring in this year's documents","es":"Traer los documentos de este año"},"看看要准备什么":{"en":"See what you'll need","es":"Ver qué necesitará"},"点选今年有过的，或用一句话写下来；拿不准的写进「不确定事项」，后面会追问。":{"en":"Tap what applies this year, or write it in one sentence; if you're not sure, put it under “Uncertain items” — we'll follow up.","es":"Toque lo que aplique este año o escríbalo en una frase; si no está seguro, anótelo en «Asuntos inciertos» y le preguntaremos después."},"申报身份变了":{"en":"Filing status changed","es":"Cambió el estado civil fiscal"},"抚养人减少":{"en":"Dependent removed","es":"Se quitó un dependiente"},"没有变化":{"en":"No changes","es":"Sin cambios"},"登录后，未登录时做的包会自动带进你的账号。":{"en":"After you log in, the packet you made while logged out is brought into your account.","es":"Después de iniciar sesión, el paquete que hizo sin sesión se traslada a su cuenta."},"样例家庭：已婚、两孩、加州。不是你的数。":{"en":"Sample household: married, two children, California. Not your numbers.","es":"Hogar de ejemplo: casados, dos hijos, California. No son sus cifras."},"拖动看收入落在哪":{"en":"Drag to see where you land","es":"Mueva para ver dónde cae"},"免费 · 永久":{"en":"Free · forever","es":"Gratis · para siempre"},"季票 · 内测免费":{"en":"Pass · free in beta","es":"Pase · gratis en beta"},"今年要备的清单":{"en":"This year's checklist","es":"Lista del año"},"上传后自动提数":{"en":"Figures auto-filled","es":"Cifras al subir"},"导出三种格式":{"en":"Three exports","es":"Tres formatos"},"用你的数出结论":{"en":"Your own numbers","es":"Sus cifras"},"交出去前总核对":{"en":"Pre-handoff check","es":"Chequeo previo"},"规则变化，本页提醒":{"en":"Rule changes shown","es":"Cambios de reglas"},"上面是样例家庭的数。内测期免费，1 月公布价格。":{"en":"Those are the sample household's numbers. Free during beta; pricing announced in January.","es":"Esas son las cifras del hogar de ejemplo. Gratis en beta; precios en enero."},"免费生成我的清单":{"en":"Build my checklist","es":"Crear mi lista"},"订阅季票":{"en":"Subscribe","es":"Suscribirme"},
+Object.assign(I18N,{"报税材料，整理成一份能交出去的清单。":{"en":"Turn this year's paperwork into one packet you can hand over.","es":"Convierta los papeles de este año en un paquete que pueda entregar."},"不少人报完才发现，一年差了几百到上千美元。可能是多交，也可能少交——填完才知道你是哪一种。":{"en":"Plenty of people only find out after they file that they were off by a few hundred, sometimes over a thousand, dollars. Maybe you paid too much, maybe too little — filling it in is how you find out which.","es":"Mucha gente se entera al declarar de que la diferencia era de cientos de dólares, a veces más de mil. Puede que haya pagado de más, o de menos: lo sabe cuando lo llena."},"说一句今年变了什么，不用登录。先给你一份基础的，答完几句就变成你自己的。":{"en":"Describe what changed this year. No login. You get a basic list first; answer a few questions and it becomes yours.","es":"Cuente qué cambió este año. Sin cuenta. Primero le damos una lista básica; con unas respuestas queda hecha a su medida."},"把今年的材料放进来":{"en":"Bring in this year's documents","es":"Traer los documentos de este año"},"看看要准备什么":{"en":"See what you'll need","es":"Ver qué necesitará"},"点选今年有过的，或用一句话写下来；拿不准的写进「不确定事项」，后面会追问。":{"en":"Tap what applies this year, or write it in one sentence; if you're not sure, put it under “Uncertain items” — we'll follow up.","es":"Toque lo que aplique este año o escríbalo en una frase; si no está seguro, anótelo en «Asuntos inciertos» y le preguntaremos después."},"申报身份变了":{"en":"Filing status changed","es":"Cambió el estado civil fiscal"},"抚养人减少":{"en":"Dependent removed","es":"Se quitó un dependiente"},"没有变化":{"en":"No changes","es":"Sin cambios"},"登录后，未登录时做的包会自动带进你的账号。":{"en":"After you log in, the packet you made while logged out is brought into your account.","es":"Después de iniciar sesión, el paquete que hizo sin sesión se traslada a su cuenta."},"样例家庭：已婚、两孩、加州。不是你的数。":{"en":"Sample household: married, two children, California. Not your numbers.","es":"Hogar de ejemplo: casados, dos hijos, California. No son sus cifras."},
+"一句话进来，会看到这一屏。下面是样例：已婚、两孩、加州，不是你的数。":{"en":"One line in, and this is what you see. The sample below is married, two children, California \u2014 not your numbers.","es":"Una frase y verá esta pantalla. El ejemplo de abajo es casados, dos hijos, California: no son sus cifras."},
+"例如：我今年换了工作，孩子上了大学，还搬到了德州。一句话就够。":{"en":"e.g. I changed jobs, my child started college, and we moved to Texas. One line is enough.","es":"ej.: cambié de trabajo, mi hijo entró a la universidad y nos mudamos a Texas. Una frase basta."},
+"只写变化，不用写数字；数字后面再填。":{"en":"Just what changed \u2014 no numbers yet.","es":"Solo qué cambió; las cifras vienen después."},
+"不知道怎么写？点选今年有的情况":{"en":"Not sure how to write it? Tap what applies","es":"\u00bfNo sabe cómo escribirlo? Toque lo que aplique"},"拖动看收入落在哪":{"en":"Drag to see where you land","es":"Mueva para ver dónde cae"},"免费 · 永久":{"en":"Free · forever","es":"Gratis · para siempre"},"季票 · 内测免费":{"en":"Pass · free in beta","es":"Pase · gratis en beta"},"今年要备的清单":{"en":"This year's checklist","es":"Lista del año"},"上传后自动提数":{"en":"Figures auto-filled","es":"Cifras al subir"},"导出三种格式":{"en":"Three exports","es":"Tres formatos"},"用你的数出结论":{"en":"Your own numbers","es":"Sus cifras"},"交出去前总核对":{"en":"Pre-handoff check","es":"Chequeo previo"},"规则变化，本页提醒":{"en":"Rule changes shown","es":"Cambios de reglas"},"上面是样例家庭的数。内测期免费，1 月公布价格。":{"en":"Those are the sample household's numbers. Free during beta; pricing announced in January.","es":"Esas son las cifras del hogar de ejemplo. Gratis en beta; precios en enero."},"免费生成我的清单":{"en":"Build my checklist","es":"Crear mi lista"},"订阅季票":{"en":"Subscribe","es":"Suscribirme"},
 "说一句今年变了什么":{"en":"Say what changed","es":"Diga qué cambió"},
 "拿到今年要备的清单":{"en":"Get your checklist","es":"Reciba su lista"},
 "拍照或上传":{"en":"Snap or upload","es":"Foto o subir"},
@@ -3641,6 +3656,9 @@ function renderHero(){
   var cy=$("coverPreviewYear");if(cy){var ty=taxYearLabel().replace(" 税年","");cy.textContent=tr(ty+" 税年 · 报税材料包","Tax year "+ty+" · Tax packet","Año fiscal "+ty+" · Paquete fiscal");}
   var cq=$("coverPreviewQs");if(cq){var cqs=cpaQuestions();var cempty=tr("暂无，按你的情况补充","None yet — add your own","Aún no hay nada; añada su caso");var cqh=cqs.length?("<ol class='cover-qs small'>"+cqs.map(function(q){return "<li>"+esc(q)+"</li>";}).join("")+"</ol>"):"<p class='small'>"+cempty+"</p>";if(cqs.length&&cqs.length<3)cqh+="<p class='small'>"+cempty+"</p>";cq.innerHTML=cqh;}
   var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",currentPage!==1);
+  // 首屏模式：还没有清单、还在第 1 页时，整页只留「一句话 / 输入框 / 样例」三块。
+  var noneList=!(packet&&packet.checklist&&packet.checklist.length);
+  document.body.classList.toggle("tpo-first", currentPage===1 && noneList);
   renderOutlook();
   var sc=$("subShowcase");if(sc)sc.classList.toggle("hidden",currentPage!==1||!packet.checklist.length||hasPass()||currentOrganizeStep!==3);
   var ai=$("aiCard");if(ai){var showAi=ai.dataset.open==="1"&&currentPage===1&&currentOrganizeStep===1;ai.classList.toggle("hidden",!showAi);}
@@ -3701,8 +3719,8 @@ function renderDemo(){
     var sd=SD.mfj, taxable=(sd!=null)?Math.max(0,inc-sd):null, band=(taxable!=null)?demoBand(BR.mfj,taxable):null;
     if(sd!=null&&band){
       push(tr("收入税档","Income and tax bracket","Ingresos y tramo"),
-        band.rate+"%",
-        tr("应税 "+demoMoney(taxable),"Taxable "+demoMoney(taxable),"Gravable "+demoMoney(taxable)),
+        band.cap===null?tr("最高这一档","Top band","Tramo más alto"):tr("中间这一档","Middle band","Tramo medio"),
+        band.rate+"%" + tr(" · 应税 "," · taxable "," · gravable ") + demoMoney(taxable),
         tr("收入 "+demoMoney(inc)+"，减掉合并申报的标准扣除 "+demoMoney(sd)+"，应税 "+demoMoney(taxable)+"。这一档 "+band.rate+"%"+(band.cap!=null?("，到 "+demoMoney(band.cap)+" 为止"):"（最高档）")+(band.next?("；再往上就进 "+band.next[1]+"%"):"")+"。",
            "Income "+demoMoney(inc)+", minus the "+demoMoney(sd)+" joint standard deduction, leaves "+demoMoney(taxable)+" taxable. This band is "+band.rate+"%"+(band.cap!=null?(", up to "+demoMoney(band.cap)):" (top band)")+(band.next?("; above that it is "+band.next[1]+"%"):"")+".",
            "Ingresos "+demoMoney(inc)+"; tras la deducción estándar conjunta de "+demoMoney(sd)+" quedan "+demoMoney(taxable)+" gravables. Este tramo es del "+band.rate+"%"+(band.cap!=null?(", hasta "+demoMoney(band.cap)):" (tramo superior)")+(band.next?("; por encima pasa al "+band.next[1]+"%"):"")+"."),
@@ -3729,8 +3747,10 @@ function renderDemo(){
       : "";
     if(four&&four.limit){
       push(tr("医保补贴的 400% 线","The 400% line for the subsidy","La línea del 400% del subsidio"),
-        inc>four.limit?tr("超线 "+demoMoney(inc-four.limit),"+"+demoMoney(inc-four.limit),"+"+demoMoney(inc-four.limit)):tr("线内","Inside","Dentro"),
-        tr("四口线 "+demoMoney(four.limit),"Line "+demoMoney(four.limit)+" (4)","Línea "+demoMoney(four.limit)+" (4)"),
+        inc>four.limit?tr("过线了","Over the line","Pasó la línea"):tr("还在线内","Inside the line","En la línea"),
+        inc>four.limit
+          ? tr("超线 "+demoMoney(inc-four.limit)+" · 四口线 "+demoMoney(four.limit),"Over by "+demoMoney(inc-four.limit)+" · line "+demoMoney(four.limit),"Arriba por "+demoMoney(inc-four.limit)+" · línea "+demoMoney(four.limit))
+          : tr("四口线 "+demoMoney(four.limit),"Line "+demoMoney(four.limit)+" (4)","Línea "+demoMoney(four.limit)+" (4)"),
         tr("四口之家 "+four.coverage_year+" 保障年的 400% 线是 "+demoMoney(four.limit)+"；样例收入 "+demoMoney(inc)+" "+posClause(inc>four.limit),
            "For a household of four the 400% line for coverage year "+four.coverage_year+" is "+demoMoney(four.limit)+"; the sample income of "+demoMoney(inc)+" "+posClause(inc>four.limit),
            "Para un hogar de cuatro la línea del 400% del año de cobertura "+four.coverage_year+" es "+demoMoney(four.limit)+"; el ingreso de muestra de "+demoMoney(inc)+" "+posClause(inc>four.limit))+nextLine,
@@ -3744,7 +3764,7 @@ function renderDemo(){
     }
     // 3) 孩子学费
     var po=(AOTC.phaseout||LLC.phaseout||{}).mfj;
-    var poPos=po?(inc<po[0]?tr("两项都在","Both apply","Ambos aplican"):(inc<=po[1]?tr("按比例减","Reduced","Se reducen"):tr("都是 $0","Both $0","Ambos $0"))):tr("待核","N/A","N/D");
+    var poPos=po?(inc<po[0]?tr("两项都能用","Both available","Ambos disponibles"):(inc<=po[1]?tr("正在减少","Being reduced","Se están reduciendo"):tr("两项都用不上","Neither available","Ninguno disponible"))):tr("待核","N/A","N/D");
     if(AOTC.max_tax_years_per_student){
       var yrs=AOTC.max_tax_years_per_student*2;
       push(tr("孩子学费的两项抵免","The two tuition credits","Créditos por matrícula"),
@@ -3759,8 +3779,8 @@ function renderDemo(){
     if(SSA.per_credit_usd&&SSA.max_per_year){
       var need=SSA.per_credit_usd*SSA.max_per_year;
       push(tr("退休金要的记分","Credits toward your retirement","Créditos para su jubilación"),
-        tr(SSA.max_per_year+" 分/年",SSA.max_per_year+"/yr",SSA.max_per_year+"/año"),
-        tr(demoMoney(need)+" 就够",demoMoney(need)+" is enough",demoMoney(need)+" basta"),
+        inc>=need?tr("今年能记满","Full credits","Completos"):tr("今年还差一点","Not full yet","Aún no completos"),
+        tr(SSA.max_per_year+" 分/年 · "+demoMoney(need)+" 就够",SSA.max_per_year+"/yr · "+demoMoney(need)+" is enough",SSA.max_per_year+"/año · "+demoMoney(need)+" basta"),
         tr("2026 年每 "+demoMoney(SSA.per_credit_usd)+" 工资记 1 分，一年最多 "+SSA.max_per_year+" 分，退休金要 "+(SSA.target||40)+" 分。样例收入 "+demoMoney(inc)+"：一年能记满 "+SSA.max_per_year+" 分（"+demoMoney(need)+" 就够）。",
            "In 2026 each "+demoMoney(SSA.per_credit_usd)+" of wages earns one credit, at most "+SSA.max_per_year+" a year, and "+ (SSA.target||40) +" credits are needed for retirement benefits. With the sample income of "+demoMoney(inc)+": a full "+SSA.max_per_year+" credits a year ("+demoMoney(need)+" is enough).",
            "En 2026 cada "+demoMoney(SSA.per_credit_usd)+" de salario suma un crédito, máximo "+SSA.max_per_year+" al año, y hacen falta "+(SSA.target||40)+" créditos para la jubilación. Con el ingreso de muestra de "+demoMoney(inc)+": los "+SSA.max_per_year+" créditos del año ("+demoMoney(need)+" basta)."),
@@ -3770,8 +3790,8 @@ function renderDemo(){
     var NX=SSA.next||null;
     if(NX&&NX.per_credit_usd&&SSA.per_credit_usd){
       push(tr("以后几年","Coming years","Próximos años"),
+        tr("门槛会抬一点","The bar rises","La meta sube"),
         tr(NX.tax_year+" 起 · 每分多 "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd),NX.tax_year+" on · +"+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+"/credit",NX.tax_year+" en adelante · +"+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)),
-        "",
         tr(NX.tax_year+" 税年起每记 1 分要多赚 "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+"（"+demoMoney(SSA.per_credit_usd)+" → "+demoMoney(NX.per_credit_usd)+"），"+ (NX.tax_year+1) +" 年报税时才用上；同样 "+(SSA.target||40)+" 分，工资要多 "+demoMoney((NX.per_credit_usd-SSA.per_credit_usd)*(SSA.target||40))+"。这条对今年的数没有影响。",
            "From tax year "+NX.tax_year+" each credit takes "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+" more in earnings ("+demoMoney(SSA.per_credit_usd)+" → "+demoMoney(NX.per_credit_usd)+"), first used on the "+ (NX.tax_year+1) +" return; the same "+(SSA.target||40)+" credits take "+demoMoney((NX.per_credit_usd-SSA.per_credit_usd)*(SSA.target||40))+" more in wages. This does not change this year's figures.",
            "Desde el año fiscal "+NX.tax_year+" cada crédito exige "+demoMoney(NX.per_credit_usd-SSA.per_credit_usd)+" más de ingreso ("+demoMoney(SSA.per_credit_usd)+" → "+demoMoney(NX.per_credit_usd)+"), y se usa por primera vez en la declaración de "+ (NX.tax_year+1) +"; los mismos "+(SSA.target||40)+" créditos exigen "+demoMoney((NX.per_credit_usd-SSA.per_credit_usd)*(SSA.target||40))+" más de salario. Esto no cambia las cifras de este año."),
@@ -5030,21 +5050,6 @@ $("btnMake").onclick=function(){
   else if(msg)msg.textContent=stateMsg||tr("已记录，先补充一项材料。","Saved — add one material to continue.","Guardado; añada un material para continuar.");
 };
 
-$("btnHqSame").onclick=function(){
-  var t=document.querySelector('#tagGrid .tag-btn[data-phrase="我今年没有变化。"]');
-  if(t&&!t.classList.contains("on"))t.classList.add("on");
-  $("btnMake").click();
-};
-$("btnHqTalk").onclick=function(){var h=$("heroText");if(h)h.focus();};
-$("btnHqSkip").onclick=function(){
-  if(!packet)return;
-  packet.changesSkip=true;
-  seedBaseChecklist();
-  savePacket();renderAll();
-  var m=$("tagMsg");
-  if(m)m.textContent=tr("已按通用项生成清单，随时回来改。","Generated the common items — change them any time.","Se generaron los elementos comunes; puede cambiarlos cuando quiera.");
-  if(packet.checklist.length)advanceAfterGenerate();
-};
 $("btnAiGenerate").addEventListener("click",async function(){
   var d=($("aiDesc").value||"").trim();
   if(!d){$("aiMsg").textContent=t("请先写一段描述（2000 字以内）。");return;}
