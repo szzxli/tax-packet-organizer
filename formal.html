@@ -701,7 +701,6 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <h3>季票给三张规划卡，再做两件事</h3>
 <div class="sub-three">
 <div class="sub-three-item"><b>交付前总核对 · 现在就能出结果</b><span>点一次，输出「可交 / 不可交 + 缺项表」；可重跑，只报告不改数据。</span></div>
-<div class="sub-three-item"><b>全年盯梢 <span class="badge pending">内测中</span></b><span>缺项、规则变化命中你的表、截止日；目前只在本页展示，不发邮件、不推送。</span></div>
 </div>
 <p class="small muted">可交 = 材料齐了，可以交会计师复核；不代表税务正确，也不代表可以直接申报。</p>
 <p class="small"><b>核对报告：</b>1 页，逐表红/黄/绿 + 可交/不可交 + 缺项清单（每项写去哪拿）；可重跑、可打印/存 PDF。</p>
@@ -722,7 +721,6 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <tr><td>规划卡：补贴（1095-A / 8962）</td><td>✓</td><td>✓</td></tr>
 <tr><td>规划卡：税档 / 退休 / 政策</td><td>—</td><td>季票</td></tr>
 <tr><td>交付前总核对（可交/不可交 + 缺项表）</td><td>—</td><td>季票</td></tr>
-<tr><td>全年盯梢（缺项、规则变化、截止日）<span class="badge pending">内测中</span></td><td>—</td><td>季票</td></tr>
 </table>
 <p class="small">条款：季票不算税、不报税、不给税务结论、不判福利与退税资格。退款口径待公布（律师核过后写定）。</p>
 <p class="small" id="subStatus"></p>
@@ -795,7 +793,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div class="card">
 <h2>支付与订单</h2>
 <p class="notice warn"><b>支付：</b>本站不保存你的完整卡号。点“确认支付”完成购买，季票生效后有效期至 2027 年 10 月 15 日。</p>
-<p class="small"><b>季票包含：</b>三张规划卡（税档 / 退休 / 政策）· 交付前总核对 · 全年盯梢（内测中，目前只在本页展示）。医保补贴那张卡免费。免费整理与导出永久免费；内测期免费，1 月公布价格。</p>
+<p class="small"><b>季票包含：</b>三张规划卡（税档 / 退休 / 政策）· 交付前总核对。医保补贴那张卡免费。免费整理与导出永久免费；内测期免费，1 月公布价格。</p>
 <p class="small"><b>购买流程：</b>1 选套餐 → 2 确认订单 → 3 支付 → 4 查看收据。</p>
 <div class="notice" id="paySubCard"></div>
 <div class="row">
@@ -1388,7 +1386,7 @@ function planCardsHtml(state,unlocked){
     "<div class='plan-opts'>"+r("chgUp","收入涨了","Income went up","Los ingresos subieron")+r("chgSize","人数变了","Household size changed","Cambió el tamaño del hogar")+r("chgSame","都没变","Neither changed","No cambió ninguno")+r("chgUnsure","不确定","Not sure","No estoy seguro")+"</div>"+
     "<div style='margin-top:10px'><label for='planHousehold'>"+esc(planLang("今年家里几个人（可留空）","People in your household this year (optional)","Personas en su hogar este año (opcional)"))+"</label><input id='planHousehold' inputmode='numeric' autocomplete='off' placeholder='"+esc(planLang("例如：3","e.g. 3","p. ej. 3"))+"' value='"+esc(state.household)+"'></div>"+
     "<div class='plan-out' id='plan2Out'></div>";
-  html+=planCard(planLang("卡 2 · 补贴会不会变","Card 2 · Will the subsidy change?","Tarjeta 2 · ¿Cambiará el subsidio?"),planLang("补贴会不会变（1095-A / 8962）","Will the subsidy change? (1095-A / 8962)","¿Cambiará el subsidio? (1095-A / 8962)"),planLang("家里的补贴、医保会不会跟着变？","Will my household subsidy or coverage change?","¿Cambiará el subsidio o la cobertura de mi hogar?"),body2,planLang("只提示要对账，不估算补贴、不判资格。","It only flags the reconciliation; it does not estimate the credit or decide eligibility.","Solo indica la conciliación; no estima el crédito ni decide la elegibilidad."));
+  html+=planCard(planLang("补贴（免费）","Subsidy (free)","Subsidio (gratis)"),planLang("补贴会不会变（1095-A / 8962）","Will the subsidy change? (1095-A / 8962)","¿Cambiará el subsidio? (1095-A / 8962)"),planLang("家里的补贴、医保会不会跟着变？","Will my household subsidy or coverage change?","¿Cambiará el subsidio o la cobertura de mi hogar?"),body2,planLang("只提示要对账，不估算补贴、不判资格。","It only flags the reconciliation; it does not estimate the credit or decide eligibility.","Solo indica la conciliación; no estima el crédito ni decide la elegibilidad."));
 
   var body3;
   if(unlocked){
@@ -1468,7 +1466,7 @@ function planHandoffHtml(s){
     "<tr><td></td><td>"+esc(planLang("家庭人数：","Household size: ","Personas en el hogar: ")+hh)+"</td></tr></table>"+
     "<h3>"+esc(planLang("每张卡一行结论","One line of conclusion per card","Una línea de conclusión por tarjeta"))+"</h3>"+
     "<table><tr><td>"+esc(planLang("卡 1 · 位置（税档）","Card 1 · Where you stand (bracket)","Tarjeta 1 · Posición (tramo)"))+"</td><td>"+esc(c1)+"</td></tr>"+
-    "<tr><td>"+esc(planLang("卡 2 · 补贴要不要重新核","Card 2 · Whether the subsidy needs re-checking","Tarjeta 2 · Si el subsidio hay que revisarlo"))+"</td><td>"+esc(c2)+"</td></tr>"+
+    "<tr><td>"+esc(planLang("补贴（免费）· 要不要重新核","Subsidy (free) · whether it needs re-checking","Subsidio (gratis) · si hay que revisarlo"))+"</td><td>"+esc(c2)+"</td></tr>"+
     "<tr><td>"+esc(planLang("卡 3 · 退休还差多少","Card 3 · How much retirement room is left","Tarjeta 3 · Cuánto falta en el retiro"))+"</td><td>"+esc(c3)+"</td></tr>"+
     "<tr><td>"+esc(planLang("卡 4 · 今年新规","Card 4 · This year's new rule","Tarjeta 4 · La regla nueva de este año"))+"</td><td>"+esc(c4)+"</td></tr></table>"+
     "<p class='small' style='margin-top:16px'>"+esc(planLang("IRS 问起来的时候，这张纸就是当时的交接记录，不用各说各话。","If the IRS asks, this sheet is the handoff record from that moment — no need for two different accounts.","Si el IRS pregunta, esta hoja es el registro de entrega de ese momento: no hace falta que cada uno cuente algo distinto."))+"</p>"+

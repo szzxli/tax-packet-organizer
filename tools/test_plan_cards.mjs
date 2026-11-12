@@ -283,7 +283,7 @@ check("交接口径单：去年/今年两栏分列，家庭人数在今年的数
 
 check("交接口径单：每张卡一行结论", () => {
   const out = sandbox.planHandoffHtml(state({ income: "150000", status: "mfj", k401: "10000", marketplace: true, chgUp: true }));
-  for (const s of ["卡 1 · 位置（税档）", "卡 2 · 补贴要不要重新核", "卡 3 · 退休还差多少", "卡 4 · 今年新规"]) {
+  for (const s of ["卡 1 · 位置（税档）", "补贴（免费）· 要不要重新核", "卡 3 · 退休还差多少", "卡 4 · 今年新规"]) {
     assert.ok(out.includes(s), "缺 " + s);
   }
   assert.ok(out.includes("落在 22% 档"), out);
