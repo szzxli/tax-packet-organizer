@@ -11,8 +11,13 @@
     "avg_benchmark_premium_increase_pct": 13,
     "benchmark_increase_by_platform": {"healthcare_gov_pct": 11, "state_marketplaces_pct": 16},
     "cliff_400pct": true,
-    "note": "CMS 2027 事实单：开放期 begins November 1, 2026, runs through January 15, 2027。涨幅为最终基准银计划平均；400% 悬崖已回归。2027 保障年的贫困线金额未出，页面不写任何 2027 的 400% 线金额。",
-    "source": "KFF, 9 things to watch for the 2027 ACA open enrollment period, 2026-11-06",
+    "note": "开放期日期见 CMS 2027 事实单原文：begins on November 1, 2026, and runs through January 15, 2027。13% 与 11%/16% 的拆分见 KFF 2026-11-06——CMS 那份事实单里没有这两个数，所以分成两个出处，不并成一处。2027 保障年的贫困线金额未出，页面不写任何 2027 的 400% 线金额。",
+    "source": "CMS, Plan Year 2027 Marketplace Plans and Prices Fact Sheet",
+    "source_url": "https://www.cms.gov/newsroom/fact-sheets/plan-year-2027-marketplace-plans-prices-fact-sheet-0",
+    "premium_source": "KFF, 9 things to watch for the 2027 ACA open enrollment period, 2026-11-06",
+    "premium_source_url": "https://www.kff.org/affordable-care-act/9-things-to-watch-for-the-2027-aca-open-enrollment-period/",
+    "source_label": {"zh": "CMS 2027 事实单", "en": "CMS 2027 fact sheet", "es": "ficha de CMS 2027"},
+    "premium_source_label": {"zh": "KFF 2026-11-06", "en": "KFF 2026-11-06", "es": "KFF 2026-11-06"},
     "checked": "2026-11-12"
   },
   "brackets": {

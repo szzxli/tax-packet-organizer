@@ -417,7 +417,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 </div>
 
 <div class="card no-print" id="demoCard" data-flow-step="1">
-<h2>先看一个样例：收入变一变，这几件跟着变</h2>
+<h2>先看一个样例：改一下收入，下面几行跟着变</h2>
 <p class="muted small">样例家庭：已婚合并申报、两个孩子、加州。这是样例家庭，不是你的数。</p>
 <p class="demo-paths"><button id="demoCta" type="button">整理我自己的 →</button> <a href="#" id="demoPass" class="demo-pass">季票给什么</a></p>
 <div class="demo-slide">
@@ -1024,7 +1024,7 @@ Object.assign(I18N,{"可交":{"en":"Ready","es":"Listo"},
 "我的订单":{"en":"My orders","es":"Mis pedidos"},
 "暂无订单。":{"en":"No orders yet.","es":"Aún no hay pedidos."},
 "三件：整理完那一屏（今年退还是补、五条线各在哪，带原文与核实日）、交付前总核对（可交／不可交 + 缺项表，可重跑）、次年打开还在（内测中）。医保补贴那张卡所有人都能用，不用领季票。提醒类（缺项、规则变化、截止日）目前只在本页展示，不发邮件、不推送。免费版已含清单、上传、提数、三种导出、封面+复核签字，整理与导出永久免费；季票内测期免费，1 月公布价格。":{"en":"Three things: the money screen (refund or owed, where each of the five lines stands, with the source and the date it was checked), the pre-delivery check (ready / not ready + missing-items table, re-runnable), and next year's packet still there (in beta). The subsidy card is available to everyone — no season pass needed. Reminders (missing items, rule changes, deadlines) are shown on this page only for now: no emails, no push notifications. The free version already includes the checklist, uploads, figure extraction, three exports, and cover + review signature; organizing and export are free forever. The season pass is free during beta; prices are announced in January.","es":"Tres cosas: la pantalla del dinero (devolución o pago, dónde está cada una de las cinco líneas, con la fuente y la fecha de verificación), la verificación previa (listo / no listo + tabla de faltantes, repetible) y el paquete del año siguiente que sigue ahí (en beta). La tarjeta de subsidio la puede usar cualquiera: no hace falta el pase. Los recordatorios (faltantes, cambios de reglas, fechas límite) solo se muestran en esta página por ahora: sin correos ni notificaciones. La versión gratuita ya incluye la lista, las cargas, la extracción de cifras, tres exportaciones y portada + firma de revisión; organizar y exportar es gratis para siempre. El pase es gratis durante la beta; los precios se anuncian en enero."}});
-Object.assign(I18N,{"先看一个样例：收入变一变，这几件跟着变":{"en":"A sample first: change the income and these lines move","es":"Primero un ejemplo: cambie el ingreso y estas líneas se mueven"},
+Object.assign(I18N,{"先看一个样例：改一下收入，下面几行跟着变":{"en":"A sample first: change the income and watch the rows move","es":"Primero un ejemplo: cambie el ingreso y vea cómo se mueven las filas"},
 "样例家庭：已婚合并申报、两个孩子、加州。这是样例家庭，不是你的数。":{"en":"Sample household: married filing jointly, two children, California. This is a sample household, not your numbers.","es":"Hogar de ejemplo: matrimonio en declaración conjunta, dos hijos, California. Es un hogar de ejemplo, no sus cifras."},
 "样例家庭今年的收入":{"en":"The sample household's income this year","es":"Los ingresos del hogar de ejemplo este año"},
 "从一个收入档开始":{"en":"Start from an income level","es":"Empiece por un nivel de ingresos"},
@@ -3032,7 +3032,7 @@ function acaBarHtml(R, nowMs){
   var byP=(oe.benchmark_increase_by_platform||{});
   var pct=oe.avg_benchmark_premium_increase_pct;
   var h="<p class=\"one-thing-lead\"><span class=\"one-badge\">"+esc(tr("开放期","Open now","Abierta"))+"</span><b>"+esc(tr((oe.coverage_year||"")+" 医保开放："+win, (oe.coverage_year||"")+" open enrollment: "+win, "Inscripción abierta "+(oe.coverage_year||"")+": "+win))+"</b></p>";
-  h+="<p class=\"small muted\">"+esc(tr("基准银计划平均涨 "+pct+"%；收入过 400% 线，补贴没了。", "Benchmark silver premiums up "+pct+"% on average; above the 400% line, the subsidy is gone. ", "Las primas de referencia suben "+pct+"% en promedio; por encima de la línea del 400%, no hay subsidio. ")+(oe.source||"")+tr("，核于 ","; checked ","; verificado el ")+(oe.checked||""))+"</p>";
+  h+="<p class=\"small muted\">"+esc(tr("基准银计划平均涨 "+pct+"%；收入过 400% 线，补贴没了。", "Benchmark silver premiums up "+pct+"% on average; above the 400% line, the subsidy is gone. ", "Las primas de referencia suben "+pct+"% en promedio; por encima de la línea del 400%, no hay subsidio. ")+tr("开放期见 ","Dates: ","Fechas: ")+(((oe.source_label||{})[LANG])||oe.source||"")+tr("；涨幅见 ","; premiums: ","; primas: ")+(((oe.premium_source_label||{})[LANG])||oe.premium_source||"")+tr("；核于 ","; checked ","; verificado el ")+(oe.checked||""))+"</p>";
   return h;
 }
 // 开放期单独一条，放在 IRS 事件条上面：两者互不挤占，事件条那两行的契约不动。
@@ -3492,10 +3492,10 @@ function demoPhaseoutLine(){
   if(!PO||!PO.mfj||!PO.single) return "";
   var sl=document.getElementById("demoIncome");
   var inc=sl?(Number(sl.value)||120000):120000;
-  var side=inc<PO.mfj[0]?tr("下面","below","por debajo"):(inc<=PO.mfj[1]?tr("区间里","inside","dentro"):tr("上面","above","por encima"));
-  return tr("两项都有收入上限：单身或户主 " + demoMoney(PO.single[0]) + "–" + demoMoney(PO.single[1]) + " 之间逐步减少、" + demoMoney(PO.single[1]) + " 及以上没有；合并申报 " + demoMoney(PO.mfj[0]) + "–" + demoMoney(PO.mfj[1]) + " 之间逐步减少、" + demoMoney(PO.mfj[1]) + " 及以上没有。样例收入 " + demoMoney(inc) + "（合并申报）在这段区间的" + side + "。",
-    "Both credits have an income cap: for single or head of household they phase out between " + demoMoney(PO.single[0]) + " and " + demoMoney(PO.single[1]) + ", and there is none at " + demoMoney(PO.single[1]) + " or above; for married filing jointly between " + demoMoney(PO.mfj[0]) + " and " + demoMoney(PO.mfj[1]) + ", and none at " + demoMoney(PO.mfj[1]) + " or above. The sample income of " + demoMoney(inc) + " (joint) is " + side + " that range.",
-    "Ambos créditos tienen tope de ingresos: para soltero o cabeza de familia se reducen entre " + demoMoney(PO.single[0]) + " y " + demoMoney(PO.single[1]) + ", y no hay nada desde " + demoMoney(PO.single[1]) + "; en declaración conjunta entre " + demoMoney(PO.mfj[0]) + " y " + demoMoney(PO.mfj[1]) + ", y nada desde " + demoMoney(PO.mfj[1]) + ". El ingreso de muestra de " + demoMoney(inc) + " (conjunta) está " + side + " de ese rango.");
+  var side=inc<PO.mfj[0]?tr("在区间下面，两项都不打折","below the range, so neither credit is reduced","por debajo del rango, así que ningún crédito se reduce"):(inc<=PO.mfj[1]?tr("在区间里，按比例减少","inside the range, so they are reduced proportionally","dentro del rango, así que se reducen de forma proporcional"):tr("在区间之上，两项都是 0","above the range, so both are 0","por encima del rango, así que ambos son 0"));
+  return tr("两项都有收入上限：单身或户主 " + demoMoney(PO.single[0]) + "–" + demoMoney(PO.single[1]) + " 之间逐步减少、" + demoMoney(PO.single[1]) + " 及以上没有；合并申报 " + demoMoney(PO.mfj[0]) + "–" + demoMoney(PO.mfj[1]) + " 之间逐步减少、" + demoMoney(PO.mfj[1]) + " 及以上没有。样例收入 " + demoMoney(inc) + "（合并申报）" + side + "。",
+    "Both credits have an income cap: for single or head of household they phase out between " + demoMoney(PO.single[0]) + " and " + demoMoney(PO.single[1]) + ", and there is none at " + demoMoney(PO.single[1]) + " or above; for married filing jointly between " + demoMoney(PO.mfj[0]) + " and " + demoMoney(PO.mfj[1]) + ", and none at " + demoMoney(PO.mfj[1]) + " or above. The sample income of " + demoMoney(inc) + " (joint) is " + side + ".",
+    "Ambos créditos tienen tope de ingresos: para soltero o cabeza de familia se reducen entre " + demoMoney(PO.single[0]) + " y " + demoMoney(PO.single[1]) + ", y no hay nada desde " + demoMoney(PO.single[1]) + "; en declaración conjunta entre " + demoMoney(PO.mfj[0]) + " y " + demoMoney(PO.mfj[1]) + ", y nada desde " + demoMoney(PO.mfj[1]) + ". El ingreso de muestra de " + demoMoney(inc) + " (conjunta) está " + side + ".");
 }
 function renderDemo(){
   var card=document.getElementById("demoCard");if(!card)return;

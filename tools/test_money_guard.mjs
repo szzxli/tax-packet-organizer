@@ -323,8 +323,8 @@ check("sw：图与价格文件进了 APP_SHELL，缓存版本随页面/图改动
   assert.ok(sw.includes('"./rules/graph.json"'), "APP_SHELL 缺规则图");
   assert.ok(sw.includes('"./pricing.json"'), "APP_SHELL 缺价格文件");
   // 图与页面是缓存优先；改了不升版本，老用户会一直读到旧内容（这轮是订阅区）。
-  assert.ok(sw.includes('"tax-packet-shell-v14"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
-  assert.ok(!sw.includes('"tax-packet-shell-v13"'), "CACHE_NAME 还停在 v13");
+  assert.ok(sw.includes('"tax-packet-shell-v15"'), "改了规则图/页面却没升 CACHE_NAME，旧内容会被缓存盖住");
+  assert.ok(!sw.includes('"tax-packet-shell-v14"'), "CACHE_NAME 还停在 v14");
 });
 check("AI 文案进 DOM 前换成中性句，正常文案不动", () => {
   const bad = sandbox.aiSafeText("You are eligible for this credit");
@@ -645,7 +645,8 @@ check("开放期：三句齐、带出处与核实日、没有 2027 的 400% 线�
     assert.ok(/11\/1/.test(out) && /1\/15/.test(out), lang + " 缺开放期日期");
     assert.ok(out.includes("13"), lang + " 缺涨幅 13%");
     assert.ok(/400%/.test(out), lang + " 缺 400% 线这句");
-    assert.ok(out.includes("KFF") && out.includes("2026-11-06"), lang + " 缺 KFF 出处");
+    assert.ok(out.includes("CMS"), lang + " 缺 CMS 开放期出处");
+    assert.ok(out.includes("KFF") && out.includes("2026-11-06"), lang + " 缺 KFF 涨幅出处");
     assert.ok(/2026-11-12/.test(out), lang + " 缺核实日");
     assert.ok(!/\$[\d]/.test(out), lang + " 出现金额：" + out.slice(0, 120));
     assert.ok(!/2027[^<]{0,12}\$/.test(out), lang + " 出现 2027 的钱数");
