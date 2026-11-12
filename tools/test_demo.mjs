@@ -215,7 +215,7 @@ await withChrome(async (cdp) => {
       });
 
       // 三组收入各拖一次，比对数字
-      for (const inc of [60000, 120000, 200000]) {
+      for (const inc of [70000, 120000, 200000]) {
         const got = await cdp.eval(`(() => {
           const sl = document.getElementById("demoIncome");
           sl.value = "${inc}";
@@ -229,7 +229,11 @@ await withChrome(async (cdp) => {
             assert.ok(edu.includes(n), "教育行缺淘汰区间 " + n + "：" + edu.slice(0, 160));
           }
           const po = (graph.credits.aotc.phaseout || graph.credits.llc.phaseout).mfj;
-          const side = inc > po[1] ? /上面|之上|above|por encima/ : inc < po[0] ? /下面|below|por debajo/ : /区间里|inside|dentro/;
+          const side = inc > po[1]
+            ? /都是 0|both are 0|ambos son 0/
+            : inc < po[0]
+              ? /都不打折|neither credit is reduced|ningún crédito se reduce/
+              : /淘汰区间里|inside the joint phase-out range|rango de reducción conjunto/;
           assert.ok(side.test(edu), "教育行没报样例收入在哪一侧（收入 " + inc + "）：" + edu.slice(0, 200));
         });
         check("五行数字与规则图一致：" + tag + " @" + inc, () => {
@@ -329,7 +333,8 @@ check("教育行不许再说「跟收入无关」，四个门槛数只在规则�
   const src = fs.readFileSync(path.join(root, "formal.html"), "utf8");
   assert.equal((src.match(/跟收入无关|does not depend on income|no depende de los ingresos/g) || []).length, 0, "页面里还有「跟收入无关」这类话");
   assert.equal((src.match(/五件事|five things|cinco cosas/g) || []).length, 0, "标题里还有「五件事」这类绝对说法");
-  const h2 = (src.match(/<h2>先看一个样例[^<]*<\/h2>/) || [""])[0];
+  const h2 = (src.match(/<h2>[^<]*下面几行跟着变[^<]*<\/h2>/) || [""])[0];
+  assert.ok(h2, "找不到样品卡的标题");
   assert.ok(h2.includes("下面几行跟着变"), "标题没换成「下面几行跟着变」：" + h2);
   for (const bad of ["全部", "都跟着", "每一条"]) {
     assert.equal(h2.includes(bad), false, "标题里出现绝对说法：" + bad);
