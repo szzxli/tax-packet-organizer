@@ -345,13 +345,16 @@ check("页面级：单列“免费整理与导出永久免费”", () => {
   assert.ok(html.includes("<p class=\"notice ok\"><b>免费整理与导出永久免费</b></p>"), "缺单列一行");
 });
 
-check("页面级：季票口径统一为“三张规划卡 + 两件事”，旧口径已删", () => {
-  assert.ok(html.includes("<h3>季票给三张规划卡，再做两件事</h3>"), "缺新口径");
-  for (const old of ["<h3>季票只做两件事</h3>", "<h3>季票只做三件事</h3>", "四张", "全包核对", "自动提醒未接", "影响你的清单时通知你"]) {
-    assert.ok(!html.includes(old), "旧口径仍在页面上：" + old);
-  }
-  assert.ok(html.split("三张规划卡").length - 1 >= 3, "“三张规划卡”出现次数不足");
-  assert.ok(html.split("目前只在本页展示").length - 1 >= 6, "“目前只在本页展示”出现次数不足");
+check("页面级：订阅展示卡只讲「整理完那一屏」与「交付前总核对」两格", () => {
+  assert.ok(html.includes("<h3>季票先把这一屏的钱讲清楚</h3>"), "缺新标题");
+  assert.ok(html.includes("<h2>季票先告诉你：今年大概是退还是补</h2>"), "缺新卡标题");
+  const i = html.indexOf('id="subShowcase"');
+  const blk = html.slice(i, i + 1600);
+  assert.equal(blk.split("sub-three-item").length - 1, 2, "展示卡不是两格");
+  for (const bad of ["三张规划卡", "全年盯梢"]) assert.ok(!blk.includes(bad), "展示卡里还有：" + bad);
+  for (const old of ["<h3>季票只做两件事</h3>", "四张"]) assert.ok(!html.includes(old), "旧口径仍在：" + old);
+  assert.match(blk, /整理完那一屏/, "缺第 1 格");
+  assert.match(blk, /交付前总核对/, "缺第 2 格");
 });
 
 check("页面级：总核对标注“现在就能出结果”", () => {
@@ -370,13 +373,14 @@ check("i18n：新增静态文案均有英文与西语", () => {
   const i18n = vm.runInNewContext("(" + src + ")", {});
   const keys = [
     "免费整理与导出永久免费",
-    "季票给三张规划卡，再做两件事",
+    "季票先把这一屏的钱讲清楚",
+    "季票先告诉你：今年大概是退还是补",
+    "基础整理和导出永久免费；季票在整理完那一屏告诉你今年的方向和每条线在哪，交付前再把整包核一遍。",
+    "整理完那一屏",
+    "今年退还是补、五条线各在哪、最近一次影响你的政策变化（带原文与核实日）。",
     "交付前总核对 · 现在就能出结果",
     "规划卡：补贴（1095-A / 8962）",
     "规划卡：税档 / 退休 / 政策",
-    "基础整理和导出永久免费；季票多给三张规划卡看清位置，交付前把整包核一遍，全年把时点盯住。",
-    "三张规划卡",
-    "税档、退休、政策；只标结构，不算税。医保补贴那张卡所有人都能用，不用领季票。",
     "可交 / 不可交 + 缺项表，可重跑，现在就能出结果。",
   ];
   for (const k of keys) {
