@@ -242,11 +242,11 @@ await withChrome(async (cdp) => {
         assert.ok(geo.sliderBottom <= geo.vh, "滑块底边超出视口：bottom=" + geo.sliderBottom + "，视口 " + geo.vh);
       });
       check("首屏可点入口固定这几处：生成、AI 描述、样例开关、滑块、订阅、免费链接、出处折叠：" + tag, () => {
-        const want = ["btnMake", "btnAiOpen", "SUMMARY", "demoIncome", "demoSub", "demoFree", "SUMMARY", "SUMMARY"];
+        const want = ["btnMake", "btnAiOpen", "SUMMARY", "demoIncome", "demoSub", "SUMMARY", "SUMMARY"];
         assert.deepEqual(geo.entries.map((e) => e.split(":")[0]).sort(), want.slice().sort(), "入口：" + geo.entries.join(" / "));
       });
-      check("卡片内一颗醒目按钮（订阅）+ 免费文字链接 + 出处折叠：" + tag, () => {
-        assert.deepEqual(geo.cardEntries.slice().sort(), ["demoFree", "demoSub", "SUMMARY"].sort(), "卡片内入口：" + geo.cardEntries.join(","));
+      check("卡片内一颗醒目按钮（订阅）+ 出处折叠：" + tag, () => {
+        assert.deepEqual(geo.cardEntries.slice().sort(), ["demoSub", "SUMMARY"].sort(), "卡片内入口：" + geo.cardEntries.join(","));
         assert.ok(geo.whyText.length > 0, "出处折叠没有标题");
         assert.ok(geo.whyTop >= geo.rowsBottom, "出处折叠没在五行之后");
       });

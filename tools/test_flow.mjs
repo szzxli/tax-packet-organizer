@@ -163,7 +163,7 @@ await withChrome(async (cdp) => {
           text: document.getElementById('stickyProgressText').textContent.trim(),
           action: document.getElementById('stickyProgressAction').textContent.trim(),
           cardCta: (document.getElementById('demoSub') || { textContent: "" }).textContent.trim(),
-          freeLink: (document.getElementById('demoFree') || { tagName: "" }).tagName,
+          hasInput: !!document.getElementById('heroText'),
           len: (window.packet.checklist||[]).length
         };
       })()`);
@@ -171,9 +171,9 @@ await withChrome(async (cdp) => {
         assert.equal(empty.display, "none", "底栏又出来了，首屏会变成两颗入口");
         assert.equal(empty.len, 0, "起点不该有清单");
       });
-      check("第 1 步唯一的醒目按钮是订阅，免费只留文字链接：" + tag, () => {
+      check("第 1 步唯一的醒目按钮是订阅（免费靠上面那个输入框）：" + tag, () => {
         assert.ok(/订阅季票|Subscribe|Suscribirme/i.test(empty.cardCta), "醒目按钮不是订阅：" + empty.cardCta);
-        assert.equal(empty.freeLink, "A", "免费那条不是文字链接：" + empty.freeLink);
+        assert.ok(empty.hasInput, "首屏没有一句话输入框");
       });
 
       // 2b) 底栏只有一条；左边那行写步骤；第 1 步主入口只有一个
@@ -215,11 +215,10 @@ await withChrome(async (cdp) => {
           assert.ok(ui.stepTitles[i].includes(String(i + 1)), "第 " + (i + 1) + " 步标题不对：" + ui.stepTitles[i]);
         }
       });
-      check("第 1 步只有一个醒目按钮（订阅），免费是文字链接：" + tag, () => {
+      check("第 1 步只有一个醒目按钮（订阅）：" + tag, () => {
         assert.equal(ui.startBtns, 0, "定位句那块里又长出按钮了：" + ui.startBtns);
         assert.equal(ui.hasDemoSub, true, "样品卡里没有订阅按钮（demoSub）");
         assert.equal(ui.demoPrimary, 1, "订阅那颗不是醒目样式");
-        assert.equal(ui.freeIsLink, 1, "免费那条不是文字链接");
         assert.equal(ui.firstPrimary, 1, "首屏区域的醒目按钮不是一颗：" + ui.firstPrimary);
         assert.equal(ui.barPrimary, 0, "底栏那颗不该出现");
         assert.equal(ui.seeTag, "", "「看看要准备什么」又冒出来了：" + ui.seeTag);
