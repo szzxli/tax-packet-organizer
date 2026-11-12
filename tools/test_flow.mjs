@@ -197,16 +197,18 @@ await withChrome(async (cdp) => {
         const title = document.getElementById('stickyProgressTitle').textContent.trim();
         const seeTag = (document.getElementById('btnSee') || {}).tagName || '';
         // 首屏入口：开场卡的按钮挪到样品卡，样品卡那颗是唯一主入口；重复的样例链接已删
-        const demoCta = document.getElementById('demoCta');
+        const demoCta = document.getElementById('demoCta'); // 已删：留着取 null，断言用
+        const demoPass = document.getElementById('demoPass');
         const firstArea = Array.from(document.querySelectorAll('#pageNav button, #pageNav a[href], #startCard button, #startCard a[href], #demoCard button, #demoCard a[href]')).filter(el => el.offsetParent !== null);
         const firstPrimary = firstArea.filter(el => el.tagName === 'BUTTON' && !el.classList.contains('secondary')).length;
         const demoPrimary = demoCta && !demoCta.classList.contains('secondary') ? 1 : 0;
+        const demoPassPrimary = demoPass && !demoPass.classList.contains('secondary') ? 1 : 0;
         const stepTitles = [];
         for (const st of [1,2,3]) { setOrganizeStep(st,false); stepTitles.push(document.getElementById('stickyProgressTitle').textContent.trim()); }
         setOrganizeStep(1,false);
         return { bars, startBtns: startBtns.length, startPrimary, barPrimary, inView: inView.length,
                  title, seeTag, stepTitles, firstArea: firstArea.length, firstPrimary, demoPrimary,
-                 hasDemoCta: !!demoCta };
+                 hasDemoCta: !!demoCta, hasDemoPass: !!demoPass, demoPassPrimary };
       })()`);
       check("底栏只有一条（stickyProgress 和 stepPager 不同时在）：" + tag, () => {
         assert.equal(ui.bars.length, 1, "还在两条底栏：" + ui.bars.join(","));
@@ -219,15 +221,16 @@ await withChrome(async (cdp) => {
       });
       check("第 1 步只有一个主入口：" + tag, () => {
         assert.equal(ui.startBtns, 0, "开场卡里又长出按钮了：" + ui.startBtns);
-        assert.equal(ui.hasDemoCta, true, "样品卡没有主按钮");
-        assert.equal(ui.demoPrimary, 1, "样品卡的主按钮不是唯一那颗");
-        assert.equal(ui.firstPrimary, 1, "首屏区域里有 " + ui.firstPrimary + " 颗主按钮");
+        assert.equal(ui.hasDemoCta, false, "样品卡里还有第二颗主按钮（demoCta）");
+        assert.equal(ui.hasDemoPass, true, "样品卡没有季票入口");
+        assert.equal(ui.demoPassPrimary, 0, "季票入口被做成了主按钮样式");
+        assert.equal(ui.firstPrimary, 0, "首屏区域里还有 " + ui.firstPrimary + " 颗主按钮（应只剩底部常驻那颗）");
         assert.equal(ui.barPrimary, 1, "底栏那颗不是唯一主按钮");
         assert.equal(ui.seeTag, "", "「看看要准备什么」又冒出来了：" + ui.seeTag);
         assert.ok(ui.firstArea <= 5, "首屏区域入口超过 5 个：" + ui.firstArea);
         assert.ok(ui.inView <= 7, "首屏可见按钮超过 7 个：" + ui.inView);
-        // 首屏现在只留样品卡两颗入口 + 常驻底栏（顶部导航在无清单时收起），按「这两颗在不在」判，不按个数判
-        assert.ok(ui.inView >= 2, "首屏按钮少得离谱，可能整块没渲染：" + ui.inView);
+        // 首屏只剩常驻底栏那一颗（季票入口在五行之后、卡内主按钮已删），按存在与否判，不按个数判
+        assert.ok(ui.inView >= 1, "首屏按钮少得离谱，可能整块没渲染：" + ui.inView);
       });
 
       // 4a) 选「没有变化」→ ≥3 项

@@ -115,8 +115,9 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 .map-notes{margin-top:10px;display:grid;gap:6px}
 .map-notes details{border:1px solid #e3ecf2;border-radius:10px;padding:8px 10px;background:#fafcfe}
 .map-notes summary{cursor:pointer;color:#35546c}
-#demoCard .demo-paths{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:14px 0 0}
-#demoCard .demo-pass{font-size:14px;color:#35546c;text-decoration:underline}
+#demoCard .demo-paths{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:12px 0 0}
+#demoCard #demoPass{min-height:44px;padding:11px 18px;font-size:15px;font-weight:600;color:#16324f;background:#fff;border:1px solid #16324f;border-radius:10px;cursor:pointer}
+#demoCard #demoPass:hover{background:#eef4fa}
 #pageNav button.nav-active{background:#eef4fa;box-shadow:inset 0 -2px 0 #16324f}
 .lang-switch.lang-footer{position:static;margin:22px 0 6px;padding:0;background:transparent;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
 .lang-switch.lang-footer .lang-globe{color:#5a6d7d}
@@ -419,7 +420,6 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div class="card no-print" id="demoCard" data-flow-step="1">
 <h2>收入变一变，下面几行跟着变</h2>
 <p class="muted small">样例家庭：已婚合并申报、两个孩子、加州。这是样例家庭，不是你的数。</p>
-<p class="demo-paths"><button id="demoCta" type="button">整理我自己的 →</button> <a href="#" id="demoPass" class="demo-pass">季票给什么</a></p>
 <div class="demo-slide">
 <label for="demoIncome" class="small muted">拖一下，看你的收入落在哪</label>
 <input type="range" id="demoIncome" min="40000" max="250000" step="1000" value="120000">
@@ -427,6 +427,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 </div>
 <ul class="demo-rows" id="demoRows"></ul>
 <p class="small muted">上面全是样例数，跟着滑块变。换成你自己的数，才需要季票。</p>
+<p class="demo-paths"><button type="button" id="demoPass" class="secondary">季票给什么</button></p>
 </div>
 <div class="card no-print" id="startCard">
 <h2 class="start-title">把今年的报税材料，整理成一份能交出去的清单。</h2>
@@ -870,6 +871,7 @@ function anonId(){
 }
 // 只记访问与点击：事件名、来源标记、页面路径、匿名 ID；不含文件内容、金额。
 function track(name,props){
+  try{if(/[?&]probe=1(&|$)/.test(location.search))return;}catch(eP){}
   try{
     var ev={e:name,ref:SRC.ref,firm:SRC.firm,utm_source:SRC.utm_source||"",utm_medium:SRC.utm_medium||"",utm_campaign:SRC.utm_campaign||"",path:location.pathname,ts:Date.now(),anon:anonId()};
     if(props)for(var k in props){if(Object.prototype.hasOwnProperty.call(props,k))ev[k]=props[k];}
@@ -887,7 +889,7 @@ function track(name,props){
 // 服务端落库：攒够 8 条或 3 秒发一次，页面要走时用 keepalive 再补一发。
 // 只发服务端白名单里的名字（与 Worker 的 NAMES 一致）；不在表里的动作仍只落本机与 abacus 计数。
 // 同站、无 cookie（credentials omit）、失败静默：埋点坏了也不许影响页面。
-var EV_NAMES={open:1,generate:1,save:1,export:1,export_done:1,pass_claimed:1,"flow-step1":1,"flow-step2":1,"flow-step3":1,"flow-step4":1,"flow-step5":1,"demo_drag":1,"demo_cta_free":1,"demo_cta_pass":1};
+var EV_NAMES={open:1,generate:1,save:1,export:1,export_done:1,pass_claimed:1,"flow-step1":1,"flow-step2":1,"flow-step3":1,"flow-step4":1,"flow-step5":1,"demo_drag":1,"demo_cta_pass":1};
 var EV_Q=[],EV_TIMER=0;
 function evBase(){try{if(typeof TpoApi!=="undefined"&&TpoApi.base)return TpoApi.base;}catch(e){}return "https://tax-packet-api.szzxli711.workers.dev";}
 function evFlush(){
@@ -3581,16 +3583,16 @@ function renderDemo(){
     return "<li class='demo-row "+r.c+"'><b>"+esc(r.t)+"</b><p>"+esc(r.p)+"</p>"+(r.s?("<span class='src'>"+esc(r.s)+"</span>"):"")+"</li>";
   }).join("");
 }
-// 三个 demo_ 名字只走 abacus（不进 EV_NAMES，服务端一条都不发）：
+// 两个 demo_ 名字都进了 EV_NAMES 与 Worker NAMES，服务端与 abacus 同时收：
 //   demo_drag        同一会话只记一次 —— abacus 计数 = 拖过的人次
-//   demo_cta_free / demo_cta_pass  两条路各自计数，比值就是「拖过的人里谁选了哪条」
+//   demo_cta_pass    点「季票给什么」的次数
+// 带 ?probe=1 打开时不记（闸门与环境自测用，避免污染分母）。
 function demoDragOnce(){
   try{if(sessionStorage.getItem("tpo_demo_drag")==="1")return;sessionStorage.setItem("tpo_demo_drag","1");}catch(e){}
   try{track("demo_drag");}catch(e2){}
 }
 $("demoIncome").addEventListener("input",function(){renderDemo();demoDragOnce();});
 $("demoPreset").addEventListener("change",function(){var sl=$("demoIncome");var v=Number(this.value);if(sl&&v){sl.value=String(v);renderDemo();}demoDragOnce();});
-$("demoCta").onclick=function(){try{track("demo_cta_free");}catch(e){}var t=$("heroText");if(t){t.scrollIntoView({behavior:"smooth",block:"center"});t.focus();}};
 $("demoPass").onclick=function(ev){if(ev&&ev.preventDefault)ev.preventDefault();try{track("demo_cta_pass");}catch(e2){}goSub();};
 $("btnAiOpen").onclick=function(e){e.preventDefault();var ai=$("aiCard");if(ai){ai.dataset.open="1";ai.classList.remove("hidden");ai.scrollIntoView({behavior:"smooth",block:"start"});}};
 // 首屏（第 1 页且还没有清单）不摆顶部导航：样品卡里已经有「整理我自己的」与「季票给什么」两条路。

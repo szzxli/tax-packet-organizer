@@ -66,6 +66,10 @@ class Cdp {
   }
   async eval(expr) {
     const r = await this.send("Runtime.evaluate", { returnByValue: true, expression: expr });
+    if (r.exceptionDetails) {
+      const d = r.exceptionDetails;
+      throw new Error("页面内报错：" + JSON.stringify({ text: d.text, desc: d.exception && d.exception.description, line: d.lineNumber, col: d.columnNumber }));
+    }
     const v = r.result.value;
     return typeof v === "string" ? JSON.parse(v) : v;
   }
@@ -140,7 +144,7 @@ await withChrome(async (cdp) => {
     for (const lang of LANGS) {
       await cdp.send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: true });
       await cdp.send("Page.enable");
-      await cdp.send("Page.navigate", { url: LIVE ? LIVE + "?lang=" + lang : base + "/formal.html?lang=" + lang });
+      await cdp.send("Page.navigate", { url: LIVE ? LIVE + "?lang=" + lang + "&probe=1" : base + "/formal.html?lang=" + lang + "&probe=1" });
       // 等规则图到齐再量：先出的是「规则图没读到」的占位行，量它会假红
       for (let i = 0; i < 80; i++) {
         await sleep(120);
@@ -154,9 +158,15 @@ await withChrome(async (cdp) => {
         const d = document.documentElement;
         const card = document.getElementById("demoCard");
         const rows = Array.from(document.querySelectorAll("#demoRows li"));
-        const cta = document.getElementById("demoCta");
-        const cr = cta.getBoundingClientRect();
-        const hit = document.elementFromPoint(Math.round(cr.left + cr.width/2), Math.round(cr.top + cr.height/2));
+        const pass = document.getElementById("demoPass");
+        const pr = pass.getBoundingClientRect();
+        const hit = document.elementFromPoint(Math.round(pr.left + pr.width/2), Math.round(pr.top + pr.height/2));
+        const lum = (c) => { const nums = (String(c).match(/[\\d.]+/g) || ["255","255","255"]).map(Number).slice(0,3); while (nums.length < 3) nums.push(255); const m = nums.map(v => { v/=255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); }); return 0.2126*m[0]+0.7152*m[1]+0.0722*m[2]; };
+        const cs = getComputedStyle(pass);
+        const bgOf = (el) => { let n = el; while (n && n !== document.documentElement) { const b = getComputedStyle(n).backgroundColor; if (b && b !== "rgba(0, 0, 0, 0)" && b !== "transparent") return b; n = n.parentElement; } return "rgb(255,255,255)"; };
+        const L1 = lum(cs.color), L2 = lum(bgOf(pass));
+        const contrast = (Math.max(L1,L2)+0.05)/(Math.min(L1,L2)+0.05);
+        const rowsBottom = rows.length ? Math.round(rows[rows.length-1].getBoundingClientRect().bottom) : 0;
         // 可点元素＝渲染后真正能点的：range / select / button / a[href]，只要在首屏视口内就计
         const clickable = (root) => Array.from(root.querySelectorAll('input[type=range],select,button,a[href]')).filter(el => {
           if (el.offsetParent === null) return false;
@@ -171,14 +181,16 @@ await withChrome(async (cdp) => {
           rows: rows.length,
           heights: rows.map(r => Math.round(r.getBoundingClientRect().height)),
           texts: rows.map(r => r.innerText.replace(/\\s+/g, " ").trim()),
-          ctaText: cta.textContent.trim(),
+          ctaText: pass.textContent.trim(),
+          passColor: cs.color, passBg: bgOf(pass),
+          passTop: Math.round(pr.top), passH: Math.round(pr.height), contrast: Math.round(contrast*100)/100, rowsBottom,
           passText: (document.getElementById("demoPass") || { textContent: "" }).textContent.trim(),
           passHidden: (() => { const el = document.getElementById("demoPass"); return !el || el.offsetParent === null; })(),
           pageNow: (typeof currentPage !== "undefined" ? currentPage : null),
           stepNow: (typeof currentOrganizeStep !== "undefined" ? currentOrganizeStep : null),
           overlay: Array.from(document.querySelectorAll('[role="dialog"], .modal, .overlay, .onboarding, .coach')).filter(el => el.offsetParent !== null).length,
-          ctaInView: cr.top < innerHeight && cr.bottom > 0,
-          ctaCovered: !(hit && (hit === cta || cta.contains(hit))),
+          passInView: pr.top < innerHeight && pr.bottom > 0,
+          passHit: !!(hit && (hit === pass || pass.contains(hit))),
           entries: entries.map(el => (el.id || el.tagName) + ":" + (el.textContent || "").trim().slice(0, 12)),
           cardEntries: cardEntries.map(el => el.id || el.tagName),
           sliderTop: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().top) : null; })(),
@@ -199,9 +211,11 @@ await withChrome(async (cdp) => {
         assert.equal(geo.cw, w, "视口不是 " + w + "（实际 " + geo.cw + "）");
         assert.ok(geo.sw <= geo.cw, "被撑宽 " + geo.sw + " > " + geo.cw);
       });
-      check("主按钮没被遮：" + tag, () => {
-        assert.ok(geo.ctaText.length > 0, "主按钮没文案");
-        if (geo.ctaInView) assert.ok(!geo.ctaCovered, "主按钮被别的元素盖住");
+      check("季票入口：44px 高、对比度 ≥4.5、在五行之后：" + tag, () => {
+        assert.ok(geo.ctaText.length > 0, "季票入口没文案");
+        assert.ok(geo.passH >= 44, "季票入口高度不足 44px：" + geo.passH);
+        assert.ok(geo.contrast >= 4.5, "季票入口对比度只有 " + geo.contrast + ":1（字 " + geo.passColor + "，底 " + geo.passBg + "）");
+        assert.ok(geo.passTop > geo.rowsBottom, "季票入口没在五行之后：pass=" + geo.passTop + " rowsBottom=" + geo.rowsBottom);
       });
       check("滑块在首屏（底边 ≤ 视口高）：" + tag, () => {
         assert.ok(geo.sliderBottom != null, "没量到滑块");
@@ -210,8 +224,8 @@ await withChrome(async (cdp) => {
       check("首屏可点入口 ≤5：" + tag, () => {
         assert.ok(geo.entries.length <= 5, "入口 " + geo.entries.length + " 个：" + geo.entries.join(" / "));
       });
-      check("卡片内只有两条路（整理我自己的 + 季票给什么）：" + tag, () => {
-        assert.deepEqual(geo.cardEntries.slice().sort(), ["demoCta", "demoPass"], "卡片内入口：" + geo.cardEntries.join(","));
+      check("卡片内只有季票一条路，没有第二颗主按钮：" + tag, () => {
+        assert.deepEqual(geo.cardEntries.slice().sort(), ["demoPass"], "卡片内入口：" + geo.cardEntries.join(","));
       });
 
       // 三组收入各拖一次，比对数字
@@ -269,31 +283,11 @@ await withChrome(async (cdp) => {
       check("拖动后那行真的变（医保补贴）：" + tag, () => {
         assert.equal(after.same, false, "把收入从 20 万拖到 4 万，这一行没变");
       });
-      const ctaHit = await cdp.eval(`(() => {
-        const sl = document.getElementById("demoIncome");
-        sl.scrollIntoView({ block: "center", behavior: "auto" });
-        sl.value = "140000";
-        sl.dispatchEvent(new Event("input", { bubbles: true }));
-        const cta = document.getElementById("demoCta");
-        const r = cta.getBoundingClientRect();
-        const hit = document.elementFromPoint(Math.round(r.left + r.width/2), Math.round(r.top + r.height/2));
-        return JSON.stringify({ top: Math.round(r.top), bottom: Math.round(r.bottom), vh: innerHeight, hit: !!(hit && (hit === cta || cta.contains(hit))) });
-      })()`);
-      check("拖完 CTA 在视口内且点得到：" + tag, () => {
-        assert.ok(ctaHit.top >= 0 && ctaHit.bottom <= ctaHit.vh, "CTA 不在视口内：top=" + ctaHit.top + " bottom=" + ctaHit.bottom + " vh=" + ctaHit.vh);
-        assert.equal(ctaHit.hit, true, "CTA 中心点被别的元素盖住");
-      });
       check("拖完到点按钮之间 0 次跳页：" + tag, () => {
         assert.ok(after.pageSame, "拖动把页面切走了");
         assert.ok(after.stepSame, "拖动把步骤切走了");
         assert.ok(after.scrollSame, "拖动让页面滚动了");
         assert.equal(after.overlay, 0, "拖动弹出了引导层／弹窗");
-      });
-      check("两条路同级可见（整理我自己的 + 季票给什么）：" + tag, () => {
-        assert.ok(geo.ctaText.length > 0, "主按钮没文案");
-        assert.ok(geo.passText.length > 0, "次级入口没文案");
-        assert.equal(geo.passHidden, false, "次级入口被藏起来了");
-        assert.equal(geo.overlay, 0, "首屏就盖了弹窗／引导层");
       });
       check("没有「使用说明／教程」这类段落标题：" + tag, () => {
         const t = geo.pageText;
@@ -358,26 +352,54 @@ check("教育行不许再说「跟收入无关」，四个门槛数只在规则�
   }
 });
 
-check("埋点：三个 demo_ 名字在页面里，EV_NAMES 里 0 个", () => {
+check("埋点：只留 demo_drag 与 demo_cta_pass，页面/EV_NAMES/Worker 三处一致", () => {
   const src = fs.readFileSync(path.join(root, "formal.html"), "utf8");
-  for (const name of ["demo_drag", "demo_cta_free", "demo_cta_pass"]) {
+  for (const name of ["demo_drag", "demo_cta_pass"]) {
     assert.ok(src.includes('"' + name + '"'), "页面里找不到事件名：" + name);
   }
-  assert.equal((src.match(/"demo_cta"/g) || []).length, 0, "页面里还有旧单名 \"demo_cta\"");
+  assert.equal((src.match(/demo_cta_free/g) || []).length, 0, "页面里还有 demo_cta_free");
   const m = src.match(/var EV_NAMES=\{([^}]*)\}/);
   assert.ok(m, "找不到 EV_NAMES 定义");
-  for (const name of ["demo_drag", "demo_cta_free", "demo_cta_pass"]) {
+  for (const name of ["demo_drag", "demo_cta_pass"]) {
     assert.ok(m[1].includes('"' + name + '"'), "EV_NAMES 里没有：" + name);
   }
-  assert.ok(!m[1].includes("demo_cta\""), "EV_NAMES 里还有旧单名 demo_cta");
-  // Worker 白名单同批：三个名字都在，旧单名 0
+  assert.equal(m[1].includes("demo_cta_free"), false, "EV_NAMES 里还有 demo_cta_free");
   const w = fs.readFileSync(path.join(root, "backend", "worker", "index.js"), "utf8");
   const wm = w.match(/const NAMES = \[([^\]]*)\]/);
   assert.ok(wm, "找不到 Worker 的 NAMES");
-  for (const name of ["demo_drag", "demo_cta_free", "demo_cta_pass"]) {
+  for (const name of ["demo_drag", "demo_cta_pass"]) {
     assert.ok(wm[1].includes('"' + name + '"'), "Worker 白名单里没有：" + name);
   }
-  assert.ok(!wm[1].includes('"demo_cta"'), "Worker 白名单里还有 demo_cta");
+  assert.equal(wm[1].includes("demo_cta_free"), false, "Worker 白名单里还有 demo_cta_free");
+  assert.ok(/probe=1/.test(src), "页面没有 ?probe=1 的探针开关");
+});
+
+// 探针开关：?probe=1 下 track() 直接返回，localStorage 里不留事件；正常访问要留一条
+const probeRes = await withChrome(async (cdp) => {
+  await cdp.send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true });
+  await cdp.send("Page.enable");
+  const paths = LIVE ? [LIVE.split("?")[0]] : [base + "/formal.html"];
+  const out = {};
+  for (const [key, q] of [["probe", "?lang=zh&probe=1"], ["plain", "?lang=zh"]]) {
+    await cdp.send("Page.navigate", { url: paths[0] + q });
+    for (let i = 0; i < 80; i++) {
+      await sleep(120);
+      const r = await cdp.send("Runtime.evaluate", { returnByValue: true, expression: 'document.readyState==="complete" && document.getElementById("demoRows") && document.getElementById("demoRows").children.length===5' });
+      if (r.result.value === true) break;
+    }
+    const n = await cdp.eval(`(() => {
+      localStorage.removeItem("tpo_events"); sessionStorage.removeItem("tpo_demo_drag");
+      const s = document.getElementById("demoIncome"); s.value = "150000"; s.dispatchEvent(new Event("input", { bubbles: true }));
+      return JSON.stringify({ n: (JSON.parse(localStorage.getItem("tpo_events") || "[]") || []).length });
+    })()`);
+    out[key] = n.n;
+  }
+  return out;
+});
+
+check("探针开关：?probe=1 拖完不记账，正常访问记一条", () => {
+  assert.equal(probeRes.probe, 0, "带 probe=1 仍写了 " + probeRes.probe + " 条事件");
+  assert.ok(probeRes.plain >= 1, "正常访问没记账：" + probeRes.plain);
 });
 
 // 四行名字必须与第 3 步地图逐字一致：生成清单 → 进第 3 步 → 读地图行头与列头
