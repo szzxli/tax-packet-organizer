@@ -387,6 +387,9 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 .site-head p{margin:5px 0 0;font-size:13px;color:rgba(255,255,255,.8);max-width:640px}
 .site-head .lang-switch{position:static;margin:0;background:rgba(255,255,255,.12);padding:3px 6px;border-radius:999px;flex:none}
 @media(max-width:600px){header.site-head{padding:12px 12px;gap:8px}.site-head .brand-row{flex:1 0 100%;gap:8px}.site-head .brand-word{font-size:20px}.site-head .brand-mark{width:34px;height:34px}.site-head .lang-switch{margin-left:auto}.site-head p{display:none}}
+
+/* 首屏只给状态，金额留在卡底折叠 */
+#demoRows li span:nth-of-type(3){display:none}
 </style>
 </head>
 <body>
@@ -460,9 +463,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <input type="range" id="demoIncome" min="40000" max="250000" step="1000" value="120000">
 </div>
 <ul class="demo-rows" id="demoRows"></ul>
-<p class="demo-price">季票 = 免费的全部 + 你的结论、交出去前核对、规则变化提醒。内测免费，1 月公布价格。</p>
 <p class="demo-cta"><button type="button" id="demoSub">订阅季票 · 内测免费</button></p>
-<p class="demo-free"><a href="#" id="demoFree">先免费整理，不用订阅 →</a></p>
 <details class="demo-why"><summary>怎么用 · 季票含什么 · 这五行怎么算的</summary>
 <ol class="demo-steps">
 <li><span class="n">1</span><span class="do">说一句今年变了什么</span><span class="get">拿到今年要备的清单</span></li>
@@ -3800,15 +3801,6 @@ $("demoIncome").addEventListener("input",function(){renderDemo();demoDragOnce();
 $("demoIncome").addEventListener("change",function(){try{var u=new URL(location.href);u.searchParams.set("income",this.value);history.replaceState(null,"",u.pathname+u.search+u.hash);}catch(e){}});
 
 // 免费这条路降成一行文字链接：已经写了或点过就直接生成，否则带到表单并给一句话说明。
-$("demoFree").onclick=function(ev){if(ev&&ev.preventDefault)ev.preventDefault();
-  var txt=document.getElementById("heroText"),sel=document.querySelectorAll("#tagGrid .tag-btn.on");
-  if((txt&&txt.value.trim())||sel.length){var b=document.getElementById("btnMake");if(b)b.click();return;}
-  var hero=document.getElementById("heroBox");
-  if(hero)hero.scrollIntoView({behavior:"smooth",block:"start"});
-  if(txt)try{txt.focus({preventScroll:true});}catch(e){txt.focus();}
-  var msg=document.getElementById("tagMsg");
-  if(msg)msg.textContent=tr("写一句今年变了什么，或点选下面的情况。","Write one line about this year, or tap the situations below.","Escriba una línea sobre este año o toque las situaciones de abajo.");
-};
 // 订阅走季票页：首屏就能选，不用先滚到底部或进导航。
 $("demoSub").onclick=function(){try{track("demo_cta_pass");}catch(e){}goSub();};
 $("btnAiOpen").onclick=function(e){e.preventDefault();var ai=$("aiCard");if(ai){ai.dataset.open="1";ai.classList.remove("hidden");ai.scrollIntoView({behavior:"smooth",block:"start"});}};
