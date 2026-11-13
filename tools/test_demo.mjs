@@ -265,13 +265,15 @@ await withChrome(async (cdp) => {
         assert.ok(geo.video.h >= 120 && geo.video.h <= 200, "演示片高度不合一屏预算：" + geo.video.h);
         assert.ok(geo.videoTag.length > 0, "演示片没标「几秒演示」");
       });
-      check("首屏不摆滑块（拖一下在片子里演过），五行紧跟订阅按钮：" + tag, () => {
+      check("首屏里没有可拖的：五行紧跟订阅按钮，滑块退到五行之后、首屏之外：" + tag, () => {
         assert.ok(geo.sliderTop != null, "没量到滑块");
-        assert.equal(geo.sliderShown, false, "滑块又回来了，首屏多一个可拖的");
         assert.ok(geo.rowsTop >= geo.ctaTop + geo.ctaH, "五行没紧跟订阅按钮：rows=" + geo.rowsTop + " ctaBottom=" + (geo.ctaTop + geo.ctaH));
+        assert.equal(geo.sliderShown, true, "滑块被藏了，片子里演的拖一下就没处可做");
+        assert.ok(geo.sliderTop >= geo.rowsBottom, "滑块跑到五行上面了：" + geo.sliderTop);
+        assert.ok(geo.sliderTop > geo.vh, "滑块还挤在首屏里：" + geo.sliderTop + "，视口 " + geo.vh);
       });
-      check("首屏可点入口固定这几处：生成、样例开关、订阅、两处出处折叠：" + tag, () => {
-        const want = ["btnMake", "SUMMARY", "demoSub", "SUMMARY", "SUMMARY"];
+      check("可点入口固定这几处：生成、样例开关、订阅、五行之下的滑块、两处出处折叠：" + tag, () => {
+        const want = ["btnMake", "SUMMARY", "demoSub", "demoIncome", "SUMMARY", "SUMMARY"];
         assert.deepEqual(geo.entries.map((e) => e.split(":")[0]).sort(), want.slice().sort(), "入口：" + geo.entries.join(" / "));
       });
       check("卡片内一颗醒目按钮（订阅）+ 出处折叠：" + tag, () => {
