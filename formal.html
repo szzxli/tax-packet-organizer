@@ -511,7 +511,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <p id="tagMsg" class="small"></p>
 </div>
 
-<div class="card no-print" id="guideCard" data-flow-step="1"><div class="g-face" aria-hidden="true">🧑‍💼</div><div class="g-body"><p class="g-line" id="gLine"></p><button type="button" class="g-btn" id="gNext">下一步</button></div></div>
+<div class="card no-print" id="guideCard" data-flow-step="1"><div class="g-face" aria-hidden="true">🧑‍💼</div><div class="g-body"><p class="g-line" id="gLine"></p><button type="button" class="g-btn" id="gNext">下一步</button><p class="g-try small muted" id="gTry">试试：<a href="#" data-inc="200000">今年卖了房</a> · <a href="#" data-inc="120000">孩子毕业了</a> · <a href="#" data-inc="60000">换工作了</a></p></div></div>
 <div class="card no-print" id="demoCard" data-flow-step="1">
 <p class="demo-tag">看一遍就会用 · 样例：已婚、两孩、加州，不是你的数。</p>
 <div class="demo-video">
@@ -5357,6 +5357,23 @@ textarea{line-height:1.6}
   function draw(){var line=document.getElementById("gLine"),b=document.getElementById("gNext");if(!line||!b)return;line.textContent=L[i][w()];b.textContent=N[i][w()];}
   function bind(){var b=document.getElementById("gNext");if(!b||b._b)return;b._b=1;b.onclick=function(){if(i<2){i++;draw();return;}try{track("demo_cta_pass");}catch(e){}try{goSub();}catch(e){}};draw();}
   document.addEventListener("DOMContentLoaded",bind);setTimeout(bind,1200);
+})();
+</script>
+
+<script>
+(function(){
+  function bind(){
+    var box=document.getElementById("gTry"); if(!box||box._b)return; box._b=1;
+    box.addEventListener("click",function(ev){
+      var a=ev.target.closest("[data-inc]"); if(!a)return; ev.preventDefault();
+      var sl=document.getElementById("demoIncome"); if(!sl)return;
+      sl.value=a.getAttribute("data-inc");
+      sl.dispatchEvent(new Event("input",{bubbles:true}));
+      sl.dispatchEvent(new Event("change",{bubbles:true}));
+      try{track("demo_drag");}catch(e){}
+    });
+  }
+  document.addEventListener("DOMContentLoaded",bind); setTimeout(bind,1200);
 })();
 </script>
 </body>
