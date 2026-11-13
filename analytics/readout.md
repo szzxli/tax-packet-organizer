@@ -8,7 +8,9 @@
 | 桶 | 条件 |
 |---|---|
 | social | `utm_medium='ref'` 且 `utm_source='xhs'` |
-| forum | `utm_medium='ref'` 且 `utm_source IN ('reddit','moonbbs')` |
+| forum | `utm_medium='ref'` 且 `utm_source IN ('reddit','moonbbs','quora')` |
+| community | `utm_medium='ref'` 且 `utm_source IN ('nextdoor','fbgroup')` |
+| seo | `utm_medium='ref'` 且 `utm_source LIKE 'seo-%'` |
 | directory | `utm_medium='ref'` 且 `utm_source IN ('alternativeto','github')` |
 | email | `utm_medium='ref'` 且 `utm_source IN ('cpa-handoff','email-cpa-survey','email')` |
 | search | `utm_medium='search'`（搜索引擎 referrer，无需 `?ref=`） |
@@ -16,16 +18,20 @@
 | direct | `utm_medium='direct'` |
 | other | 其余（只列数，**不参与任何止损判决**） |
 
-> 线上已挂出的 ref 实值只有六个：`reddit`、`moonbbs`、`alternativeto`、`github`、`cpa-handoff`、`email-cpa-survey`。
+> 已挂出的 ref 实值是六个：`reddit`、`moonbbs`、`alternativeto`、`github`、`cpa-handoff`、`email-cpa-survey`。
+> 待挂的还有四个：`quora`、`nextdoor`、`fbgroup`、`seo-<slug>`（10 页各一个 slug，还会继续加）。
 > 旧名 `cpa`、`email` 保留在映射里只作兼容，不要据此判断邮件线死了。
+> `other` 里若出现 `quora`／`nextdoor`／`fbgroup`／`seo-` 前缀，说明 CASE 没生效，按实现缺陷处理，不算渠道 0。
 
 ## 日读数 SQL（前一天 00:00–24:00 PT）
 
 ```sql
 SELECT
   CASE
+    WHEN utm_medium='ref' AND utm_source LIKE 'seo-%' THEN 'seo'
     WHEN utm_medium='ref' AND utm_source='xhs' THEN 'social'
-    WHEN utm_medium='ref' AND utm_source IN ('reddit','moonbbs') THEN 'forum'
+    WHEN utm_medium='ref' AND utm_source IN ('reddit','moonbbs','quora') THEN 'forum'
+    WHEN utm_medium='ref' AND utm_source IN ('nextdoor','fbgroup') THEN 'community'
     WHEN utm_medium='ref' AND utm_source IN ('alternativeto','github') THEN 'directory'
     WHEN utm_medium='ref' AND utm_source IN ('cpa-handoff','email-cpa-survey','email') THEN 'email'
     WHEN utm_medium='search' THEN 'search'
@@ -50,5 +56,5 @@ WHERE created_at >= :start AND created_at < :end;
 
 ## 判据
 
-到 2026-11-30：收录 ≥8 页；`ref` 到达 ≥60、`search` 到达 ≥40，合计 ≥100；开口问 ≥10 人且 ≥3 人问到具体动作。
-`other` 不计入任何一项。https 开关落地前，涉及 https 的收录项标「仪器未通（https）」。
+到 2026-11-30：收录 ≥8 页；`ref` 到达 ≥60（social + forum + community + seo + directory + email 求和）、`search` 到达 ≥40，合计 ≥100；开口问 ≥10 人且 ≥3 人问到具体动作。
+`other` 不计入任何一项；`other` 里若出现 `quora`／`nextdoor`／`fbgroup`／`seo-` 前缀，算实现缺陷，不算渠道 0。https 开关落地前，涉及 https 的收录项标「仪器未通（https）」。
