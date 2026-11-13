@@ -276,7 +276,32 @@ export default {
       return bad("subscription_closed", 503);
     }
 
-    if (path === "/api/health" && req.method === "GET") return ok({ version: "tpo-api-5", subscription_open: SUBSCRIPTION_OPEN });
+    if (path === "/api/health" && req.method === "GET") return ok({ version: "tpo-api-6", subscription_open: SUBSCRIPTION_OPEN });
+
+    // 报名落库：公开、不建账号，与 formsubmit 双写。页面提交失败也不阻断，
+    // 所以这里只做最小校验与限流；ref 原样存，不做映射，归因由查询端决定。
+    if (path === "/api/signup" && req.method === "POST") {
+      const b = await readJson(req);
+      if (!b || typeof b !== "object") return bad("bad_json");
+      const email = String(b.email || "").trim().toLowerCase();
+      const phone = String(b.phone || "").trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad("bad_email");
+      if (phone.replace(/\D/g, "").length < 7) return bad("bad_phone");
+      const ipHash = await sha256hex((req.headers.get("CF-Connecting-IP") || "unknown") + "|signup");
+      const since = Date.now() - 60 * 60 * 1000;
+      const hit = await env.DB.prepare("SELECT COUNT(*) AS n FROM signup_rate WHERE ip_hash=? AND created_at>?").bind(ipHash, since).first();
+      if ((hit?.n || 0) >= 10) return bad("rate_limited", 429);
+      const id = crypto.randomUUID();
+      const ref = String(b.ref || "").slice(0, 120);
+      const source = String(b.source || "").slice(0, 120);
+      const payload = JSON.stringify(b).slice(0, 4000);
+      await env.DB.batch([
+        env.DB.prepare("INSERT INTO signup_leads (id,email,phone,name,state,kind,slot,ref,source,payload,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
+          .bind(id, email, phone, String(b.name || "").slice(0, 80), String(b.state || "").slice(0, 40), String(b.kind || "").slice(0, 80), String(b.slot || "").slice(0, 80), ref, source, payload, Date.now()),
+        env.DB.prepare("INSERT INTO signup_rate (ip_hash,created_at) VALUES (?,?)").bind(ipHash, Date.now()),
+      ]);
+      return ok({ id });
+    }
 
     // 套餐公开可读：价格、周期、是否自动续费只有这一个来源。
     if (path === "/api/plans" && req.method === "GET") {

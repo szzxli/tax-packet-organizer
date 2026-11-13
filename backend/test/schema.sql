@@ -95,3 +95,22 @@ CREATE TABLE subscription_events (
   created_at INTEGER NOT NULL
 );
 CREATE INDEX idx_sub_events_account ON subscription_events(account_id);
+
+-- 报名落库（2026-11-13）：公开表单，不建账号；ref 原样存。
+CREATE TABLE signup_leads (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  name TEXT,
+  state TEXT,
+  kind TEXT,
+  slot TEXT,
+  ref TEXT,
+  source TEXT,
+  payload TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX idx_signup_leads_created ON signup_leads(created_at);
+CREATE INDEX idx_signup_leads_ref ON signup_leads(ref);
+CREATE TABLE signup_rate (ip_hash TEXT NOT NULL, created_at INTEGER NOT NULL);
+CREATE INDEX idx_signup_rate ON signup_rate(ip_hash, created_at);

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://tax.ucplan.org/signup.html">
 <title>内测报名｜报税包整理器</title>
 <style>
   :root{--ink:#1f2a37;--muted:#5b6776;--line:#dfe3e8;--bg:#f6f7f5;--card:#fff;--accent:#1f4e79;--accent2:#2f6f4e;--warn:#8a5a00}
@@ -55,13 +56,14 @@
     <h2>免费陪跑：把报税材料理成一张清单</h2>
     <p class="lead">5 场小组，每场 10 家，20:00–20:45；复杂件加 1 次 1 对 1。做完拿走自己的清单 PDF，不收费，只换一句真实反馈。</p>
 
-    <form action="https://formsubmit.co/dfccede04d08f7b3d12914879a0bc598" method="POST" accept-charset="UTF-8">
+    <form id="familyForm" action="https://formsubmit.co/dfccede04d08f7b3d12914879a0bc598" method="POST" accept-charset="UTF-8">
       <input type="hidden" name="_subject" value="50 家庭陪跑报名">
       <input type="hidden" name="_template" value="table">
       
       <input type="hidden" name="_next" value="https://tax.ucplan.org/signup.html?sent=1#thanks">
       <input type="hidden" name="_autoresponse" value="已收到 50 家庭陪跑报名。11/17 前会发小组时间；5 场小组，每场 10 家。先准备去年报税表 + 今年 2–3 份收入表（SSN 遮住）。名额满了会进候补，按报名顺序通知。">
       <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+      <input type="hidden" name="ref" id="f-ref" value="">
 
       <div class="row">
         <div>
@@ -149,11 +151,30 @@
 <script>
   (function(){
     var p = new URLSearchParams(location.search);
+    var ref = (p.get('ref') || '').slice(0, 120);
+    var refEl = document.getElementById('f-ref');
+    if (refEl) refEl.value = ref;
     if (p.get('sent')) {
       var el = document.getElementById('thanks');
       if (el) el.style.display = 'block';
       window.scrollTo({top: 0, behavior: 'smooth'});
     }
+    var form = document.getElementById('familyForm');
+    if (form) form.addEventListener('submit', function(){
+      try {
+        var fd = new FormData(form);
+        var body = {
+          name: fd.get('称呼') || '', email: fd.get('email') || '', phone: fd.get('手机号') || '',
+          state: fd.get('州') || '', kind: fd.get('身份或收入类型') || '', slot: fd.get('小组场次') || '',
+          change: fd.get('今年最大的变化') || '', note: fd.get('备注') || '', case_ok: fd.get('授权案例') || '',
+          ref: fd.get('ref') || '', source: 'signup.html'
+        };
+        fetch('https://tax-packet-api.szzxli711.workers.dev/api/signup', {
+          method: 'POST', headers: {'content-type': 'application/json'},
+          body: JSON.stringify(body), keepalive: true
+        }).catch(function(){});
+      } catch (e) {}
+    });
   })();
 </script>
 </body>
