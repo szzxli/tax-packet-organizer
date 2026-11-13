@@ -413,6 +413,12 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 
 /* 少做选择：首屏只留 生成 / 看怎么算 / 订阅 */
 #btnAiOpen,#heroState{display:none!important}
+
+#guideCard{display:flex;gap:10px;align-items:flex-start;margin:0 0 10px}
+#guideCard .g-face{width:38px;height:38px;border-radius:50%;background:#16324f;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 38px}
+#guideCard .g-body{flex:1}
+#guideCard .g-line{margin:0 0 8px;font-size:15px;line-height:1.5}
+#guideCard .g-btn{min-height:44px;font-size:15px}
 </style>
 </head>
 <body>
@@ -505,6 +511,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <p id="tagMsg" class="small"></p>
 </div>
 
+<div class="card no-print" id="guideCard" data-flow-step="1"><div class="g-face" aria-hidden="true">🧑‍💼</div><div class="g-body"><p class="g-line" id="gLine"></p><button type="button" class="g-btn" id="gNext">下一步</button></div></div>
 <div class="card no-print" id="demoCard" data-flow-step="1">
 <p class="demo-tag">看一遍就会用 · 样例：已婚、两孩、加州，不是你的数。</p>
 <div class="demo-video">
@@ -5338,5 +5345,19 @@ textarea{line-height:1.6}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}#coverPreviewCard .cover-preview{transform:none!important}}
 </style>
 
+
+<script>
+(function(){
+  var L=[["先说一句今年变了什么。不会写也行，跳过，直接看下面的样例。","Say one thing that changed this year. No idea how to write it? Skip it and look at the sample below.","Diga una cosa que cambió este año. ¿No sabe cómo escribirlo? Omita y mire el ejemplo de abajo."],
+         ["这五行是样例，只看结论——金额和出处都收起来了。","These five lines are a sample; read the conclusions only — amounts and sources are folded away.","Estas cinco líneas son un ejemplo; lea solo las conclusiones: los importes están plegados."],
+         ["想看你自己那五行、还有今年退还是补？点这颗。","Want your own five lines, plus refund or owed this year? Tap this one.","¿Quiere sus cinco líneas, y si este año sale a devolver o a pagar? Toque este."]],
+      N=[["下一步","Next","Siguiente"],["下一步","Next","Siguiente"],["订阅季票 · 内测免费","Subscribe · free in beta","Suscribirse · gratis en beta"]];
+  var i=0;
+  function w(){var l=(document.documentElement.lang||"zh").slice(0,2);return l==="en"?1:(l==="es"?2:0);}
+  function draw(){var line=document.getElementById("gLine"),b=document.getElementById("gNext");if(!line||!b)return;line.textContent=L[i][w()];b.textContent=N[i][w()];}
+  function bind(){var b=document.getElementById("gNext");if(!b||b._b)return;b._b=1;b.onclick=function(){if(i<2){i++;draw();return;}try{track("demo_cta_pass");}catch(e){}try{goSub();}catch(e){}};draw();}
+  document.addEventListener("DOMContentLoaded",bind);setTimeout(bind,1200);
+})();
+</script>
 </body>
 </html>
