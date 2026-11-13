@@ -105,7 +105,7 @@ details>summary{cursor:pointer;color:var(--ink);font-weight:600;padding:8px 0}
 .sticky-progress button{white-space:nowrap;min-height:44px}#stickyProgressPrev{display:inline-block;margin-top:5px;color:#35546c;font-size:12px;text-decoration:underline}.sec-head{align-items:center;gap:10px}.sec-sum{line-height:1.35}.sec-head h2{font-size:17px}
 /* 样品：一行一条（标签 / 数值 / 一句说明），长解释与出处收进折叠，首屏只留一屏。 */
 /* 首屏模式：整页只剩「一句话 / 输入框 / 样例」，生成清单后所有卡自动回来 */
-body.tpo-first #appView > .card:not(#startCard):not(#heroBox):not(#demoCard){display:none!important}
+body.tpo-first #appView > .card:not(#startCard):not(#heroBox):not(#demoCard):not(#pageNav){display:none!important}
 body.tpo-first #appViewSections,body.tpo-first #appView > .journey-guide{display:none!important}
 #heroBox.llm{padding:14px 12px!important}
 #heroBox .llm-q{margin:0 0 10px;font-size:19px;line-height:1.35}
@@ -1066,6 +1066,7 @@ Object.assign(I18N,{"报税材料，整理成一份能交出去的清单。":{"e
 "用你的数出结论、交出去前总核对、规则变化提醒。":{"en":"your answer, the check-over, rule changes.","es":"su respuesta, el chequeo, cambios de reglas."},
 "上面是样例家庭的数。季票内测期免费，1 月公布价格。":{"en":"Those are the sample household\u2019s numbers. The pass is free during beta; pricing announced in January.","es":"Esas son las cifras del hogar de ejemplo. El pase es gratis en beta; precios en enero."},
 "订阅季票 · 内测免费":{"en":"Subscribe \u00b7 free in beta","es":"Suscribirme \u00b7 gratis en beta"},
+"打开我的季票":{"en":"Open my pass","es":"Abrir mi pase"},
 "季票内测期免费，1 月公布价格。":{"en":"The pass is free during beta; pricing announced in January.","es":"El pase es gratis durante la beta; precios en enero."},
 "免费 · 不用登录 · 不需要懂税":{"en":"Free \u00b7 no login \u00b7 no tax knowledge needed","es":"Gratis \u00b7 sin cuenta \u00b7 sin saber de impuestos"},
 "季票 = 免费的全部 + 你的结论、交出去前核对、规则变化提醒。内测免费，1 月公布价格。":{"en":"The pass = everything free, plus your own answer, the pre-handoff check, and rule changes. Free in beta; pricing announced in January.","es":"El pase = todo lo gratis, más su respuesta, la verificación previa y los cambios de reglas. Gratis en beta; precios en enero."},
@@ -1386,7 +1387,7 @@ function apiOn(){return (typeof TpoApi!=="undefined")&&TpoApi.enabled();}
 var serverOrders=[];
 function displayOrders(){ if(serverOrders&&serverOrders.length) return serverOrders.map(function(o){ return {id:o.id, at:new Date(o.created_at).toLocaleString(), packs:o.packs, amountCents:o.amount_cents, method:"\u4fe1\u7528\u5361", status:o.status==="paid"?"paid":"pending", entitlementEnd:o.entitlement_end}; }); return subOrders(); }
 function refreshOrders(){if(!apiOn()||localOnly||!currentUser)return Promise.resolve([]);return TpoApi.listOrders().then(function(d){serverOrders=(d&&d.orders)||[];if(typeof renderOrders==="function")renderOrders();return serverOrders;}).catch(function(){return serverOrders;});}
-function refreshEntitlement(){if(!apiOn()||!currentUser)return Promise.resolve(0);return TpoApi.me().then(function(m){serverEntitlementEnd=(m&&m.entitlement_end)||0;serverSub=(m&&m.subscription)||null;if(typeof renderSubStatus==="function")renderSubStatus();if(typeof renderPlanCards==="function")renderPlanCards();refreshOrders();if(typeof renderHero==="function")renderHero();if(hasPass()){if(typeof renderReminders==="function")renderReminders();if(typeof renderProbe==="function")renderProbe();if(typeof renderDeep==="function")renderDeep();if(typeof renderSnaps==="function")renderSnaps();if(typeof renderCpa==="function")renderCpa();if(typeof renderPriority==="function")renderPriority();}return serverEntitlementEnd;}).catch(function(){return 0;});}
+function refreshEntitlement(){if(!apiOn()||!currentUser)return Promise.resolve(0);return TpoApi.me().then(function(m){serverEntitlementEnd=(m&&m.entitlement_end)||0;serverSub=(m&&m.subscription)||null;if(typeof renderSubStatus==="function")renderSubStatus();if(typeof renderPlanCards==="function")renderPlanCards();refreshOrders();if(typeof renderHero==="function")renderHero();if(hasPass()){if(typeof renderReminders==="function")renderReminders();if(typeof renderProbe==="function")renderProbe();if(typeof renderDeep==="function")renderDeep();if(typeof renderSnaps==="function")renderSnaps();if(typeof renderCpa==="function")renderCpa();if(typeof renderPriority==="function")renderPriority();}if(typeof maybeLandOnPass==="function")maybeLandOnPass();return serverEntitlementEnd;}).catch(function(){return 0;});}
 function scheduleServerSave(){if(!apiOn()||localOnly||!currentUser||!packet)return;if(serverSyncTimer)clearTimeout(serverSyncTimer);serverSyncTimer=setTimeout(function(){serverSyncTimer=null;if(!packet||!currentUser)return;TpoApi.putPacket(packet).catch(function(){});},1000);}
 var GUEST_KEY="tpo_packet_guest",pendingPage=null;
 function isGuest(){return !currentUser;}
@@ -3685,6 +3686,7 @@ function renderHero(){
   // 首屏模式：还没有清单、还在第 1 页时，整页只留「一句话 / 输入框 / 样例」三块。
   var noneList=!(packet&&packet.checklist&&packet.checklist.length);
   document.body.classList.toggle("tpo-first", currentPage===1 && noneList);
+  document.body.classList.toggle("tpo-pass", hasPass());
   renderOutlook();
   var sc=$("subShowcase");if(sc)sc.classList.toggle("hidden",currentPage!==1||!packet.checklist.length||hasPass()||currentOrganizeStep!==3);
   var ai=$("aiCard");if(ai){var showAi=ai.dataset.open==="1"&&currentPage===1&&currentOrganizeStep===1;ai.classList.toggle("hidden",!showAi);}
@@ -3729,6 +3731,7 @@ function renderDemo(){
   var sl=document.getElementById("demoIncome");
   var inc=sl?(Number(sl.value)||120000):120000;
   var now=document.getElementById("demoIncomeNow");if(now)now.textContent=demoMoney(inc);
+  var sb=document.getElementById("demoSub");if(sb)sb.textContent=hasPass()?tr("打开我的季票","Open my pass","Abrir mi pase"):tr("订阅季票 · 内测免费","Subscribe · free in beta","Suscribirme · gratis en beta");
   var box=document.getElementById("demoRows");if(!box)return;
   var rows=[];
   // 每行三件：标签、数值、一句说明。整句与出处进卡底折叠，首屏只留一屏。
@@ -3853,7 +3856,7 @@ $("btnAiOpen").onclick=function(e){e.preventDefault();var ai=$("aiCard");if(ai){
 function syncNavChrome(){
   var nav=document.getElementById("pageNav"); if(!nav) return;
   var noList=!(typeof packet!=="undefined"&&packet&&packet.checklist&&packet.checklist.length);
-  nav.classList.toggle("hidden", currentPage===1 && noList);
+  nav.classList.toggle("hidden", currentPage===1 && noList && !hasPass());
 }
 function showPage(p){
   // 卡 2 对所有人免费可见：订阅页未登录也能看能填；只有支付页（3）要求登录。
@@ -3884,6 +3887,10 @@ function showPage(p){
   renderStickyProgress();
 }
 wrapSections();
+var passLanded=false,navTouched=false;
+function landingPage(){try{if(hasPass()&&!pendingStep&&(!packet||!packet.checklist||!packet.checklist.length))return 2;}catch(e){}return 1;}
+function maybeLandOnPass(){try{if(passLanded||navTouched||!hasPass())return;if(currentPage!==1)return;if(pendingStep)return;if(packet&&packet.checklist&&packet.checklist.length)return;passLanded=true;showPage(2);}catch(e){}}
+document.addEventListener("click",function(){navTouched=true;},true);
 function showApp(){
   flowStart();
   var bc=$("bootCard");if(bc)bc.classList.add("hidden");
@@ -3903,7 +3910,7 @@ function showApp(){
   $("guestNote").classList.toggle("hidden",!g);
   currentOrganizeStep=recommendedOrganizeStep();
   lastResolvedCount=packet.checklist.filter(rowResolved).length;
-  renderAll();showPage(1);
+  renderAll();showPage(landingPage());
   if(pendingStep){var ps=pendingStep;pendingStep=null;setOrganizeStep(ps,false);}
 }
 var pendingStep=null,saveFrom=null;

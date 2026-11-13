@@ -352,6 +352,55 @@ await withChrome(async (cdp) => {
       });
     }
   }
+  // 已订用户的路：不再每次从「整理」进——落地进季票页，首屏给订阅口，按钮不写「订阅」
+  await cdp.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+  await cdp.send("Storage.clearDataForOrigin", { origin: baseUrl.replace(/\/formal\.html$/, ""), storageTypes: "local_storage" });
+  await cdp.send("Page.navigate", { url: baseUrl + "?lang=zh&probe=1" });
+  for (let i = 0; i < 90; i++) { await sleep(120); const n = await cdp.eval('document.getElementById("demoRows") ? document.getElementById("demoRows").children.length : 0'); if (n === 5) break; }
+  await sleep(400);
+  const paid = JSON.parse(await cdp.eval(`(() => {
+    const nav = document.getElementById("pageNav");
+    const before = {
+      page: currentPage,
+      navHidden: nav.classList.contains("hidden") || getComputedStyle(nav).display === "none",
+      cta: document.getElementById("demoSub").textContent.trim()
+    };
+    currentUser = "paid@example.com";
+    serverEntitlementEnd = Date.now() + 30 * 86400000;
+    passLanded = false; navTouched = false;
+    const landingEmpty = landingPage();
+    maybeLandOnPass();
+    const landed = currentPage;
+    const out = {
+      before: before, landingEmpty: landingEmpty, landed: landed,
+      subShown: !document.getElementById("subCard").classList.contains("hidden"),
+      navVisible: !nav.classList.contains("hidden") && getComputedStyle(nav).display !== "none",
+      navButtons: Array.from(nav.querySelectorAll("button")).map(b => b.id)
+    };
+    showPage(1); renderAll();
+    out.cta = document.getElementById("demoSub").textContent.trim();
+    packet.checklist = packet.checklist.slice();
+    packet.checklist.push({ id: "gate-probe", form: "W-2", title: "W-2", status: "not-started" });
+    out.landingWithWork = landingPage();
+    packet.checklist.pop();
+    return JSON.stringify(out);
+  })()`));
+  check("未订用户：还从「整理」进，首屏没有顶部导航，按钮写「订阅」", () => {
+    assert.equal(paid.before.page, 1, "游客没落在第 1 页");
+    assert.equal(paid.before.navHidden, true, "游客首屏冒出顶部导航");
+    assert.ok(/订阅|Subscribe|Suscribirme/.test(paid.before.cta), "游客按钮不是订阅：" + paid.before.cta);
+  });
+  check("已订用户：没有在做的事时，落地直接进季票页", () => {
+    assert.equal(paid.landingEmpty, 2, "已订用户落地页不是季票页：" + paid.landingEmpty);
+    assert.equal(paid.landed, 2, "已订用户被留在整理：" + paid.landed);
+    assert.equal(paid.subShown, true, "季票页没显示出来");
+    assert.equal(paid.landingWithWork, 1, "有清单的已订用户应该回整理继续");
+  });
+  check("已订用户：首屏有「整理 / 季票」两个口，按钮改「打开我的季票」", () => {
+    assert.equal(paid.navVisible, true, "已订用户首屏没有订阅口");
+    assert.deepEqual(paid.navButtons, ["navOrganize", "navSubscribe"], "导航按钮不对：" + paid.navButtons.join(","));
+    assert.ok(/打开我的季票|Open my pass|Abrir mi pase/.test(paid.cta), "已订用户按钮还写着订阅：" + paid.cta);
+  });
 });
 
 server.close();
