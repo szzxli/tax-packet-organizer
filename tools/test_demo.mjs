@@ -211,7 +211,9 @@ await withChrome(async (cdp) => {
           ctaHit: !!(hit && (hit === cta || cta.contains(hit))),
           entries: entries.map(el => (el.id || el.tagName) + ":" + (el.textContent || "").trim().slice(0, 12)),
           cardEntries: cardEntries.map(el => el.id || el.tagName),
+          rowsTop: rows.length ? Math.round(rows[0].getBoundingClientRect().top) : 0,
           sliderTop: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().top) : null; })(),
+          sliderShown: (() => { const el = document.getElementById("demoIncome"); return !!(el && el.offsetParent !== null); })(),
           sliderBottom: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().bottom) : null; })(),
           video: (() => {
             const v = document.getElementById("demoVideo");
@@ -263,13 +265,13 @@ await withChrome(async (cdp) => {
         assert.ok(geo.video.h >= 120 && geo.video.h <= 200, "演示片高度不合一屏预算：" + geo.video.h);
         assert.ok(geo.videoTag.length > 0, "演示片没标「几秒演示」");
       });
-      check("滑块与五行都在片子和订阅按钮下面（进阶，不抢首屏）：" + tag, () => {
+      check("首屏不摆滑块（拖一下在片子里演过），五行紧跟订阅按钮：" + tag, () => {
         assert.ok(geo.sliderTop != null, "没量到滑块");
-        assert.ok(geo.sliderTop > geo.ctaTop + geo.ctaH, "滑块跑到订阅按钮上面了");
-        assert.ok(geo.sliderBottom <= geo.vh + 300, "滑块离首屏太远：" + geo.sliderBottom);
+        assert.equal(geo.sliderShown, false, "滑块又回来了，首屏多一个可拖的");
+        assert.ok(geo.rowsTop >= geo.ctaTop + geo.ctaH, "五行没紧跟订阅按钮：rows=" + geo.rowsTop + " ctaBottom=" + (geo.ctaTop + geo.ctaH));
       });
-      check("首屏可点入口固定这几处：生成、AI 描述、样例开关、滑块、订阅、免费链接、出处折叠：" + tag, () => {
-        const want = ["btnMake", "btnAiOpen", "SUMMARY", "demoIncome", "demoSub", "SUMMARY", "SUMMARY"];
+      check("首屏可点入口固定这几处：生成、样例开关、订阅、两处出处折叠：" + tag, () => {
+        const want = ["btnMake", "SUMMARY", "demoSub", "SUMMARY", "SUMMARY"];
         assert.deepEqual(geo.entries.map((e) => e.split(":")[0]).sort(), want.slice().sort(), "入口：" + geo.entries.join(" / "));
       });
       check("卡片内一颗醒目按钮（订阅）+ 出处折叠：" + tag, () => {
