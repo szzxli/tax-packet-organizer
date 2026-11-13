@@ -213,6 +213,18 @@ await withChrome(async (cdp) => {
           cardEntries: cardEntries.map(el => el.id || el.tagName),
           sliderTop: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().top) : null; })(),
           sliderBottom: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().bottom) : null; })(),
+          video: (() => {
+            const v = document.getElementById("demoVideo");
+            if (!v) return null;
+            const b = v.getBoundingClientRect();
+            return { top: Math.round(b.top), bottom: Math.round(b.bottom), h: Math.round(b.height),
+              src: (v.currentSrc || v.getAttribute("src") || "").split("/").pop(),
+              poster: (v.getAttribute("poster") || "").split("/").pop(),
+              muted: v.muted, loop: v.loop, autoplay: v.autoplay,
+              playsinline: v.hasAttribute("playsinline"), paused: v.paused,
+              w: v.videoWidth, hh: v.videoHeight };
+          })(),
+          videoTag: (() => { const e = document.querySelector("#demoCard .demo-video-tag"); return e ? e.textContent.trim() : ""; })(),
           vh: innerHeight,
           cardText: card ? card.textContent : "",
           pageText: document.body.innerText
@@ -229,17 +241,32 @@ await withChrome(async (cdp) => {
         assert.equal(geo.cw, w, "视口不是 " + w + "（实际 " + geo.cw + "）");
         assert.ok(geo.sw <= geo.cw, "被撑宽 " + geo.sw + " > " + geo.cw);
       });
-      check("订阅按钮：≥44px、对比度 ≥4.5、在五行与三步之后、首屏看得见：" + tag, () => {
+      check("订阅按钮：≥44px、对比度 ≥4.5、在演示片下面、首屏看得见：" + tag, () => {
         assert.ok(geo.ctaText.length > 0, "订阅按钮没文案");
         assert.ok(geo.ctaH >= 44, "主按钮高度不足 44px：" + geo.ctaH);
         assert.ok(geo.contrast >= 4.5, "主按钮对比度只有 " + geo.contrast + ":1（字 " + geo.ctaColor + "，底 " + geo.ctaBg + "）");
-        assert.ok(geo.ctaTop > geo.rowsBottom, "主按钮没在五行之后：cta=" + geo.ctaTop + " rowsBottom=" + geo.rowsBottom);
+        assert.ok(geo.video && geo.ctaTop > geo.video.bottom, "主按钮没紧跟演示片：cta=" + geo.ctaTop + " videoBottom=" + (geo.video || {}).bottom);
         assert.ok(geo.ctaH > 0 && geo.ctaTop > 0, "订阅按钮没渲染出来");
-
+        assert.ok(geo.ctaTop + geo.ctaH <= geo.vh, "订阅按钮被挤出首屏：bottom=" + (geo.ctaTop + geo.ctaH) + "，视口 " + geo.vh);
       });
-      check("滑块在首屏（底边 ≤ 视口高）：" + tag, () => {
-        assert.ok(geo.sliderBottom != null, "没量到滑块");
-        assert.ok(geo.sliderBottom <= geo.vh, "滑块底边超出视口：bottom=" + geo.sliderBottom + "，视口 " + geo.vh);
+      check("演示片：自动、静音、循环、内联播放，放的是当前语言那一条：" + tag, () => {
+        assert.ok(geo.video, "没有演示片");
+        assert.ok(/^demo-(zh|en|es)\.mp4$/.test(geo.video.src), "演示片路径不对：" + geo.video.src);
+        assert.equal(geo.video.src, "demo-" + lang + ".mp4", "放的不是当前语言那条：" + geo.video.src);
+        assert.ok(/^demo-(zh|en|es)\.jpg$/.test(geo.video.poster), "封面路径不对：" + geo.video.poster);
+        assert.equal(geo.video.muted, true, "没静音，手机上不会自动播");
+        assert.equal(geo.video.loop, true, "没循环");
+        assert.equal(geo.video.autoplay, true, "没自动播");
+        assert.equal(geo.video.playsinline, true, "没写 inline，iOS 会全屏弹出去");
+        assert.ok(geo.video.w > 0 && geo.video.hh > 0, "片子没加载出来：" + geo.video.w + "×" + geo.video.hh);
+        assert.equal(geo.video.paused, false, "片子停着没动");
+        assert.ok(geo.video.h >= 120 && geo.video.h <= 200, "演示片高度不合一屏预算：" + geo.video.h);
+        assert.ok(geo.videoTag.length > 0, "演示片没标「几秒演示」");
+      });
+      check("滑块与五行都在片子和订阅按钮下面（进阶，不抢首屏）：" + tag, () => {
+        assert.ok(geo.sliderTop != null, "没量到滑块");
+        assert.ok(geo.sliderTop > geo.ctaTop + geo.ctaH, "滑块跑到订阅按钮上面了");
+        assert.ok(geo.sliderBottom <= geo.vh + 300, "滑块离首屏太远：" + geo.sliderBottom);
       });
       check("首屏可点入口固定这几处：生成、AI 描述、样例开关、滑块、订阅、免费链接、出处折叠：" + tag, () => {
         const want = ["btnMake", "btnAiOpen", "SUMMARY", "demoIncome", "demoSub", "SUMMARY", "SUMMARY"];
