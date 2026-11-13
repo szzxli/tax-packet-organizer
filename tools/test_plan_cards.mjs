@@ -351,7 +351,7 @@ check("FAQ：季票只讲三件，规划卡与盯梢这两个卖点名清零", (
   assert.ok(i > 0 && j > i, "找不到 FAQ 卡");
   const faq = html.slice(i, j);
   const line = html.slice(html.indexOf("季票包括什么？", i), html.indexOf("</p>", html.indexOf("季票包括什么？", i)));
-  for (const need of ["整理完那一屏", "交付前总核对", "次年打开还在", "内测中", "医保补贴", "不用领季票", "只在本页展示"]) {
+  for (const need of ["整理完那一屏", "交付前总核对", "次年打开还在", "内测中", "补贴那一屏", "不用领季票", "只在本页展示"]) {
     assert.ok(line.includes(need), "FAQ 少了：" + need);
   }
   assert.ok(!faq.includes("三张规划卡"), "FAQ 还在讲三张规划卡");
@@ -361,7 +361,7 @@ check("FAQ：季票只讲三件，规划卡与盯梢这两个卖点名清零", (
 
 check("页面级：订阅展示卡只讲「整理完那一屏」与「交付前总核对」两格", () => {
   assert.ok(html.includes("<h3>季票先把这一屏的钱讲清楚</h3>"), "缺新标题");
-  assert.ok(html.includes("<h2>季票先告诉你：今年大概是退还是补</h2>"), "缺新卡标题");
+  assert.ok(html.includes("<h2>免费只说大概；季票说差多少、哪几项在推、哪天之前改</h2>"), "缺新卡标题");
   const i = html.indexOf('id="subShowcase"');
   const blk = html.slice(i, i + 1600);
   assert.equal(blk.split("sub-three-item").length - 1, 2, "展示卡不是两格");
@@ -388,24 +388,26 @@ check("页面级：功能对比表改成四节点交付节律（一行一个）"
 });
 
 check("i18n：新增静态文案均有英文与西语", () => {
-  const i18nStart = html.indexOf("var I18N=");
-  const i18nEnd = html.indexOf("Object.assign(I18N", i18nStart);
-  const src = html.slice(i18nStart + "var I18N=".length, i18nEnd).trim().replace(/;$/, "");
-  const i18n = vm.runInNewContext("(" + src + ")", {});
+  // 词条分布在 var I18N 与多个 Object.assign 块里，按页面的合并方式查：任一块有这对翻译即可
+  const pair = (k) =>
+    new RegExp(
+      JSON.stringify(k).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
+        ':\\{"en":"(?:[^"\\\\]|\\\\.)+","es":"(?:[^"\\\\]|\\\\.)+"\\}'
+    );
   const keys = [
     "免费整理与导出永久免费",
     "季票先把这一屏的钱讲清楚",
-    "季票先告诉你：今年大概是退还是补",
-    "基础整理和导出永久免费；季票在整理完那一屏告诉你今年的方向和每条线在哪，交付前再把整包核一遍。",
+    "免费只说大概；季票说差多少、哪几项在推、哪天之前改",
+    "基础整理和导出永久免费；季票用你的数把这三句落到你身上，交付前再把整包核一遍。",
     "整理完那一屏",
-    "今年退还是补、五条线各在哪、最近一次影响你的政策变化（带原文与核实日）。",
+    "差多少（一个范围，写清算什么、没算什么）、哪几项在推、哪天之前还能改，带出处与核实日。",
     "交付前总核对 · 现在就能出结果",
     "规划卡：补贴（1095-A / 8962）",
     "规划卡：税档 / 退休 / 政策",
     "可交 / 不可交 + 缺项表，可重跑，现在就能出结果。",
   ];
   for (const k of keys) {
-    assert.ok(i18n[k] && i18n[k].en && i18n[k].es, "缺翻译：" + k);
+    assert.ok(pair(k).test(html), "缺翻译：" + k);
   }
 });
 

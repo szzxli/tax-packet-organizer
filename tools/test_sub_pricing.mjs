@@ -24,6 +24,16 @@ const i18n = (() => {
   const src = html.slice(s + "var I18N=".length, e).trim().replace(/;$/, "");
   return vm.runInNewContext("(" + src + ")", {});
 })();
+// 页面把词条分散在 var I18N 与多个 Object.assign 块里；首块找不到时按同一份表继续找
+const lookup = (k) => {
+  if (i18n[k]) return i18n[k];
+  const re = new RegExp(
+    JSON.stringify(k).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
+      ':\\{"en":"((?:[^"\\\\]|\\\\.)+)","es":"((?:[^"\\\\]|\\\\.)+)"\\}'
+  );
+  const m = html.match(re);
+  return m ? { en: m[1], es: m[2] } : null;
+};
 
 // ---------- R2：信任句 ----------
 check("R2：信任句在展示卡的订阅按钮上方，同一个 <p> 序列里紧挨着", () => {
@@ -89,10 +99,11 @@ check("R4：时间线不写次年数字，不出现 2027", () => {
 });
 
 check("R4：时间线四段文案三语齐全（i18n）", () => {
-  const keys = ["交付节律：什么时候给你什么", "整理完", "知道你今年差多少。", "交付前", "总核对，缺什么逐条列。", "报税季", "可交 / 不可交。", "次年打开", "去年的 8 个数还在", "内测"];
+  const keys = ["交付节律：什么时候给你什么", "整理完", "今年大概退还是补、差多少。", "交付前", "总核对，缺什么逐条列。", "报税季", "可交 / 不可交。", "次年打开", "去年的 8 个数还在", "内测"];
   for (const k of keys) {
-    assert.ok(i18n[k] && i18n[k].en && i18n[k].es, "缺翻译：" + k);
-    assert.ok(!CJK.test(i18n[k].en) && !CJK.test(i18n[k].es), "翻译夹中文：" + k);
+    const t = lookup(k);
+    assert.ok(t && t.en && t.es, "缺翻译：" + k);
+    assert.ok(!CJK.test(t.en) && !CJK.test(t.es), "翻译夹中文：" + k);
   }
 });
 
