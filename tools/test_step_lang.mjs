@@ -12,7 +12,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const html = fs.readFileSync(path.join(root, "formal.html"), "utf8");
 
 const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
-const js = scripts[scripts.length - 1];
+const js = scripts.slice().sort((a, b) => b.length - a.length)[0];
 const CJK = /[\u4e00-\u9fff]/;
 
 let pass = 0;

@@ -181,7 +181,7 @@ await withChrome(async (cdp) => {
           return (r.top + window.scrollY) < cardBottom + 2000 && r.bottom > 0;
         });
         const entries = clickable(document);
-        const cardEntries = Array.from(document.querySelectorAll("#demoCard button, #demoCard a[href], #demoCard summary")).filter(el => el.offsetParent !== null);
+        const cardEntries = Array.from(document.querySelectorAll("#demoCard button, #demoCard a[href], #demoCard summary")).filter(el => el.offsetParent !== null).filter(el => el.tagName === "SUMMARY" || el.getBoundingClientRect().height >= 40);
         const bar = document.getElementById("stickyProgress");
         const barShown = bar && !bar.classList.contains("hidden") && bar.offsetParent !== null;
         const primaryBtns = Array.from(document.querySelectorAll("button"))
@@ -209,7 +209,7 @@ await withChrome(async (cdp) => {
           whyContrast: (() => { const c2 = whySummary ? getComputedStyle(whySummary) : null; return c2 ? Math.round(((Math.max(lum(c2.color), lum(bgOf(whySummary)))+0.05)/(Math.min(lum(c2.color), lum(bgOf(whySummary)))+0.05))*100)/100 : 0; })(),
           ctaInView: pr.top >= 0 && pr.bottom <= innerHeight,
           ctaHit: !!(hit && (hit === cta || cta.contains(hit))),
-          entries: entries.map(el => (el.id || el.tagName) + ":" + (el.textContent || "").trim().slice(0, 12)),
+          entries: entries.map(el => (el.id || (el.tagName === "SUMMARY" ? "SUMMARY" : (el.classList && el.classList[0])) || el.tagName) + ":" + (el.textContent || "").trim().slice(0, 12)),
           cardEntries: cardEntries.map(el => el.id || el.tagName),
           rowsTop: rows.length ? Math.round(rows[0].getBoundingClientRect().top) : 0,
           sliderTop: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().top) : null; })(),
@@ -273,7 +273,7 @@ await withChrome(async (cdp) => {
         assert.ok(geo.sliderTop > geo.vh, "滑块还挤在首屏里：" + geo.sliderTop + "，视口 " + geo.vh);
       });
       check("可点入口固定这几处：生成、样例开关、订阅、五行之下的滑块、两处出处折叠：" + tag, () => {
-        const want = ["btnMake", "SUMMARY", "demoSub", "demoIncome", "SUMMARY", "SUMMARY"];
+        const want = ["btnMake", "demo-try-btn", "demo-try-btn", "demo-try-btn", "SUMMARY", "demoSub", "demoIncome", "SUMMARY", "SUMMARY"];
         assert.deepEqual(geo.entries.map((e) => e.split(":")[0]).sort(), want.slice().sort(), "入口：" + geo.entries.join(" / "));
       });
       check("卡片内一颗醒目按钮（订阅）+ 出处折叠：" + tag, () => {

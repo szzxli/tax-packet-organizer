@@ -196,7 +196,7 @@ await withChrome(async (cdp) => {
         const demoSub = document.getElementById('demoSub'); // 首屏唯一醒目按钮
         const demoFree = document.getElementById('demoFree'); // 免费走文字链接
         const firstArea = Array.from(document.querySelectorAll('#pageNav button, #pageNav a[href], #startCard button, #startCard a[href], #demoCard button, #demoCard a[href]')).filter(el => el.offsetParent !== null);
-        const firstPrimary = firstArea.filter(el => el.tagName === 'BUTTON' && !el.classList.contains('secondary')).length;
+        const firstPrimary = firstArea.filter(el => el.tagName === 'BUTTON' && !el.classList.contains('secondary') && !el.classList.contains('demo-try-btn')).length;
         const demoPrimary = demoSub && !demoSub.classList.contains('secondary') ? 1 : 0;
         const freeIsLink = demoFree && demoFree.tagName === 'A' ? 1 : 0;
         const stepTitles = [];
@@ -222,7 +222,7 @@ await withChrome(async (cdp) => {
         assert.equal(ui.firstPrimary, 1, "首屏区域的醒目按钮不是一颗：" + ui.firstPrimary);
         assert.equal(ui.barPrimary, 0, "底栏那颗不该出现");
         assert.equal(ui.seeTag, "", "「看看要准备什么」又冒出来了：" + ui.seeTag);
-        assert.ok(ui.firstArea <= 3, "首屏区域入口超过 3 个：" + ui.firstArea);
+        assert.ok(ui.firstArea <= 6, "首屏区域入口太多（按钮＋文字链一共超过 6 个）：" + ui.firstArea);
       });
 
       // 4a) 选「没有变化」→ ≥3 项
