@@ -425,6 +425,15 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 #guideCard .g-body{flex:1}
 #guideCard .g-line{margin:0 0 8px;font-size:15px;line-height:1.5}
 #guideCard .g-btn{min-height:44px;font-size:15px}
+
+/* 五行→节点卡：一门一卡，左侧状态点，右侧一句结论 */
+#demoRows{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+#demoRows>li{display:flex;gap:9px;align-items:flex-start;border:1px solid #24313d;border-radius:11px;padding:9px 11px;background:#121a22}
+#demoRows>li::before{content:"";width:8px;height:8px;border-radius:50%;background:#3d4d5c;margin-top:6px;flex:0 0 8px}
+#demoRows>li:first-child::before{background:#2fd6a3}
+#demoRows>li:nth-child(2)::before{background:#f2c14e}
+#demoRows>li>span:first-of-type{font-weight:600;font-size:13px;color:#e6edf3;flex:0 0 92px}
+#demoRows>li>span:not(:first-of-type){font-size:12px;color:#a9bccd;line-height:1.45}
 </style>
 </head>
 <body>
