@@ -220,8 +220,8 @@ await withChrome(async (cdp) => {
             if (!v) return null;
             const b = v.getBoundingClientRect();
             return { top: Math.round(b.top), bottom: Math.round(b.bottom), h: Math.round(b.height),
-              src: (v.currentSrc || v.getAttribute("src") || "").split("/").pop(),
-              poster: (v.getAttribute("poster") || "").split("/").pop(),
+              src: ((v.currentSrc || v.getAttribute("src") || "").split("?")[0]).split("/").pop(),
+              poster: ((v.getAttribute("poster") || "").split("?")[0]).split("/").pop(),
               muted: v.muted, loop: v.loop, autoplay: v.autoplay,
               playsinline: v.hasAttribute("playsinline"), paused: v.paused,
               w: v.videoWidth, hh: v.videoHeight };

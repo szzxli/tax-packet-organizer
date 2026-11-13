@@ -515,7 +515,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div class="card no-print" id="demoCard" data-flow-step="1">
 <p class="demo-tag">看一遍就会用 · 样例：已婚、两孩、加州，不是你的数。</p>
 <div class="demo-video">
-<video id="demoVideo" muted loop playsinline autoplay preload="metadata" aria-hidden="true" tabindex="-1" poster="media/demo-zh.jpg" src="media/demo-zh.mp4"></video>
+<video id="demoVideo" muted loop playsinline autoplay preload="metadata" aria-hidden="true" tabindex="-1" poster="media/demo-zh.jpg?v=28" src="media/demo-zh.mp4?v=28"></video>
 <span class="demo-video-tag">▶ 4 步 · 10 秒</span>
 </div>
 <p class="demo-cta"><button type="button" id="demoSub">订阅季票 · 内测免费</button></p>
@@ -1343,8 +1343,8 @@ function applyLang(lang){
     var dv=document.getElementById("demoVideo");
     if(dv&&dv.getAttribute("data-vlang")!==lang){
       dv.setAttribute("data-vlang",lang);
-      dv.setAttribute("poster","media/demo-"+lang+".jpg");
-      dv.setAttribute("src","media/demo-"+lang+".mp4");
+      dv.setAttribute("poster","media/demo-"+lang+".jpg?v=28");
+      dv.setAttribute("src","media/demo-"+lang+".mp4?v=28");
       var pr=dv.play();if(pr&&pr.catch)pr.catch(function(){});
     }
   }catch(e){}
