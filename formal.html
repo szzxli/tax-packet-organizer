@@ -459,6 +459,10 @@ body.tpo-first #stickyProgress{display:none!important}
 body[data-step="2"] #outlookCard,body[data-step="3"] #outlookCard,
 body[data-step="2"] #demoCard,body[data-step="3"] #demoCard,
 body[data-step="2"] #guideCard,body[data-step="3"] #guideCard{display:none!important}
+/* 每步只留一块主体；其余收进这一行「明细」，点开才出现。 */
+body:not(.lean-open) #appViewSections > .card.lean-sec{display:none!important}
+#leanToggle{margin:12px 0 0}
+#leanToggle a{color:#7ee2b8;font-weight:600;text-decoration:underline}
 </style>
 </head>
 <body>
@@ -2526,7 +2530,30 @@ function renderFollowUp(){
   };
 }
 function applyOrganizeStep(){if(currentPage!==1)return;var wrap=$("appViewSections");if(!wrap)return;for(var i=0;i<wrap.children.length;i++){var c=wrap.children[i];if(c.className.indexOf("card")<0)continue;var showCard=c.id!=="subCard"&&Number(c.dataset.flowStep||0)===currentOrganizeStep;c.classList.toggle("hidden",!showCard);}}
-function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderCommuteRules,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,renderForeign,renderPricing,renderDemo,applyCollapse,syncNavChrome];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}}
+// 一屏一件事：每步只留一块主体，其余收进一行「明细」——八张同样重的卡并排，是他说「乱」的那一屏。
+var LEAN_KEEP={1:"changes",2:"s4",3:"s6"};
+function applyLean(){
+  var wrap=$("appViewSections");if(!wrap)return;
+  var btn=$("leanToggle");
+  if(!btn){btn=document.createElement("p");btn.id="leanToggle";btn.className="small no-print";wrap.appendChild(btn);}
+  if(currentPage!==1){btn.style.display="none";return;}
+  var step=currentOrganizeStep,keep=LEAN_KEEP[step],n=0;
+  for(var i=0;i<wrap.children.length;i++){
+    var c=wrap.children[i];if(c.className.indexOf("card")<0)continue;
+    var on=Number(c.dataset.flowStep||0)===step;
+    var k=c.dataset.secKey||"";
+    var lean=on&&!!k&&k!==keep;
+    if(lean)n++;
+    c.classList.toggle("lean-sec",!!lean);
+  }
+  if(!n){btn.style.display="none";btn.innerHTML="";return;}
+  btn.style.display="";
+  var open=document.body.classList.contains("lean-open");
+  btn.innerHTML="<a href='#' id='leanLink'>"+(open?tr("收起明细","Hide the rest","Ocultar el resto"):tr("还有 "+n+" 项明细（数字、提醒、会计师）","+"+n+" more (numbers, alerts, accountant)","+"+n+" más (cifras, avisos, contador)"))+"</a>";
+  var lk=$("leanLink");
+  if(lk)lk.onclick=function(e){e.preventDefault();document.body.classList.toggle("lean-open");applyLean();};
+}
+function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderCommuteRules,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderReturnState,renderForeign,renderPricing,renderDemo,applyCollapse,syncNavChrome];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}try{applyLean();}catch(e){}}
 function secKeyFromH2(t){
   if(t.indexOf("州税范围")>=0)return "s3b";
   if(t.indexOf("去年有什么")>=0)return "s3";
@@ -2555,6 +2582,7 @@ function wrapSections(){
     if(card.querySelector("#changesHead")){card.dataset.flowStep="1";return;}
     var key=secKeyFromH2(h2.textContent.trim());if(!key)return;
     card.dataset.flowStep=card.id==="subCard"?"0":String(flowStepForKey(key));
+    card.dataset.secKey=key;
     var head=document.createElement("div");head.className="sec-head";
     var sum=document.createElement("span");sum.className="sec-sum";
     var check=document.createElement("span");check.className="chg-check hidden";check.textContent="✓";
@@ -2725,7 +2753,7 @@ function setOrganizeStep(step,scrollToGuide){
     var wrap=$("appViewSections");
     if(wrap)Array.prototype.forEach.call(wrap.children,function(card){if(card.className.indexOf("card")<0)return;var visible=card.id!=="subCard"&&Number(card.dataset.flowStep||0)===currentOrganizeStep;card.classList.toggle("hidden",!visible);});
   }
-  updateStepTabs();renderStickyProgress();renderHero();
+  updateStepTabs();renderStickyProgress();renderHero();try{applyLean();}catch(e){}
   if(scrollToGuide){var guide=$("journeyGuide");if(guide)guide.scrollIntoView({behavior:"smooth",block:"start"});}
 }
 function navigateToSection(key){
@@ -4024,6 +4052,7 @@ function showPage(p){
     sections.classList.toggle("hidden", p===3);
   }
   renderHero();
+  try{applyLean();}catch(e){}
   if(pay) pay.classList.toggle("hidden", p!==3);
   // 导航用「当前页」标记，不抢主按钮的视觉：一屏只留一颗主按钮（首屏那颗是样品卡的「整理我自己的」）
   ["navOrganize","navSubscribe"].forEach(function(id,idx){
