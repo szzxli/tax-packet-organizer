@@ -455,6 +455,12 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
    「整理」按钮在深色主题下被浅色底盖住，文字改成深色，别让它是白底白字。 */
 body.tpo-first #stickyProgress{display:none!important}
 #pageNav button.nav-active{color:#16324f}
+/* 一页一种语言：页头与正文同一块底色，别再深蓝压纯黑。 */
+.site-head{background:linear-gradient(180deg,#0b1420,#0d1622)!important;border-bottom:1px solid #1e2a36}
+/* 导航条与两块近乎空白的卡不再各占一张卡：留一行入口，不占首屏。 */
+#pageNav{background:transparent;border:0;box-shadow:none;padding:4px 2px}
+#accountCard,#returnBanner{display:none!important}
+
 /* 一屏一件事：第 2、3 步不再挂着第 1 步的概览、地图与演示片。 */
 body[data-step="2"] #outlookCard,body[data-step="3"] #outlookCard,
 body[data-step="2"] #demoCard,body[data-step="3"] #demoCard,
@@ -595,7 +601,7 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 </details>
 </div>
 
-<div class="card no-print">
+<div class="card no-print" id="accountCard">
 <p id="whoLine" class="hidden"><b id="whoLabel">已登录：</b><span id="who"></span> · <span id="progressText"></span></p>
 <p id="accountRow" class="hidden"><button id="btnLogout" class="secondary">退出登录</button> <button id="btnDeletePacket" class="danger">一键删除我的包和文件记录</button></p>
 <p id="guestLine" class="small">不用登录也能整理和导出。进度只存这台浏览器。</p>
