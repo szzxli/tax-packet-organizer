@@ -3,6 +3,10 @@
   "built": "2026-11-10",
   "tax_year": 2026,
   "note": "页面只从这里取门槛与出处；数字不抄进 js，也不抄进测试。每条带有效税年、适用保障年、出处与核实日。",
+  "demo_edges": {
+    "note": "首屏关系图的五条边，顺序与页面五行一致。kind 只有三种：num＝有数（可对外，实线）、range＝区间（给上下沿，点线）、dir＝方向（不给数，虚线）。页面只读这里，前端不写线型。",
+    "kinds": ["num", "range", "range", "num", "dir"]
+  },
   "open_enrollment": {
     "program": "ACA Marketplace open enrollment for coverage year 2027",
     "coverage_year": 2027,

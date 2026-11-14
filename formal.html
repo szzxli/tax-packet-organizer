@@ -434,6 +434,23 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 #demoRows>li:nth-child(2)::before{background:#f2c14e}
 #demoRows>li>span:first-of-type{font-weight:600;font-size:13px;color:#e6edf3;flex:0 0 92px}
 #demoRows>li>span:not(:first-of-type){font-size:12px;color:#a9bccd;line-height:1.45}
+/* 首屏关系图：一个中心数、五条边。线型由 rules/graph.json 的 demo_edges.kinds 决定，页面不写线型。 */
+#graphCard{background:#0f151c;border:1px solid #24313d;border-radius:14px;padding:16px 16px 12px}
+#graphCard .rg-h{margin:0 0 4px;font-size:15px;font-weight:700;color:#e6edf3}
+#graphCard .rg-sub{margin:0 0 8px;font-size:12px;color:#a9bccd;line-height:1.5}
+#ruleGraph{display:block;width:100%;height:auto}
+.rg-lbl{font-size:10.5px;fill:#a9bccd}
+.rg-val{font-size:12.5px;fill:#e6edf3;font-weight:700}
+.rg-badge{font-size:9px;font-weight:700}
+.rg-c-lbl{font-size:10px;fill:#b9c9d8}
+.rg-c-val{font-size:19px;fill:#fff;font-weight:800}
+.rg-legend{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0 0;padding:0;font-size:11px;color:#a9bccd;list-style:none}
+.rg-legend i{display:inline-block;width:22px;border-top:2px solid #2fd6a3;vertical-align:middle;margin-right:5px}
+.rg-legend i.r{border:0;height:2px;background:repeating-linear-gradient(90deg,#f2c14e 0 2px,transparent 2px 5px)}
+.rg-legend i.d{border:0;height:2px;background:repeating-linear-gradient(90deg,#8aa0b6 0 6px,transparent 6px 11px)}
+.rg-flip{animation:rgflip 1.1s ease}
+@keyframes rgflip{0%{filter:brightness(2.2)}100%{filter:none}}
+@media(max-width:620px){#graphCard .rg-h{font-size:14px}}
 </style>
 </head>
 <body>
@@ -536,6 +553,12 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <p class="demo-live" id="demoLive"></p>
 <p class="demo-try"><span>换个数：</span><button type="button" class="demo-try-btn" data-inc="200000">卖了房</button><button type="button" class="demo-try-btn" data-inc="130000">涨了薪</button><button type="button" class="demo-try-btn" data-inc="60000">换了工作</button></p>
 <p class="demo-cta"><button type="button" id="demoSub">订阅季票 · 内测免费</button></p>
+<div id="graphCard">
+<p class="rg-h">中间这个数，牵动外圈这几项</p>
+<p class="rg-sub">中间是你今年的收入，外圈是它牵动的位置。边是粗是细，说的是这件事我们能说到哪一步。</p>
+<svg id="ruleGraph" viewBox="0 0 720 400" role="img" aria-label="收入与几项结果的关系图"><g id="rgEdges"></g><g id="rgNodes"></g></svg>
+<ul class="rg-legend"><li><i></i>有数（可对外）</li><li><i class="r"></i>区间（给上下沿）</li><li><i class="d"></i>方向（不给数）</li></ul>
+</div>
 <p class="demo-convert small muted">这五行是样例，不是你的数；换成你的数，就是你的清单。免费只说大概；季票说差多少、哪几项在推、哪天之前改。</p>
 <ul class="demo-rows" id="demoRows"></ul>
 <div class="demo-slide">
@@ -3753,6 +3776,54 @@ function demoPhaseoutRanges(){
             "Phase-out: "+demoMoney(PO.single[0])+"–"+demoMoney(PO.single[1])+" single/HoH, "+demoMoney(PO.mfj[0])+"–"+demoMoney(PO.mfj[1])+" joint.",
             "Reducción: "+demoMoney(PO.single[0])+"–"+demoMoney(PO.single[1])+" soltero/jefe de hogar, "+demoMoney(PO.mfj[0])+"–"+demoMoney(PO.mfj[1])+" conjunta.");
 }
+// ===== 首屏关系图：一个中心数、五条边。线型只从 rules/graph.json 的 demo_edges.kinds 读 =====
+// 图只画 rows 里已有的东西，不新增任何数字；规则图没到就整块不出，不留半张图。
+var rgPrev=null;
+function renderDemoGraph(rows){
+  var card=document.getElementById("graphCard"),svg=document.getElementById("ruleGraph");
+  if(!card||!svg)return;
+  var R=(typeof mapRules==="function")?mapRules():null;
+  var kinds=(R&&R.demo_edges&&R.demo_edges.kinds)?R.demo_edges.kinds:null;
+  var list=(rows||[]).filter(function(r){return r&&r.t;}).slice(0,5);
+  if(!kinds||list.length<3){card.classList.add("hidden");rgPrev=null;return;}
+  card.classList.remove("hidden");
+  var sl=document.getElementById("demoIncome");
+  var inc=sl?(Number(sl.value)||120000):120000;
+  var narrow=(window.innerWidth||1024)<620;
+  var color={num:"#2fd6a3",range:"#f2c14e",dir:"#8aa0b6"};
+  var dash={num:"",range:"4 5",dir:"9 7"};
+  var word={num:tr("有数","figure","cifra"),range:tr("区间","range","rango"),dir:tr("方向","direction","dirección")};
+  var cx,cy,rr,pos,W,H;
+  if(narrow){
+    svg.setAttribute("viewBox","0 0 360 322");
+    cx=180;cy=50;rr=42;W=166;H=58;
+    pos=[[8,100],[186,100],[8,170],[186,170],[8,240]];
+  }else{
+    svg.setAttribute("viewBox","0 0 720 400");
+    cx=360;cy=196;rr=60;W=214;H=54;
+    pos=[[14,30],[253,14],[492,30],[64,306],[442,306]];
+  }
+  var edges=[],nodes=[],next=[];
+  nodes.push('<circle cx="'+cx+'" cy="'+cy+'" r="'+rr+'" fill="#16324f" stroke="#2a6db0" stroke-width="1.5"/>'
+    +'<text class="rg-c-lbl" x="'+cx+'" y="'+(cy-5)+'" text-anchor="middle">'+esc(tr("今年收入","Income","Ingreso"))+'</text>'
+    +'<text class="rg-c-val" x="'+cx+'" y="'+(cy+22)+'" text-anchor="middle">'+esc(demoMoney(inc))+'</text>');
+  for(var i=0;i<list.length;i++){
+    var p=pos[i],k=kinds[i]||"num",row=list[i];
+    var mx=p[0]+W/2,my=p[1]+H/2;
+    edges.push('<line x1="'+cx+'" y1="'+cy+'" x2="'+mx+'" y2="'+my+'" stroke="'+color[k]+'" stroke-width="'+(k==="num"?2.2:1.5)+'"'+(dash[k]?' stroke-dasharray="'+dash[k]+'"':"")+' stroke-linecap="round"/>');
+    var flip=(rgPrev&&rgPrev[i]!==undefined&&rgPrev[i]!==row.v);
+    next.push(row.v);
+    nodes.push('<g'+(flip?' class="rg-flip"':'')+'>'
+      +'<rect x="'+p[0]+'" y="'+p[1]+'" width="'+W+'" height="'+H+'" rx="10" fill="#121a22" stroke="'+color[k]+'" stroke-width="1.4"'+(k==="dir"?' stroke-dasharray="6 4"':"")+'/>'
+      +(narrow?"":'<text class="rg-badge" x="'+(p[0]+W-10)+'" y="'+(p[1]+19)+'" text-anchor="end" fill="'+color[k]+'">'+esc(word[k])+'</text>')
+      +'<text class="rg-lbl" x="'+(p[0]+12)+'" y="'+(p[1]+21)+'">'+esc(row.t)+'</text>'
+      +'<text class="rg-val" x="'+(p[0]+12)+'" y="'+(p[1]+41)+'">'+esc(row.v)+'</text></g>');
+  }
+  rgPrev=next;
+  var ge=document.getElementById("rgEdges"),gn=document.getElementById("rgNodes");
+  if(ge)ge.innerHTML=edges.join("");
+  if(gn)gn.innerHTML=nodes.join("");
+}
 function renderDemo(){
   var card=document.getElementById("demoCard");if(!card)return;
   var R=(typeof mapRules==="function")?mapRules():null;
@@ -3869,6 +3940,7 @@ function renderDemo(){
       live.textContent=tr("样例 · 待核","Sample · to check","Ejemplo · por verificar");
     }
   }
+  try{renderDemoGraph(rows);}catch(e){try{console.error("demoGraph",e);}catch(_){}}
   box.innerHTML=rows.map(function(r){
     return "<li class='demo-row "+r.c+"'><span class='lbl'>"+esc(r.t)+"</span><span class='val'>"+esc(r.v)+"</span><span class='note'>"+esc(r.n)+"</span></li>";
   }).join("");
@@ -5262,6 +5334,7 @@ function registerAppShell(){
   window.addEventListener("load",function(){navigator.serviceWorker.register("./sw.js").catch(function(){});});
 }
 registerAppShell();
+Object.assign(I18N,{"中间这个数，牵动外圈这几项":{"en":"The number in the middle moves these around it","es":"El número del centro mueve estos de alrededor"},"中间是你今年的收入，外圈是它牵动的位置。边是粗是细，说的是这件事我们能说到哪一步。":{"en":"The middle is your income this year; the ring shows what it moves. How solid each line is tells you how far we can speak on that item.","es":"El centro es su ingreso de este año; el anillo muestra qué mueve. Lo sólida que sea cada línea indica hasta dónde podemos hablar de ese punto."},"有数（可对外）":{"en":"Figure (we can quote it)","es":"Cifra (podemos darla)"},"区间（给上下沿）":{"en":"Range (ends only)","es":"Rango (solo extremos)"},"方向（不给数）":{"en":"Direction (no figure)","es":"Dirección (sin cifra)"}});
 try{captureZh();var _sl=window.__TPO_LANG||null;if(!_sl){try{_sl=localStorage.getItem("tpo_lang");}catch(e){}}if(_sl==="en"||_sl==="es"||_sl==="zh"){applyLang(_sl);}}catch(e){}
 try{if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches){var _dv=document.getElementById("demoVideo");if(_dv){_dv.removeAttribute("autoplay");try{_dv.pause();}catch(e){}_dv.setAttribute("controls","");}}}catch(e){}
 (function(){var bs=document.querySelectorAll("[data-lang-btn]");for(var i=0;i<bs.length;i++){bs[i].addEventListener("click",function(){var l=this.getAttribute("data-lang-btn");setLang(l);});}})();
