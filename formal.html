@@ -455,6 +455,10 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
    「整理」按钮在深色主题下被浅色底盖住，文字改成深色，别让它是白底白字。 */
 body.tpo-first #stickyProgress{display:none!important}
 #pageNav button.nav-active{color:#16324f}
+/* 一屏一件事：第 2、3 步不再挂着第 1 步的概览、地图与演示片。 */
+body[data-step="2"] #outlookCard,body[data-step="3"] #outlookCard,
+body[data-step="2"] #demoCard,body[data-step="3"] #demoCard,
+body[data-step="2"] #guideCard,body[data-step="3"] #guideCard{display:none!important}
 </style>
 </head>
 <body>
@@ -2537,8 +2541,20 @@ function secKeyFromH2(t){
   if(t.indexOf("导出：")>=0||t.indexOf("导出给会计师")>=0)return "s6";
   if(t.indexOf("去年会计师")>=0)return "s6b";
   if(t.indexOf("订阅")==0||t.indexOf("季票")>=0)return "sub";
-  if(t.indexOf("安全")==0)return "safe";
+  if(t.indexOf("常见问题")>=0)return "faq";
+  if(t.indexOf("技术支持")>=0)return "safe";
   return null;
+}
+// 一屏一件事：三步各自只放自己的事；季票功能（IRS 提醒、全年提醒线、多包对比）不占流程，
+// 只在他点「季票」时出现；常见问题与技术支持挂在最后一步，别在三步里跟材料并排。
+function flowStepForKey(key){
+  if(key==="changes")return 1;
+  if(key==="s3"||key==="s3b")return 1;
+  if(key==="s4"||key==="s4b"||key==="s5")return 2;
+  if(key==="s5b"||key==="s5e"||key==="s6c")return 0;
+  if(key==="faq")return 3;
+  if(key==="safe")return 3;
+  return 3;
 }
 var secHeads={};
 function wrapSections(){
@@ -3744,6 +3760,8 @@ function renderHero(){
   var cq=$("coverPreviewQs");if(cq){var cqs=cpaQuestions();var cempty=tr("暂无，按你的情况补充","None yet — add your own","Aún no hay nada; añada su caso");var cqh=cqs.length?("<ol class='cover-qs small'>"+cqs.map(function(q){return "<li>"+esc(q)+"</li>";}).join("")+"</ol>"):"<p class='small'>"+cempty+"</p>";if(cqs.length&&cqs.length<3)cqh+="<p class='small'>"+cempty+"</p>";cq.innerHTML=cqh;}
   var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",currentPage!==1);
   document.body.classList.toggle("tpo-first", onEntry);
+  // 这一步的号挂在 body 上：概览与演示片只在第 1 步出现，第 2、3 步各干各的事。
+  document.body.setAttribute("data-step", String(currentOrganizeStep));
   var rl=$("resumeLine");
   if(rl){
     var nHave=(packet&&packet.checklist)?packet.checklist.length:0;
@@ -4008,7 +4026,7 @@ function showPage(p){
     for(var i=0;i<sections.children.length;i++){
       var c=sections.children[i]; if(c.className.indexOf("card")<0) continue;
       if(p===1){var showCard=c.id!=="subCard"&&Number(c.dataset.flowStep||0)===currentOrganizeStep;c.classList.toggle("hidden",!showCard);}
-      else if(p===2){ if(c.id==="subCard") c.classList.remove("hidden"); else c.classList.add("hidden"); }
+      else if(p===2){ if(c.id==="subCard"||Number(c.dataset.flowStep||-1)===0) c.classList.remove("hidden"); else c.classList.add("hidden"); }
       else c.classList.add("hidden");
     }
     sections.classList.toggle("hidden", p===3);
