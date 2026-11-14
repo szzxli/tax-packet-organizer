@@ -2545,17 +2545,6 @@ function secKeyFromH2(t){
   if(t.indexOf("技术支持")>=0)return "safe";
   return null;
 }
-// 一屏一件事：三步各自只放自己的事；季票功能（IRS 提醒、全年提醒线、多包对比）不占流程，
-// 只在他点「季票」时出现；常见问题与技术支持挂在最后一步，别在三步里跟材料并排。
-function flowStepForKey(key){
-  if(key==="changes")return 1;
-  if(key==="s3"||key==="s3b")return 1;
-  if(key==="s4"||key==="s4b"||key==="s5")return 2;
-  if(key==="s5b"||key==="s5e"||key==="s6c")return 0;
-  if(key==="faq")return 3;
-  if(key==="safe")return 3;
-  return 3;
-}
 var secHeads={};
 function wrapSections(){
   var wrap=$("appViewSections");if(!wrap)return;
@@ -2707,10 +2696,13 @@ function renderOrders(){
   var st=$("payStatus"); if(st) st.textContent=os.length?("共 "+os.length+" 笔订单。"):"";
 }
 var currentPage=1;
+// 一屏一件事：三步各自只放自己的事；季票功能（IRS 提醒、全年提醒线、多包对比）不占流程，
+// 只在他点「季票」时出现；常见问题与技术支持挂在最后一步。
 function flowStepForKey(key){
   if(key==="changes")return 1;
   if(key==="s3"||key==="s3b")return 1;
   if(key==="s4"||key==="s4b"||key==="s5")return 2;
+  if(key==="s5b"||key==="s5e"||key==="s6c")return 0;
   return 3;
 }
 var currentOrganizeStep=1;
