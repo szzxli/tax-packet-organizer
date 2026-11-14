@@ -204,6 +204,7 @@ await withChrome(async (cdp) => {
         const demoCardEl = document.getElementById('demoCard');
         const demoVisible = !!(demoCardEl && demoCardEl.offsetParent !== null);
         const firstArea = Array.from(document.querySelectorAll('#pageNav button, #pageNav a[href], #startCard button, #startCard a[href], #demoCard button, #demoCard a[href]')).filter(el => el.offsetParent !== null);
+        const heroCtas = Array.from(document.querySelectorAll('#startCard a[href]')).filter(el => el.offsetParent !== null).map(el => el.id || el.className);
         const firstPrimary = firstArea.filter(el => el.tagName === 'BUTTON' && !el.classList.contains('secondary') && !el.classList.contains('demo-try-btn')).length;
         const demoPrimary = demoSub && !demoSub.classList.contains('secondary') ? 1 : 0;
         const freeIsLink = demoFree && demoFree.tagName === 'A' ? 1 : 0;
@@ -212,7 +213,7 @@ await withChrome(async (cdp) => {
         setOrganizeStep(1,false);
         return { bars, startBtns: startBtns.length, startPrimary, barPrimary, inView: inView.length,
                  title, seeTag, stepTitles, firstArea: firstArea.length, firstPrimary, demoPrimary,
-                 hasDemoSub: !!demoSub, freeIsLink, makeVisible, demoVisible };
+                 hasDemoSub: !!demoSub, freeIsLink, makeVisible, demoVisible, heroCtas };
       })()`);
       check("底栏只有一条（stickyProgress 和 stepPager 不同时在）：" + tag, () => {
         assert.equal(ui.bars.length, 1, "还在两条底栏：" + ui.bars.join(","));
@@ -223,15 +224,16 @@ await withChrome(async (cdp) => {
           assert.ok(ui.stepTitles[i].includes(String(i + 1)), "第 " + (i + 1) + " 步标题不对：" + ui.stepTitles[i]);
         }
       });
-      check("入口屏只有一件要做的事（生成清单），演示与订阅不并列： " + tag, () => {
+      check("入口屏只有一条主线：两颗 hero 按钮（免费估税／先看一遍）+ 生成清单，演示不并列：" + tag, () => {
         assert.equal(ui.startBtns, 0, "定位句那块里又长出按钮了：" + ui.startBtns);
         assert.equal(ui.makeVisible, true, "入口屏没有「生成我的清单」");
         assert.equal(ui.demoVisible, false, "演示卡又跟入口并列了（应藏在「看 22 秒怎么用」后面）");
+        assert.deepEqual(ui.heroCtas.slice().sort(), ["btnHeroDemo", "btnHeroGo"], "hero 按钮不是这两颗：" + ui.heroCtas.join(","));
         assert.equal(ui.firstPrimary, 0, "演示卡没藏好，首屏又多出醒目按钮：" + ui.firstPrimary);
         assert.equal(ui.hasDemoSub, true, "样品卡里没有订阅按钮（demoSub）");
         assert.equal(ui.barPrimary, 0, "底栏那颗不该出现");
         assert.equal(ui.seeTag, "", "「看看要准备什么」又冒出来了：" + ui.seeTag);
-        assert.equal(ui.firstArea, 0, "入口屏还有别的入口：" + ui.firstArea);
+        assert.equal(ui.firstArea, 2, "入口屏多了别的入口：" + ui.firstArea);
       });
 
       // 4a) 选「没有变化」→ ≥3 项

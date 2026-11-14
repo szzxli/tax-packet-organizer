@@ -296,8 +296,8 @@ await withChrome(async (cdp) => {
         assert.ok(geo.sliderTop >= geo.rowsBottom, "滑块跑到五行上面了：" + geo.sliderTop);
         assert.equal(entry.hiddenOnEntry, true, "入口屏就把滑块摆出来了");
       });
-      check("可点入口固定这几处：生成、看演示、样例开关、订阅、五行之下的滑块、两处出处折叠：" + tag, () => {
-        const want = ["btnMake", "btnDemoPeek", "demo-try-btn", "demo-try-btn", "demo-try-btn", "SUMMARY", "demoSub", "demoIncome", "SUMMARY", "SUMMARY"];
+      check("可点入口固定这几处：页头报名、hero 两颗、生成、看演示、样例开关、订阅、五行之下的滑块、两处出处折叠：" + tag, () => {
+        const want = ["A", "btnHeroGo", "btnHeroDemo", "btnMake", "btnDemoPeek", "demo-try-btn", "demo-try-btn", "demo-try-btn", "SUMMARY", "demoSub", "demoIncome", "SUMMARY", "SUMMARY"];
         assert.deepEqual(geo.entries.map((e) => e.split(":")[0]).sort(), want.slice().sort(), "入口：" + geo.entries.join(" / "));
       });
       check("卡片内一颗醒目按钮（订阅）+ 出处折叠：" + tag, () => {
