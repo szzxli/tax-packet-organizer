@@ -195,6 +195,14 @@ await withChrome(async (cdp) => {
         // 首屏入口：开场卡的按钮挪到样品卡，样品卡那颗是唯一主入口；重复的样例链接已删
         const demoSub = document.getElementById('demoSub'); // 首屏唯一醒目按钮
         const demoFree = document.getElementById('demoFree'); // 免费走文字链接
+        // 入口屏只留一件事：说一句 → 生成清单。演示片与订阅收在「看 22 秒怎么用」后面，点开才出现。
+        // 判定前先回到「这一次刚打开」的状态，避免前面交互残留的会话标记让入口屏消失。
+        try { sessionStorage.removeItem('tpo_entry'); } catch (e) {}
+        try { renderHero(); } catch (e) {}
+        const btnMake = document.getElementById('btnMake');
+        const makeVisible = !!(btnMake && btnMake.offsetParent !== null);
+        const demoCardEl = document.getElementById('demoCard');
+        const demoVisible = !!(demoCardEl && demoCardEl.offsetParent !== null);
         const firstArea = Array.from(document.querySelectorAll('#pageNav button, #pageNav a[href], #startCard button, #startCard a[href], #demoCard button, #demoCard a[href]')).filter(el => el.offsetParent !== null);
         const firstPrimary = firstArea.filter(el => el.tagName === 'BUTTON' && !el.classList.contains('secondary') && !el.classList.contains('demo-try-btn')).length;
         const demoPrimary = demoSub && !demoSub.classList.contains('secondary') ? 1 : 0;
@@ -204,7 +212,7 @@ await withChrome(async (cdp) => {
         setOrganizeStep(1,false);
         return { bars, startBtns: startBtns.length, startPrimary, barPrimary, inView: inView.length,
                  title, seeTag, stepTitles, firstArea: firstArea.length, firstPrimary, demoPrimary,
-                 hasDemoSub: !!demoSub, freeIsLink };
+                 hasDemoSub: !!demoSub, freeIsLink, makeVisible, demoVisible };
       })()`);
       check("底栏只有一条（stickyProgress 和 stepPager 不同时在）：" + tag, () => {
         assert.equal(ui.bars.length, 1, "还在两条底栏：" + ui.bars.join(","));
@@ -215,14 +223,15 @@ await withChrome(async (cdp) => {
           assert.ok(ui.stepTitles[i].includes(String(i + 1)), "第 " + (i + 1) + " 步标题不对：" + ui.stepTitles[i]);
         }
       });
-      check("第 1 步只有一个醒目按钮（订阅）：" + tag, () => {
+      check("入口屏只有一件要做的事（生成清单），演示与订阅不并列： " + tag, () => {
         assert.equal(ui.startBtns, 0, "定位句那块里又长出按钮了：" + ui.startBtns);
+        assert.equal(ui.makeVisible, true, "入口屏没有「生成我的清单」");
+        assert.equal(ui.demoVisible, false, "演示卡又跟入口并列了（应藏在「看 22 秒怎么用」后面）");
+        assert.equal(ui.firstPrimary, 0, "演示卡没藏好，首屏又多出醒目按钮：" + ui.firstPrimary);
         assert.equal(ui.hasDemoSub, true, "样品卡里没有订阅按钮（demoSub）");
-        assert.equal(ui.demoPrimary, 1, "订阅那颗不是醒目样式");
-        assert.equal(ui.firstPrimary, 1, "首屏区域的醒目按钮不是一颗：" + ui.firstPrimary);
         assert.equal(ui.barPrimary, 0, "底栏那颗不该出现");
         assert.equal(ui.seeTag, "", "「看看要准备什么」又冒出来了：" + ui.seeTag);
-        assert.ok(ui.firstArea <= 6, "首屏区域入口太多（按钮＋文字链一共超过 6 个）：" + ui.firstArea);
+        assert.equal(ui.firstArea, 0, "入口屏还有别的入口：" + ui.firstArea);
       });
 
       // 4a) 选「没有变化」→ ≥3 项

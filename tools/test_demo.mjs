@@ -154,6 +154,22 @@ await withChrome(async (cdp) => {
       await sleep(300);
       const tag = lang + " " + w + "×" + h;
 
+      // 入口屏先记两件事：演示卡是不是藏着、片子有没有自己动。
+      // 然后按用户的做法点「看 22 秒怎么用」，把样片打开、滚到它顶部，再量后面的版式。
+      const entry = await cdp.eval(`(() => {
+        const v = document.getElementById("demoVideo");
+        const card = document.getElementById("demoCard");
+        const peek = document.getElementById("btnDemoPeek");
+        const attr = v ? { autoplay: v.autoplay, loop: v.loop, muted: v.muted, paused: v.paused } : null;
+        const hiddenOnEntry = !card || card.offsetParent === null;
+        if (peek) peek.click();
+        else { document.body.classList.add("demo-open"); if (card) card.classList.remove("hidden"); }
+        return JSON.stringify({ attr: attr, hiddenOnEntry: hiddenOnEntry, peek: !!peek });
+      })()`);
+      await sleep(900);
+      await cdp.eval(`(() => { const c = document.getElementById("demoCard"); if (c) window.scrollTo(0, Math.max(0, c.getBoundingClientRect().top + window.scrollY - 8)); return 1; })()`);
+      await sleep(150);
+
       const geo = await cdp.eval(`(() => {
         const d = document.documentElement;
         const card = document.getElementById("demoCard");
@@ -178,7 +194,7 @@ await withChrome(async (cdp) => {
           if (el.offsetParent === null) return false;
           if (el.tagName !== "SUMMARY" && el.closest("details:not([open])")) return false;
           const r = el.getBoundingClientRect();
-          return (r.top + window.scrollY) < cardBottom + 2000 && r.bottom > 0;
+          return (r.top + window.scrollY) < cardBottom + 2000;
         });
         const entries = clickable(document);
         const cardEntries = Array.from(document.querySelectorAll("#demoCard button, #demoCard a[href], #demoCard summary")).filter(el => el.offsetParent !== null).filter(el => el.tagName === "SUMMARY" || el.getBoundingClientRect().height >= 40);
@@ -234,7 +250,15 @@ await withChrome(async (cdp) => {
       })()`);
       seen.push({ tag, geo });
 
-      check("样品卡在首屏且没被隐藏：" + tag, () => {
+      check("入口屏不自己放片：演示卡藏着，片子不自动播、不循环，留一行「看 22 秒怎么用」：" + tag, () => {
+        assert.equal(entry.hiddenOnEntry, true, "演示卡在入口屏就摊开了");
+        assert.equal(entry.peek, true, "没有「看 22 秒怎么用」这一行");
+        assert.ok(entry.attr, "没有演示片");
+        assert.equal(entry.attr.autoplay, false, "演示片还在自动播");
+        assert.equal(entry.attr.loop, false, "演示片还在循环，字一直在闪");
+        assert.equal(entry.attr.paused, true, "片子没等用户点就在动");
+      });
+      check("样片五行：五条、行高在一屏预算内：" + tag, () => {
         assert.equal(geo.cardHidden, false, "样品卡是 hidden");
         assert.ok(geo.rows === 5, "行数不是 5：" + geo.rows);
         assert.ok(geo.heights.every((x) => x >= 28 && x <= 64), "行太高，一屏放不下：" + geo.heights.join(","));
@@ -243,37 +267,37 @@ await withChrome(async (cdp) => {
         assert.equal(geo.cw, w, "视口不是 " + w + "（实际 " + geo.cw + "）");
         assert.ok(geo.sw <= geo.cw, "被撑宽 " + geo.sw + " > " + geo.cw);
       });
-      check("订阅按钮：≥44px、对比度 ≥4.5、在演示片下面、首屏看得见：" + tag, () => {
+      check("订阅按钮：≥44px、对比度 ≥4.5、在演示片下面、打开演示后不用再滚就看见：" + tag, () => {
         assert.ok(geo.ctaText.length > 0, "订阅按钮没文案");
         assert.ok(geo.ctaH >= 44, "主按钮高度不足 44px：" + geo.ctaH);
         assert.ok(geo.contrast >= 4.5, "主按钮对比度只有 " + geo.contrast + ":1（字 " + geo.ctaColor + "，底 " + geo.ctaBg + "）");
         assert.ok(geo.video && geo.ctaTop > geo.video.bottom, "主按钮没紧跟演示片：cta=" + geo.ctaTop + " videoBottom=" + (geo.video || {}).bottom);
         assert.ok(geo.ctaH > 0 && geo.ctaTop > 0, "订阅按钮没渲染出来");
-        assert.ok(geo.ctaTop + geo.ctaH <= geo.vh, "订阅按钮被挤出首屏：bottom=" + (geo.ctaTop + geo.ctaH) + "，视口 " + geo.vh);
+        assert.ok(geo.ctaTop + geo.ctaH <= geo.vh, "订阅按钮被挤出一屏：bottom=" + (geo.ctaTop + geo.ctaH) + "，视口 " + geo.vh);
       });
-      check("演示片：自动、静音、循环、内联播放，放的是当前语言那一条：" + tag, () => {
+      check("演示片：点开才播（静音、不循环、内联），放的是当前语言那一条：" + tag, () => {
         assert.ok(geo.video, "没有演示片");
         assert.ok(/^demo-(zh|en|es)\.mp4$/.test(geo.video.src), "演示片路径不对：" + geo.video.src);
         assert.equal(geo.video.src, "demo-" + lang + ".mp4", "放的不是当前语言那条：" + geo.video.src);
         assert.ok(/^demo-(zh|en|es)\.jpg$/.test(geo.video.poster), "封面路径不对：" + geo.video.poster);
-        assert.equal(geo.video.muted, true, "没静音，手机上不会自动播");
-        assert.equal(geo.video.loop, true, "没循环");
-        assert.equal(geo.video.autoplay, true, "没自动播");
+        assert.equal(geo.video.muted, true, "没静音");
+        assert.equal(geo.video.loop, false, "又回到循环了，字会一直闪");
+        assert.equal(geo.video.autoplay, false, "又回到自动播了");
         assert.equal(geo.video.playsinline, true, "没写 inline，iOS 会全屏弹出去");
-        assert.ok(geo.video.w > 0 && geo.video.hh > 0, "片子没加载出来：" + geo.video.w + "×" + geo.video.hh);
-        assert.equal(geo.video.paused, false, "片子停着没动");
-        assert.ok(geo.video.h >= 120 && geo.video.h <= 200, "演示片高度不合一屏预算：" + geo.video.h);
+        assert.ok(geo.video.w > 0 && geo.video.hh > 0, "点了之后片子没加载出来：" + geo.video.w + "×" + geo.video.hh);
+        assert.equal(geo.video.paused, false, "点了「看 22 秒怎么用」之后片子没动");
+        assert.ok(geo.video.h >= 120 && geo.video.h <= 220, "演示片高度不合一屏预算：" + geo.video.h);
         assert.ok(geo.videoTag.length > 0, "演示片没标「几秒演示」");
       });
-      check("首屏里没有可拖的：五行紧跟订阅按钮，滑块退到五行之后、首屏之外：" + tag, () => {
+      check("滑块在五行之下（入口屏不摆要人先拖的东西）：" + tag, () => {
         assert.ok(geo.sliderTop != null, "没量到滑块");
         assert.ok(geo.rowsTop >= geo.ctaTop + geo.ctaH, "五行没紧跟订阅按钮：rows=" + geo.rowsTop + " ctaBottom=" + (geo.ctaTop + geo.ctaH));
         assert.equal(geo.sliderShown, true, "滑块被藏了，片子里演的拖一下就没处可做");
         assert.ok(geo.sliderTop >= geo.rowsBottom, "滑块跑到五行上面了：" + geo.sliderTop);
-        assert.ok(geo.sliderTop > geo.vh, "滑块还挤在首屏里：" + geo.sliderTop + "，视口 " + geo.vh);
+        assert.equal(entry.hiddenOnEntry, true, "入口屏就把滑块摆出来了");
       });
-      check("可点入口固定这几处：生成、样例开关、订阅、五行之下的滑块、两处出处折叠：" + tag, () => {
-        const want = ["btnMake", "demo-try-btn", "demo-try-btn", "demo-try-btn", "SUMMARY", "demoSub", "demoIncome", "SUMMARY", "SUMMARY"];
+      check("可点入口固定这几处：生成、看演示、样例开关、订阅、五行之下的滑块、两处出处折叠：" + tag, () => {
+        const want = ["btnMake", "btnDemoPeek", "demo-try-btn", "demo-try-btn", "demo-try-btn", "SUMMARY", "demoSub", "demoIncome", "SUMMARY", "SUMMARY"];
         assert.deepEqual(geo.entries.map((e) => e.split(":")[0]).sort(), want.slice().sort(), "入口：" + geo.entries.join(" / "));
       });
       check("卡片内一颗醒目按钮（订阅）+ 出处折叠：" + tag, () => {
