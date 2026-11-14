@@ -461,6 +461,7 @@ body[data-step="2"] #demoCard,body[data-step="3"] #demoCard,
 body[data-step="2"] #guideCard,body[data-step="3"] #guideCard{display:none!important}
 /* 每步只留一块主体；其余收进这一行「明细」，点开才出现。 */
 body:not(.lean-open) #appViewSections > .card.lean-sec{display:none!important}
+body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!important}
 #leanToggle{margin:12px 0 0}
 #leanToggle a{color:#7ee2b8;font-weight:600;text-decoration:underline}
 </style>
@@ -3794,7 +3795,7 @@ function renderHero(){
   }
   document.body.classList.toggle("tpo-pass", hasPass());
   renderOutlook();
-  var sc=$("subShowcase");if(sc)sc.classList.toggle("hidden",currentPage!==1||!packet.checklist.length||hasPass()||currentOrganizeStep!==3);
+  var sc=$("subShowcase");if(sc)sc.classList.toggle("hidden",currentPage===1||!packet.checklist.length||hasPass());
   var ai=$("aiCard");if(ai){var showAi=ai.dataset.open==="1"&&currentPage===1&&currentOrganizeStep===1;ai.classList.toggle("hidden",!showAi);}
   var fq=$("faqCard");if(fq)fq.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==3);
   var sp=$("supportCard");if(sp)sp.classList.toggle("hidden",currentPage!==1||currentOrganizeStep!==3);
