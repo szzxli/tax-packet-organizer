@@ -515,8 +515,8 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 </div>
 
 <div class="card no-print" id="startCard" data-flow-step="1">
-<h2 class="start-title">报税材料，整理成一份能交出去的清单。</h2>
-<p class="start-trust">免费 · 不用登录 · 不需要懂税</p>
+<h2 class="start-title">说一句话，材料列成一张清单。</h2>
+<p class="start-trust">免费 · 不用登录 · 不算税，不报税</p>
 </div>
 <div class="card no-print llm" id="heroBox">
 <h2 class="llm-q">今年有什么变化？</h2>
@@ -542,6 +542,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 <div class="row"><div><label for="heroState">在哪个州报税（本版只支持 10 个州）</label><select id="heroState"><option value="">不选（先不填）</option></select></div></div>
 </details>
 <p id="tagMsg" class="small"></p>
+<p id="resumeLine" class="small hidden"></p>
 </div>
 
 <div class="card no-print" id="guideCard" data-flow-step="1"><div class="g-face" aria-hidden="true">🧑‍💼</div><div class="g-body"><p class="g-line" id="gLine"></p><button type="button" class="g-btn" id="gNext">下一步</button></div></div>
@@ -3734,9 +3735,21 @@ function renderHero(){
   var cy=$("coverPreviewYear");if(cy){var ty=taxYearLabel().replace(" 税年","");cy.textContent=tr(ty+" 税年 · 报税材料包","Tax year "+ty+" · Tax packet","Año fiscal "+ty+" · Paquete fiscal");}
   var cq=$("coverPreviewQs");if(cq){var cqs=cpaQuestions();var cempty=tr("暂无，按你的情况补充","None yet — add your own","Aún no hay nada; añada su caso");var cqh=cqs.length?("<ol class='cover-qs small'>"+cqs.map(function(q){return "<li>"+esc(q)+"</li>";}).join("")+"</ol>"):"<p class='small'>"+cempty+"</p>";if(cqs.length&&cqs.length<3)cqh+="<p class='small'>"+cempty+"</p>";cq.innerHTML=cqh;}
   var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",currentPage!==1);
-  // 首屏模式：还没有清单、还在第 1 页时，整页只留「一句话 / 输入框 / 样例」三块。
-  var noneList=!(packet&&packet.checklist&&packet.checklist.length);
-  document.body.classList.toggle("tpo-first", currentPage===1 && noneList);
+  // 一屏一个问题：这一页每次打开都先只问「今年有什么变化」，不把清单、地图、季票一起铺开。
+  // 只有他这次会话里点过「生成我的清单」或「继续上次」，才放行后面的整页。
+  var entered=false;try{entered=sessionStorage.getItem("tpo_entry")==="1";}catch(e){}
+  var onEntry=currentPage===1&&!entered;
+  document.body.classList.toggle("tpo-first", onEntry);
+  var rl=$("resumeLine");
+  if(rl){
+    var nHave=(packet&&packet.checklist)?packet.checklist.length:0;
+    if(onEntry&&nHave>0){
+      rl.classList.remove("hidden");
+      rl.innerHTML=esc(tr("上次整理到 ","Last session: ","La última vez: ")+nHave+tr(" 项 · "," items · "," elementos · "))+"<a href='#' id='btnResume'>"+esc(tr("继续上次","pick up where I left off","continuar donde lo dejé"))+"</a>";
+      var br=$("btnResume");
+      if(br)br.onclick=function(ev){ev.preventDefault();try{sessionStorage.setItem("tpo_entry","1");}catch(e){}renderHero();renderAll();};
+    }else{rl.classList.add("hidden");}
+  }
   document.body.classList.toggle("tpo-pass", hasPass());
   renderOutlook();
   var sc=$("subShowcase");if(sc)sc.classList.toggle("hidden",currentPage!==1||!packet.checklist.length||hasPass()||currentOrganizeStep!==3);
@@ -5191,6 +5204,7 @@ $("btnMake").onclick=function(){
   var stateMsg="";if(st)stateMsg=addStateRow(st);
   generateFromLastYear();
   if(!packet.checklist.length&&(packet.changesNone||packet.changesSkip))seedBaseChecklist();
+  try{sessionStorage.setItem("tpo_entry","1");}catch(e){}
   savePacket();renderAll();
   var hs=$("heroState");if(hs&&st)hs.value=st;
   trackGenerate();
@@ -5334,7 +5348,7 @@ function registerAppShell(){
   window.addEventListener("load",function(){navigator.serviceWorker.register("./sw.js").catch(function(){});});
 }
 registerAppShell();
-Object.assign(I18N,{"中间这个数，牵动外圈这几项":{"en":"The number in the middle moves these around it","es":"El número del centro mueve estos de alrededor"},"中间是你今年的收入，外圈是它牵动的位置。边是粗是细，说的是这件事我们能说到哪一步。":{"en":"The middle is your income this year; the ring shows what it moves. How solid each line is tells you how far we can speak on that item.","es":"El centro es su ingreso de este año; el anillo muestra qué mueve. Lo sólida que sea cada línea indica hasta dónde podemos hablar de ese punto."},"有数（可对外）":{"en":"Figure (we can quote it)","es":"Cifra (podemos darla)"},"区间（给上下沿）":{"en":"Range (ends only)","es":"Rango (solo extremos)"},"方向（不给数）":{"en":"Direction (no figure)","es":"Dirección (sin cifra)"}});
+Object.assign(I18N,{"说一句话，材料列成一张清单。":{"en":"One sentence in, a checklist out.","es":"Una frase, y sale una lista."},"免费 · 不用登录 · 不算税，不报税":{"en":"Free · no sign-up · no tax calculation, no filing","es":"Gratis · sin cuenta · sin calcular ni presentar"},"中间这个数，牵动外圈这几项":{"en":"The number in the middle moves these around it","es":"El número del centro mueve estos de alrededor"},"中间是你今年的收入，外圈是它牵动的位置。边是粗是细，说的是这件事我们能说到哪一步。":{"en":"The middle is your income this year; the ring shows what it moves. How solid each line is tells you how far we can speak on that item.","es":"El centro es su ingreso de este año; el anillo muestra qué mueve. Lo sólida que sea cada línea indica hasta dónde podemos hablar de ese punto."},"有数（可对外）":{"en":"Figure (we can quote it)","es":"Cifra (podemos darla)"},"区间（给上下沿）":{"en":"Range (ends only)","es":"Rango (solo extremos)"},"方向（不给数）":{"en":"Direction (no figure)","es":"Dirección (sin cifra)"}});
 try{captureZh();var _sl=window.__TPO_LANG||null;if(!_sl){try{_sl=localStorage.getItem("tpo_lang");}catch(e){}}if(_sl==="en"||_sl==="es"||_sl==="zh"){applyLang(_sl);}}catch(e){}
 try{if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches){var _dv=document.getElementById("demoVideo");if(_dv){_dv.removeAttribute("autoplay");try{_dv.pause();}catch(e){}_dv.setAttribute("controls","");}}}catch(e){}
 (function(){var bs=document.querySelectorAll("[data-lang-btn]");for(var i=0;i<bs.length;i++){bs[i].addEventListener("click",function(){var l=this.getAttribute("data-lang-btn");setLang(l);});}})();
