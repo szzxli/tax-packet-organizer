@@ -3727,7 +3727,11 @@ function procBind() {
 // PROCESS_LOGIC_END
 function renderHero(){
   var hero=$("heroBox");if(!hero||!packet)return;
-  var show=currentPage===1&&!packet.checklist.length;
+  // 一屏一个问题：每次打开先只问「今年有什么变化」，有旧清单也先停在这一屏，
+  // 由他点「继续上次」再放行；只有这次会话里点过生成/继续，才按老逻辑按清单是否为空判断。
+  var entered=false;try{entered=sessionStorage.getItem("tpo_entry")==="1";}catch(e){}
+  var onEntry=currentPage===1&&!entered;
+  var show=currentPage===1&&(!packet.checklist.length||onEntry);
   hero.classList.toggle("hidden",!show);
   var start=$("startCard");if(start)start.classList.toggle("hidden",!show);
   var sample=$("sampleCard");if(sample)sample.classList.toggle("hidden",!(sampleOpen&&currentPage===1&&!packet.checklist.length));
@@ -3735,10 +3739,6 @@ function renderHero(){
   var cy=$("coverPreviewYear");if(cy){var ty=taxYearLabel().replace(" 税年","");cy.textContent=tr(ty+" 税年 · 报税材料包","Tax year "+ty+" · Tax packet","Año fiscal "+ty+" · Paquete fiscal");}
   var cq=$("coverPreviewQs");if(cq){var cqs=cpaQuestions();var cempty=tr("暂无，按你的情况补充","None yet — add your own","Aún no hay nada; añada su caso");var cqh=cqs.length?("<ol class='cover-qs small'>"+cqs.map(function(q){return "<li>"+esc(q)+"</li>";}).join("")+"</ol>"):"<p class='small'>"+cempty+"</p>";if(cqs.length&&cqs.length<3)cqh+="<p class='small'>"+cempty+"</p>";cq.innerHTML=cqh;}
   var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",currentPage!==1);
-  // 一屏一个问题：这一页每次打开都先只问「今年有什么变化」，不把清单、地图、季票一起铺开。
-  // 只有他这次会话里点过「生成我的清单」或「继续上次」，才放行后面的整页。
-  var entered=false;try{entered=sessionStorage.getItem("tpo_entry")==="1";}catch(e){}
-  var onEntry=currentPage===1&&!entered;
   document.body.classList.toggle("tpo-first", onEntry);
   var rl=$("resumeLine");
   if(rl){
