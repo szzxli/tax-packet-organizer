@@ -162,9 +162,13 @@ await withChrome(async (cdp) => {
         const peek = document.getElementById("btnDemoPeek");
         const attr = v ? { autoplay: v.autoplay, loop: v.loop, muted: v.muted, paused: v.paused } : null;
         const hiddenOnEntry = !card || card.offsetParent === null;
+        const pos = document.getElementById("posCard");
+        const sl = document.getElementById("demoIncome");
+        const posOnEntry = !!(pos && pos.offsetParent !== null);
+        const sliderOnEntry = !!(sl && sl.offsetParent !== null);
         if (peek) peek.click();
         else { document.body.classList.add("demo-open"); if (card) card.classList.remove("hidden"); }
-        return JSON.stringify({ attr: attr, hiddenOnEntry: hiddenOnEntry, peek: !!peek });
+        return JSON.stringify({ attr: attr, hiddenOnEntry: hiddenOnEntry, posOnEntry: posOnEntry, sliderOnEntry: sliderOnEntry, peek: !!peek });
       })()`);
       await sleep(900);
       await cdp.eval(`(() => { const c = document.getElementById("demoCard"); if (c) window.scrollTo(0, Math.max(0, c.getBoundingClientRect().top + window.scrollY - 8)); return 1; })()`);
@@ -230,6 +234,8 @@ await withChrome(async (cdp) => {
           rowsTop: rows.length ? Math.round(rows[0].getBoundingClientRect().top) : 0,
           sliderTop: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().top) : null; })(),
           sliderShown: (() => { const el = document.getElementById("demoIncome"); return !!(el && el.offsetParent !== null); })(),
+          sliderInPosCard: !!document.querySelector("#posCard #demoIncome"),
+          posAboveInput: (() => { const p = document.getElementById("posCard"), h = document.getElementById("heroBox"); if (!p || !h) return null; return p.getBoundingClientRect().top < h.getBoundingClientRect().top; })(),
           sliderBottom: (() => { const el = document.getElementById("demoIncome"); return el ? Math.round(el.getBoundingClientRect().bottom) : null; })(),
           video: (() => {
             const v = document.getElementById("demoVideo");
@@ -289,15 +295,16 @@ await withChrome(async (cdp) => {
         assert.ok(geo.video.h >= 120 && geo.video.h <= 220, "演示片高度不合一屏预算：" + geo.video.h);
         assert.ok(geo.videoTag.length > 0, "演示片没标「几秒演示」");
       });
-      check("滑块在五行之下（入口屏不摆要人先拖的东西）：" + tag, () => {
+      check("位置图就在首屏、图下一个滑块、紧跟输入框（首屏只这一个控件）：" + tag, () => {
         assert.ok(geo.sliderTop != null, "没量到滑块");
-        assert.ok(geo.rowsTop >= geo.ctaTop + geo.ctaH, "五行没紧跟订阅按钮：rows=" + geo.rowsTop + " ctaBottom=" + (geo.ctaTop + geo.ctaH));
-        assert.equal(geo.sliderShown, true, "滑块被藏了，片子里演的拖一下就没处可做");
-        assert.ok(geo.sliderTop >= geo.rowsBottom, "滑块跑到五行上面了：" + geo.sliderTop);
-        assert.equal(entry.hiddenOnEntry, true, "入口屏就把滑块摆出来了");
+        assert.equal(entry.posOnEntry, true, "入口屏没摆出那张位置图");
+        assert.equal(entry.sliderOnEntry, true, "入口屏把滑块藏了");
+        assert.equal(geo.sliderShown, true, "滑块没显示");
+        assert.ok(geo.sliderInPosCard, "滑块不在首屏那张位置卡里");
+        assert.equal(geo.posAboveInput, true, "位置卡没排在输入框上面");
       });
-      check("可点入口固定这几处：页头报名、hero 两颗、生成、看演示、样例开关、订阅、五行之下的滑块、两处出处折叠：" + tag, () => {
-        const want = ["A", "btnHeroGo", "btnHeroDemo", "btnMake", "btnDemoPeek", "demo-try-btn", "demo-try-btn", "demo-try-btn", "demoSub", "demoIncome", "SUMMARY", "SUMMARY"];
+      check("可点入口固定这几处：页头报名、hero 两颗、位置卡里的滑块与换成你的数、生成、看演示、样例开关、订阅、五行与两处出处折叠：" + tag, () => {
+        const want = ["A", "btnHeroGo", "btnHeroDemo", "btnMake", "btnDemoPeek", "demo-try-btn", "demo-try-btn", "demo-try-btn", "demoSub", "demoIncome", "btnPosGo", "SUMMARY", "SUMMARY"];
         assert.deepEqual(geo.entries.map((e) => e.split(":")[0]).sort(), want.slice().sort(), "入口：" + geo.entries.join(" / "));
       });
       check("卡片内一颗醒目按钮（订阅）+ 出处折叠：" + tag, () => {
