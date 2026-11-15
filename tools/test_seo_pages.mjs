@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 验收：根路径下的四篇英文搜索页（单语页面，不写 hreflang）。
+// 验收：根路径下的六篇英文搜索页（单语页面，不写 hreflang）。
 import fs from "node:fs";
 import path from "node:path";
 import assert from "node:assert/strict";
@@ -16,6 +16,8 @@ const SLUGS = [
   "form-1095-a-and-8962",
   "1099-k-venmo-paypal-ebay",
   "what-to-bring-to-your-cpa",
+  "aca-400-percent-line",
+  "retirement-contribution-deadlines-2026",
 ];
 
 let pass = 0;
@@ -100,10 +102,10 @@ check("英文页不出现全国覆盖的说法，州税口径正确", () => {
   assert.match(read("tax-document-checklist.html"), /state items for your state aren't covered in this version/);
 });
 
-check("sitemap 只列中文入口（正式页＋报名页）与四篇英文页，URL 都有对应文件", () => {
+check("sitemap 只列中文入口（正式页＋报名页）与六篇英文页，URL 都有对应文件", () => {
   const xml = read("sitemap.xml");
   const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  assert.equal(locs.length, 6, `应有 6 条，实际 ${locs.length}`);
+  assert.equal(locs.length, 8, `应有 8 条，实际 ${locs.length}`);
   assert.ok(locs.includes(`${BASE}/formal.html`));
   assert.ok(locs.includes(`${BASE}/signup.html`), "sitemap 缺报名页 signup");
   for (const s of SLUGS) assert.ok(locs.includes(`${BASE}/${s}.html`), `sitemap 缺 ${s}`);
@@ -118,7 +120,7 @@ check("robots.txt 指向 sitemap", () => {
   assert.match(read("robots.txt"), new RegExp(`Sitemap: ${BASE}/sitemap.xml`));
 });
 
-check("四篇互相链接，能走到整理器与中文页", () => {
+check("六篇互相链接，能走到整理器与中文页", () => {
   for (const slug of SLUGS) {
     const html = read(`${slug}.html`);
     for (const other of SLUGS) {
