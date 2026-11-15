@@ -133,7 +133,7 @@ body.tpo-first .site-head p a[href="signup.html"]{background:transparent!importa
 #demoCard .demo-try button.on{color:#2fd4a0}
 #demoCard .demo-video{position:relative;margin:0 auto 8px;max-width:420px;border:1px solid #232e3a;border-radius:12px;overflow:hidden;background:#0b1016;line-height:0}
 #demoCard .demo-video-tag{position:absolute;right:8px;top:8px;padding:3px 8px;border-radius:999px;background:rgba(9,13,18,.74);border:1px solid rgba(143,163,181,.35);color:#c8d5df;font-size:11px;line-height:1.35;pointer-events:none}
-#demoCard .demo-video video{display:block;width:100%;height:auto;aspect-ratio:39/22;background:#0b1016}
+#demoCard .demo-video video{display:block;width:100%;height:auto;aspect-ratio:39/22;background:#0b1016;pointer-events:none}
 #demoCard{padding:10px 12px!important}
 #demoCard .demo-rows{list-style:none;margin:10px 0 0;padding:0;border:1px solid #232e3a;border-radius:12px;background:#0f141b;overflow:hidden}
 #demoCard .demo-row{display:grid;grid-template-columns:1fr auto;gap:1px 10px;padding:6px 12px;border-top:1px solid #1b2530;background:transparent}
@@ -426,6 +426,8 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 
 /* 少做选择：首屏只留 生成 / 看怎么算 / 订阅 */
 #btnAiOpen,#heroState{display:none!important}
+/* 不给点不开的入口：情形 chip 那一块整块收起，连折叠标题一起（点开是空的比没有更糟） */
+#heroBox .llm-more{display:none!important}
 
 #guideCard{display:flex;gap:10px;align-items:flex-start;margin:0 0 10px}
 #guideCard .g-face{width:38px;height:38px;border-radius:50%;background:#16324f;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 38px}
@@ -545,6 +547,7 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <h2 class="start-title">说一句话，<br>看清今年的税。</h2>
 <p class="start-sub">每一笔税，都牵动你的医保、福利与退休金。我们让你提前看见。</p>
 <p class="start-actions"><a href="#" class="hero-cta" id="btnHeroGo">免费估税 →</a><a href="#" class="hero-cta ghost" id="btnHeroDemo">先看一遍</a></p>
+<p class="start-scope">只整理材料清单，不报税、不算应交总额；报税和签字由你或会计师。</p>
 </div>
 <div class="card no-print llm" id="heroBox">
 <h2 class="llm-q">今年有什么变化？</h2>
@@ -552,7 +555,7 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <textarea id="heroText" rows="3" data-i18n-ph="例如：今年换了工作，孩子上了大学；去年报过税的，写「和去年一样」也行。" placeholder="例如：今年换了工作，孩子上了大学；去年报过税的，写「和去年一样」也行。"></textarea>
 <button id="btnMake" type="button" class="secondary">生成我的清单</button>
 </div>
-<p class="llm-hint">只写变化，不用写数字；数字后面再填。 <a href="#" id="btnAiOpen">不会写？用 AI 描述</a></p>
+<p class="llm-hint">只写变化，不用写数字。文件只在本机读，不上传、不存社保号。 <a href="#" id="btnAiOpen">不会写？用 AI 描述</a></p>
 <details class="llm-more"><summary>不知道怎么写？点选今年有的情况</summary>
 <div class="tag-grid" id="tagGrid">
 <button type="button" class="tag-btn" data-form="W-2" data-phrase="我今年有工资。">有工资</button>
@@ -582,7 +585,7 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 </div>
 
 <div class="step-strip no-print" id="stepStrip">
-<div class="ss-card"><b>01</b><span>说一句</span><i>语音或文字</i></div>
+<div class="ss-card"><b>01</b><span>说一句</span><i>一句话就够</i></div>
 <div class="ss-card"><b>02</b><span>拿清单</span><i>交给会计师</i></div>
 <div class="ss-card"><b>03</b><span>看方向</span><i>不猜总额</i></div>
 <div class="ss-card"><b>04</b><span>看联动</span><i>福利 · 退休金</i></div>
@@ -592,22 +595,28 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <div class="card no-print" id="demoCard" data-flow-step="1">
 <div class="demo-video">
 <video id="demoVideo" muted playsinline preload="none" aria-hidden="true" tabindex="-1" poster="media/demo-zh.jpg?v=32" src="media/demo-zh.mp4?v=32"></video>
-<span class="demo-video-tag">▶ 6 步 · 22 秒</span>
+<span class="demo-video-tag">▶ 22 秒 · 看一遍</span>
 </div>
+<p class="demo-note">演示片里的按钮是画出来的，点不了；要试就点下面这几个。</p>
 <p class="demo-live" id="demoLive"></p>
 <p class="demo-try"><span>换个数：</span><button type="button" class="demo-try-btn" data-inc="200000">卖了房</button><button type="button" class="demo-try-btn" data-inc="130000">涨了薪</button><button type="button" class="demo-try-btn" data-inc="60000">换了工作</button></p>
+<p class="demo-try-note">样例只改收入这一项：卖了房按 $200,000、涨了薪 $130,000、换了工作 $60,000 演示，其他都不变。</p>
 <p class="demo-cta"><button type="button" id="demoSub">订阅季票 · 内测免费</button></p>
+<p class="demo-price-line">内测期免费到<b>2027-01-15</b>；到期前会写明价格 · 随时可停，不用打电话。</p>
 <div id="graphCard">
 <p class="rg-h">中间这个数，牵动外圈这几项</p>
+<p class="rg-pre"><b>样例前提：</b>合并申报、四口之家、两个孩子、2026 税年——不是你的数。</p>
 <p class="rg-sub">中间是你今年的收入，外圈是它牵动的位置。边是粗是细，说的是这件事我们能说到哪一步。</p>
 <svg id="ruleGraph" viewBox="0 0 720 400" role="img" aria-label="收入与几项结果的关系图"><g id="rgEdges"></g><g id="rgNodes"></g></svg>
 <ul class="rg-legend"><li><i></i>有数（可对外）</li><li><i class="r"></i>区间（给上下沿）</li><li><i class="d"></i>方向（不给数）</li></ul>
+<p class="rg-note">「400% 线」＝贫困线的 4 倍，过了这条线医保补贴就没有了；「记分」＝社保退休金要满 40 分，一年最多记 4 分。</p>
 </div>
 <p class="demo-convert small muted">这五行是样例，不是你的数；换成你的数，就是你的清单。免费只说大概；季票说差多少、哪几项在推、哪天之前改。</p>
 <ul class="demo-rows" id="demoRows"></ul>
 <div class="demo-slide">
 <div class="demo-slide-line"><label for="demoIncome" class="small muted">拖动看收入落在哪</label><b id="demoIncomeNow">$120,000</b></div>
 <input type="range" id="demoIncome" min="40000" max="250000" step="1000" value="120000">
+<p class="demo-scale"><span>$40,000</span><span>只改收入这一项</span><span>$250,000</span></p>
 </div>
 <details class="demo-why"><summary>怎么用 · 季票含什么 · 这五行怎么算的</summary>
 <ol class="demo-steps">
@@ -1144,7 +1153,20 @@ Object.assign(I18N,{"不用登录 · 进度只存这台浏览器。只整理、�
 Object.assign(I18N,{"把今年报税要准备的材料整理成一份清单，导出后自己核对，或给会计师对照着填。只整理、不算税、不报税、不给税务结论；清单最后由你或会计师复核。":{"en":"It organizes the materials you need for this year's taxes into one checklist; export it to check yourself or give it to your accountant. We only organize — we don't calculate tax, file returns, or give tax advice; you or your accountant review the final checklist.","es":"Organiza los materiales que necesita para los impuestos de este año en una sola lista; expórtela para revisarla usted mismo o entregarla a su contador. Solo organizamos: no calculamos impuestos, no presentamos declaraciones ni damos asesoría fiscal; usted o su contador revisan la lista final."}});
 Object.assign(I18N,{"报税材料，整理成一份能交出去的清单。":{"en":"Turn this year's paperwork into one packet you can hand over.","es":"Convierta los papeles de este año en un paquete que pueda entregar."},"不少人报完才发现，一年差了几百到上千美元。可能是多交，也可能少交——填完才知道你是哪一种。":{"en":"Plenty of people only find out after they file that they were off by a few hundred, sometimes over a thousand, dollars. Maybe you paid too much, maybe too little — filling it in is how you find out which.","es":"Mucha gente se entera al declarar de que la diferencia era de cientos de dólares, a veces más de mil. Puede que haya pagado de más, o de menos: lo sabe cuando lo llena."},"说一句今年变了什么，不用登录。先给你一份基础的，答完几句就变成你自己的。":{"en":"Describe what changed this year. No login. You get a basic list first; answer a few questions and it becomes yours.","es":"Cuente qué cambió este año. Sin cuenta. Primero le damos una lista básica; con unas respuestas queda hecha a su medida."},"把今年的材料放进来":{"en":"Bring in this year's documents","es":"Traer los documentos de este año"},"看看要准备什么":{"en":"See what you'll need","es":"Ver qué necesitará"},"点选今年有过的，或用一句话写下来；拿不准的写进「不确定事项」，后面会追问。":{"en":"Tap what applies this year, or write it in one sentence; if you're not sure, put it under “Uncertain items” — we'll follow up.","es":"Toque lo que aplique este año o escríbalo en una frase; si no está seguro, anótelo en «Asuntos inciertos» y le preguntaremos después."},"申报身份变了":{"en":"Filing status changed","es":"Cambió el estado civil fiscal"},"抚养人减少":{"en":"Dependent removed","es":"Se quitó un dependiente"},"没有变化":{"en":"No changes","es":"Sin cambios"},"登录后，未登录时做的包会自动带进你的账号。":{"en":"After you log in, the packet you made while logged out is brought into your account.","es":"Después de iniciar sesión, el paquete que hizo sin sesión se traslada a su cuenta."},"样例家庭：已婚、两孩、加州。不是你的数。":{"en":"Sample household: married, two children, California. Not your numbers.","es":"Hogar de ejemplo: casados, dos hijos, California. No son sus cifras."}});
 Object.assign(I18N,{"免费只说大概；季票说差多少、哪几项在推、哪天之前改":{"en":"Free gives the rough picture; the pass gives the number: how far off, what is driving it, and until when","es":"Gratis da lo aproximado; el pase da la cifra: cuánto se pasa, qué lo empuja y hasta cuándo"},"基础整理和导出永久免费；季票用你的数把这三句落到你身上，交付前再把整包核一遍。":{"en":"Organizing and export are free forever; the pass turns those three into your own numbers and re-checks the whole packet before you hand it over.","es":"Organizar y exportar es gratis para siempre; el pase convierte esas tres cosas en sus cifras y revisa todo el paquete antes de entregarlo."},"差多少（一个范围，写清算什么、没算什么）、哪几项在推、哪天之前还能改，带出处与核实日。":{"en":"How far off (a range, with what it counts and what it leaves out), what is driving it, and the last day to change it — with the source and the date it was checked.","es":"Cuánto se pasa (un rango, con lo que cuenta y lo que no), qué lo empuja y hasta qué día cambiarlo, con la fuente y la fecha de verificación."},"这五行是样例，不是你的数；换成你的数，就是你的清单。免费只说大概；季票说差多少、哪几项在推、哪天之前改。":{"en":"These five lines are the sample, not your numbers; swap in yours and they are your list. Free gives the rough picture; the pass gives how far off, what is driving it, and until when.","es":"Estas cinco líneas son el ejemplo, no son sus cifras; con las suyas pasan a ser su lista. Gratis da lo aproximado; el pase da cuánto se pasa, qué lo empuja y hasta cuándo."},"清单、提数、三种导出，加一句方向。":{"en":"The checklist, figure extraction and three exports — plus one line of direction.","es":"La lista, la extracción de cifras y tres exportaciones, más una línea de dirección."},"用你的数说差多少、交出去前总核对、规则变化提醒。":{"en":"Your numbers with the amount, the pre-handoff check, and rule-change reminders.","es":"Sus cifras con el monto, la verificación previa y los avisos de cambios de reglas."},"整理完你会看到自己的数：大概差多少、哪几项在推、哪天之前改还来得及。基础整理永久免费，内测期免费，1 月公布价格。":{"en":"Once the packet is organized you see your own numbers: roughly how far off, what is driving it, and the last day to change it. Basic organizing is free forever; the pass is free during beta, pricing announced in January.","es":"Cuando el paquete está organizado ve sus propias cifras: aproximadamente cuánto se pasa, qué lo empuja y hasta qué día cambiarlo. La organización básica es gratis para siempre; el pase es gratis durante la beta, precios en enero."},"今年大概退还是补、差多少。":{"en":"Refund or owed; how much.","es":"Devolución o pago, y cuánto."},"用你的数说差多少（哪几项在推、哪天之前改）· 交出去前总核对 · 规则变化本页提醒。免费整理与导出永久免费；补贴那张卡免费；内测期免费，1 月公布价格。":{"en":"Your numbers with the amount (what is driving it, the last day to change it) · the pre-handoff check · rule changes shown on this page. Organizing and export are free forever; the subsidy card is free; free during beta, pricing announced in January.","es":"Sus cifras con el monto (qué lo empuja, hasta qué día cambiarlo) · la verificación previa · cambios de reglas mostrados en esta página. Organizar y exportar es gratis para siempre; la tarjeta del subsidio es gratis; gratis en beta, precios en enero."},"三件：整理完那一屏（大概差多少、哪几项在推、哪天之前改，带出处与核实日）、交付前总核对（可交／不可交 + 缺项表，可重跑）、次年打开还在（内测中）。补贴那一屏所有人都能用，不用领季票。提醒类（缺项、规则变化、截止日）目前只在本页展示，不发邮件、不推送。免费版已含清单、上传、提数、三种导出、封面+复核签字，整理与导出永久免费；季票内测期免费，1 月公布价格。":{"en":"Three things: the money screen (roughly how far off, what is driving it, the last day to change it, with the source and the date it was checked), the pre-delivery check (ready / not ready + missing-items table, re-runnable), and next year's packet still there (in beta). The subsidy screen is available to everyone — no season pass needed. Reminders (missing items, rule changes, deadlines) are shown on this page only for now: no emails, no push notifications. The free version already includes the checklist, uploads, figure extraction, three exports, and cover + review signature; organizing and export are free forever. The season pass is free during beta; prices are announced in January.","es":"Tres cosas: la pantalla del dinero (aproximadamente cuánto se pasa, qué lo empuja y hasta qué día cambiarlo, con la fuente y la fecha de verificación), la verificación previa (listo / no listo + tabla de faltantes, repetible) y el paquete del año siguiente que sigue ahí (en beta). La pantalla del subsidio la puede usar cualquiera: no hace falta el pase. Los recordatorios (faltantes, cambios de reglas, fechas límite) solo se muestran en esta página por ahora: sin correos ni notificaciones. La versión gratuita ya incluye la lista, las cargas, la extracción de cifras, tres exportaciones y portada + firma de revisión; organizar y exportar es gratis para siempre. El pase es gratis durante la beta; los precios se anuncian en enero."}});
-Object.assign(I18N,{"报税前的你 · 不再迷路":{"en":"BEFORE YOU FILE · NO MORE GUESSING","es":"ANTES DE DECLARAR · SIN PERDERSE"},"说一句话，":{"en":"One sentence,","es":"Una frase,"},"看清今年的税。":{"en":"and you see this year's tax.","es":"y ve el impuesto de este año."},"每一笔税，都牵动你的医保、福利与退休金。我们让你提前看见。":{"en":"Every dollar of tax moves your coverage, your benefits and your retirement. You see it before you file.","es":"Cada dólar de impuesto mueve su cobertura, sus beneficios y su retiro. Usted lo ve antes de declarar."},"免费估税 →":{"en":"Free estimate →","es":"Estimación gratis →"},"先看一遍":{"en":"Take a look first","es":"Véalo primero"},"IRS 更新":{"en":"IRS update","es":"Actualización del IRS"},"2027 医保开放期 11/1–1/15":{"en":"2027 coverage: open enrollment Nov 1 – Jan 15","es":"Cobertura 2027: inscripción 1 nov – 15 ene"},"趋势":{"en":"Trend","es":"Tendencia"},"基准保费平均涨 13%":{"en":"Benchmark premiums up 13% on average","es":"Las primas de referencia suben un 13% en promedio"},"注意":{"en":"Watch","es":"Atención"},"400% 线仍在，过线补贴归零":{"en":"The 400% line still applies — cross it and the credit is gone","es":"El límite del 400% sigue: si lo pasa, no hay crédito"},"CMS / KFF · 核实 11/12":{"en":"CMS / KFF · checked Nov 12","es":"CMS / KFF · verificado 12 nov"},"说一句":{"en":"Say it","es":"Dígalo"},"语音或文字":{"en":"by voice or text","es":"por voz o texto"},"拿清单":{"en":"Get the list","es":"Reciba la lista"},"交给会计师":{"en":"hand it to your accountant","es":"entréguela a su contador"},"看方向":{"en":"See the direction","es":"Vea la dirección"},"不猜总额":{"en":"no total guessing","es":"sin adivinar el total"},"看联动":{"en":"See what moves","es":"Vea qué se mueve"},"福利 · 退休金":{"en":"benefits · retirement","es":"beneficios · retiro"},"▶ 看 22 秒怎么用":{"en":"▶ Watch 22s — how it works","es":"▶ Vea 22 s — cómo funciona"},"▶ 6 步 · 22 秒":{"en":"▶ 6 steps · 22s","es":"▶ 6 pasos · 22s"},"换个数：":{"en":"Change it:","es":"Cambie:"},"卖了房":{"en":"sold a house","es":"vendió casa"},"涨了薪":{"en":"a raise","es":"un aumento"},"换了工作":{"en":"new job","es":"nuevo trabajo"},"和去年一样":{"en":"Same as last year","es":"Igual que el año pasado"},
+Object.assign(I18N,{"报税前的你 · 不再迷路":{"en":"BEFORE YOU FILE · NO MORE GUESSING","es":"ANTES DE DECLARAR · SIN PERDERSE"},"说一句话，":{"en":"One sentence,","es":"Una frase,"},"看清今年的税。":{"en":"and you see this year's tax.","es":"y ve el impuesto de este año."},"每一笔税，都牵动你的医保、福利与退休金。我们让你提前看见。":{"en":"Every dollar of tax moves your coverage, your benefits and your retirement. You see it before you file.","es":"Cada dólar de impuesto mueve su cobertura, sus beneficios y su retiro. Usted lo ve antes de declarar."},"免费估税 →":{"en":"Free estimate →","es":"Estimación gratis →"},"先看一遍":{"en":"Take a look first","es":"Véalo primero"},"IRS 更新":{"en":"IRS update","es":"Actualización del IRS"},"2027 医保开放期 11/1–1/15":{"en":"2027 coverage: open enrollment Nov 1 – Jan 15","es":"Cobertura 2027: inscripción 1 nov – 15 ene"},"趋势":{"en":"Trend","es":"Tendencia"},"基准保费平均涨 13%":{"en":"Benchmark premiums up 13% on average","es":"Las primas de referencia suben un 13% en promedio"},"注意":{"en":"Watch","es":"Atención"},"400% 线仍在，过线补贴归零":{"en":"The 400% line still applies — cross it and the credit is gone","es":"El límite del 400% sigue: si lo pasa, no hay crédito"},"CMS / KFF · 核实 11/12":{"en":"CMS / KFF · checked Nov 12","es":"CMS / KFF · verificado 12 nov"},"说一句":{"en":"Say it","es":"Dígalo"},"语音或文字":{"en":"by voice or text","es":"por voz o texto"},"拿清单":{"en":"Get the list","es":"Reciba la lista"},"交给会计师":{"en":"hand it to your accountant","es":"entréguela a su contador"},"看方向":{"en":"See the direction","es":"Vea la dirección"},"不猜总额":{"en":"no total guessing","es":"sin adivinar el total"},"看联动":{"en":"See what moves","es":"Vea qué se mueve"},"福利 · 退休金":{"en":"benefits · retirement","es":"beneficios · retiro"},
+"只整理材料清单，不报税、不算应交总额；报税和签字由你或会计师。":{"en":"We only organize the document list. We don't file, don't compute what you owe — filing and signing are you or your accountant.","es":"Solo organizamos la lista de documentos. No declaramos ni calculamos cuánto debe: declarar y firmar es cosa suya o de su contador."},
+"样例前提：":{"en":"Sample assumptions:","es":"Supuestos del ejemplo:"},
+"合并申报、四口之家、两个孩子、2026 税年——不是你的数。":{"en":"married filing jointly, household of four, two children, tax year 2026 — not your numbers.","es":"declaración conjunta, hogar de cuatro, dos hijos, año fiscal 2026: no son sus cifras."},
+"内测期免费到":{"en":"Free during beta until ","es":"Gratis en beta hasta el "},
+"；到期前会写明价格 · 随时可停，不用打电话。":{"en":"; we will state the price before it ends · cancel anytime, no phone call.","es":"; diremos el precio antes de que termine · cancele cuando quiera, sin llamar."},
+"样例只改收入这一项：卖了房按 $200,000、涨了薪 $130,000、换了工作 $60,000 演示，其他都不变。":{"en":"The sample changes income only: sold a house at $200,000, a raise at $130,000, a new job at $60,000 — nothing else moves.","es":"El ejemplo solo cambia el ingreso: vendió casa a $200,000, aumento a $130,000, nuevo trabajo a $60,000; lo demás no se mueve."},
+"只改收入这一项":{"en":"income only","es":"solo el ingreso"},
+"▶ 22 秒 · 看一遍":{"en":"▶ 22s · watch once","es":"▶ 22 s · véalo una vez"},
+"「400% 线」＝贫困线的 4 倍，过了这条线医保补贴就没有了；「记分」＝社保退休金要满 40 分，一年最多记 4 分。":{"en":"“400% line” = four times the poverty line; cross it and the health-insurance credit is gone. “Credits” = you need 40 Social Security credits for retirement, at most 4 per year.","es":"«Línea del 400%» = cuatro veces la línea de pobreza; si la pasa, no hay crédito de salud. «Créditos» = necesita 40 para el retiro, máximo 4 al año."},
+"一句话就够":{"en":"one line is enough","es":"una frase basta"},
+"11/17 有 5 场小组陪跑 · 免费":{"en":"Nov 17 · 5 small-group sessions · free","es":"17 nov · 5 sesiones en grupo · gratis"},
+"演示片里的按钮是画出来的，点不了；要试就点下面这几个。":{"en":"The buttons inside the clip are drawn, not clickable — try the ones below.","es":"Los botones del video son dibujos, no se pueden pulsar; pruebe los de abajo."},
+"只写变化，不用写数字。文件只在本机读，不上传、不存社保号。":{"en":"Just what changed — no numbers. Files are read on this device only: never uploaded, never store your SSN.","es":"Solo qué cambió; sin cifras. Los archivos se leen solo en este dispositivo: no se suben ni guardan su número de seguro social."},"▶ 看 22 秒怎么用":{"en":"▶ Watch 22s — how it works","es":"▶ Vea 22 s — cómo funciona"},"▶ 6 步 · 22 秒":{"en":"▶ 6 steps · 22s","es":"▶ 6 pasos · 22s"},"换个数：":{"en":"Change it:","es":"Cambie:"},"卖了房":{"en":"sold a house","es":"vendió casa"},"涨了薪":{"en":"a raise","es":"un aumento"},"换了工作":{"en":"new job","es":"nuevo trabajo"},"和去年一样":{"en":"Same as last year","es":"Igual que el año pasado"},
 "看一遍就会用 · 样例：已婚、两孩、加州，不是你的数。":{"en":"Watch once, then use it · Sample: married, two kids, California \u2014 not your numbers.","es":"Véalo una vez y listo · Ejemplo: casados, dos hijos, California; no son sus cifras."},
 "例如：我今年换了工作，孩子上了大学，还搬到了德州。一句话就够。":{"en":"e.g. I changed jobs, my child started college, and we moved to Texas. One line is enough.","es":"ej.: cambié de trabajo, mi hijo entró a la universidad y nos mudamos a Texas. Una frase basta."},"例如：今年换了工作，孩子上了大学；去年报过税的，写「和去年一样」也行。":{"en":"e.g. changed jobs, a child started college; if you filed last year, \"same as last year\" works too.","es":"ej.: cambié de trabajo, un hijo entró a la universidad; si declaró el año pasado, «igual que el año pasado» también sirve."},
 "只写变化，不用写数字；数字后面再填。":{"en":"Just what changed \u2014 no numbers yet.","es":"Solo qué cambió; las cifras vienen después."},
@@ -5262,7 +5284,13 @@ $("btnMake").onclick=function(){
   var text=$("heroText").value.trim();
   var sel=[];document.querySelectorAll("#tagGrid .tag-btn.on").forEach(function(b){sel.push(b);});
   var msg=$("tagMsg");
-  if(!text&&!sel.length){if(msg)msg.textContent=tr("先写一句，或点选今年的情况。","Write one line or tap this year's situations.","Escriba una línea o toque las situaciones de este año.");return;}
+  if(msg){msg.style.color="";msg.style.fontWeight="";}
+  if(!text&&!sel.length){
+    if(msg){msg.textContent=tr("先写一句，例如「今年换了工作、孩子上了大学」——不用写数字。","Write one line first, e.g. \"changed jobs, a child started college\" — no numbers needed.","Escriba una línea primero, p. ej. «cambié de trabajo, un hijo entró a la universidad» — sin cifras.");msg.style.color="#B4342A";msg.style.fontWeight="700";}
+    var ht=$("heroText");
+    if(ht){try{ht.scrollIntoView({behavior:"smooth",block:"center"});ht.focus({preventScroll:true});}catch(e){try{ht.focus();}catch(e2){}}}
+    return;
+  }
   var st=$("heroState").value||(text?detectStateInText(text):"");
   if(text){
     addUncertainDocs(text,isSaleText(text));
@@ -5641,7 +5669,8 @@ select option{background:#fff;color:#1E2A45}
 #pageNav{background:transparent!important;border:0!important;box-shadow:none!important}
 #heroBox #btnMake{background:#E8971F!important;color:#2A1B00!important;border:none!important;font-weight:700}
 #heroBox .llm-hint a,#demoPeek a{color:#B8770A!important}
-#demoSub{background:#12294B!important;color:#fff!important}
+#demoSub{background:#12294B!important;color:#fff!important;width:auto!important;min-height:44px!important;padding:0 20px!important;font-size:14px!important;font-weight:700!important;border-radius:999px!important;box-shadow:none!important}
+#demoCard .demo-cta{display:flex;justify-content:flex-start;margin:10px 0 0}
 
 /* 入口屏：一句标题 + 两颗按钮；四步卡与新闻条只在入口屏出现 */
 #startCard{background:linear-gradient(160deg,#05284F 0%,#083C72 58%,#0A4C88 100%)!important;border:0!important;border-radius:20px!important;padding:34px 30px 30px!important;box-shadow:0 14px 34px rgba(6,42,85,.20)!important;color:#fff}
@@ -5654,6 +5683,15 @@ select option{background:#fff;color:#1E2A45}
 #startCard .hero-cta{display:inline-block;padding:12px 22px;border-radius:999px;background:#F5A623;color:#2A1B00!important;font-weight:700;text-decoration:none;font-size:15px;box-shadow:0 6px 16px rgba(245,166,35,.28)}
 #startCard .hero-cta.ghost{background:transparent;border:1px solid rgba(255,255,255,.52);color:#fff!important;box-shadow:none}
 #startCard .hero-cta:hover{filter:brightness(1.05)}
+#startCard .start-scope{margin:14px 0 0!important;font-size:12px!important;line-height:1.6!important;color:rgba(255,255,255,.66)!important}
+#demoCard .demo-price-line{margin:6px 0 0;font-size:12px;line-height:1.5;color:#6B7889}
+#demoCard .demo-price-line b{color:#12294B;font-weight:700}
+#graphCard .rg-pre{margin:0 0 8px;font-size:11.5px;line-height:1.5;color:#8A6A22}
+#graphCard .rg-pre b{color:#5C4410;font-weight:700}
+#graphCard .rg-note{margin:8px 0 0;font-size:11.5px;line-height:1.55;color:#6B7889}
+#demoCard .demo-try-note{margin:4px 0 0;font-size:11.5px;line-height:1.45;color:#7A8899}
+#demoCard .demo-scale{display:flex;justify-content:space-between;gap:8px;margin:4px 0 0;font-size:11px;color:#8A96A6}
+#demoCard .demo-note{margin:6px 0 0;font-size:11.5px;line-height:1.45;color:#8A96A6}
 
 .news-strip{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 0;padding:9px 14px;border:1px solid #E7E0D1;border-radius:12px;background:#fff;font-size:12.5px;color:#3A4A61;overflow:hidden}
 .news-strip .ns-item{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
