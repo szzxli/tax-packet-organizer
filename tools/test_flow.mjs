@@ -224,7 +224,7 @@ await withChrome(async (cdp) => {
           assert.ok(ui.stepTitles[i].includes(String(i + 1)), "第 " + (i + 1) + " 步标题不对：" + ui.stepTitles[i]);
         }
       });
-      check("入口屏只有一条主线：两颗 hero 按钮（免费估税／先看一遍）+ 生成清单，演示不并列：" + tag, () => {
+      check("入口屏只有一条主线：两颗 hero 按钮（开始整理／先看一遍）+ 生成清单，演示不并列：" + tag, () => {
         assert.equal(ui.startBtns, 0, "定位句那块里又长出按钮了：" + ui.startBtns);
         assert.equal(ui.makeVisible, true, "入口屏没有「生成我的清单」");
         assert.equal(ui.demoVisible, false, "演示卡又跟入口并列了（应藏在「看 22 秒怎么用」后面）");
