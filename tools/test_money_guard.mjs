@@ -323,9 +323,11 @@ check("贫困线：2027 保障年那组在图里（按 2026 年指南 ×4），�
   assert.ok(n, "缺 poverty_lines.next（2027 保障年）");
   assert.equal(n.coverage_year, 2027);
   assert.equal(n.effective_tax_year, 2026, "保障年 2027 应使用 2026 年贫困线");
-  assert.equal(n.checked, "2026-11-12");
-  assert.match(n.source_url, /^https:\/\/aspe\.hhs\.gov\//, "缺 ASPE 出处");
+  assert.match(n.checked, /^\d{4}-\d{2}-\d{2}$/, "缺核实日");
+  assert.match(n.source_url, /^https:\/\/aspe\.hhs\.gov\/.*detailed-guidelines-2026\.pdf$/, "出处应是 2026 年指南原文 PDF");
+  assert.match(n.federal_register || "", /^https:\/\/www\.federalregister\.gov\//, "缺联邦公报刊登页");
   assert.ok(/45 CFR 155\.300/.test(n.note || ""), "note 没写 45 CFR 155.300");
+  assert.ok(/132,000|132000/.test(n.note || ""), "note 没写四口之家 400% 线的数");
   assert.equal(n.step_per_extra_person, 5680);
   assert.equal(n.step_limit_per_extra_person, 5680 * 4);
   const fpl = { 1: 15960, 2: 21640, 3: 27320, 4: 33000 };

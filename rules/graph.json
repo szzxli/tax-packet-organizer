@@ -18,7 +18,7 @@
       "state_marketplaces_pct": 16
     },
     "cliff_400pct": true,
-    "note": "开放期日期见 CMS 2027 事实单原文：begins on November 1, 2026, and runs through January 15, 2027。13% 与 11%/16% 的拆分见 KFF 2026-11-06——CMS 那份事实单里没有这两个数，所以分成两个出处，不并成一处。2027 保障年的贫困线金额未出，页面不写任何 2027 的 400% 线金额。",
+    "note": "开放期日期见 CMS 2027 事实单原文：begins on November 1, 2026, and runs through January 15, 2027。13% 与 11%/16% 的拆分见 KFF 2026-11-06——CMS 那份事实单里没有这两个数，所以分成两个出处，不并成一处。2027 保障年的 400% 线用 2026 年贫困线（四口之家 $33,000 ×4 = $132,000，HHS 2026-01-15 联邦公报 2026-00755 已发布），见 poverty_lines.next。",
     "source": "CMS, Plan Year 2027 Marketplace Plans and Prices Fact Sheet",
     "source_url": "https://www.cms.gov/newsroom/fact-sheets/plan-year-2027-marketplace-plans-prices-fact-sheet-0",
     "premium_source": "KFF, 9 things to watch for the 2027 ACA open enrollment period, 2026-11-06",
@@ -374,9 +374,10 @@
       "program": "HHS poverty guidelines, 2026, 48 contiguous states + DC",
       "effective_tax_year": 2026,
       "coverage_year": 2027,
-      "checked": "2026-11-12",
-      "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines",
-      "note": "保障年 2027 用 2026 年贫困线，依据 45 CFR 155.300：Federal poverty level means the most recently published Federal poverty level as of the first day of the annual open enrollment period for coverage in a QHP。开放期 2026-11-01 开始、选的是 2027 保障年，所以用 2026 年指南。",
+      "checked": "2026-11-15",
+      "source_url": "https://aspe.hhs.gov/sites/default/files/documents/b1bfa16b20ae9b89d525bc35de7c1643/detailed-guidelines-2026.pdf",
+      "federal_register": "https://www.federalregister.gov/documents/2026/01/15/2026-00755/annual-update-of-the-hhs-poverty-guidelines",
+      "note": "保障年 2027 用 2026 年贫困线，依据 45 CFR 155.300：Federal poverty level means the most recently published Federal poverty level as of the first day of the annual open enrollment period for coverage in a QHP。开放期 2026-11-01 开始、选的是 2027 保障年，所以用 2026 年指南；该指南已于 2026-01-15 在联邦公报发布（2026-00755），四口之家 $33,000，×4 按 26 U.S.C. §36B(c)(1)(A) 得 $132,000，是已生效的正式数而非预测。",
       "step_per_extra_person": 5680,
       "step_limit_per_extra_person": 22720,
       "four_hundred_pct": [
@@ -386,8 +387,8 @@
           "limit": 63840,
           "effective_tax_year": 2026,
           "coverage_year": 2027,
-          "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines",
-          "checked": "2026-11-12"
+          "source_url": "https://aspe.hhs.gov/sites/default/files/documents/b1bfa16b20ae9b89d525bc35de7c1643/detailed-guidelines-2026.pdf",
+          "checked": "2026-11-15"
         },
         {
           "household_size": 2,
@@ -395,8 +396,8 @@
           "limit": 86560,
           "effective_tax_year": 2026,
           "coverage_year": 2027,
-          "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines",
-          "checked": "2026-11-12"
+          "source_url": "https://aspe.hhs.gov/sites/default/files/documents/b1bfa16b20ae9b89d525bc35de7c1643/detailed-guidelines-2026.pdf",
+          "checked": "2026-11-15"
         },
         {
           "household_size": 3,
@@ -404,8 +405,8 @@
           "limit": 109280,
           "effective_tax_year": 2026,
           "coverage_year": 2027,
-          "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines",
-          "checked": "2026-11-12"
+          "source_url": "https://aspe.hhs.gov/sites/default/files/documents/b1bfa16b20ae9b89d525bc35de7c1643/detailed-guidelines-2026.pdf",
+          "checked": "2026-11-15"
         },
         {
           "household_size": 4,
@@ -413,8 +414,8 @@
           "limit": 132000,
           "effective_tax_year": 2026,
           "coverage_year": 2027,
-          "source_url": "https://aspe.hhs.gov/topics/poverty-economic-mobility/poverty-guidelines",
-          "checked": "2026-11-12"
+          "source_url": "https://aspe.hhs.gov/sites/default/files/documents/b1bfa16b20ae9b89d525bc35de7c1643/detailed-guidelines-2026.pdf",
+          "checked": "2026-11-15"
         }
       ]
     }
