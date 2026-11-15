@@ -107,10 +107,12 @@ CREATE TABLE signup_leads (
   slot TEXT,
   ref TEXT,
   source TEXT,
+  anon TEXT,
   payload TEXT NOT NULL,
   created_at INTEGER NOT NULL
 );
 CREATE INDEX idx_signup_leads_created ON signup_leads(created_at);
 CREATE INDEX idx_signup_leads_ref ON signup_leads(ref);
+CREATE INDEX idx_signup_leads_anon ON signup_leads(anon);
 CREATE TABLE signup_rate (ip_hash TEXT NOT NULL, created_at INTEGER NOT NULL);
 CREATE INDEX idx_signup_rate ON signup_rate(ip_hash, created_at);

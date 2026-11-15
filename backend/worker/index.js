@@ -276,7 +276,7 @@ export default {
       return bad("subscription_closed", 503);
     }
 
-    if (path === "/api/health" && req.method === "GET") return ok({ version: "tpo-api-6", subscription_open: SUBSCRIPTION_OPEN });
+    if (path === "/api/health" && req.method === "GET") return ok({ version: "tpo-api-7", subscription_open: SUBSCRIPTION_OPEN });
 
     // 报名落库：公开、不建账号，与 formsubmit 双写。页面提交失败也不阻断，
     // 所以这里只做最小校验与限流；ref 原样存，不做映射，归因由查询端决定。
@@ -294,10 +294,12 @@ export default {
       const id = crypto.randomUUID();
       const ref = String(b.ref || "").slice(0, 120);
       const source = String(b.source || "").slice(0, 120);
+      // 只收已有匿名串的前 16 位（与 track.js 同源）；没有就是空串，这里不生成新 ID。
+      const anon = String(b.anon || "").slice(0, 16);
       const payload = JSON.stringify(b).slice(0, 4000);
       await env.DB.batch([
-        env.DB.prepare("INSERT INTO signup_leads (id,email,phone,name,state,kind,slot,ref,source,payload,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
-          .bind(id, email, phone, String(b.name || "").slice(0, 80), String(b.state || "").slice(0, 40), String(b.kind || "").slice(0, 80), String(b.slot || "").slice(0, 80), ref, source, payload, Date.now()),
+        env.DB.prepare("INSERT INTO signup_leads (id,email,phone,name,state,kind,slot,ref,source,anon,payload,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")
+          .bind(id, email, phone, String(b.name || "").slice(0, 80), String(b.state || "").slice(0, 40), String(b.kind || "").slice(0, 80), String(b.slot || "").slice(0, 80), ref, source, anon, payload, Date.now()),
         env.DB.prepare("INSERT INTO signup_rate (ip_hash,created_at) VALUES (?,?)").bind(ipHash, Date.now()),
       ]);
       return ok({ id });
@@ -439,7 +441,7 @@ export default {
       const list = Array.isArray(b) ? b : (Array.isArray(b && b.events) ? b.events : null);
       if (!list) return bad("bad_events");
       if (list.length < 1 || list.length > 20) return bad("bad_batch");
-      const NAMES = ["open", "generate", "save", "export", "export_done", "pass_claimed", "flow-step1", "flow-step2", "flow-step3", "flow-step4", "flow-step5", "demo_drag", "demo_cta_pass"];
+      const NAMES = ["open", "generate", "save", "export", "export_done", "pass_claimed", "flow-step1", "flow-step2", "flow-step3", "flow-step4", "flow-step5", "demo_drag", "demo_cta_pass", "signup_start", "signup"];
       const now = Date.now();
       const text = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
       const rows = [];
@@ -456,8 +458,8 @@ export default {
           text(it.path, 200),
           text(it.device, 20),
           text(it.anon, 64).slice(0, 16),
-          // demo_cta 用它分 free / pass 两条路；其它事件留空
-          text(it.target, 16),
+          // demo_cta 用它分 free / pass 两条路；signup 用它存报名的身份类型（最长 15 字，留 32 位余量）
+          text(it.target, 32),
         ]);
       }
       try {

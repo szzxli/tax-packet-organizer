@@ -150,29 +150,56 @@
 
 <script>
   (function(){
+    var API = 'https://tax-packet-api.szzxli711.workers.dev';
     var p = new URLSearchParams(location.search);
-    var ref = (p.get('ref') || '').slice(0, 120);
+    // ref：URL 上有就用 URL 的；没有就沿用 track.js 存下的会话归因，站内跳进来或直接打开都不丢。
+    var ref = (p.get('ref') || '').trim();
+    if (!ref) { try { ref = sessionStorage.getItem('tpo_ref') || ''; } catch (e) {} }
+    ref = ref.slice(0, 120);
     var refEl = document.getElementById('f-ref');
     if (refEl) refEl.value = ref;
+    // 与 track.js 同一个匿名串：只取 localStorage 里已有的前 16 位，没有就是空串，不新生成。
+    function anonId() {
+      try { return String(localStorage.getItem('tpo_anon') || '').slice(0, 16); } catch (e) { return ''; }
+    }
+    function sendEvents(events) {
+      try {
+        fetch(API + '/api/events', {
+          method: 'POST', mode: 'cors', credentials: 'omit', keepalive: true,
+          headers: {'content-type': 'text/plain;charset=UTF-8'},
+          body: JSON.stringify({ events: events })
+        }).catch(function(){});
+      } catch (e) {}
+    }
     if (p.get('sent')) {
       var el = document.getElementById('thanks');
       if (el) el.style.display = 'block';
       window.scrollTo({top: 0, behavior: 'smooth'});
     }
+    // 第一次聚焦邮箱框算「开始填表」：只在内存里记一次，刷新才重置，不进 localStorage。
+    var started = false;
+    var emailEl = document.getElementById('f-email');
+    if (emailEl) emailEl.addEventListener('focus', function(){
+      if (started) return;
+      started = true;
+      sendEvents([{ name: 'signup_start', ts: Date.now(), target: 'email', path: '/signup.html', anon: anonId() }]);
+    });
     var form = document.getElementById('familyForm');
     if (form) form.addEventListener('submit', function(){
       try {
         var fd = new FormData(form);
+        var anon = anonId();
         var body = {
           name: fd.get('称呼') || '', email: fd.get('email') || '', phone: fd.get('手机号') || '',
           state: fd.get('州') || '', kind: fd.get('身份或收入类型') || '', slot: fd.get('小组场次') || '',
           change: fd.get('今年最大的变化') || '', note: fd.get('备注') || '', case_ok: fd.get('授权案例') || '',
-          ref: fd.get('ref') || '', source: 'signup.html'
+          ref: fd.get('ref') || '', source: 'signup.html', anon: anon
         };
-        fetch('https://tax-packet-api.szzxli711.workers.dev/api/signup', {
+        fetch(API + '/api/signup', {
           method: 'POST', headers: {'content-type': 'application/json'},
           body: JSON.stringify(body), keepalive: true
         }).catch(function(){});
+        sendEvents([{ name: 'signup', ts: Date.now(), target: body.kind, path: '/signup.html', anon: anon }]);
       } catch (e) {}
     });
   })();
