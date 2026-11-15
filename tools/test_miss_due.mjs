@@ -109,8 +109,10 @@ const MEASURE = `(() => {
     rows: [...c.querySelectorAll("tr")].slice(1).map((r) => [...r.children].map((td) => clean(td.innerText)))
   }));
   const card = document.getElementById("missCard");
+  const rect = (id) => { const e = document.getElementById(id); if (!e) return null; const r = e.getBoundingClientRect(); return { top: Math.round(r.top + scrollY), bottom: Math.round(r.bottom + scrollY) }; };
   return JSON.stringify({
     li, pre: pre ? clean(pre.innerText) : null, cols,
+    vh: innerHeight, miss: rect("missCard"), hero: rect("heroText"), make: rect("btnMake"),
     missVisible: card ? getComputedStyle(card).display !== "none" : false,
   });
 })()`;
@@ -128,12 +130,31 @@ const got = await withChrome(async (cdp) => {
   const base = "http://127.0.0.1:" + server.address().port;
   await cdp.send("Page.enable");
   try {
-    await cdp.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
+    await cdp.send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true });
     await cdp.send("Page.navigate", { url: base + "/formal.html?lang=zh" });
     // 首访：不碰 packet，只等规则库到达。A 必须在这时就已经在首屏。
     await sleep(1800);
     const bootRaw = await cdp.send("Runtime.evaluate", { returnByValue: true, expression: MEASURE });
     const boot = JSON.parse(bootRaw.result.value);
+    // 基线：把新块藏掉，同一屏再量一次按钮位置，用来判断这块是不是把按钮挤下去的
+    const baseRaw = await cdp.send("Runtime.evaluate", { returnByValue: true, expression: `(() => {
+      const c = document.getElementById("missCard"); if (c) c.style.display = "none";
+      const e = document.getElementById("btnMake"); const r = e.getBoundingClientRect();
+      const m = document.getElementById("missCard").getBoundingClientRect();
+      return JSON.stringify({ makeTop: Math.round(r.top + scrollY), missH: Math.round(m.height), heroTop: Math.round(document.getElementById("heroText").getBoundingClientRect().top + scrollY), vh: innerHeight });
+    })()` });
+    boot.baseline = JSON.parse(baseRaw.result.value);
+    await cdp.send("Runtime.evaluate", { expression: `(() => { const c = document.getElementById("missCard"); if (c) c.style.display = ""; })()` });
+    const layRaw = await cdp.send("Runtime.evaluate", { returnByValue: true, expression: `(() => {
+      const ids = ["startCard","posCard","missCard","heroBox","demoCard","btnMake","btnHeroGo"];
+      const out = { body: document.body.className, vh: innerHeight, scroll: scrollY, items: {} };
+      for (const id of ids) { const e = document.getElementById(id); if (!e) { out.items[id] = null; continue; }
+        const r = e.getBoundingClientRect(); const st = getComputedStyle(e);
+        out.items[id] = { top: Math.round(r.top + scrollY), h: Math.round(r.height), display: st.display, vis: st.visibility }; }
+      return JSON.stringify(out);
+    })()` });
+    boot.layout = JSON.parse(layRaw.result.value);
+
     await cdp.send("Runtime.evaluate", { expression: SETUP });
     await sleep(400);
     const r = await cdp.send("Runtime.evaluate", { returnByValue: true, expression: MEASURE });
@@ -165,6 +186,14 @@ check("A 样例前提一行且 ≤30 字", () => {
   assert.ok(A.pre && A.pre.length <= 30, "前提行不对：" + A.pre);
   assert.ok(/样例/.test(A.pre), "前提行没有「样例」");
   assert.ok(!/\d{4}-\d{2}-\d{2}/.test(A.pre), "前提行不该再放日期");
+});
+check("A 块在位置卡与输入框之间，且不吃掉首屏主按钮", () => {
+  const it = A.layout.items;
+  assert.ok(it.missCard && it.missCard.h > 0, "块没渲染出高度");
+  assert.ok(it.missCard.top > it.posCard.top, "块跑到位置卡上面去了");
+  assert.ok(it.missCard.top + it.missCard.h <= it.heroBox.top, "块压到了输入框");
+  assert.ok(it.missCard.h <= 240, "块太高，" + it.missCard.h + "px（上限 240）");
+  assert.ok(it.btnHeroGo && it.btnHeroGo.top < A.layout.vh, "首访那屏的主按钮掉出去了：top=" + (it.btnHeroGo && it.btnHeroGo.top));
 });
 check("B 两栏，标题字面量固定", () => {
   assert.equal(B.cols.length, 2, "不是两栏");
