@@ -113,6 +113,8 @@ const MEASURE = `(() => {
   return JSON.stringify({
     li, pre: pre ? clean(pre.innerText) : null, cols,
     vh: innerHeight, miss: rect("missCard"), hero: rect("heroText"), make: rect("btnMake"),
+    authHidden: (() => { const a = document.getElementById("authView"); return a ? getComputedStyle(a).display === "none" : null; })(),
+    runHref: (() => { const a = document.querySelector(".head-cta a"); return a ? a.getAttribute("href") : null; })(),
     missVisible: card ? getComputedStyle(card).display !== "none" : false,
   });
 })()`;
@@ -187,13 +189,18 @@ check("A 样例前提一行且 ≤30 字", () => {
   assert.ok(/样例/.test(A.pre), "前提行没有「样例」");
   assert.ok(!/\d{4}-\d{2}-\d{2}/.test(A.pre), "前提行不该再放日期");
 });
-check("A 块在位置卡与输入框之间，且不吃掉首屏主按钮", () => {
+check("A 三行在关系图之前、输入框之前，且不吃掉首屏主按钮", () => {
   const it = A.layout.items;
   assert.ok(it.missCard && it.missCard.h > 0, "块没渲染出高度");
-  assert.ok(it.missCard.top > it.posCard.top, "块跑到位置卡上面去了");
+  assert.ok(it.missCard.top < it.posCard.top, "三行还压在关系图后面");
+  assert.ok(it.missCard.top + it.missCard.h <= it.posCard.top, "三行和关系图重叠了");
   assert.ok(it.missCard.top + it.missCard.h <= it.heroBox.top, "块压到了输入框");
   assert.ok(it.missCard.h <= 240, "块太高，" + it.missCard.h + "px（上限 240）");
   assert.ok(it.btnHeroGo && it.btnHeroGo.top < A.layout.vh, "首访那屏的主按钮掉出去了：top=" + (it.btnHeroGo && it.btnHeroGo.top));
+});
+check("首访不弹账号表单；陪跑链接带 ref=referral", () => {
+  assert.equal(A.authHidden, true, "首访就把注册表单摊出来了");
+  assert.match(A.runHref || "", /signup\.html\?ref=referral/, "陪跑链接没带 ref：" + A.runHref);
 });
 check("B 两栏，标题字面量固定", () => {
   assert.equal(B.cols.length, 2, "不是两栏");
