@@ -5284,9 +5284,9 @@ $("btnMake").onclick=function(){
   var text=$("heroText").value.trim();
   var sel=[];document.querySelectorAll("#tagGrid .tag-btn.on").forEach(function(b){sel.push(b);});
   var msg=$("tagMsg");
-  if(msg){msg.style.color="";msg.style.fontWeight="";}
+  if(msg){msg.style.removeProperty("color");msg.style.removeProperty("font-weight");}
   if(!text&&!sel.length){
-    if(msg){msg.textContent=tr("先写一句，例如「今年换了工作、孩子上了大学」——不用写数字。","Write one line first, e.g. \"changed jobs, a child started college\" — no numbers needed.","Escriba una línea primero, p. ej. «cambié de trabajo, un hijo entró a la universidad» — sin cifras.");msg.style.color="#B4342A";msg.style.fontWeight="700";}
+    if(msg){msg.textContent=tr("先写一句，例如「今年换了工作、孩子上了大学」——不用写数字。","Write one line first, e.g. \"changed jobs, a child started college\" — no numbers needed.","Escriba una línea primero, p. ej. «cambié de trabajo, un hijo entró a la universidad» — sin cifras.");msg.style.setProperty("color","#B4342A","important");msg.style.setProperty("font-weight","700","important");}
     var ht=$("heroText");
     if(ht){try{ht.scrollIntoView({behavior:"smooth",block:"center"});ht.focus({preventScroll:true});}catch(e){try{ht.focus();}catch(e2){}}}
     return;
