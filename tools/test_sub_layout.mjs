@@ -185,16 +185,15 @@ const got = await withChrome(async (cdp) => {
       await cdp.send("Page.navigate", { url: base + "/formal.html?lang=zh" });
       await sleep(1100);
       await cdp.send("Runtime.evaluate", { expression: SETUP });
-      // 第三步：清单卡与展示卡都在这一屏
-      await cdp.send("Runtime.evaluate", { expression: "setOrganizeStep(3,false);renderAll();renderHero();" });
+      // 展示卡在订阅页（整理页 currentPage===1 时按设计隐藏），所以先切到订阅页再量
+      await cdp.send("Runtime.evaluate", { expression: "setOrganizeStep(3,false);renderAll();renderHero();showPage(2);" });
       await sleep(300);
       for (const lang of LANGS) {
-        await cdp.send("Runtime.evaluate", { expression: "setLang(" + JSON.stringify(lang) + ");setOrganizeStep(3,false);renderHero();" });
+        await cdp.send("Runtime.evaluate", { expression: "setLang(" + JSON.stringify(lang) + ");setOrganizeStep(3,false);renderHero();showPage(2);" });
         await sleep(350);
         const a = await cdp.send("Runtime.evaluate", { returnByValue: true, expression: MEASURE_SHOWCASE });
-        // 订阅页：交付节律与价格块在这一页
-        await cdp.send("Runtime.evaluate", { expression: "showPage(2);" });
-        await sleep(350);
+        // 同一页：交付节律与价格块
+        await sleep(100);
         const b = await cdp.send("Runtime.evaluate", { returnByValue: true, expression: MEASURE_CARD });
         await cdp.send("Runtime.evaluate", { expression: "showPage(1);" });
         out.push({ vp, lang, a: JSON.parse(a.result.value), m: JSON.parse(b.result.value) });

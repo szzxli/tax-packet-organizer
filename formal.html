@@ -142,6 +142,7 @@ body.tpo-first .site-head p a[href="signup.html"]{background:transparent!importa
 #demoCard .demo-row .val{grid-column:2;text-align:right;font-size:15px;font-weight:700;color:#e6edf3;font-variant-numeric:tabular-nums}
 #demoCard .demo-row .note{grid-column:1/-1;font-size:11px;color:#7d8fa1}
 #demoCard .demo-row.sample{background:#0e1a17}
+@media (max-width:380px){#demoCard .demo-row{padding:5px 11px}#demoCard .demo-row .note{font-size:10.5px;line-height:1.22}#demoCard .demo-row .lbl{font-size:12.5px}}
 #demoCard .demo-steps{list-style:none;margin:8px 0 0;padding:0}
 #demoCard .demo-steps li{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 7px;padding:2px 0;font-size:12.5px;line-height:1.4;color:#c8d5df}
 #demoCard .demo-steps .n{min-width:11px;color:#2fd4a0;font-weight:700}
@@ -3986,7 +3987,7 @@ function renderDemo(){
     };
     var nextLine=(nextFour&&nextFour.limit&&PLnext.coverage_year&&four&&four.limit)
       ? tr(PLnext.coverage_year+" 保障年那条线是 "+demoMoney(nextFour.limit)+"（比 "+four.coverage_year+" 高 "+demoMoney(nextFour.limit-four.limit)+"，按 "+PLnext.effective_tax_year+" 年指南）；你"+posClause(inc>nextFour.limit),
-           "Coverage year "+PLnext.coverage_year+" has a "+demoMoney(nextFour.limit)+" line ("+demoMoney(nextFour.limit-four.limit)+" higher, on the "+PLnext.effective_tax_year+" guidelines); your income "+posClause(inc>nextFour.limit),
+           "Coverage year "+PLnext.coverage_year+" has a "+demoMoney(nextFour.limit)+" line (+"+demoMoney(nextFour.limit-four.limit)+", "+PLnext.effective_tax_year+" guide); sample "+posClause(inc>nextFour.limit),
            "El año de cobertura "+PLnext.coverage_year+" tiene una línea de "+demoMoney(nextFour.limit)+" ("+demoMoney(nextFour.limit-four.limit)+" más, con la guía de "+PLnext.effective_tax_year+"); su ingreso "+posClause(inc>nextFour.limit))
       : "";
     if(four&&four.limit){
@@ -3996,7 +3997,7 @@ function renderDemo(){
           ? tr("超线 "+demoMoney(inc-four.limit)+" · 四口线 "+demoMoney(four.limit),"Over by "+demoMoney(inc-four.limit)+" · line "+demoMoney(four.limit),"Arriba por "+demoMoney(inc-four.limit)+" · línea "+demoMoney(four.limit))
           : tr("四口线 "+demoMoney(four.limit),"Line "+demoMoney(four.limit)+" (4)","Línea "+demoMoney(four.limit)+" (4)"),
         tr("四口之家 "+four.coverage_year+" 保障年的 400% 线是 "+demoMoney(four.limit)+"；样例收入 "+demoMoney(inc)+" "+posClause(inc>four.limit),
-           "For a household of four the 400% line for coverage year "+four.coverage_year+" is "+demoMoney(four.limit)+"; the sample income of "+demoMoney(inc)+" "+posClause(inc>four.limit),
+           "4-person: coverage year "+four.coverage_year+" line is "+demoMoney(four.limit)+"; sample "+demoMoney(inc)+" "+posClause(inc>four.limit),
            "Para un hogar de cuatro la línea del 400% del año de cobertura "+four.coverage_year+" es "+demoMoney(four.limit)+"; el ingreso de muestra de "+demoMoney(inc)+" "+posClause(inc>four.limit))+nextLine,
         tr("26 U.S.C. §36B(c)(1)(A) × HHS 贫困线，核于 ","26 U.S.C. §36B(c)(1)(A) × HHS poverty line, checked ","26 U.S.C. §36B(c)(1)(A) × línea de pobreza de HHS, verificado el ")+(PL.checked||"")
           +(nextLine

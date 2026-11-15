@@ -100,11 +100,12 @@ check("英文页不出现全国覆盖的说法，州税口径正确", () => {
   assert.match(read("tax-document-checklist.html"), /state items for your state aren't covered in this version/);
 });
 
-check("sitemap 只列中文入口与四篇英文页，URL 都有对应文件", () => {
+check("sitemap 只列中文入口（正式页＋报名页）与四篇英文页，URL 都有对应文件", () => {
   const xml = read("sitemap.xml");
   const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  assert.equal(locs.length, 5, `应有 5 条，实际 ${locs.length}`);
+  assert.equal(locs.length, 6, `应有 6 条，实际 ${locs.length}`);
   assert.ok(locs.includes(`${BASE}/formal.html`));
+  assert.ok(locs.includes(`${BASE}/signup.html`), "sitemap 缺报名页 signup");
   for (const s of SLUGS) assert.ok(locs.includes(`${BASE}/${s}.html`), `sitemap 缺 ${s}`);
   for (const u of locs) {
     const file = u.replace(BASE + "/", "");
