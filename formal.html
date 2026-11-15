@@ -5586,6 +5586,9 @@ try{if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").
     // 规划卡第一次渲染可能早于规则图到达；到了再画一遍，免得停在「还没读到」。
     try { renderPlanCards(); } catch (e2) {}
     try { renderDemo(); } catch (e3) {}
+    // 首屏三行与缺项表都读规则库：规则到了必须重画一遍，否则首访停在上面的空态。
+    try { renderMiss(); } catch (e4) {}
+    try { renderDue(); } catch (e5) {}
   }).catch(function () {});
   // 价格结构只在 pricing.json：取不到就不出价格块，页面上一个数字都不补。
   fetch("./pricing.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (p) {

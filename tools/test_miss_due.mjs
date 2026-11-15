@@ -130,24 +130,28 @@ const got = await withChrome(async (cdp) => {
   try {
     await cdp.send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     await cdp.send("Page.navigate", { url: base + "/formal.html?lang=zh" });
-    await sleep(1200);
+    // 首访：不碰 packet，只等规则库到达。A 必须在这时就已经在首屏。
+    await sleep(1800);
+    const bootRaw = await cdp.send("Runtime.evaluate", { returnByValue: true, expression: MEASURE });
+    const boot = JSON.parse(bootRaw.result.value);
     await cdp.send("Runtime.evaluate", { expression: SETUP });
     await sleep(400);
     const r = await cdp.send("Runtime.evaluate", { returnByValue: true, expression: MEASURE });
-    return JSON.parse(r.result.value);
+    return { boot, got: JSON.parse(r.result.value) };
   } finally {
     await new Promise((r) => server.close(r));
   }
 });
 
 const today = new Date().toISOString().slice(0, 10);
+const A = got.boot, B = got.got;
 
 check("A 三行都在，卡片可见", () => {
-  assert.equal(got.missVisible, true, "missCard 是 hidden");
-  assert.equal(got.li.length, 3, "不是三行：" + JSON.stringify(got.li));
+  assert.equal(A.missVisible, true, "missCard 是 hidden");
+  assert.equal(A.li.length, 3, "不是三行：" + JSON.stringify(A.li));
 });
 check("A 每行是「项目 · 锁死日 · 后果」，日期按升序", () => {
-  const dates = got.li.map((s) => {
+  const dates = A.li.map((s) => {
     const m = s.match(/\d{4}-\d{2}-\d{2}/);
     assert.ok(m, "这一行没有锁死日：" + s);
     assert.ok(s.split(" · ").length === 3, "不是三段：" + s);
@@ -158,24 +162,24 @@ check("A 每行是「项目 · 锁死日 · 后果」，日期按升序", () => 
   assert.ok(dates.every((d) => d > today), "首屏三行应当都还没过期：" + dates.join(","));
 });
 check("A 样例前提一行且 ≤30 字", () => {
-  assert.ok(got.pre && got.pre.length <= 30, "前提行不对：" + got.pre);
-  assert.ok(/样例/.test(got.pre), "前提行没有「样例」");
-  assert.ok(!/\d{4}-\d{2}-\d{2}/.test(got.pre), "前提行不该再放日期");
+  assert.ok(A.pre && A.pre.length <= 30, "前提行不对：" + A.pre);
+  assert.ok(/样例/.test(A.pre), "前提行没有「样例」");
+  assert.ok(!/\d{4}-\d{2}-\d{2}/.test(A.pre), "前提行不该再放日期");
 });
 check("B 两栏，标题字面量固定", () => {
-  assert.equal(got.cols.length, 2, "不是两栏");
-  assert.match(got.cols[0].head, /还来得及改/);
-  assert.match(got.cols[1].head, /今年已经晚了/);
+  assert.equal(B.cols.length, 2, "不是两栏");
+  assert.match(B.cols[0].head, /还来得及改/);
+  assert.match(B.cols[1].head, /今年已经晚了/);
 });
 check("B 过期进「今年已经晚了」、未过期进「还来得及改」", () => {
-  const late = got.cols[1].rows.map((r) => r[4]).join(" ");
-  const soon = got.cols[0].rows.map((r) => r[4]).join(" ");
+  const late = B.cols[1].rows.map((r) => r[4]).join(" ");
+  const soon = B.cols[0].rows.map((r) => r[4]).join(" ");
   assert.ok(/\d{4}-\d{2}-\d{2}/.test(late), "已过期那栏没有带日期的行");
   for (const d of late.match(/\d{4}-\d{2}-\d{2}/g) || []) assert.ok(d < today, "这栏里混进了未过期的日期：" + d);
   for (const d of soon.match(/\d{4}-\d{2}-\d{2}/g) || []) assert.ok(d >= today, "这栏里混进了已过期的日期：" + d);
 });
 check("B 每行六列，金额列留空（不写金额）", () => {
-  const rows = got.cols.flatMap((c) => c.rows);
+  const rows = B.cols.flatMap((c) => c.rows);
   assert.ok(rows.length >= 5, "行数太少：" + rows.length);
   for (const r of rows) {
     assert.equal(r.length, 6, "不是六列：" + JSON.stringify(r));
@@ -183,7 +187,7 @@ check("B 每行六列，金额列留空（不写金额）", () => {
   }
 });
 check("B 清单行也在表里（W-2 / 1099-INT）", () => {
-  const all = got.cols.flatMap((c) => c.rows).map((r) => r[0]).join(" | ");
+  const all = B.cols.flatMap((c) => c.rows).map((r) => r[0]).join(" | ");
   assert.match(all, /W-2/);
   assert.match(all, /1099-INT/);
 });
