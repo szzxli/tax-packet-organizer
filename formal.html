@@ -558,8 +558,6 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <div class="card no-print" id="posCard">
 <div id="graphCard">
 <p class="rg-h">中间这个数，牵动外圈这几项</p>
-<p class="rg-pre"><b>样例前提：</b>合并申报、四口之家、两个孩子、2026 税年——不是你的数。</p>
-<p class="rg-sub">中间是你今年的收入，外圈是它牵动的位置。边是粗是细，说的是这件事我们能说到哪一步。</p>
 <svg id="ruleGraph" viewBox="0 0 720 400" role="img" aria-label="收入与几项结果的关系图"><g id="rgEdges"></g><g id="rgNodes"></g></svg>
 <ul class="rg-legend"><li><i></i>有数（可对外）</li><li><i class="r"></i>区间（给上下沿）</li><li><i class="d"></i>方向（不给数）</li></ul>
 </div>
@@ -5788,6 +5786,13 @@ select option{background:#fff;color:#1E2A45}
 #posCard .demo-slide-line{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
 #posCard .demo-slide-line b{font-size:17px;color:#12294B;font-variant-numeric:tabular-nums}
 #posCard .demo-scale{display:flex;justify-content:space-between;gap:8px;margin:4px 0 0;font-size:11px;color:#8A96A6}
+#posCard{padding:12px 14px 10px!important}
+#posCard #ruleGraph{max-height:170px}
+#posCard .rg-legend{margin:6px 0 0!important;gap:8px!important;font-size:10.5px!important}
+#posCard .demo-slide{margin:8px 0 0!important}
+#posCard #demoIncome{height:26px}
+#posCard .demo-scale{margin:0!important;font-size:10.5px!important}
+#posCard .pos-lead{margin:8px 0 0!important}
 #missCard{margin:12px 0 0!important;padding:14px 18px 12px!important;border:1px solid #E7E0D1!important;border-radius:16px!important;background:#FFFDF7!important}
 #missCard .ms-h{margin:0 0 4px!important;font-size:22px!important;letter-spacing:0!important}
 #missCard .ms-list{list-style:none;margin:6px 0 0;padding:0}
