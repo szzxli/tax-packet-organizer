@@ -3057,9 +3057,19 @@ function outlookOutHtml(unlocked) {
     return h;
   }
   // 这一行必须同时说清「算什么、没算什么」，否则区间就是个孤零零的数。
-  var condZh = "；只按标准扣除算（" + outlookMoney(e.std) + "），分项扣除或别的调整项会让实际不一样；还没算学费单、医保对账、被抚养人、房贷利息和州税，所以范围比实际宽";
-  var condEn = "; it uses the standard deduction only (" + outlookMoney(e.std) + "), so itemizing or other adjustments will move it; the tuition form, the subsidy reconciliation, dependents, mortgage interest and state tax are not in it yet, so the range is wider than the real one";
-  var condEs = "; solo usa la deducción estándar (" + outlookMoney(e.std) + "), así que detallar o aplicar otros ajustes lo moverá; aún no incluye el formulario de matrícula, el ajuste del subsidio, las personas a cargo, los intereses hipotecarios ni el impuesto estatal, así que el rango es más amplio que el real";
+  // 非逐项现金捐赠上限只做披露、不进估算：金额与生效税年都从规则图读，图上没有这一节就不说。
+  var NCC = (((mapRules() || {}).deductions || {}).nonitemizer_cash_charity) || {};
+  var ncc = (NCC.amount_single > 0 && NCC.amount_mfj > 0) ? {
+    y: NCC.effective_tax_year,
+    s: outlookMoney(NCC.amount_single),
+    m: outlookMoney(NCC.amount_mfj)
+  } : null;
+  var nccZh = ncc ? "，" + (ncc.y ? ncc.y + " 年起" : "") + "不逐项也能再减最多 " + ncc.s + " 现金捐赠（合并申报 " + ncc.m + "），这条没算进去" : "";
+  var nccEn = ncc ? ", " + (ncc.y ? "and from " + ncc.y + " you" : "and you") + " can also subtract up to " + ncc.s + " of cash donations (" + ncc.m + " joint) even without itemizing — that isn't counted here" : "";
+  var nccEs = ncc ? ", " + (ncc.y ? "y desde " + ncc.y : "y") + " también puede restar hasta " + ncc.s + " en donaciones en efectivo (" + ncc.m + " en conjunta) aunque no detalle; eso no está incluido" : "";
+  var condZh = "；只按标准扣除算（" + outlookMoney(e.std) + "）" + nccZh + "；分项扣除或别的调整项会让实际不一样；还没算学费单、医保对账、被抚养人、房贷利息和州税，所以范围比实际宽";
+  var condEn = "; it uses the standard deduction only (" + outlookMoney(e.std) + ")" + nccEn + "; itemizing or other adjustments will move it; the tuition form, the subsidy reconciliation, dependents, mortgage interest and state tax are not in it yet, so the range is wider than the real one";
+  var condEs = "; solo usa la deducción estándar (" + outlookMoney(e.std) + ")" + nccEs + "; detallar o aplicar otros ajustes lo moverá; aún no incluye el formulario de matrícula, el ajuste del subsidio, las personas a cargo, los intereses hipotecarios ni el impuesto estatal, así que el rango es más amplio que el real";
   h += "<p>" + esc(tr("大概范围：", "Rough range: ", "Rango aproximado: ")) + "<b>" + esc(outlookRangeText(e)) + "</b>" + esc(tr(condZh + "。", condEn + ".", condEs + ".")) + "</p>";
   var OBR = (mapRules() || {}).brackets || {};
   h += "<p class=\"small muted\">" + esc(tr("依据：2026 年联邦档位表（与本页卡 1 同一张，" + (OBR.source || "") + "，核于 " + OBR.checked + "）。", "Basis: the 2026 federal bracket table (same one as card 1 on this page, " + (OBR.source || "") + ", checked " + OBR.checked + ").", "Base: la tabla federal de tramos de 2026 (la misma de la tarjeta 1, " + (OBR.source || "") + ", verificada el " + OBR.checked + ").")) + "</p>";

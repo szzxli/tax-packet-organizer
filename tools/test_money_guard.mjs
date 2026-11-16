@@ -177,6 +177,35 @@ check("钱那屏：条件行写明只按标准扣除算（金额在条件行里�
   assert.ok(out.includes("$32,200"), "条件行缺标准扣除金额");
   assert.ok(out.includes("分项扣除"), "条件行没说明分项会让实际不一样");
 });
+check("钱那屏：非逐项现金捐赠上限三语都披露，金额与税年从规则图读", () => {
+  const node = sandbox.RULES.deductions.nonitemizer_cash_charity;
+  const saved = Object.assign({}, node);
+  const s = state({ status: "single", income: "85000", withheld: "9000" });
+  sandbox.localStorage.setItem("tpo_outlook", JSON.stringify(s));
+  try {
+    const want = {
+      zh: "2026 年起不逐项也能再减最多 $1,000 现金捐赠（合并申报 $2,000），这条没算进去",
+      en: "from 2026 you can also subtract up to $1,000 of cash donations ($2,000 joint) even without itemizing",
+      es: "desde 2026 también puede restar hasta $1,000 en donaciones en efectivo ($2,000 en conjunta)",
+    };
+    for (const lang of ["zh", "en", "es"]) {
+      sandbox.LANG = lang;
+      const out = sandbox.outlookOutHtml(true);
+      assert.ok(out.includes(want[lang]), lang + " 条件行缺非逐项现金捐赠这句");
+      // 只做披露、不进估算：标准扣除与区间不因这一节变化
+      assert.equal(sandbox.outlookEstimate(s).std, graph.standard_deduction.single, lang + " 标准扣除不该被这一节改动");
+    }
+    // 改图里的数，页面跟着变
+    node.amount_single = 1250; node.amount_mfj = 2500; node.effective_tax_year = 2031;
+    sandbox.LANG = "zh";
+    const after = sandbox.outlookOutHtml(true);
+    assert.ok(after.includes("2031 年起不逐项也能再减最多 $1,250 现金捐赠（合并申报 $2,500）"), "金额与税年没跟规则图走");
+    assert.ok(!after.includes("$1,000 现金捐赠"), "图里的数改了，页面还留着旧数");
+  } finally {
+    Object.assign(node, saved);
+    sandbox.LANG = "zh";
+  }
+});
 check("估算：先扣标准扣除，四个样例的方向与税额都对", () => {
   const cases = [
     [{ status: "single", income: "70000", withheld: "8000" }, "refund", 1430],
