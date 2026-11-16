@@ -655,17 +655,21 @@ check("第 1 步：不再并排三颗快捷按钮，入口只有一个输入框 
 });
 
 // ---- 首屏不写死时间承诺 ----
-check("首屏副行不再承诺分钟数，三语都改成「先给一份基础的」", () => {
+// v60 换了首屏文案，旧副行「先给一份基础的」已不在页面上；这条闸门守的是意图：
+// 首屏副行不许给时长承诺（分钟、秒都不许）。
+check("首屏副行不承诺时长（不写分钟、不写秒），三语同步", () => {
   assert.equal(html.indexOf("3 分钟生成"), -1, "还有「3 分钟生成」");
   assert.equal(html.indexOf("3 minutes"), -1, "还有「3 minutes」");
   assert.equal(html.indexOf("3 minutos"), -1, "还有「3 minutos」");
-  const zh = "说一句今年变了什么，不用登录。先给你一份基础的，答完几句就变成你自己的。";
-  assert.ok(html.includes(zh), "首屏没有新副行");
+  const zh = "不用上传、不填社保号。看你落在这三类里的哪一类。";
+  assert.ok(html.includes('<p class="start-sub">' + zh + "</p>"), "首屏副行不是这句");
+  assert.ok(!/[\d一二三四五六七八九十]+\s*(?:分钟|秒)/.test(zh), "副行里还有时长承诺：" + zh);
   const m = html.match(new RegExp('"' + zh + '":\\{"en":"([^"]+)","es":"([^"]+)"\\}'));
   assert.ok(m, "i18n 里没有这条（key 没同步就会回退中文）");
-  assert.ok(/basic list first/i.test(m[1]), "英文没写「先给一份基础的」：" + m[1]);
-  assert.ok(/lista básica/i.test(m[2]), "西语没写「先给一份基础的」：" + m[2]);
+  assert.ok(/three cases/i.test(m[1]), "英文没写三类：" + m[1]);
+  assert.ok(/tres casos/i.test(m[2]), "西语没写三类：" + m[2]);
   assert.ok(!/[\u4e00-\u9fff]/.test(m[2]), "西语里夹了中文：" + m[2]);
+  assert.ok(!/30 seconds?|30 segundos/i.test(m[1] + m[2]), "英西还有 30 秒承诺");
 });
 check("全页除限流提示外，没有别的分钟数承诺", () => {
   const hits = [...html.matchAll(/.{0,70}\d+\s*(?:分钟|minutes?|minutos).{0,50}/gi)].map((x) => x[0]);
