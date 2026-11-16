@@ -5889,12 +5889,27 @@ body.tpo-first #startCard .hero-cta{display:inline-block!important}
   body.tpo-first #newsStrip,body.tpo-first #stepStrip{grid-column:1/-1}
   /* 输入框就在右边那张卡下面，这颗桥接按钮在桌面上也是多余的主按钮 */
   body.tpo-first #startCard .start-actions{display:none!important}
+  /* 40px 标题在 720 高的笔记本上把按钮顶到 727（屏 720 切掉 7px）：收到 34 并压内边距 */
+  body.tpo-first #startCard{padding:26px 26px 24px!important}
+  body.tpo-first #startCard .start-title{font-size:clamp(28px,2.5vw,34px)!important;line-height:1.16!important}
+  body.tpo-first #startCard .start-sub{margin:0 0 14px!important}
+  body.tpo-first #startCard .start-scope{margin:10px 0 0!important}
   /* 图在 720×400 的坐标里按比例缩到约 570 宽，字会缩到 8px：桌面上把字号抬一档 */
   #graphCard .rg-lbl{font-size:12.5px}
   #graphCard .rg-val{font-size:14.5px}
   #graphCard .rg-badge{font-size:10.5px}
   #graphCard .rg-c-lbl{font-size:11.5px}
   #graphCard .rg-c-val{font-size:21px}
+}
+/* 矮屏笔记本（1280×720 一类）：英文页头那句说明会折两行，把按钮顶到 728、切掉 8px。
+   只在视口矮时收起页头说明与一点间距，品牌与 11/17 报名行都留着。 */
+@media(min-width:900px) and (max-height:820px){
+  body.tpo-first .site-head p:not(.head-cta){display:none!important}
+  body.tpo-first #appView{row-gap:10px}
+  body.tpo-first #startCard .start-sub{margin-bottom:10px!important}
+  body.tpo-first #startCard .start-scope{margin-top:6px!important}
+  #heroBox.llm{padding:10px 12px!important}
+  #heroBox .llm-input textarea{min-height:80px!important}
 }
 </style>
 
