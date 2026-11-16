@@ -1,27 +1,30 @@
 # 到达与报名日读数（唯一口径）
 
 2026-11-13 定。数据源：D1 `events`（`name='open'`）与 `signup_leads`。
-计数单位：**每会话一条**。`formal.html` 与其余 5 页共用 `sessionStorage.tpo_open_sent`，刷新不重复计。
+计数单位：**`open` 一条 = 一次页面加载**。`formal.html` 自己的上报每次加载都发（实测同一匿名串 30 秒内连发 6 条），所以**报「人数」一律用 `COUNT(DISTINCT anon)`，不能报 `COUNT(*)`**；想看加载次数时才报 `COUNT(*)`，两个数一起写。
 
 ## 分桶映射（原样入库，查询时分桶）
 
+> **渠道词一律前缀匹配（2026-11-16 起）。** 同一个渠道会带轮次后缀落地——`?ref=reddit` 与 `?ref=reddit-r1` 都算论坛线，`seo-<slug>` 算 SEO 线。精确等值会让 `reddit-r1` 掉进 `other` 而静默归零，所以映射只认前缀，加后缀不改 CASE。
+
 | 桶 | 条件 |
 |---|---|
-| social | `utm_medium='ref'` 且 `utm_source='xhs'` |
-| forum | `utm_medium='ref'` 且 `utm_source IN ('reddit','moonbbs','quora')` |
-| community | `utm_medium='ref'` 且 `utm_source IN ('nextdoor','fbgroup')` |
+| social | `utm_medium='ref'` 且 `utm_source LIKE 'xhs%'` |
+| forum | `utm_medium='ref'` 且（`utm_source LIKE 'reddit%'` 或 `LIKE 'moonbbs%'` 或 `LIKE 'quora%'`） |
+| community | `utm_medium='ref'` 且（`utm_source LIKE 'nextdoor%'` 或 `LIKE 'fbgroup%'`） |
 | seo | `utm_medium='ref'` 且 `utm_source LIKE 'seo-%'` |
-| directory | `utm_medium='ref'` 且 `utm_source IN ('alternativeto','github')` |
-| email | `utm_medium='ref'` 且 `utm_source IN ('cpa-handoff','email-cpa-survey','email')` |
+| directory | `utm_medium='ref'` 且（`utm_source LIKE 'alternativeto%'` 或 `LIKE 'github%'`） |
+| email | `utm_medium='ref'` 且（`utm_source LIKE 'cpa%'` 或 `LIKE 'email%'`） |
 | search | `utm_medium='search'`（搜索引擎 referrer，无需 `?ref=`） |
 | referral | `utm_medium='referral'` |
 | direct | `utm_medium='direct'` |
 | other | 其余（只列数，**不参与任何止损判决**） |
 
-> 已挂出的 ref 实值是六个：`reddit`、`moonbbs`、`alternativeto`、`github`、`cpa-handoff`、`email-cpa-survey`。
+> 已挂出的 ref 实值是六个渠道词：`reddit`、`moonbbs`、`alternativeto`、`github`、`cpa-handoff`、`email-cpa-survey`；同一个渠道的轮次变体（如 `reddit-r1`）同桶。
 > 待挂的还有四个：`quora`、`nextdoor`、`fbgroup`、`seo-<slug>`（10 页各一个 slug，还会继续加）。
 > 旧名 `cpa`、`email` 保留在映射里只作兼容，不要据此判断邮件线死了。
-> `other` 里若出现 `quora`／`nextdoor`／`fbgroup`／`seo-` 前缀，说明 CASE 没生效，按实现缺陷处理，不算渠道 0。
+> `other` 里若出现 `quora`／`nextdoor`／`fbgroup`／`seo-`／`reddit` 前缀，说明 CASE 没生效，按实现缺陷处理，不算渠道 0。
+> 2026-11-16 改前缀匹配的原因：`signup_leads` 里已有 `ref='reddit-r1'` 的行，旧的精确等值会把这条最大流量线的点击静默归入 `other`；同日核到 events 全时段还没有任何 `utm_source LIKE 'reddit%'` 的到达，所以这次改的是「别把将来的点击读成 0」，不是找回既有流量。
 
 ## 日读数 SQL（前一天 00:00–24:00 PT）
 
@@ -29,11 +32,11 @@
 SELECT
   CASE
     WHEN utm_medium='ref' AND utm_source LIKE 'seo-%' THEN 'seo'
-    WHEN utm_medium='ref' AND utm_source='xhs' THEN 'social'
-    WHEN utm_medium='ref' AND utm_source IN ('reddit','moonbbs','quora') THEN 'forum'
-    WHEN utm_medium='ref' AND utm_source IN ('nextdoor','fbgroup') THEN 'community'
-    WHEN utm_medium='ref' AND utm_source IN ('alternativeto','github') THEN 'directory'
-    WHEN utm_medium='ref' AND utm_source IN ('cpa-handoff','email-cpa-survey','email') THEN 'email'
+    WHEN utm_medium='ref' AND utm_source LIKE 'xhs%' THEN 'social'
+    WHEN utm_medium='ref' AND (utm_source LIKE 'reddit%' OR utm_source LIKE 'moonbbs%' OR utm_source LIKE 'quora%') THEN 'forum'
+    WHEN utm_medium='ref' AND (utm_source LIKE 'nextdoor%' OR utm_source LIKE 'fbgroup%') THEN 'community'
+    WHEN utm_medium='ref' AND (utm_source LIKE 'alternativeto%' OR utm_source LIKE 'github%') THEN 'directory'
+    WHEN utm_medium='ref' AND (utm_source LIKE 'cpa%' OR utm_source LIKE 'email%') THEN 'email'
     WHEN utm_medium='search' THEN 'search'
     WHEN utm_medium='referral' THEN 'referral'
     WHEN utm_medium='direct' THEN 'direct'
@@ -82,16 +85,16 @@ AND anon NOT IN (SELECT anon FROM signup_leads
 到达 → 开始填 → 提交，三层同一天同一口径，且都先扣掉 QA（见上一节）：
 
 ```sql
--- 第一层：到达（每会话一条，COUNT(*) 即会话数）
-SELECT COUNT(*) FROM events
+-- 第一层：到达（人数 = 去重匿名串；formal.html 每次加载都发，不能用 COUNT(*) 当人）
+SELECT COUNT(DISTINCT anon) FROM events
 WHERE name='open' AND ts >= :start AND ts < :end
   AND anon NOT IN (SELECT anon FROM signup_leads WHERE email LIKE 'qa.%@example.com' AND anon <> '');
--- 第二层：开始填（任一即算）
-SELECT COUNT(*) FROM events
+-- 第二层：开始填（任一即算，同样按人去重）
+SELECT COUNT(DISTINCT anon) FROM events
 WHERE name IN ('flow-step1','signup_start') AND ts >= :start AND ts < :end
   AND anon NOT IN (SELECT anon FROM signup_leads WHERE email LIKE 'qa.%@example.com' AND anon <> '');
 -- 第三层：提交
-SELECT COUNT(*) FROM events
+SELECT COUNT(DISTINCT anon) FROM events
 WHERE name='signup' AND ts >= :start AND ts < :end
   AND anon NOT IN (SELECT anon FROM signup_leads WHERE email LIKE 'qa.%@example.com' AND anon <> '');
 ```
@@ -103,4 +106,5 @@ WHERE name='signup' AND ts >= :start AND ts < :end
 ## 判据
 
 到 2026-11-30：收录 ≥8 页；`ref` 到达 ≥60（social + forum + community + seo + directory + email 求和）、`search` 到达 ≥40，合计 ≥100；开口问 ≥10 人且 ≥3 人问到具体动作。
-`other` 不计入任何一项；`other` 里若出现 `quora`／`nextdoor`／`fbgroup`／`seo-` 前缀，算实现缺陷，不算渠道 0。https 开关落地前，涉及 https 的收录项标「仪器未通（https）」。
+判据里的「到达」一律指**去重人数**（`COUNT(DISTINCT anon)`），不是加载次数。
+`other` 不计入任何一项；`other` 里若出现 `quora`／`nextdoor`／`fbgroup`／`seo-`／`reddit` 前缀，算实现缺陷，不算渠道 0。https 开关落地前，涉及 https 的收录项标「仪器未通（https）」。
