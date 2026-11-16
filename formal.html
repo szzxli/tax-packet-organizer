@@ -3977,7 +3977,6 @@ function renderDemoGraph(rows){
   var narrow=(window.innerWidth||1024)<620;
   var color={num:"#2fd6a3",range:"#f2c14e",dir:"#8aa0b6"};
   var dash={num:"",range:"4 5",dir:"9 7"};
-  var word={num:tr("有数","figure","cifra"),range:tr("区间","range","rango"),dir:tr("方向","direction","dirección")};
   var cx,cy,rr,pos,W,H;
   if(narrow){
     svg.setAttribute("viewBox","0 0 360 322");
@@ -3991,8 +3990,7 @@ function renderDemoGraph(rows){
   var edges=[],nodes=[],next=[];
   // 窄屏节点只有 166 宽：英西标签比中文长，一行放不下就把标签折成两行，值下移。
   function rgWrap(t){
-    if(!narrow) return [t];
-    var max=24;
+    var max=narrow?24:26;
     if(t.length<=max) return [t];
     var cut=t.lastIndexOf(" ",max);
     if(cut<8) cut=max;
@@ -4010,7 +4008,6 @@ function renderDemoGraph(rows){
     var lab=rgWrap(row.t),two=lab.length>1;
     nodes.push('<g'+(flip?' class="rg-flip"':'')+'>'
       +'<rect x="'+p[0]+'" y="'+p[1]+'" width="'+W+'" height="'+H+'" rx="10" fill="#121a22" stroke="'+color[k]+'" stroke-width="1.4"'+(k==="dir"?' stroke-dasharray="6 4"':"")+'/>'
-      +(narrow?"":'<text class="rg-badge" x="'+(p[0]+W-10)+'" y="'+(p[1]+19)+'" text-anchor="end" fill="'+color[k]+'">'+esc(word[k])+'</text>')
       +'<text class="rg-lbl" x="'+(p[0]+12)+'" y="'+(p[1]+(two?16:21))+'">'+esc(lab[0])+'</text>'
       +(two?'<text class="rg-lbl" x="'+(p[0]+12)+'" y="'+(p[1]+29)+'">'+esc(lab[1])+'</text>':'')
       +'<text class="rg-val" x="'+(p[0]+12)+'" y="'+(p[1]+(two?47:41))+'">'+esc(row.v)+'</text></g>');
@@ -5878,6 +5875,26 @@ body.tpo-first #startCard .hero-cta{display:inline-block!important}
   #heroBox #demoPeek{margin:2px 0 0!important}
   /* 首屏四个块之间收紧一点，别让空行把按钮顶出去 */
   body.tpo-first #startCard,body.tpo-first #posCard,body.tpo-first #heroBox,body.tpo-first #missCard{margin:8px 0!important}
+}
+/* 桌面首屏：左边问句＋输入框，右边位置图。单列时输入框在 980px，一屏够不着；
+   两栏后输入框落在 515px 上下，与手机端同一套 DOM，只是排版换列。 */
+@media(min-width:900px){
+  body.tpo-first #appView{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr);column-gap:22px;row-gap:14px;align-items:start}
+  body.tpo-first #appView > *{margin:0!important;min-width:0}
+  body.tpo-first #pageNav{grid-column:1/-1;grid-row:1}
+  body.tpo-first #startCard{grid-column:1;grid-row:2}
+  body.tpo-first #heroBox{grid-column:1;grid-row:3}
+  body.tpo-first #posCard{grid-column:2;grid-row:2 / span 2}
+  body.tpo-first #missCard{grid-column:1/-1;grid-row:4}
+  body.tpo-first #newsStrip,body.tpo-first #stepStrip{grid-column:1/-1}
+  /* 输入框就在右边那张卡下面，这颗桥接按钮在桌面上也是多余的主按钮 */
+  body.tpo-first #startCard .start-actions{display:none!important}
+  /* 图在 720×400 的坐标里按比例缩到约 570 宽，字会缩到 8px：桌面上把字号抬一档 */
+  #graphCard .rg-lbl{font-size:12.5px}
+  #graphCard .rg-val{font-size:14.5px}
+  #graphCard .rg-badge{font-size:10.5px}
+  #graphCard .rg-c-lbl{font-size:11.5px}
+  #graphCard .rg-c-val{font-size:21px}
 }
 </style>
 
