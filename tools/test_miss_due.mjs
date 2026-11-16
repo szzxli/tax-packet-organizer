@@ -188,15 +188,17 @@ check("A 末行是不判资格的声明，且三行里没有任何金额", () =>
   assert.match(A.pre, /不是资格认定/, "没有「不是资格认定」");
   for (const row of A.li) assert.ok(!/\$\d/.test(row), "三行里出现了金额：" + row);
 });
-check("A 三行在关系图之前、输入框之前，且不吃掉首屏主按钮", () => {
+check("A 三行紧跟输入卡之后（不再夹在图和输入框之间），且首屏主按钮在屏内", () => {
+  // 2026-11-16 换序：812px 一屏放不下「问句＋三行＋位置图＋输入框」四块，
+  // 按「下一步要够得着」把输入框提到关系图下面，三行后果顺到输入卡之后一行。
   const it = A.layout.items;
   assert.ok(it.missCard && it.missCard.h > 0, "块没渲染出高度");
-  assert.ok(it.missCard.top < it.posCard.top, "三行还压在关系图后面");
-  assert.ok(it.missCard.top + it.missCard.h <= it.posCard.top, "三行和关系图重叠了");
-  assert.ok(it.missCard.top + it.missCard.h <= it.heroBox.top, "块压到了输入框");
-  assert.ok(it.missCard.top + it.missCard.h <= A.layout.vh, "三行块没能在第一屏内看全：" + (it.missCard.top + it.missCard.h) + " > " + A.layout.vh);
+  assert.ok(it.missCard.top >= it.heroBox.top + it.heroBox.h, "三行没接在输入卡后面：" + it.missCard.top + " < " + (it.heroBox.top + it.heroBox.h));
+  assert.ok(it.missCard.top >= it.posCard.top + it.posCard.h, "三行压到了关系图");
+  assert.ok(it.missCard.top <= it.heroBox.top + it.heroBox.h + 24, "三行离输入卡太远（>24px 空隙）");
   assert.ok(it.missCard.h <= 300, "块太高，" + it.missCard.h + "px（上限 300）");
-  assert.ok(it.btnHeroGo && it.btnHeroGo.top < A.layout.vh, "首访那屏的主按钮掉出去了：top=" + (it.btnHeroGo && it.btnHeroGo.top));
+  const mk = A.layout.items.btnMake;
+  assert.ok(mk && mk.top + mk.h <= A.layout.vh, "首屏的「生成我的清单」被挤出一屏：bottom=" + (mk && mk.top + mk.h) + " vh=" + A.layout.vh);
 });
 check("首访不弹账号表单；陪跑链接带 ref=referral", () => {
   assert.equal(A.authHidden, true, "首访就把注册表单摊出来了");

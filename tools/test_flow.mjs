@@ -224,16 +224,17 @@ await withChrome(async (cdp) => {
           assert.ok(ui.stepTitles[i].includes(String(i + 1)), "第 " + (i + 1) + " 步标题不对：" + ui.stepTitles[i]);
         }
       });
-      check("入口屏只有一条主线：一颗 hero 按钮（查我这种情况）+ 生成清单，演示不并列：" + tag, () => {
+      check("入口屏只有一条主线：手机上「生成我的清单」一颗，桥接按钮收起，演示不并列：" + tag, () => {
         assert.equal(ui.startBtns, 0, "定位句那块里又长出按钮了：" + ui.startBtns);
         assert.equal(ui.makeVisible, true, "入口屏没有「生成我的清单」");
         assert.equal(ui.demoVisible, false, "演示卡又跟入口并列了（应藏在「看 22 秒怎么用」后面）");
-        assert.deepEqual(ui.heroCtas.slice().sort(), ["btnHeroGo"], "首屏 hero 按钮该只有一颗：" + ui.heroCtas.join(","));
+        // 2026-11-16：输入框进了首屏，那颗「查我这种情况」的桥接按钮在手机上收起，只留生成清单
+        assert.deepEqual(ui.heroCtas, [], "手机上 hero 又长出桥接按钮：" + ui.heroCtas.join(","));
         assert.equal(ui.firstPrimary, 0, "演示卡没藏好，首屏又多出醒目按钮：" + ui.firstPrimary);
         assert.equal(ui.hasDemoSub, true, "样品卡里没有订阅按钮（demoSub）");
         assert.equal(ui.barPrimary, 0, "底栏那颗不该出现");
         assert.equal(ui.seeTag, "", "「看看要准备什么」又冒出来了：" + ui.seeTag);
-        assert.equal(ui.firstArea, 1, "入口屏多了别的入口：" + ui.firstArea);
+        assert.equal(ui.firstArea, 0, "首屏上部又长出别的入口：" + ui.firstArea);
       });
 
       // 4a) 选「没有变化」→ ≥3 项

@@ -550,11 +550,6 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <p class="start-actions"><a href="#" class="hero-cta" id="btnHeroGo">查我这种情况 →</a></p>
 <p class="start-scope">不是资格认定：只标常见情况与锁死日，不算税、不报税；以 IRS 和你的会计师为准。</p>
 </div>
-<div class="card no-print hidden" id="missCard">
-<h2 class="ms-h">先看你是不是这三类</h2>
-<ul class="ms-list" id="missList"></ul>
-<p class="ms-pre">不是资格认定；以 IRS 和你的会计师为准。</p>
-</div>
 <div class="card no-print" id="posCard">
 <div id="graphCard">
 <p class="rg-h">中间这个数，牵动外圈这几项</p>
@@ -594,6 +589,12 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <p id="tagMsg" class="small"></p>
 <p id="resumeLine" class="small hidden"></p>
 <p id="demoPeek" class="llm-hint"><a href="#" id="btnDemoPeek">▶ 看 22 秒怎么用</a></p>
+</div>
+
+<div class="card no-print hidden" id="missCard">
+<h2 class="ms-h">先看你是不是这三类</h2>
+<ul class="ms-list" id="missList"></ul>
+<p class="ms-pre">不是资格认定；以 IRS 和你的会计师为准。</p>
 </div>
 
 <div class="news-strip no-print" id="newsStrip" aria-label="规则更新" data-i18n-aria="规则更新">
@@ -3988,20 +3989,31 @@ function renderDemoGraph(rows){
     pos=[[14,30],[253,14],[492,30],[64,306],[442,306]];
   }
   var edges=[],nodes=[],next=[];
+  // 窄屏节点只有 166 宽：英西标签比中文长，一行放不下就把标签折成两行，值下移。
+  function rgWrap(t){
+    if(!narrow) return [t];
+    var max=24;
+    if(t.length<=max) return [t];
+    var cut=t.lastIndexOf(" ",max);
+    if(cut<8) cut=max;
+    return [t.slice(0,cut),t.slice(cut+1)];
+  }
   nodes.push('<circle cx="'+cx+'" cy="'+cy+'" r="'+rr+'" fill="#16324f" stroke="#2a6db0" stroke-width="1.5"/>'
     +'<text class="rg-c-lbl" x="'+cx+'" y="'+(cy-5)+'" text-anchor="middle">'+esc(tr("今年收入","Income","Ingreso"))+'</text>'
-    +'<text class="rg-c-val" x="'+cx+'" y="'+(cy+22)+'" text-anchor="middle">'+esc(demoMoney(inc))+'</text>');
+    +'<text class="rg-c-val" x="'+cx+'" y="'+(cy+22)+'" text-anchor="middle"'+(narrow?' style="font-size:15px"':'')+'>'+esc(demoMoney(inc))+'</text>');
   for(var i=0;i<list.length;i++){
     var p=pos[i],k=kinds[i]||"num",row=list[i];
     var mx=p[0]+W/2,my=p[1]+H/2;
     edges.push('<line x1="'+cx+'" y1="'+cy+'" x2="'+mx+'" y2="'+my+'" stroke="'+color[k]+'" stroke-width="'+(k==="num"?2.2:1.5)+'"'+(dash[k]?' stroke-dasharray="'+dash[k]+'"':"")+' stroke-linecap="round"/>');
     var flip=(rgPrev&&rgPrev[i]!==undefined&&rgPrev[i]!==row.v);
     next.push(row.v);
+    var lab=rgWrap(row.t),two=lab.length>1;
     nodes.push('<g'+(flip?' class="rg-flip"':'')+'>'
       +'<rect x="'+p[0]+'" y="'+p[1]+'" width="'+W+'" height="'+H+'" rx="10" fill="#121a22" stroke="'+color[k]+'" stroke-width="1.4"'+(k==="dir"?' stroke-dasharray="6 4"':"")+'/>'
       +(narrow?"":'<text class="rg-badge" x="'+(p[0]+W-10)+'" y="'+(p[1]+19)+'" text-anchor="end" fill="'+color[k]+'">'+esc(word[k])+'</text>')
-      +'<text class="rg-lbl" x="'+(p[0]+12)+'" y="'+(p[1]+21)+'">'+esc(row.t)+'</text>'
-      +'<text class="rg-val" x="'+(p[0]+12)+'" y="'+(p[1]+41)+'">'+esc(row.v)+'</text></g>');
+      +'<text class="rg-lbl" x="'+(p[0]+12)+'" y="'+(p[1]+(two?16:21))+'">'+esc(lab[0])+'</text>'
+      +(two?'<text class="rg-lbl" x="'+(p[0]+12)+'" y="'+(p[1]+29)+'">'+esc(lab[1])+'</text>':'')
+      +'<text class="rg-val" x="'+(p[0]+12)+'" y="'+(p[1]+(two?47:41))+'">'+esc(row.v)+'</text></g>');
   }
   rgPrev=next;
   var ge=document.getElementById("rgEdges"),gn=document.getElementById("rgNodes");
@@ -5795,7 +5807,7 @@ select option{background:#fff;color:#1E2A45}
 #posCard .demo-try{margin:10px 0 0;font-size:12px;line-height:1.4;color:#6B7889}
 #posCard .demo-try button.on{color:#B8770A!important}
 #posCard .pos-lead{margin:12px 0 0!important;font-size:12.5px!important;line-height:1.6!important;color:#5F6E80!important}
-#posCard .pos-lead a{color:#B8770A!important;font-weight:700;text-decoration:none;white-space:nowrap}
+#posCard .pos-lead a{color:#B8770A!important;font-weight:700;text-decoration:none;white-space:nowrap;margin-left:.35em}
 
 /* 入口屏：一句标题 + 两颗按钮；四步卡与新闻条只在入口屏出现 */
 #startCard{background:linear-gradient(160deg,#05284F 0%,#083C72 58%,#0A4C88 100%)!important;border:0!important;border-radius:20px!important;padding:34px 30px 30px!important;box-shadow:0 14px 34px rgba(6,42,85,.20)!important;color:#fff}
@@ -5840,6 +5852,33 @@ select option{background:#fff;color:#1E2A45}
 body:not(.tpo-first) #newsStrip,body:not(.tpo-first) #stepStrip{display:none!important}
 body.tpo-first #startCard .hero-cta{display:inline-block!important}
 @media(max-width:620px){#startCard{padding:26px 20px 24px!important}#startCard .start-title{font-size:30px!important}}
+/* 首屏预算：手机上一屏要塞下「问句 → 位置图＋滑块 → 输入框＋按钮」，四块各自收一点。
+   位置图与滑块是黄金点，不许折叠；三行后果排在输入框之后，仍在这一屏的下一张卡。 */
+@media(max-width:620px){
+  #startCard{padding:14px 14px 12px!important}
+  #startCard .start-kicker{display:none!important}
+  #startCard .start-title{font-size:22px!important;line-height:1.2!important;margin:0 0 6px!important}
+  #startCard .start-sub{margin:0 0 8px!important;font-size:13px!important;line-height:1.45!important}
+  /* 手机上不再留这颗桥接按钮：输入框就在下面一屏内，按钮改由「生成我的清单」承担 */
+  #startCard .start-actions{display:none!important}
+  #startCard .start-scope{margin:6px 0 0!important;font-size:11px!important;line-height:1.4!important}
+  #graphCard{padding:10px 10px 8px!important}
+  #graphCard .rg-h{font-size:13.5px!important;margin:0 0 2px!important}
+  .rg-legend{margin-top:4px!important;gap:10px!important;font-size:10.5px!important}
+  #posCard .demo-slide{margin-top:4px!important}
+  #posCard .demo-scale{display:none!important}
+  #posCard .pos-lead{margin:4px 0 0!important;font-size:11.5px!important;line-height:1.4!important}
+  #heroBox.llm{padding:10px 12px!important}
+  #heroBox .llm-q{font-size:15px!important;margin:0 0 4px!important}
+  /* 输入框与按钮并排：竖排会多占 58px，按钮就掉出一屏 */
+  #heroBox .llm-input{grid-template-columns:1fr 108px!important;gap:8px!important;align-items:stretch!important}
+  #heroBox .llm-input textarea{min-height:64px!important;height:64px!important}
+  #heroBox #btnMake{min-height:64px!important;line-height:1.25!important;padding:8px 6px!important}
+  #heroBox .llm-hint{margin:4px 0 0!important;font-size:11.5px!important}
+  #heroBox #demoPeek{margin:2px 0 0!important}
+  /* 首屏四个块之间收紧一点，别让空行把按钮顶出去 */
+  body.tpo-first #startCard,body.tpo-first #posCard,body.tpo-first #heroBox,body.tpo-first #missCard{margin:8px 0!important}
+}
 </style>
 
 

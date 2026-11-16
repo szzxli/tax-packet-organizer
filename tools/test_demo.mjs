@@ -303,8 +303,8 @@ await withChrome(async (cdp) => {
         assert.ok(geo.sliderInPosCard, "滑块不在首屏那张位置卡里");
         assert.equal(geo.posAboveInput, true, "位置卡没排在输入框上面");
       });
-      check("可点入口固定这几处：页头报名、hero 一颗、位置卡里的滑块与换成你的数、生成、看演示、样例开关、订阅、五行与两处出处折叠：" + tag, () => {
-        const want = ["A", "btnHeroGo", "btnMake", "btnDemoPeek", "demo-try-btn", "demo-try-btn", "demo-try-btn", "demoSub", "demoIncome", "btnPosGo", "SUMMARY", "SUMMARY"];
+      check("可点入口固定这几处：页头报名、位置卡里的滑块与换成你的数、生成、看演示、样例开关、订阅、五行与两处出处折叠（手机上不再有桥接按钮）：" + tag, () => {
+        const want = ["A", "btnMake", "btnDemoPeek", "demo-try-btn", "demo-try-btn", "demo-try-btn", "demoSub", "demoIncome", "btnPosGo", "SUMMARY", "SUMMARY"];
         assert.deepEqual(geo.entries.map((e) => e.split(":")[0]).sort(), want.slice().sort(), "入口：" + geo.entries.join(" / "));
       });
       check("卡片内一颗醒目按钮（订阅）+ 出处折叠：" + tag, () => {
