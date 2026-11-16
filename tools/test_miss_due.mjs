@@ -173,21 +173,20 @@ check("A 三行都在，卡片可见", () => {
   assert.equal(A.missVisible, true, "missCard 是 hidden");
   assert.equal(A.li.length, 3, "不是三行：" + JSON.stringify(A.li));
 });
-check("A 每行是「项目 · 锁死日 · 后果」，日期按升序", () => {
-  const dates = A.li.map((s) => {
-    const m = s.match(/\d{4}-\d{2}-\d{2}/);
-    assert.ok(m, "这一行没有锁死日：" + s);
-    assert.ok(s.split(" · ").length === 3, "不是三段：" + s);
-    return m[0];
+check("A 每行是「身份 · 锁死日 · 后果」，三类身份齐、日期都未过期", () => {
+  const want = ["在读", "自雇", "搬"];
+  A.li.forEach((row, i) => {
+    assert.ok(/\d{4}-\d{2}-\d{2}/.test(row), "这一行没有锁死日：" + row);
+    assert.equal(row.split(" · ").length, 3, "不是三段：" + row);
+    assert.ok(row.includes(want[i]), "第 " + (i + 1) + " 行不是「" + want[i] + "」那一类：" + row);
+    const d = row.match(/\d{4}-\d{2}-\d{2}/)[0];
+    assert.ok(d > today, "锁死日已经过期：" + d);
   });
-  const sorted = [...dates].sort();
-  assert.deepEqual(dates, sorted, "日期没升序：" + dates.join(","));
-  assert.ok(dates.every((d) => d > today), "首屏三行应当都还没过期：" + dates.join(","));
 });
-check("A 样例前提一行且 ≤30 字", () => {
-  assert.ok(A.pre && A.pre.length <= 30, "前提行不对：" + A.pre);
-  assert.ok(/样例/.test(A.pre), "前提行没有「样例」");
-  assert.ok(!/\d{4}-\d{2}-\d{2}/.test(A.pre), "前提行不该再放日期");
+check("A 末行是不判资格的声明，且三行里没有任何金额", () => {
+  assert.ok(A.pre && A.pre.length <= 40, "声明行不对：" + A.pre);
+  assert.match(A.pre, /不是资格认定/, "没有「不是资格认定」");
+  for (const row of A.li) assert.ok(!/\$\d/.test(row), "三行里出现了金额：" + row);
 });
 check("A 三行在关系图之前、输入框之前，且不吃掉首屏主按钮", () => {
   const it = A.layout.items;
@@ -195,7 +194,8 @@ check("A 三行在关系图之前、输入框之前，且不吃掉首屏主按�
   assert.ok(it.missCard.top < it.posCard.top, "三行还压在关系图后面");
   assert.ok(it.missCard.top + it.missCard.h <= it.posCard.top, "三行和关系图重叠了");
   assert.ok(it.missCard.top + it.missCard.h <= it.heroBox.top, "块压到了输入框");
-  assert.ok(it.missCard.h <= 240, "块太高，" + it.missCard.h + "px（上限 240）");
+  assert.ok(it.missCard.top + it.missCard.h <= A.layout.vh, "三行块没能在第一屏内看全：" + (it.missCard.top + it.missCard.h) + " > " + A.layout.vh);
+  assert.ok(it.missCard.h <= 300, "块太高，" + it.missCard.h + "px（上限 300）");
   assert.ok(it.btnHeroGo && it.btnHeroGo.top < A.layout.vh, "首访那屏的主按钮掉出去了：top=" + (it.btnHeroGo && it.btnHeroGo.top));
 });
 check("首访不弹账号表单；陪跑链接带 ref=referral", () => {
