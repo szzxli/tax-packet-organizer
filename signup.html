@@ -204,6 +204,28 @@
     });
   })();
 </script>
+<script>
+// 英西读者从主站页头点进来时，先说明「这场是中文」，并给一条回工具的路；
+// 不改任何字段 name，报名照旧走 formsubmit 的 POST。
+(function(){
+  var lang=(new URLSearchParams(location.search).get('lang')||'').toLowerCase();
+  if(lang!=='en'&&lang!=='es')return;
+  var copy={
+    en:{title:'This small-group session is held in Chinese',
+        body:'The signup form below is in Chinese (Beijing time, 20:00–20:45). If you would rather not fill a Chinese form, skip it — the tool itself works in English.',
+        back:'Back to the tool (English) →'},
+    es:{title:'Esta sesión de grupo se imparte en chino',
+        body:'El formulario de abajo está en chino (hora de Pekín, 20:00–20:45). Si prefiere no rellenar un formulario en chino, puede omitirlo: la herramienta funciona en español.',
+        back:'Volver a la herramienta (español) →'}
+  }[lang];
+  var box=document.createElement('div');
+  box.className='note';
+  box.setAttribute('lang',lang);
+  box.innerHTML='<b>'+copy.title+'</b><br>'+copy.body+' <a href="formal.html?lang='+lang+'">'+copy.back+'</a>';
+  var h=document.querySelector('header');
+  if(h&&h.parentNode)h.parentNode.insertBefore(box,h.nextSibling);
+})();
+</script>
 <script src="/track.js" defer></script>
 </body>
 </html>
