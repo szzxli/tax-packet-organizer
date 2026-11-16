@@ -13,9 +13,10 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCAN = process.argv[2] === "scan";
+const SCAN_LANG = SCAN ? (process.argv[3] || "en") : "zh";
 const listFile = SCAN ? null : process.argv[2];
 if (!SCAN && !listFile) {
-  console.error("用法：node tools/i18n_deleted_probe.mjs <deleted_keys.json> | scan");
+  console.error("用法：node tools/i18n_deleted_probe.mjs <deleted_keys.json> | scan [en|es]");
   process.exit(2);
 }
 const deleted = SCAN ? [] : JSON.parse(fs.readFileSync(listFile, "utf8"));
@@ -65,6 +66,13 @@ const SETUP = `(() => {
     { form: "W-2", title: "今年 W-2（按去年每个雇主）", payer: "Acme", status: "uploaded" },
     { form: "1099-INT", title: "今年 1099-INT（按去年每个付款方）", payer: "Bank", status: "pending" }
   ];
+  // 订单与收据面板：空态、待支付、已支付三种都要在 en 下走一遍，
+  // 否则模板里写死的中文只有真有订单的那天才露出来。走服务端订单这条真实路径。
+  serverOrders = [
+    { id: "ord-test-0001", created_at: Date.parse("2026-11-16T10:00:00Z"), packs: 1, amount_cents: 4900, status: "paid", entitlement_end: Date.parse("2027-10-15T00:00:00Z") },
+    { id: "ord-test-0002", created_at: Date.parse("2026-11-16T10:05:00Z"), packs: 2, amount_cents: 7400, status: "created" }
+  ];
+  packet.selectedOrderId = "ord-test-0001";
   savePacket();
   return true;
 })()`;
@@ -164,7 +172,7 @@ const out = await (async () => {
     try {
       await cdp.send("Page.enable");
       await cdp.send("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
-      await cdp.send("Page.navigate", { url: base + "/formal.html?lang=" + (SCAN ? "en" : "zh") });
+      await cdp.send("Page.navigate", { url: base + "/formal.html?lang=" + SCAN_LANG });
       await sleep(2000);
       const hits = new Set();
       for (const st of STATES) {
@@ -185,7 +193,7 @@ const out = await (async () => {
 })();
 
 if (SCAN) {
-  console.log("en 模式、全状态残留中文：" + out.length + " 处");
+  console.log(SCAN_LANG + " 模式、全状态残留中文：" + out.length + " 处");
   out.forEach((k) => console.log("  " + k));
   process.exit(out.length ? 1 : 0);
 }

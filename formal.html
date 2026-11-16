@@ -486,7 +486,7 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <!-- 正式版：邮件验证、加密存储、真实收款（测试模式）均已接通并实测；演示版见 index.html -->
 <header class="site-head">
 <div class="brand-row">
-<svg class="brand-mark" viewBox="0 0 512 512" role="img" aria-label="ClearToFile 可交">
+<svg class="brand-mark" viewBox="0 0 512 512" role="img" aria-label="ClearToFile 可交" data-i18n-aria="ClearToFile 可交">
 <rect width="512" height="512" rx="116" fill="#0E2A47"/>
 <path d="M166 112 h116 l58 58 v182 a22 22 0 0 1 -22 22 H166 a22 22 0 0 1 -22 -22 V134 a22 22 0 0 1 22 -22 z" fill="#FFFFFF"/>
 <path d="M282 112 l58 58 v-58 z" fill="#C7D6E5"/>
@@ -558,7 +558,7 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <div class="card no-print" id="posCard">
 <div id="graphCard">
 <p class="rg-h">中间这个数，牵动外圈这几项</p>
-<svg id="ruleGraph" viewBox="0 0 720 400" role="img" aria-label="收入与几项结果的关系图"><g id="rgEdges"></g><g id="rgNodes"></g></svg>
+<svg id="ruleGraph" viewBox="0 0 720 400" role="img" aria-label="收入与几项结果的关系图" data-i18n-aria="收入与几项结果的关系图"><g id="rgEdges"></g><g id="rgNodes"></g></svg>
 <ul class="rg-legend"><li><i></i>有数（可对外）</li><li><i class="r"></i>区间（给上下沿）</li><li><i class="d"></i>方向（不给数）</li></ul>
 </div>
 <div class="demo-slide">
@@ -596,7 +596,7 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <p id="demoPeek" class="llm-hint"><a href="#" id="btnDemoPeek">▶ 看 22 秒怎么用</a></p>
 </div>
 
-<div class="news-strip no-print" id="newsStrip" aria-label="规则更新">
+<div class="news-strip no-print" id="newsStrip" aria-label="规则更新" data-i18n-aria="规则更新">
 <span class="ns-item"><span class="ns-tag">IRS 更新</span><span class="ns-i">2027 医保开放期 11/1–1/15</span></span>
 <span class="ns-item"><span class="ns-tag">趋势</span><span class="ns-i">基准保费平均涨 13%</span></span>
 <span class="ns-item"><span class="ns-tag warn">注意</span><span class="ns-i">400% 线仍在，过线补贴归零</span></span>
@@ -1250,6 +1250,7 @@ Object.assign(I18N,{"可交":{"en":"Ready","es":"Listo"},
 Object.assign(I18N,{});
 Object.assign(I18N,{
 "季票给什么":{"en":"What the season pass gives you","es":"Qué da el pase"}});
+Object.assign(I18N,{"ClearToFile 可交":{"en":"ClearToFile","es":"ClearToFile"},"收入与几项结果的关系图":{"en":"Your income and a few results, as a chart","es":"Sus ingresos y algunos resultados, en un gráfico"},"规则更新":{"en":"Rule updates","es":"Actualizaciones de reglas"}});
 function t(s){if(LANG==="zh")return s;var e=I18N[s];return (e&&e[LANG])?e[LANG]:s;}
 function tr(zh,en,es){return LANG==="en"?en:(LANG==="es"?es:zh);}
 // EXPORT_I18N_START
@@ -1496,7 +1497,7 @@ var currentUser=null,packet=null;
 var serverEntitlementEnd=0,serverSub=null,serverSyncTimer=null,localOnly=false;
 function apiOn(){return (typeof TpoApi!=="undefined")&&TpoApi.enabled();}
 var serverOrders=[];
-function displayOrders(){ if(serverOrders&&serverOrders.length) return serverOrders.map(function(o){ return {id:o.id, at:new Date(o.created_at).toLocaleString(), packs:o.packs, amountCents:o.amount_cents, method:"\u4fe1\u7528\u5361", status:o.status==="paid"?"paid":"pending", entitlementEnd:o.entitlement_end}; }); return subOrders(); }
+function displayOrders(){ if(serverOrders&&serverOrders.length) return serverOrders.map(function(o){ return {id:o.id, at:new Date(o.created_at).toLocaleString(), packs:o.packs, amountCents:o.amount_cents, method:tr("信用卡","Credit card","Tarjeta de crédito"), status:o.status==="paid"?"paid":"pending", entitlementEnd:o.entitlement_end}; }); return subOrders(); }
 function refreshOrders(){if(!apiOn()||localOnly||!currentUser)return Promise.resolve([]);return TpoApi.listOrders().then(function(d){serverOrders=(d&&d.orders)||[];if(typeof renderOrders==="function")renderOrders();return serverOrders;}).catch(function(){return serverOrders;});}
 function refreshEntitlement(){if(!apiOn()||!currentUser)return Promise.resolve(0);return TpoApi.me().then(function(m){serverEntitlementEnd=(m&&m.entitlement_end)||0;serverSub=(m&&m.subscription)||null;if(typeof renderSubStatus==="function")renderSubStatus();if(typeof renderPlanCards==="function")renderPlanCards();refreshOrders();if(typeof renderHero==="function")renderHero();if(hasPass()){if(typeof renderReminders==="function")renderReminders();if(typeof renderProbe==="function")renderProbe();if(typeof renderDeep==="function")renderDeep();if(typeof renderSnaps==="function")renderSnaps();if(typeof renderCpa==="function")renderCpa();if(typeof renderPriority==="function")renderPriority();}if(typeof maybeLandOnPass==="function")maybeLandOnPass();return serverEntitlementEnd;}).catch(function(){return 0;});}
 function scheduleServerSave(){if(!apiOn()||localOnly||!currentUser||!packet)return;if(serverSyncTimer)clearTimeout(serverSyncTimer);serverSyncTimer=setTimeout(function(){serverSyncTimer=null;if(!packet||!currentUser)return;TpoApi.putPacket(packet).catch(function(){});},1000);}
@@ -2199,14 +2200,14 @@ function renderReturnState(){
   if(!has)return;
   var miss=unresolvedRows();
   $("returnCount").textContent=miss.length?tr("还缺 "+miss.length+" 件","Still missing "+miss.length,"Faltan "+miss.length):tr("✓ 全部备齐","✓ All set","✓ Todo listo");
-  $("returnNext").textContent=miss.length?tr("下一步：补 "+rowTitle(miss[0])+(miss[0].payer?"（"+miss[0].payer+"）":""),"Next: gather "+rowTitle(miss[0])+(miss[0].payer?" ("+miss[0].payer+")":""),"Siguiente: reunir "+rowTitle(miss[0])+(miss[0].payer?" ("+miss[0].payer+")":"")):tr("下一步：导出给会计师","Next: export to your accountant","Siguiente: exportar a su contador");
+  $("returnNext").textContent=miss.length?tr("下一步：补 "+exRowTitle(miss[0])+(miss[0].payer?"（"+miss[0].payer+"）":""),"Next: gather "+exRowTitle(miss[0])+(miss[0].payer?" ("+miss[0].payer+")":""),"Siguiente: reunir "+exRowTitle(miss[0])+(miss[0].payer?" ("+miss[0].payer+")":"")):tr("下一步：导出给会计师","Next: export to your accountant","Siguiente: exportar a su contador");
   var btn=$("btnReturnNext");
   if(btn){btn.textContent=miss.length?tr("继续补","Keep gathering","Seguir reuniendo"):tr("去导出","Export now","Exportar ahora");btn.onclick=function(){if(miss.length)navigateToSection("s4");else navigateToSection("s6");};}
 }
 function showProgressToast(){
   var el=$("progressToast");if(!el||!packet)return;
   var miss=unresolvedRows();
-  el.innerHTML=miss.length?("<b>"+tr("✓ 又处理好 1 件","✓ One more item handled","✓ Un elemento más listo")+"</b> · "+tr("还缺 "+miss.length+" 件","still missing "+miss.length,"faltan "+miss.length)+" · "+tr("下一步：补 "+rowTitle(miss[0]),"Next: gather "+rowTitle(miss[0]),"Siguiente: reunir "+rowTitle(miss[0]))):("<b>"+tr("✓ 全部备齐","✓ All set","✓ Todo listo")+"</b> · "+tr("下一步：导出给会计师","Next: export to your accountant","Siguiente: exportar a su contador"));
+  el.innerHTML=miss.length?("<b>"+tr("✓ 又处理好 1 件","✓ One more item handled","✓ Un elemento más listo")+"</b> · "+tr("还缺 "+miss.length+" 件","still missing "+miss.length,"faltan "+miss.length)+" · "+tr("下一步：补 "+exRowTitle(miss[0]),"Next: gather "+exRowTitle(miss[0]),"Siguiente: reunir "+exRowTitle(miss[0]))):("<b>"+tr("✓ 全部备齐","✓ All set","✓ Todo listo")+"</b> · "+tr("下一步：导出给会计师","Next: export to your accountant","Siguiente: exportar a su contador"));
   el.classList.remove("hidden");
   if(toastTimer)clearTimeout(toastTimer);
   toastTimer=setTimeout(function(){el.classList.add("hidden");},5000);
@@ -2613,7 +2614,7 @@ function renderExports(){
   var ul=$("exportLog");ul.innerHTML="";
   if(!packet.exports.length)ul.innerHTML="<li class='muted small'>"+tr("暂无导出记录。","No exports yet.","Aún no hay exportaciones.")+"</li>";
   packet.exports.forEach(function(e){var li=document.createElement("li");li.className="small";li.textContent=e;ul.appendChild(li)});
-  $("transRecord").textContent=packet.transcript?packet.transcript:"无";
+  $("transRecord").textContent=packet.transcript?packet.transcript:tr("无","None","Ninguno");
   try{updateStepTabs();}catch(e){}
 }
 function followUpQuestions(){
@@ -2799,7 +2800,7 @@ function cancelSub(){
   }).catch(function(e){
     if(btn) btn.disabled=false;
     var code=(e&&e.code)||"?";
-    if(msg) msg.textContent=code==="not_recurring"?"这张季票是一次性付款，不需要取消续费。":code==="stripe_not_configured"?"取消服务暂不可用，请稍后再试。":("取消失败（"+code+"），请稍后再试。");
+    if(msg) msg.textContent=code==="not_recurring"?tr("这张季票是一次性付款，不需要取消续费。","This season pass is a one-time payment, so there is no renewal to cancel.","Este pase es un pago único, así que no hay renovación que cancelar."):code==="stripe_not_configured"?tr("取消服务暂不可用，请稍后再试。","Cancellation isn't available yet — please try again later.","La cancelación no está disponible por ahora; inténtelo de nuevo más tarde."):tr("取消失败（"+code+"），请稍后再试。","Cancellation failed ("+code+"). Please try again later.","No se pudo cancelar ("+code+"). Inténtelo de nuevo más tarde.");
   });
 }
 function payTotalCents(packs){ return packs>=2 ? 7400 : 4900; }
@@ -2816,15 +2817,15 @@ function renderOrders(){
   if(card&&packet){
     var os0=displayOrders();
     var paid0=os0.filter(function(o){return o.status==="paid";});
-    card.innerHTML=paid0.length?("当前状态：已支付 "+paid0.length+" 笔，季票有效"+(serverEntitlementEnd?("，至 "+fmtDateUTC(serverEntitlementEnd)):"")+"。"):(os0.length?(tr("当前状态：免费版 + 订单 "+os0.length+" 笔（待支付）。季票生效后，有效期至 2027 年 10 月 15 日。","Current status: free version + "+os0.length+(os0.length===1?" pending order":" pending orders")+". Once the season pass takes effect, it is valid until October 15, 2027.","Estado actual: versión gratuita + "+os0.length+(os0.length===1?" pedido pendiente":" pedidos pendientes")+". Una vez activo el pase de temporada, es válido hasta el 15 de octubre de 2027.")):(tr("当前状态：免费版。季票生效后，有效期至 2027 年 10 月 15 日。","Current status: free version. Once the season pass takes effect, it is valid until October 15, 2027.","Estado actual: versión gratuita. Una vez activo el pase de temporada, es válido hasta el 15 de octubre de 2027.")));
+    card.innerHTML=paid0.length?(tr("当前状态：已支付 "+paid0.length+" 笔，季票有效","Current status: "+paid0.length+(paid0.length===1?" paid order":" paid orders")+", season pass active","Estado actual: "+paid0.length+(paid0.length===1?" pedido pagado":" pedidos pagados")+", pase de temporada activo")+(serverEntitlementEnd?(tr("，至 "," through "," hasta ")+fmtDateUTC(serverEntitlementEnd)):"")+tr("。",".",".")):(os0.length?(tr("当前状态：免费版 + 订单 "+os0.length+" 笔（待支付）。季票生效后，有效期至 2027 年 10 月 15 日。","Current status: free version + "+os0.length+(os0.length===1?" pending order":" pending orders")+". Once the season pass takes effect, it is valid until October 15, 2027.","Estado actual: versión gratuita + "+os0.length+(os0.length===1?" pedido pendiente":" pedidos pendientes")+". Una vez activo el pase de temporada, es válido hasta el 15 de octubre de 2027.")):(tr("当前状态：免费版。季票生效后，有效期至 2027 年 10 月 15 日。","Current status: free version. Once the season pass takes effect, it is valid until October 15, 2027.","Estado actual: versión gratuita. Una vez activo el pase de temporada, es válido hasta el 15 de octubre de 2027.")));
   }
   var list=$("orderList"); if(!list||!packet) return;
   var os=displayOrders();
-  if(!os.length){ list.innerHTML="<p class='muted small'>暂无订单。</p>"; }
+  if(!os.length){ list.innerHTML="<p class='muted small'>"+tr("暂无订单。","No orders yet.","Aún no hay pedidos.")+"</p>"; }
   else{
     list.innerHTML=os.map(function(o){
-      var sel2=(packet.selectedOrderId===o.id)?" <b>（查看中）</b>":"";
-      return "<div class='orderitem' data-oid='"+esc(o.id)+"'><b>"+esc(shortOrderId(o.id))+"</b> · "+esc(o.at)+" · "+o.packs+" 个包 · "+esc(o.method)+" · "+(o.status==="paid"?"<span class='badge'>已支付</span>":"<span class='badge pending'>待支付</span>")+sel2+"<br><span class='small'>点此查看收据</span></div>";
+      var sel2=(packet.selectedOrderId===o.id)?tr(" <b>（查看中）</b>"," <b>(viewing)</b>"," <b>(viendo)</b>"):"";
+      return "<div class='orderitem' data-oid='"+esc(o.id)+"'><b>"+esc(shortOrderId(o.id))+"</b> · "+esc(o.at)+" · "+o.packs+tr(" 个包 · "," packet(s) · "," paquete(s) · ")+esc(o.method)+" · "+(o.status==="paid"?tr("<span class='badge'>已支付</span>","<span class='badge'>Paid</span>","<span class='badge'>Pagado</span>"):tr("<span class='badge pending'>待支付</span>","<span class='badge pending'>Awaiting payment</span>","<span class='badge pending'>Pendiente de pago</span>"))+sel2+"<br><span class='small'>"+tr("点此查看收据","Tap to view the receipt","Toque para ver el recibo")+"</span></div>";
     }).join("");
     var items=list.querySelectorAll(".orderitem");
     for(var i=0;i<items.length;i++){
@@ -2836,10 +2837,10 @@ function renderOrders(){
     var cur=null;
     for(var j=0;j<os.length;j++) if(os[j].id===packet.selectedOrderId) cur=os[j];
     if(!cur && os.length) cur=os[os.length-1];
-    if(!cur) rec.innerHTML="<p class='muted small'>暂无收据。支付完成后收据会出现在这里。</p>";
-    else rec.innerHTML="<div class='orderitem'><b>收据 · "+esc(shortOrderId(cur.id))+"</b><br><span class='small'>时间："+esc(cur.at)+"<br>套餐："+cur.packs+" 个包<br>费用：内测期免费，1 月公布价格<br>支付方式："+esc(cur.method)+"<br>状态："+(cur.status==="paid"?"已支付":"待支付")+"<br>"+(cur.status==="paid"&&cur.entitlementEnd?("有效期至："+fmtDateUTC(cur.entitlementEnd)):tr("有效期说明：季票生效后至 2027 年 10 月 15 日","Validity: once the season pass takes effect, through October 15, 2027","Vigencia: una vez activo el pase de temporada, hasta el 15 de octubre de 2027"))+"</span></div>";
+    if(!cur) rec.innerHTML="<p class='muted small'>"+tr("暂无收据。支付完成后收据会出现在这里。","No receipts yet. A receipt appears here after payment.","Aún no hay recibos. El recibo aparecerá aquí después del pago.")+"</p>";
+    else rec.innerHTML="<div class='orderitem'><b>"+tr("收据","Receipt","Recibo")+" · "+esc(shortOrderId(cur.id))+"</b><br><span class='small'>"+tr("时间：","Time: ","Fecha y hora: ")+esc(cur.at)+"<br>"+tr("套餐：","Plan: ","Paquete: ")+cur.packs+tr(" 个包"," packet(s)"," paquete(s)")+"<br>"+tr("费用：内测期免费，1 月公布价格","Cost: free during beta, pricing announced in January","Costo: gratis durante la beta, precios en enero")+"<br>"+tr("支付方式：","Payment: ","Pago: ")+esc(cur.method)+"<br>"+tr("状态：","Status: ","Estado: ")+(cur.status==="paid"?tr("已支付","Paid","Pagado"):tr("待支付","Awaiting payment","Pendiente de pago"))+"<br>"+(cur.status==="paid"&&cur.entitlementEnd?(tr("有效期至：","Valid through: ","Vigente hasta: ")+fmtDateUTC(cur.entitlementEnd)):tr("有效期说明：季票生效后至 2027 年 10 月 15 日","Validity: once the season pass takes effect, through October 15, 2027","Vigencia: una vez activo el pase de temporada, hasta el 15 de octubre de 2027"))+"</span></div>";
   }
-  var st=$("payStatus"); if(st) st.textContent=os.length?("共 "+os.length+" 笔订单。"):"";
+  var st=$("payStatus"); if(st) st.textContent=os.length?tr("共 "+os.length+" 笔订单。",""+os.length+(os.length===1?" order total.":" orders total."),""+os.length+(os.length===1?" pedido en total.":" pedidos en total.")):"";
 }
 var currentPage=1;
 // 一屏一件事：三步各自只放自己的事；季票功能（IRS 提醒、全年提醒线、多包对比）不占流程，
@@ -3070,16 +3071,16 @@ function outlookInputsHtml(s) {
     + "<div class=\"row\"><div><label for=\"ol_status\">" + esc(tr("报税身份", "Filing status", "Estado civil fiscal")) + "</label><select id=\"ol_status\">" + opts + "</select></div></div>"
     + "<div class=\"row\">"
     + num("dep", "被抚养人数", "People you support", "Personas a su cargo", "0")
-    + num("income", "今年要报的收入（W-2、1099 加起来）", "Income to report this year (W-2 and 1099 combined)", "Ingresos a declarar este año (W-2 y 1099 juntos)", "例如 85000")
+    + num("income", "今年要报的收入（W-2、1099 加起来）", "Income to report this year (W-2 and 1099 combined)", "Ingresos a declarar este año (W-2 y 1099 juntos)", "85000")
     + "</div><div class=\"row\">"
-    + num("withheld", "全年已经被扣掉的税（W-2 上的联邦预扣）", "Tax already taken out all year (federal withholding on your W-2)", "Impuesto ya descontado todo el año (retención federal de su W-2)", "例如 9000")
-    + num("tuition", "学费（一年实付，学校单子上的数）", "Tuition (what you actually paid this year)", "Matrícula (lo que pagó este año)", "例如 12000")
+    + num("withheld", "全年已经被扣掉的税（W-2 上的联邦预扣）", "Tax already taken out all year (federal withholding on your W-2)", "Impuesto ya descontado todo el año (retención federal de su W-2)", "9000")
+    + num("tuition", "学费（一年实付，学校单子上的数）", "Tuition (what you actually paid this year)", "Matrícula (lo que pagó este año)", "12000")
     + "</div><div class=\"row\">"
-    + num("retire", "今年放进退休账户的钱", "Money put into retirement accounts this year", "Dinero aportado a cuentas de retiro este año", "例如 5000")
-    + num("mkt", "医保 Marketplace 覆盖了几个月", "Months covered by Marketplace insurance", "Meses cubiertos por el seguro del Marketplace", "例如 12")
+    + num("retire", "今年放进退休账户的钱", "Money put into retirement accounts this year", "Dinero aportado a cuentas de retiro este año", "5000")
+    + num("mkt", "医保 Marketplace 覆盖了几个月", "Months covered by Marketplace insurance", "Meses cubiertos por el seguro del Marketplace", "12")
     + "</div><div class=\"row\">"
-    + num("premium", "1095-A 上的全年保费", "Full-year premium on Form 1095-A", "Prima anual del Formulario 1095-A", "例如 8400")
-    + num("mortgage", "房贷利息 + 州税（一年合计）", "Mortgage interest + state tax (yearly total)", "Intereses hipotecarios + impuesto estatal (total del año)", "例如 14000")
+    + num("premium", "1095-A 上的全年保费", "Full-year premium on Form 1095-A", "Prima anual del Formulario 1095-A", "8400")
+    + num("mortgage", "房贷利息 + 州税（一年合计）", "Mortgage interest + state tax (yearly total)", "Intereses hipotecarios + impuesto estatal (total del año)", "14000")
     + "</div></details>";
 }
 // 「今年这张地图」：四条线 × 三格（你现在的位置 / 这个数推得动哪一条 / 最晚哪天还能改）。
