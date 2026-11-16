@@ -903,6 +903,20 @@
     "source_url": "https://www.irs.gov/pub/irs-drop/rp-25-32.pdf",
     "note": "Rev. Proc. 2025-32；与 us-tax-2026-constants 一致，不另找来源"
   },
+  "deductions": {
+    "nonitemizer_cash_charity": {
+      "amount_single": 1000,
+      "amount_mfj": 2000,
+      "effective_tax_year": 2026,
+      "filed_in_year": 2027,
+      "source": "IRS IR-2026-135",
+      "source_url": "https://www.irs.gov/newsroom/irs-reminder-permanent-charitable-contribution-deduction-begins-for-returns-filed-next-year-for-taxpayers-who-do-not-itemize",
+      "source_published": "2026-11-10",
+      "checked": "2026-11-16",
+      "quote": "Beginning with tax year 2026, individuals who do not itemize may deduct up to $1,000 of qualifying cash contributions made to certain qualified charitable organizations, or $2,000 for married taxpayers filing jointly.",
+      "note": "只对现金、只对特定机构；非现金捐赠与其它受赠对象不在这一条内。新增项、无前值，所以不进 events：events 的标题要 before→after 两头的数，新项没有 before，写进去也不会显示。"
+    }
+  },
   "banned_drop": [
     "符合条件",
     "能拿",
