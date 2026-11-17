@@ -4212,7 +4212,7 @@ function renderAcctBar(){
   if(!b||!p) return;
   if(isGuest()){ b.classList.add("hidden"); p.classList.add("hidden"); b.setAttribute("aria-expanded","false"); return; }
   b.classList.remove("hidden");
-  b.textContent=hasPass()?tr("我的账户 · 季票","Account · pass","Cuenta · pase"):tr("我的账户","My account","Mi cuenta");
+  b.textContent=tr("我的账户","My account","Mi cuenta");
   var who=$("acctWho"), plan=$("acctPlan");
   if(who) who.textContent=tr("登录：","Signed in: ","Sesión: ")+currentUser;
   if(plan) plan.textContent=hasPass()

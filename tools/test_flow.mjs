@@ -455,7 +455,7 @@ await withChrome(async (cdp) => {
   check("已订用户：首页顶部有「我的账户」入口，且在第一屏内", () => {
     assert.equal(acct.before.navVisible, true, "已订用户首页没有顶部工具条");
     assert.equal(acct.before.btnVisible, true, "「我的账户」按钮没露出来");
-    assert.match(acct.before.label, /我的账户.*季票/, "按钮没写清是账户＋季票：" + acct.before.label);
+    assert.equal(acct.before.label, "我的账户", "按钮文案不对：" + acct.before.label);
     assert.equal(acct.before.inViewport, true, "「我的账户」不在第一屏");
     assert.equal(acct.before.panelHidden, true, "账户面板一开始就是展开的");
   });
@@ -494,7 +494,7 @@ await withChrome(async (cdp) => {
   check("375 宽：账户按钮不把首屏撑宽，也不出屏", () => {
     assert.ok(narrowAcct.sw <= narrowAcct.cw + 1, "整页横向滚动：" + narrowAcct.sw + " > " + narrowAcct.cw);
     assert.ok(narrowAcct.right <= narrowAcct.inner, "账户按钮出屏：" + narrowAcct.right + " > " + narrowAcct.inner);
-    assert.match(narrowAcct.label, /我的账户.*季票/, "窄屏按钮文案丢了季票：" + narrowAcct.label);
+    assert.equal(narrowAcct.label, "我的账户", "窄屏按钮文案不对：" + narrowAcct.label);
   });
 });
 
