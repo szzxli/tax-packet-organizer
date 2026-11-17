@@ -420,6 +420,7 @@ header.site-head{background:linear-gradient(115deg,#0A2137 0%,#0E2A47 58%,#17466
 html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{display:none}
 .site-head p{margin:5px 0 0;font-size:13px;color:rgba(255,255,255,.8);max-width:640px}
 .site-head .lang-switch{position:static;margin:0;background:rgba(255,255,255,.12);padding:3px 6px;border-radius:999px;flex:none}
+.site-head .head-auth{flex:none;margin-left:auto;color:#cfe0ee;font-size:13px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,.32);border-radius:999px;padding:6px 12px;white-space:nowrap}
 @media(max-width:600px){header.site-head{padding:12px 12px;gap:8px}.site-head .brand-row{flex:1 0 100%;gap:8px}.site-head .brand-word{font-size:20px}.site-head .brand-mark{width:34px;height:34px}.site-head .lang-switch{margin-left:auto}.site-head p{display:none}}
 
 /* 首屏只给状态，金额留在卡底折叠 */
@@ -505,8 +506,9 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <div class="brand-copy">
 <h1 class="brand-word"><span>Clear<span class="ctf-to">To</span><span class="ctf-file">File</span></span><span class="brand-zh">可交</span></h1>
 <p>列出你今年要交出去的报税材料清单。导出后自己核对，或请会计师复核。</p>
-<p class="head-cta" style="margin:14px 0 0"><a href="signup.html?ref=referral" style="display:inline-block;background:#16324f;color:#fff;text-decoration:none;font-weight:600;padding:10px 16px;border-radius:10px">11/18 起有 5 场小组陪跑 · 免费</a></p>
+<p class="head-cta" style="margin:14px 0 0"><a href="signup.html?ref=referral" style="display:inline-block;background:#16324f;color:#fff;text-decoration:none;font-weight:600;padding:10px 16px;border-radius:10px"><span class="cta-long">11/18 起有 5 场小组陪跑 · 免费</span><span class="cta-short">11/18 起 · 5 场陪跑 · 免费</span></a></p>
 </div>
+<a href="#" id="btnHeadAuth" class="head-auth hidden">登录 / 注册</a>
 </div>
 
 </header>
@@ -1189,7 +1191,7 @@ Object.assign(I18N,{"报税前的你 · 不再迷路":{"en":"BEFORE YOU FILE · 
 "只改收入这一项":{"en":"income only","es":"solo el ingreso"},
 "▶ 22 秒 · 看一遍":{"en":"▶ 22s · watch once","es":"▶ 22 s · véalo una vez"},
 "一句话就够":{"en":"one line is enough","es":"una frase basta"},
-"11/18 起有 5 场小组陪跑 · 免费":{"en":"From Nov 18 · 5 small-group sessions (held in Chinese) · free","es":"Desde el 18 nov · 5 sesiones en grupo (en chino) · gratis"},
+"11/18 起有 5 场小组陪跑 · 免费":{"en":"From Nov 18 · 5 small-group sessions (held in Chinese) · free","es":"Desde el 18 nov · 5 sesiones en grupo (en chino) · gratis"},"11/18 起 · 5 场陪跑 · 免费":{"en":"From Nov 18 · 5 sessions · free","es":"Desde el 18 nov · 5 sesiones · gratis"},
 "只写变化，不用写数字。文件只在本机读，不上传、不存社保号。":{"en":"Just what changed — no numbers. Files are read on this device only: never uploaded, never store your SSN.","es":"Solo qué cambió; sin cifras. Los archivos se leen solo en este dispositivo: no se suben ni guardan su número de seguro social."},"▶ 看 22 秒怎么用":{"en":"▶ Watch 22s — how it works","es":"▶ Vea 22 s — cómo funciona"},"换个数：":{"en":"Change it:","es":"Cambie:"},"卖了房":{"en":"sold a house","es":"vendió casa"},"涨了薪":{"en":"a raise","es":"un aumento"},"换了工作":{"en":"new job","es":"nuevo trabajo"},"和去年一样":{"en":"Same as last year","es":"Igual que el año pasado"},"例如：今年换了工作，孩子上了大学；去年报过税的，写「和去年一样」也行。":{"en":"e.g. changed jobs, a child started college; if you filed last year, \"same as last year\" works too.","es":"ej.: cambié de trabajo, un hijo entró a la universidad; si declaró el año pasado, «igual que el año pasado» también sirve."},
 "不知道怎么写？点选今年有的情况":{"en":"Not sure how to write it? Tap what applies","es":"\u00bfNo sabe cómo escribirlo? Toque lo que aplique"},"拖动看收入落在哪":{"en":"Drag to see where you land","es":"Mueva para ver dónde cae"},"季票 · 内测免费":{"en":"Pass · free in beta","es":"Pase · gratis en beta"},"今年要备的清单":{"en":"This year's checklist","es":"Lista del año"},"交出去前总核对":{"en":"Pre-handoff check","es":"Chequeo previo"},"生成我的清单":{"en":"Generate my list","es":"Generar mi lista"},"订阅季票":{"en":"Subscribe","es":"Suscribirme"},
 "说一句今年变了什么":{"en":"Say what changed","es":"Diga qué cambió"},
@@ -3948,6 +3950,9 @@ function renderHero(){
     }else{rl.classList.add("hidden");}
   }
   document.body.classList.toggle("tpo-pass", hasPass());
+  // 新访客也要有一道能点开的门：登录/注册常驻页头，不再只出现在「做完之后」的路径里。
+  var ha=$("btnHeadAuth");
+  if(ha) ha.classList.toggle("hidden", !isGuest());
   renderOutlook();
   var sc=$("subShowcase");if(sc)sc.classList.toggle("hidden",currentPage===1||!packet.checklist.length||hasPass());
   var ai=$("aiCard");if(ai){var showAi=ai.dataset.open==="1"&&currentPage===1&&currentOrganizeStep===1;ai.classList.toggle("hidden",!showAi);}
@@ -4194,6 +4199,8 @@ document.querySelectorAll("#demoCard .demo-try button").forEach(function(b){
 // 订阅走季票页：首屏就能选，不用先滚到底部或进导航。
 $("demoSub").onclick=function(){try{track("demo_cta_pass");}catch(e){}goSub();};
 $("btnAiOpen").onclick=function(e){e.preventDefault();var ai=$("aiCard");if(ai){ai.dataset.open="1";ai.classList.remove("hidden");ai.scrollIntoView({behavior:"smooth",block:"start"});}};
+// 首屏那道门：新访客不用先做完事才找得到登录/注册。点了记一笔，这会是第一个真实漏斗数。
+$("btnHeadAuth").onclick=function(e){e.preventDefault();try{track("auth_open");}catch(_){}openAuthFor("<b>登录后，清单跟着账号走，换设备也能接着整理。</b>还没有账号就在这里建一个，免费。",null,"hero");};
 // 首屏（第 1 页且还没有清单）不给访客摆顶部导航：样品卡里已经有两条路。
 // 登录过的人一律保留这条工具条——它是首页唯一能点开的「我的账户」入口。
 function syncNavChrome(){
@@ -5876,7 +5883,7 @@ select option{background:#fff;color:#1E2A45}
 #startCard .start-title{margin:0 0 12px!important;font-size:40px!important;line-height:1.18!important;color:#fff!important;font-weight:800!important;letter-spacing:-.01em}
 #startCard .start-sub{margin:0 0 20px!important;font-size:15px!important;line-height:1.65!important;color:rgba(255,255,255,.84)!important;max-width:34em;overflow-wrap:break-word;word-break:break-word}
 /* 手机上「说明段」收起，但 11/17 报名入口必须留着 */
-@media(max-width:600px){header.site-head p{display:none}header.site-head p.head-cta{display:block!important;margin:8px 0 0!important}}
+@media(max-width:600px){header.site-head p{display:none}header.site-head p.head-cta{display:block!important;margin:8px 0 0!important}header.site-head .head-cta a{font-size:12px!important;line-height:1.3!important;padding:6px 9px!important;max-width:100%;overflow-wrap:anywhere}header.site-head .cta-short{display:none}header.site-head .cta-long{display:inline}header.site-head .head-auth{font-size:12px;padding:5px 10px;align-self:flex-start}header.site-head .cta-long{display:none}header.site-head .cta-short{display:inline}}
 #startCard .start-actions{display:flex;gap:10px;flex-wrap:wrap;margin:0}
 #startCard .hero-cta{display:inline-block;padding:12px 22px;border-radius:999px;background:#F5A623;color:#2A1B00!important;font-weight:700;text-decoration:none;font-size:15px;box-shadow:0 6px 16px rgba(245,166,35,.28)}
 #startCard .hero-cta.ghost{background:transparent;border:1px solid rgba(255,255,255,.52);color:#fff!important;box-shadow:none}

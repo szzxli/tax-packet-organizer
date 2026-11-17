@@ -496,6 +496,41 @@ await withChrome(async (cdp) => {
     assert.ok(narrowAcct.right <= narrowAcct.inner, "账户按钮出屏：" + narrowAcct.right + " > " + narrowAcct.inner);
     assert.equal(narrowAcct.label, "我的账户", "窄屏按钮文案不对：" + narrowAcct.label);
   });
+  // 新访客的门：登录/注册要在首屏能点到，而不是先做完事才出现
+  const door = JSON.parse(await cdp.eval(`(() => {
+    currentUser=null; serverEntitlementEnd=0;
+    try{sessionStorage.removeItem("tpo_entry");}catch(e){}
+    showApp(); showPage(1); renderAll();
+    const line=document.getElementById("btnHeadAuth"), a=line;
+    const lr=line.getBoundingClientRect();
+    const before={
+      visible: line.offsetParent!==null,
+      inViewport: lr.top>=0 && lr.bottom<=innerHeight,
+      top: Math.round(lr.top), bottom: Math.round(lr.bottom), inner: innerHeight, sy: Math.round(scrollY),
+      text: a.textContent.trim(),
+      authHidden: document.getElementById("authView").classList.contains("hidden")
+    };
+    a.click();
+    const after={
+      authShown: !document.getElementById("authView").classList.contains("hidden"),
+      why: (document.getElementById("authWhy").textContent||"").trim()
+    };
+    currentUser="paid@example.com"; serverEntitlementEnd=Date.now()+30*86400000; renderAll();
+    const loggedInHidden = document.getElementById("btnHeadAuth").classList.contains("hidden");
+    currentUser=null; serverEntitlementEnd=0;
+    return JSON.stringify({before, after, loggedInHidden});
+  })()`));
+  check("新访客首屏有「登录 / 注册」，点了进登录表单", () => {
+    assert.equal(door.before.visible, true, "首屏没有登录/注册那一行");
+    assert.equal(door.before.inViewport, true, "登录/注册不在第一屏：" + JSON.stringify(door.before));
+    assert.match(door.before.text, /登录 \/ 注册/, "文案不对：" + door.before.text);
+    assert.equal(door.before.authHidden, true, "登录表单一开始就露着");
+    assert.equal(door.after.authShown, true, "点了没进登录表单");
+    assert.match(door.after.why, /清单|账号/, "登录表单没写为什么值得注册：" + door.after.why);
+  });
+  check("登录用户不再显示页头的登录入口", () => {
+    assert.equal(door.loggedInHidden, true, "登录后页头还摆着「登录 / 注册」");
+  });
 });
 
 server.close();
