@@ -16,7 +16,7 @@
 | directory | `utm_medium='ref'` 且（`utm_source LIKE 'alternativeto%'` 或 `LIKE 'github%'`） |
 | email | `utm_medium='ref'` 且（`utm_source LIKE 'cpa%'` 或 `LIKE 'email%'`） |
 | search | `utm_medium='search'`（搜索引擎 referrer，无需 `?ref=`） |
-| referral | `utm_medium='referral'` |
+| referral | `utm_medium='referral'`，或（`utm_medium='ref'` 且 `utm_source LIKE 'referral%'`） |
 | direct | `utm_medium='direct'` |
 | other | 其余（只列数，**不参与任何止损判决**） |
 
@@ -25,6 +25,7 @@
 > 旧名 `cpa`、`email` 保留在映射里只作兼容，不要据此判断邮件线死了。
 > `other` 里若出现 `quora`／`nextdoor`／`fbgroup`／`seo-`／`reddit` 前缀，说明 CASE 没生效，按实现缺陷处理，不算渠道 0。
 > 2026-11-16 改前缀匹配的原因：`signup_leads` 里已有 `ref='reddit-r1'` 的行，旧的精确等值会把这条最大流量线的点击静默归入 `other`；同日核到 events 全时段还没有任何 `utm_source LIKE 'reddit%'` 的到达，所以这次改的是「别把将来的点击读成 0」，不是找回既有流量。
+> 2026-11-17 补两处：`?ref=referral` 落地是 `utm_medium='ref'` + `utm_source='referral'`，旧 CASE 不认这个组合、会掉 `other`（11-16 唯一的站外真实到达就是这么丢的），所以 `referral` 桶加了 `utm_source LIKE 'referral%'` 分支；探针行另按 `utm_source NOT LIKE 'qa-%'` 清，见 QA 一节。
 
 ## 日读数 SQL（前一天 00:00–24:00 PT）
 
@@ -39,6 +40,7 @@ SELECT
     WHEN utm_medium='ref' AND (utm_source LIKE 'cpa%' OR utm_source LIKE 'email%') THEN 'email'
     WHEN utm_medium='search' THEN 'search'
     WHEN utm_medium='referral' THEN 'referral'
+    WHEN utm_medium='ref' AND utm_source LIKE 'referral%' THEN 'referral'
     WHEN utm_medium='direct' THEN 'direct'
     ELSE 'other'
   END AS bucket,
@@ -46,6 +48,7 @@ SELECT
 FROM events
 WHERE name='open'
   AND ts >= :start AND ts < :end
+  AND (utm_source IS NULL OR utm_source NOT LIKE 'qa-%')
 GROUP BY 1 ORDER BY 2 DESC;
 ```
 
@@ -68,6 +71,7 @@ SELECT CASE
     WHEN ref LIKE 'nextdoor%' OR ref LIKE 'fbgroup%' THEN 'community'
     WHEN ref LIKE 'alternativeto%' OR ref LIKE 'github%' THEN 'directory'
     WHEN ref LIKE 'cpa%' OR ref LIKE 'email%' THEN 'email'
+    WHEN ref LIKE 'referral%' THEN 'referral'
     WHEN ref IS NULL OR ref = '' THEN 'direct'
     ELSE 'other'
   END AS bucket,
@@ -101,6 +105,16 @@ AND anon NOT IN (SELECT anon FROM signup_leads
 
 `signup_leads` 那侧同时加 `AND email NOT LIKE 'qa.%@example.com'`；两侧都过滤，对账才有意义。
 
+**探针行按 `utm_source` 清，不要按 anon 清（2026-11-16 起）。** 验证用的探针链接是 `?ref=qa-instr3`、`?ref=qa-probe` 这种，落库后是 `utm_source='qa-instr3'`、`utm_medium='ref'`，不会进 `signup_leads`，anon 名单根本抓不到它们——必须单独加一句：
+
+```sql
+AND (utm_source IS NULL OR utm_source NOT LIKE 'qa-%')
+```
+
+**反过来，anon 名单也不能无条件套在 `events` 上：** 2026-11-16 实测，探针用的两个匿名串里有一个（`620ce2f1-8703-4a`）当天还在 `formal.html` 上留下 25 次真实加载——按 anon 清会把这个真实访客一并删掉（12 人误读成 9 人）。所以 `events` 侧先按 `utm_source LIKE 'qa-%'` 清探针行，anon 名单只用于确实由 QA 报名行带出来的会话。
+
+- 2026-11-16 实测（PT 当日）：含 QA 原始 38 次加载／12 人 → 扣掉 3 条探针（`qa-probe`、`qa-instr3`、`qa-instr4`）后 **35 次加载／11 人**，报名 0（`signup` 事件 0、`signup_leads` 0，两层相等）。
+
 - 2026-11-15 实测（PT 当日，原始 → 扣 QA 后）：报名 **2 → 0**；`signup` 事件 **2 → 0**；到达 **2 → 2**、开始填 **2 → 2**（当日这两条 `open` 的 anon 不在 QA 名单里，是真实会话；那两次 QA 实测没有在当日留下 `open`）。所以 11-15 的真实读数是：到达 2、开始填 2、报名 **0**。
 - 凡是研发当天做过端到端实测的，第二天读数先跑第 0 步，有 QA 行就过滤，并在消息里点一句「已扣 QA n 条报名／n 次到达」。
 
@@ -112,14 +126,17 @@ AND anon NOT IN (SELECT anon FROM signup_leads
 -- 第一层：到达（人数 = 去重匿名串；formal.html 每次加载都发，不能用 COUNT(*) 当人）
 SELECT COUNT(DISTINCT anon) FROM events
 WHERE name='open' AND ts >= :start AND ts < :end
+  AND (utm_source IS NULL OR utm_source NOT LIKE 'qa-%')
   AND anon NOT IN (SELECT anon FROM signup_leads WHERE email LIKE 'qa.%@example.com' AND anon <> '');
 -- 第二层：开始填（任一即算，同样按人去重）
 SELECT COUNT(DISTINCT anon) FROM events
 WHERE name IN ('flow-step1','signup_start') AND ts >= :start AND ts < :end
+  AND (utm_source IS NULL OR utm_source NOT LIKE 'qa-%')
   AND anon NOT IN (SELECT anon FROM signup_leads WHERE email LIKE 'qa.%@example.com' AND anon <> '');
 -- 第三层：提交
 SELECT COUNT(DISTINCT anon) FROM events
 WHERE name='signup' AND ts >= :start AND ts < :end
+  AND (utm_source IS NULL OR utm_source NOT LIKE 'qa-%')
   AND anon NOT IN (SELECT anon FROM signup_leads WHERE email LIKE 'qa.%@example.com' AND anon <> '');
 ```
 
