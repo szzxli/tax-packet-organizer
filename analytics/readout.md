@@ -20,7 +20,7 @@
 | direct | `utm_medium='direct'` |
 | other | 其余（只列数，**不参与任何止损判决**） |
 
-> 已挂出的 ref 实值是六个渠道词：`reddit`、`moonbbs`、`alternativeto`、`github`、`cpa-handoff`、`email-cpa-survey`；同一个渠道的轮次变体（如 `reddit-r1`）同桶。
+> 已挂出的 ref 实值是七个渠道词：`reddit`、`moonbbs`、`alternativeto`、`github`、`cpa-handoff`、`email-cpa-survey`、`xhs`；同一个渠道的轮次变体（如 `reddit-r1`、`xhs-dm`）同桶。`xhs` 由市场 2026-11-16 启用，私信与群公告共用这一个值，不细分。
 > 待挂的还有四个：`quora`、`nextdoor`、`fbgroup`、`seo-<slug>`（10 页各一个 slug，还会继续加）。
 > 旧名 `cpa`、`email` 保留在映射里只作兼容，不要据此判断邮件线死了。
 > `other` 里若出现 `quora`／`nextdoor`／`fbgroup`／`seo-`／`reddit` 前缀，说明 CASE 没生效，按实现缺陷处理，不算渠道 0。
@@ -55,6 +55,30 @@ FROM signup_leads
 WHERE created_at >= :start AND created_at < :end
   AND email NOT LIKE 'qa.%@example.com';
 ```
+
+### 按渠道看报名（小红书这类只有 ref 的渠道）
+
+`events` 里的 `signup` 事件**不带 ref**（只记 `target`／`path`／`anon`），所以渠道归属一律看 `signup_leads.ref`，不在 events 上做二次归因：
+
+```sql
+SELECT CASE
+    WHEN ref LIKE 'seo-%' THEN 'seo'
+    WHEN ref LIKE 'xhs%' THEN 'social'
+    WHEN ref LIKE 'reddit%' OR ref LIKE 'moonbbs%' OR ref LIKE 'quora%' THEN 'forum'
+    WHEN ref LIKE 'nextdoor%' OR ref LIKE 'fbgroup%' THEN 'community'
+    WHEN ref LIKE 'alternativeto%' OR ref LIKE 'github%' THEN 'directory'
+    WHEN ref LIKE 'cpa%' OR ref LIKE 'email%' THEN 'email'
+    WHEN ref IS NULL OR ref = '' THEN 'direct'
+    ELSE 'other'
+  END AS bucket,
+  COUNT(*) AS leads
+FROM signup_leads
+WHERE created_at >= :start AND created_at < :end
+  AND email NOT LIKE 'qa.%@example.com'
+GROUP BY 1 ORDER BY 2 DESC;
+```
+
+`xhs` 的到达走 `events` 的 `open`（第 35 行，`utm_source LIKE 'xhs%'` → `social`），报名走上表的 `ref`——两边同一套前缀规则，所以 `?ref=xhs` 不用再往 CASE 里加 `ref='xhs'` 这一条。
 
 ## QA 测试行（常设过滤，不只 11-15 一天）
 
