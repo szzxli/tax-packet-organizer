@@ -387,7 +387,7 @@ await withChrome(async (cdp) => {
       before: before, landingEmpty: landingEmpty, landed: landed,
       subShown: !document.getElementById("subCard").classList.contains("hidden"),
       navVisible: !nav.classList.contains("hidden") && getComputedStyle(nav).display !== "none",
-      navButtons: Array.from(nav.querySelectorAll("button")).map(b => b.id)
+      navButtons: Array.from(nav.querySelectorAll(".nav-bar button")).map(b => b.id)
     };
     showPage(1); renderAll();
     out.cta = document.getElementById("demoSub").textContent.trim();
@@ -410,8 +410,91 @@ await withChrome(async (cdp) => {
   });
   check("已订用户：首屏有「整理 / 季票」两个口，按钮改「打开我的季票」", () => {
     assert.equal(paid.navVisible, true, "已订用户首屏没有订阅口");
-    assert.deepEqual(paid.navButtons, ["navOrganize", "navSubscribe"], "导航按钮不对：" + paid.navButtons.join(","));
+    assert.deepEqual(paid.navButtons, ["navOrganize", "navSubscribe", "btnAccount"], "导航按钮不对：" + paid.navButtons.join(","));
     assert.ok(/打开我的季票|Open my pass|Abrir mi pase/.test(paid.cta), "已订用户按钮还写着订阅：" + paid.cta);
+  });
+  // 订阅用户在首页要能找到「我的账户」：邮箱、季票到期日、季票页、订单、退出登录
+  const acct = JSON.parse(await cdp.eval(`(() => {
+    currentUser = "paid@example.com";
+    serverEntitlementEnd = Date.now() + 30 * 86400000;
+    showPage(1); renderAll();
+    const nav = document.getElementById("pageNav");
+    const b = document.getElementById("btnAccount");
+    const nb = b.getBoundingClientRect();
+    const panel = document.getElementById("acctPanel");
+    const before = {
+      navVisible: !nav.classList.contains("hidden") && getComputedStyle(nav).display !== "none",
+      btnVisible: b.offsetParent !== null,
+      label: b.textContent.trim(),
+      inViewport: nb.top >= 0 && nb.bottom <= innerHeight,
+      panelHidden: panel.classList.contains("hidden")
+    };
+    b.click();
+    const opened = {
+      panelVisible: panel.offsetParent !== null,
+      who: document.getElementById("acctWho").textContent.trim(),
+      plan: document.getElementById("acctPlan").textContent.trim(),
+      buttons: Array.from(panel.querySelectorAll("button")).map(x => x.id)
+    };
+    document.getElementById("acctPass").click();
+    const afterPass = { page: currentPage, panelHidden: panel.classList.contains("hidden") };
+    b.click();
+    document.getElementById("acctOrders").click();
+    const afterOrders = { page: currentPage, panelHidden: panel.classList.contains("hidden") };
+    showPage(1);
+    currentUser = "free@example.com"; serverEntitlementEnd = 0; renderAll();
+    const free = { label: b.textContent.trim(), plan: document.getElementById("acctPlan").textContent.trim() };
+    currentUser = null; showApp();
+    const guest = {
+      btnHidden: b.classList.contains("hidden") || b.offsetParent === null,
+      panelHidden: panel.classList.contains("hidden"),
+      navHidden: nav.classList.contains("hidden")
+    };
+    return JSON.stringify({ before, opened, afterPass, afterOrders, free, guest });
+  })()`));
+  check("已订用户：首页顶部有「我的账户」入口，且在第一屏内", () => {
+    assert.equal(acct.before.navVisible, true, "已订用户首页没有顶部工具条");
+    assert.equal(acct.before.btnVisible, true, "「我的账户」按钮没露出来");
+    assert.match(acct.before.label, /我的账户.*季票/, "按钮没写清是账户＋季票：" + acct.before.label);
+    assert.equal(acct.before.inViewport, true, "「我的账户」不在第一屏");
+    assert.equal(acct.before.panelHidden, true, "账户面板一开始就是展开的");
+  });
+  check("点「我的账户」：写清邮箱与季票到期日，四个动作都在", () => {
+    assert.equal(acct.opened.panelVisible, true, "账户面板没打开");
+    assert.ok(acct.opened.who.includes("paid@example.com"), "面板没写登录邮箱：" + acct.opened.who);
+    assert.match(acct.opened.plan, /季票有效至\s*\d{4}/, "面板没写季票到期日：" + acct.opened.plan);
+    assert.deepEqual(acct.opened.buttons, ["acctPass", "acctOrders", "acctLogout", "acctClose"], "面板动作不对：" + acct.opened.buttons.join(","));
+  });
+  check("账户面板：去季票页、去订单页，点了都收起", () => {
+    assert.equal(acct.afterPass.page, 2, "「我的季票」没进季票页：" + acct.afterPass.page);
+    assert.equal(acct.afterPass.panelHidden, true, "去季票页后面板还开着");
+    assert.equal(acct.afterOrders.page, 3, "「订单与收据」没进订单页：" + acct.afterOrders.page);
+    assert.equal(acct.afterOrders.panelHidden, true, "去订单页后面板还开着");
+  });
+  check("免费登录用户也有账户入口，写「免费版」；退出后入口收起", () => {
+    assert.equal(acct.free.label, "我的账户", "免费用户的按钮文案不对：" + acct.free.label);
+    assert.match(acct.free.plan, /免费版/, "免费用户的面板没写当前计划：" + acct.free.plan);
+    assert.equal(acct.guest.btnHidden, true, "退出登录后「我的账户」还露着");
+    assert.equal(acct.guest.panelHidden, true, "退出登录后账户面板还开着");
+    assert.equal(acct.guest.navHidden, true, "游客首屏又冒出导航工具条");
+  });
+  // 窄屏：三个按钮挤在一行，量它有没有把首屏撑宽
+  await cdp.send("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 1, mobile: true });
+  const narrowAcct = JSON.parse(await cdp.eval(`(() => {
+    currentUser = "paid@example.com";
+    serverEntitlementEnd = Date.now() + 30 * 86400000;
+    showPage(1); renderAll();
+    const b = document.getElementById("btnAccount");
+    const r = b.getBoundingClientRect();
+    return JSON.stringify({
+      sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth,
+      right: Math.round(r.right), inner: innerWidth, label: b.textContent.trim()
+    });
+  })()`));
+  check("375 宽：账户按钮不把首屏撑宽，也不出屏", () => {
+    assert.ok(narrowAcct.sw <= narrowAcct.cw + 1, "整页横向滚动：" + narrowAcct.sw + " > " + narrowAcct.cw);
+    assert.ok(narrowAcct.right <= narrowAcct.inner, "账户按钮出屏：" + narrowAcct.right + " > " + narrowAcct.inner);
+    assert.match(narrowAcct.label, /我的账户.*季票/, "窄屏按钮文案丢了季票：" + narrowAcct.label);
   });
 });
 

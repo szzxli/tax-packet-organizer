@@ -361,6 +361,10 @@ select option{background:#0f141b;color:#e6edf3}
 .nav-spacer{flex:1}
 #pageNav{padding:6px 10px;border-radius:10px;margin:8px 0}
 #pageNav button{min-height:34px;padding:6px 12px;font-size:13px}
+#acctPanel{border-top:1px solid rgba(127,149,168,.35);margin-top:8px;padding-top:8px}
+#acctPanel p{margin:2px 0}
+#acctPanel p.small{overflow-wrap:anywhere;word-break:break-word}
+#acctPanel p button{margin:4px 6px 0 0}
 #navSubscribe,#navPay{background:transparent;color:#35546c;border:1px solid #dbe5ec}
 #navSubscribe:not(.secondary),#navPay:not(.secondary){background:#16324f;color:#fff;border-color:#16324f}
 .lang-switch{position:absolute;top:10px;right:12px;display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.16);border-radius:999px;padding:3px 6px}
@@ -540,6 +544,12 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <button id="navOrganize" class="secondary">整理</button>
 <span class="nav-spacer"></span>
 <button id="navSubscribe" class="secondary">季票</button>
+<button id="btnAccount" class="secondary hidden" aria-expanded="false" aria-controls="acctPanel">我的账户</button>
+</div>
+<div id="acctPanel" class="hidden">
+<p class="small" id="acctWho"></p>
+<p class="small" id="acctPlan"></p>
+<p><button id="acctPass" class="secondary">我的季票</button> <button id="acctOrders" class="secondary">订单与收据</button> <button id="acctLogout" class="danger">退出登录</button> <button id="acctClose" class="secondary">收起</button></p>
 </div>
 </div>
 
@@ -1249,9 +1259,6 @@ Object.assign(I18N,{"可交":{"en":"Ready","es":"Listo"},
 "暂无收据。支付完成后收据会出现在这里。":{"en":"No receipts yet. A receipt appears here after payment.","es":"Aún no hay recibos. El recibo aparecerá aquí después del pago."},
 "我的订单":{"en":"My orders","es":"Mis pedidos"},
 "暂无订单。":{"en":"No orders yet.","es":"Aún no hay pedidos."}});
-Object.assign(I18N,{});
-Object.assign(I18N,{
-"季票给什么":{"en":"What the season pass gives you","es":"Qué da el pase"}});
 Object.assign(I18N,{"内测期免费，正式开通前不收费；开通前会在这里写明价格 · 随时可停，不用打电话。":{"en":"Free during the beta — nothing is charged before it opens. The price will be posted here before then · stop anytime, no phone call needed.","es":"Gratis durante la beta: no se cobra nada antes de la apertura. El precio se publicará aquí antes de abrir · puede parar cuando quiera, sin llamadas."}});
 Object.assign(I18N,{"整理和导出不收费；以后按季收规划服务费，开通前会在这里写明价格。":{"en":"Organizing and export are free; a quarterly planning-service fee will come later, and the price will be posted here before it starts.","es":"Organizar y exportar son gratis; más adelante habrá una cuota trimestral por el servicio de planificación, y el precio se publicará aquí antes de empezar."}});
 Object.assign(I18N,{"ClearToFile 可交":{"en":"ClearToFile","es":"ClearToFile"},"收入与几项结果的关系图":{"en":"Your income and a few results, as a chart","es":"Sus ingresos y algunos resultados, en un gráfico"},"规则更新":{"en":"Rule updates","es":"Actualizaciones de reglas"}});
@@ -1513,7 +1520,7 @@ function apiOn(){return (typeof TpoApi!=="undefined")&&TpoApi.enabled();}
 var serverOrders=[];
 function displayOrders(){ if(serverOrders&&serverOrders.length) return serverOrders.map(function(o){ return {id:o.id, at:new Date(o.created_at).toLocaleString(), packs:o.packs, amountCents:o.amount_cents, method:tr("信用卡","Credit card","Tarjeta de crédito"), status:o.status==="paid"?"paid":"pending", entitlementEnd:o.entitlement_end}; }); return subOrders(); }
 function refreshOrders(){if(!apiOn()||localOnly||!currentUser)return Promise.resolve([]);return TpoApi.listOrders().then(function(d){serverOrders=(d&&d.orders)||[];if(typeof renderOrders==="function")renderOrders();return serverOrders;}).catch(function(){return serverOrders;});}
-function refreshEntitlement(){if(!apiOn()||!currentUser)return Promise.resolve(0);return TpoApi.me().then(function(m){serverEntitlementEnd=(m&&m.entitlement_end)||0;serverSub=(m&&m.subscription)||null;if(typeof renderSubStatus==="function")renderSubStatus();if(typeof renderPlanCards==="function")renderPlanCards();refreshOrders();if(typeof renderHero==="function")renderHero();if(hasPass()){if(typeof renderReminders==="function")renderReminders();if(typeof renderProbe==="function")renderProbe();if(typeof renderDeep==="function")renderDeep();if(typeof renderSnaps==="function")renderSnaps();if(typeof renderCpa==="function")renderCpa();if(typeof renderPriority==="function")renderPriority();}if(typeof maybeLandOnPass==="function")maybeLandOnPass();return serverEntitlementEnd;}).catch(function(){return 0;});}
+function refreshEntitlement(){if(!apiOn()||!currentUser)return Promise.resolve(0);return TpoApi.me().then(function(m){serverEntitlementEnd=(m&&m.entitlement_end)||0;serverSub=(m&&m.subscription)||null;if(typeof renderSubStatus==="function")renderSubStatus();if(typeof renderPlanCards==="function")renderPlanCards();refreshOrders();if(typeof renderHero==="function")renderHero();if(hasPass()){if(typeof renderReminders==="function")renderReminders();if(typeof renderProbe==="function")renderProbe();if(typeof renderDeep==="function")renderDeep();if(typeof renderSnaps==="function")renderSnaps();if(typeof renderCpa==="function")renderCpa();if(typeof renderPriority==="function")renderPriority();}if(typeof maybeLandOnPass==="function")maybeLandOnPass();if(typeof syncNavChrome==="function")syncNavChrome();return serverEntitlementEnd;}).catch(function(){return 0;});}
 function scheduleServerSave(){if(!apiOn()||localOnly||!currentUser||!packet)return;if(serverSyncTimer)clearTimeout(serverSyncTimer);serverSyncTimer=setTimeout(function(){serverSyncTimer=null;if(!packet||!currentUser)return;TpoApi.putPacket(packet).catch(function(){});},1000);}
 var GUEST_KEY="tpo_packet_guest",pendingPage=null;
 function isGuest(){return !currentUser;}
@@ -4187,17 +4194,45 @@ document.querySelectorAll("#demoCard .demo-try button").forEach(function(b){
 // 订阅走季票页：首屏就能选，不用先滚到底部或进导航。
 $("demoSub").onclick=function(){try{track("demo_cta_pass");}catch(e){}goSub();};
 $("btnAiOpen").onclick=function(e){e.preventDefault();var ai=$("aiCard");if(ai){ai.dataset.open="1";ai.classList.remove("hidden");ai.scrollIntoView({behavior:"smooth",block:"start"});}};
-// 首屏（第 1 页且还没有清单）不摆顶部导航：样品卡里已经有「整理我自己的」与「季票给什么」两条路。
+// 首屏（第 1 页且还没有清单）不给访客摆顶部导航：样品卡里已经有两条路。
+// 登录过的人一律保留这条工具条——它是首页唯一能点开的「我的账户」入口。
 function syncNavChrome(){
   var nav=document.getElementById("pageNav"); if(!nav) return;
-  // 领过季票的人，顶部两颗按钮直接写「我的清单 / 我的季票」，不再写「整理 / 季票」——
-  // 首页要让人一眼看出自己已经是订阅用户、钱付过、权益到哪天。
   var org=$("navOrganize"), sub=$("navSubscribe");
   if(org) org.textContent=hasPass()?tr("我的清单","My checklist","Mi lista"):tr("整理","Organize","Organizar");
   if(sub) sub.textContent=hasPass()?tr("我的季票","My pass","Mi pase"):tr("季票","Pass","Pase");
+  renderAcctBar();
   var noList=!(typeof packet!=="undefined"&&packet&&packet.checklist&&packet.checklist.length);
-  nav.classList.toggle("hidden", currentPage===1 && noList && !hasPass());
+  nav.classList.toggle("hidden", currentPage===1 && noList && isGuest());
 }
+// 登录用户（尤其订阅用户）回到首页要有一个能点开的「我的账户」：
+// 邮箱、季票到哪天、订单收据、退出登录。只换按钮文案不算入口，这里给的是可展开的一块。
+function renderAcctBar(){
+  var b=$("btnAccount"), p=$("acctPanel");
+  if(!b||!p) return;
+  if(isGuest()){ b.classList.add("hidden"); p.classList.add("hidden"); b.setAttribute("aria-expanded","false"); return; }
+  b.classList.remove("hidden");
+  b.textContent=hasPass()?tr("我的账户 · 季票","Account · pass","Cuenta · pase"):tr("我的账户","My account","Mi cuenta");
+  var who=$("acctWho"), plan=$("acctPlan");
+  if(who) who.textContent=tr("登录：","Signed in: ","Sesión: ")+currentUser;
+  if(plan) plan.textContent=hasPass()
+    ? tr("季票有效至 "+fmtDateUTC(serverEntitlementEnd),"Season pass active through "+fmtDateUTC(serverEntitlementEnd),"Pase activo hasta "+fmtDateUTC(serverEntitlementEnd))
+    : tr("当前是免费版；季票内测期免费领取。","You're on the free plan; the pass is free during the beta.","Está en el plan gratis; el pase es gratis durante la beta.");
+  var bp=$("acctPass"), bo=$("acctOrders"), bl=$("acctLogout"), bc=$("acctClose");
+  if(bp) bp.textContent=tr("我的季票","My pass","Mi pase");
+  if(bo) bo.textContent=tr("订单与收据","Orders & receipts","Pedidos y recibos");
+  if(bl) bl.textContent=tr("退出登录","Log out","Cerrar sesión");
+  if(bc) bc.textContent=tr("收起","Close","Cerrar");
+}
+function openAcct(){var p=$("acctPanel"),b=$("btnAccount");if(!p||!b||isGuest())return;p.classList.remove("hidden");b.setAttribute("aria-expanded","true");}
+function closeAcct(){var p=$("acctPanel"),b=$("btnAccount");if(p)p.classList.add("hidden");if(b)b.setAttribute("aria-expanded","false");}
+// 点在账户面板以外就收起，避免它一直占着首屏
+document.addEventListener("click",function(e){
+  var p=$("acctPanel");if(!p||p.classList.contains("hidden"))return;
+  var b=$("btnAccount");
+  if(p.contains(e.target)||(b&&b.contains(e.target)))return;
+  closeAcct();
+});
 function showPage(p){
   // 卡 2 对所有人免费可见：订阅页未登录也能看能填；只有支付页（3）要求登录。
   if(p===3&&isGuest()){pendingPage=p;showAuth();return;}
@@ -4382,7 +4417,13 @@ $("btnLogin").onclick=function(){
     $("loginMsg").textContent=c==="bad_credentials"?"邮箱或密码不对，请检查后重试":c==="not_verified"?"该邮箱未验证，请先完成验证":("登录失败（"+c+"），请稍后再试。");
   });
 };
-$("btnLogout").onclick=function(){if(apiOn()){try{TpoApi.logout()}catch(e){}}serverEntitlementEnd=0;serverSub=null;localOnly=false;if(serverSyncTimer){clearTimeout(serverSyncTimer);serverSyncTimer=null;}currentUser=null;try{localStorage.removeItem("tpo_session")}catch(e){}delete memStore["tpo_session"];pendingPage=null;loadGuest();showApp()};
+function doLogout(){if(apiOn()){try{TpoApi.logout()}catch(e){}}serverEntitlementEnd=0;serverSub=null;localOnly=false;if(serverSyncTimer){clearTimeout(serverSyncTimer);serverSyncTimer=null;}currentUser=null;try{localStorage.removeItem("tpo_session")}catch(e){}delete memStore["tpo_session"];pendingPage=null;loadGuest();showApp();}
+$("btnLogout").onclick=doLogout;
+$("btnAccount").onclick=function(){var p=$("acctPanel");if(!p)return;if(p.classList.contains("hidden"))openAcct();else closeAcct();};
+$("acctClose").onclick=closeAcct;
+$("acctPass").onclick=function(){closeAcct();showPage(2);};
+$("acctOrders").onclick=function(){closeAcct();showPage(3);var el=$("orderList");if(el){try{el.scrollIntoView({block:"center"});}catch(e){}}};
+$("acctLogout").onclick=function(){closeAcct();doLogout();};
 $("btnBackGuest").onclick=function(){if(!packet)loadGuest();showApp();};
 $("btnDeletePacket").onclick=function(){
   if(!confirm(isGuest()?"确定删除本机未登录的包吗？清单、上传记录、transcript 对齐、导出记录都会删掉，此操作不可撤销。":"确定删除本账号的包吗？清单、上传记录、transcript 对齐、导出记录都会删掉，此操作不可撤销。"))return;
