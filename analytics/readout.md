@@ -11,7 +11,7 @@
 |---|---|
 | social | `utm_medium='ref'` 且 `utm_source LIKE 'xhs%'` |
 | forum | `utm_medium='ref'` 且（`utm_source LIKE 'reddit%'` 或 `LIKE 'moonbbs%'` 或 `LIKE 'quora%'`） |
-| community | `utm_medium='ref'` 且（`utm_source LIKE 'nextdoor%'` 或 `LIKE 'fbgroup%'`） |
+| community | `utm_medium='ref'` 且（`utm_source LIKE 'nextdoor%'` 或 `LIKE 'fbgroup%'` 或 `LIKE 'community%'`） |
 | seo | `utm_medium='ref'` 且 `utm_source LIKE 'seo-%'` |
 | directory | `utm_medium='ref'` 且（`utm_source LIKE 'alternativeto%'` 或 `LIKE 'github%'`） |
 | email | `utm_medium='ref'` 且（`utm_source LIKE 'cpa%'` 或 `LIKE 'email%'`） |
@@ -21,11 +21,12 @@
 | other | 其余（只列数，**不参与任何止损判决**） |
 
 > 已挂出的 ref 实值是七个渠道词：`reddit`、`moonbbs`、`alternativeto`、`github`、`cpa-handoff`、`email-cpa-survey`、`xhs`；同一个渠道的轮次变体（如 `reddit-r1`、`xhs-dm`）同桶。`xhs` 由市场 2026-11-16 启用，私信与群公告共用这一个值，不细分。
-> 待挂的还有四个：`quora`、`nextdoor`、`fbgroup`、`seo-<slug>`（10 页各一个 slug，还会继续加）。
+> 待挂的还有五个：`quora`、`nextdoor`、`fbgroup`、`community`、`seo-<slug>`（10 页各一个 slug，还会继续加）。`community` 是机构线（中文学校、教会、老年中心、图书馆、超市布告栏二维码），与 `nextdoor`／`fbgroup` 同属社区桶但单独取值，这条线要能单独止损；`community-1119` 这类轮次后缀按前缀规则同桶。
 > 旧名 `cpa`、`email` 保留在映射里只作兼容，不要据此判断邮件线死了。
-> `other` 里若出现 `quora`／`nextdoor`／`fbgroup`／`seo-`／`reddit` 前缀，说明 CASE 没生效，按实现缺陷处理，不算渠道 0。
+> `other` 里若出现 `quora`／`nextdoor`／`fbgroup`／`community`／`seo-`／`reddit` 前缀，说明 CASE 没生效，按实现缺陷处理，不算渠道 0。
 > 2026-11-16 改前缀匹配的原因：`signup_leads` 里已有 `ref='reddit-r1'` 的行，旧的精确等值会把这条最大流量线的点击静默归入 `other`；同日核到 events 全时段还没有任何 `utm_source LIKE 'reddit%'` 的到达，所以这次改的是「别把将来的点击读成 0」，不是找回既有流量。
 > 2026-11-17 补两处：`?ref=referral` 落地是 `utm_medium='ref'` + `utm_source='referral'`，旧 CASE 不认这个组合、会掉 `other`（11-16 唯一的站外真实到达就是这么丢的），所以 `referral` 桶加了 `utm_source LIKE 'referral%'` 分支；探针行另按 `utm_source NOT LIKE 'qa-%'` 清，见 QA 一节。
+> 2026-11-18 补一处：机构社群的介绍信与布告栏二维码用 `?ref=community` 挂，旧 CASE 只认 `nextdoor%`／`fbgroup%`，这条线会整条掉进 `other`，而 `other` 不参与任何止损判决——等于到达永远读不出来。两段 CASE 的社区桶各加了 `LIKE 'community%'`（`events` 看 `utm_source`，`signup_leads` 看 `ref`），与既有两个值并列，前缀规则不变，已挂的 `nextdoor`／`fbgroup` 不受影响。
 
 ## 日读数 SQL（前一天 00:00–24:00 PT）
 
@@ -35,7 +36,7 @@ SELECT
     WHEN utm_medium='ref' AND utm_source LIKE 'seo-%' THEN 'seo'
     WHEN utm_medium='ref' AND utm_source LIKE 'xhs%' THEN 'social'
     WHEN utm_medium='ref' AND (utm_source LIKE 'reddit%' OR utm_source LIKE 'moonbbs%' OR utm_source LIKE 'quora%') THEN 'forum'
-    WHEN utm_medium='ref' AND (utm_source LIKE 'nextdoor%' OR utm_source LIKE 'fbgroup%') THEN 'community'
+    WHEN utm_medium='ref' AND (utm_source LIKE 'nextdoor%' OR utm_source LIKE 'fbgroup%' OR utm_source LIKE 'community%') THEN 'community'
     WHEN utm_medium='ref' AND (utm_source LIKE 'alternativeto%' OR utm_source LIKE 'github%') THEN 'directory'
     WHEN utm_medium='ref' AND (utm_source LIKE 'cpa%' OR utm_source LIKE 'email%') THEN 'email'
     WHEN utm_medium='search' THEN 'search'
@@ -68,7 +69,7 @@ SELECT CASE
     WHEN ref LIKE 'seo-%' THEN 'seo'
     WHEN ref LIKE 'xhs%' THEN 'social'
     WHEN ref LIKE 'reddit%' OR ref LIKE 'moonbbs%' OR ref LIKE 'quora%' THEN 'forum'
-    WHEN ref LIKE 'nextdoor%' OR ref LIKE 'fbgroup%' THEN 'community'
+    WHEN ref LIKE 'nextdoor%' OR ref LIKE 'fbgroup%' OR ref LIKE 'community%' THEN 'community'
     WHEN ref LIKE 'alternativeto%' OR ref LIKE 'github%' THEN 'directory'
     WHEN ref LIKE 'cpa%' OR ref LIKE 'email%' THEN 'email'
     WHEN ref LIKE 'referral%' THEN 'referral'
@@ -148,4 +149,4 @@ WHERE name='signup' AND ts >= :start AND ts < :end
 
 到 2026-11-30：收录 ≥8 页；`ref` 到达 ≥60（social + forum + community + seo + directory + email 求和）、`search` 到达 ≥40，合计 ≥100；开口问 ≥10 人且 ≥3 人问到具体动作。
 判据里的「到达」一律指**去重人数**（`COUNT(DISTINCT anon)`），不是加载次数。
-`other` 不计入任何一项；`other` 里若出现 `quora`／`nextdoor`／`fbgroup`／`seo-`／`reddit` 前缀，算实现缺陷，不算渠道 0。https 开关落地前，涉及 https 的收录项标「仪器未通（https）」。
+`other` 不计入任何一项；`other` 里若出现 `quora`／`nextdoor`／`fbgroup`／`community`／`seo-`／`reddit` 前缀，算实现缺陷，不算渠道 0。https 开关落地前，涉及 https 的收录项标「仪器未通（https）」。
