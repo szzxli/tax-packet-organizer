@@ -205,7 +205,7 @@ check("中文缺项表保持不变（三列：表 / 付款方 / 缺什么）", (
   assert.match(out, /<td>等 transcript<\/td>/);
 });
 
-check("CSV：中/英/西三套表头都是 15 列，英文与西语无汉字，中文逐字不变", () => {
+check("CSV：中/英/西三套表头都是 16 列，英文与西语无汉字，中文逐字不变", () => {
   const csvBlock = html.slice(html.indexOf('$("btnExportCsv").onclick'), html.indexOf("var lines=[head.map"));
   assert.ok(csvBlock.length > 100, "找不到 CSV 导出块");
 
@@ -217,18 +217,19 @@ check("CSV：中/英/西三套表头都是 15 列，英文与西语无汉字，�
   const cols = (m) => m[1].split(",").map((x) => x.trim().replace(/^"|"$/g, ""));
 
   const zh = cols(zhMatch);
-  assert.equal(zh.length, 15);
+  assert.equal(zh.length, 16);
   assert.equal(
     zh.join(","),
-    "序号,表类型,付款方,今年需备文件,状态,不适用原因,文件名,是否今年新增,备注,确认数字类别,确认数字金额,证据来源,凭证核对,表格数,核对结果"
+    "序号,表类型,付款方,今年需备文件,状态,不适用原因,文件名,是否今年新增,备注,确认数字类别,确认数字金额,证据来源,凭证核对,表格数,核对结果,建议文件名"
   );
 
   for (const [name, arr] of [["英文", cols(enMatch)], ["西语", cols(esMatch)]]) {
-    assert.equal(arr.length, 15, `${name}表头应 15 列，实际 ${arr.length}`);
+    assert.equal(arr.length, 16, `${name}表头应 16 列，实际 ${arr.length}`);
     for (const c of arr) assert.ok(!CJK.test(c), `${name}列名含中文：${c}`);
   }
   assert.equal(cols(esMatch)[4], "Estado", "西语状态列应与页面用词一致");
   assert.equal(cols(esMatch)[12], "Verificación del comprobante", "西语凭证列应与页面一致");
+  assert.equal(cols(esMatch)[15], "Nombre de archivo sugerido", "西语建议文件名列不对");
 });
 
 check("CSV 文件名带语言且为英文名", () => {

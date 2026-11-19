@@ -67,6 +67,17 @@ button:disabled{opacity:.5} .row{display:flex;gap:10px;flex-wrap:wrap} .row>*{fl
 .badge{display:inline-block;padding:1px 8px;border-radius:20px;font-size:12px;font-weight:700}
 .missing{background:#fdecea;color:#9b2226} .uploaded{background:#eaf6ec;color:#1e6b2e} .na{background:#eee;color:#555} .pending{background:#fff3cd;color:#7a5b00}
 .item{border:1px solid #e2e6eb;border-radius:10px;padding:12px;margin:10px 0} .item.miss{border-color:#d66;background:#fffafa}
+.std-item{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;padding:9px 11px;border:1px solid #e2e6eb;border-radius:10px;margin:6px 0;background:#fff}
+.std-item.std-miss{background:#fff6f5;border-color:#e0a8a8}
+.std-item.std-done{background:#eaf6ec;border-color:#9ccfa2}
+.std-main{flex:1 1 240px;min-width:0}
+.std-main label{display:flex;gap:8px;align-items:flex-start;margin:0;font-size:14px;line-height:1.4;color:#203040;cursor:pointer}
+.std-main label input{width:16px;height:16px;min-height:0;padding:0;margin:2px 0 0;flex:0 0 auto;accent-color:#16324f}
+.std-why{display:block;margin:4px 0 0 24px;font-size:12px;line-height:1.5;color:#5a6b7b}
+.std-item>button{flex:0 0 auto;align-self:center}
+.quick-export{background:#f2f7fb;border:1px solid #d6e3ee;border-radius:12px;padding:12px 14px;margin:10px 0}
+.quick-export .qe-line{margin:0 0 8px;font-size:14px;color:#16324f}
+.quick-export .qe-acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0}
 .chg-scroll{max-height:200px;overflow-y:auto;border:1px solid #ddd;border-radius:8px;padding:6px 12px} .chg-scroll label{display:flex;gap:10px;align-items:center;margin:12px 0;cursor:pointer} .chg-scroll input{width:auto;accent-color:#16324f} .chg-check{color:#1a7f37;font-size:20px;font-weight:700} .chg-head{cursor:pointer}
 .sec-head{cursor:pointer;display:flex;align-items:baseline;gap:8px;margin:-6px -8px 10px;padding:8px;border-radius:8px} .sec-head:hover{background:#f2f5f8} .sec-head h2{flex:1;margin:0} .sec-sum{color:#666;font-size:13px} .sec-chev{color:#16324f;font-weight:700;white-space:nowrap}
 .muted{color:#666;font-size:13px} .small{font-size:13px} .hidden{display:none!important}
@@ -754,6 +765,7 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <div class="card">
 <h2>今年要准备的材料（文件＋数字，一页）</h2>
 <p class="muted small">每行一项：先传文件，再填一个总数。全部标“已备”或“不适用”就是整理完；没做完也能先导出，缺的会列出来。同一笔只填一次。</p>
+<div class="quick-export no-print hidden" id="quickExport"></div>
 <details class="small"><summary>支持的格式、拍照与自动读数</summary><p class="muted">电子档 PDF／.txt／.docx／.xlsx 会读字给出候选，你确认后才记数；拍照只预览，数字自己填。.doc、.xls 不支持。</p></details>
 <div id="commuteRules" class="commute-rules small"></div>
 <p class="small muted">文件在你电脑上读取，不上传；账号里只存清单和你确认过的数字，不存原件、不提取 SSN。可一键删除。</p>
@@ -795,6 +807,7 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 </details>
 <div id="mergedBox"></div>
 <div id="mergedSummary"></div>
+<div id="stdBox" class="hidden"></div>
 </div>
 
 <div class="card">
@@ -882,6 +895,7 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <div id="checkReport"></div>
 </div>
 <p><button id="btnPrint">下载清单 PDF</button></p><details><summary class="small">更多格式（CSV / JSON）</summary><p><button id="btnExportCsv" class="secondary">下载通用表格（CSV）</button> <button id="btnExportJson" class="secondary">下载机器可读清单（JSON）</button></p></details>
+<div id="renameBox" class="no-print"></div>
 <div id="exportSaveGuide" class="notice hidden"><b>已导出。</b> 注册免费账号可保存进度、换设备继续，清单会自动带入。 <button type="button" id="btnGuideSave" class="secondary">保存进度 / 换设备继续</button> <button type="button" id="btnGuideClose" class="secondary" aria-label="关闭提示" data-i18n-aria="关闭提示">关闭</button></div>
 <p class="small hidden" id="saveToAccountLine">不用注册也能导出。想保存进度、换设备继续？ <button type="button" id="btnSaveToAccount" class="secondary">保存进度 / 换设备继续</button></p>
 <h3>再补几句</h3>
@@ -2595,7 +2609,7 @@ function renderMerged(){
     photo.onchange=function(){if(photo.files&&photo.files[0]){var pf=photo.files[0];it.fileName=pf.name+"（拍照）";it.status="uploaded";it.pendingCandidates=null;setEvidencePreview(it.id,{kind:"image",url:URL.createObjectURL(pf)});savePacket();renderAll()}};
     uprow.appendChild(file);uprow.appendChild(photo);
     main.appendChild(uprow);
-    if(it.fileName){var fn=document.createElement("p");fn.className="small";fn.textContent=tr("已上传文件：","File uploaded: ","Archivo cargado: ")+it.fileName;main.appendChild(fn);}
+    if(it.fileName){var semMap=null;try{semMap=semNameById();}catch(e){}var fn=document.createElement("p");fn.className="small";fn.textContent=tr("原件：","Original: ","Original: ")+it.fileName+((semMap&&semMap[it.id])?tr(" · 导出名："," · export name: "," · nombre al exportar: ")+semMap[it.id]:"");main.appendChild(fn);}
     main.appendChild(figureMainArea(it));
     div.appendChild(main);
     var more=document.createElement("div");if(it.moreCollapsed)more.classList.add("hidden");
@@ -2633,6 +2647,127 @@ function renderMerged(){
     sum.innerHTML="<p class='small'>"+tr("填报小计（草稿）：","Entered subtotal (draft): ","Subtotal ingresado (borrador): ")+filled+"/"+packet.checklist.length+tr(" 项已填数字 · 收入合计 "," items with a figure · total income "," elementos con cifra · total de ingresos ")+fmtMoney(inc)+tr(" · 成本合计 "," · total costs "," · total de costos ")+fmtMoney(exp)+tr(" · 小计合计 "," · net subtotal "," · subtotal neto ")+fmtMoney(netT)+tr("。小计为填报数字之和，非申报表；抵扣资格与比例由持证税务师确认。",". The subtotal is the sum of what you typed, not a tax form; your licensed tax professional confirms deductibility and the share.",". El subtotal es la suma de lo que ingresó, no un formulario fiscal; su profesional fiscal con licencia confirma la deducibilidad y la proporción.")+"</p><p class='small'>"+tr("还差什么（去见税务师前先补齐）：","Still missing (gather before you see your tax professional): ","Aún falta (reúnalo antes de ver a su profesional fiscal): ")+(missNum.length?(tr("缺数字：","missing figure: ","falta cifra: ")+missNum.map(function(x){return esc(exRowTitle(x))+(x.payer?tr("（"," ("," (")+esc(exPayer(x.payer))+tr("）",")",")"):"")}).join(tr("、",", ","; "))):tr("数字已齐","figures complete","cifras completas"))+tr("；","; ","; ")+(missEv.length?(tr("缺凭证（可选，不挡数字）：","missing receipt (optional, does not block the figure): ","falta comprobante (opcional, no bloquea la cifra): ")+missEv.map(function(x){return esc(exRowTitle(x))+(x.payer?tr("（"," ("," (")+esc(exPayer(x.payer))+tr("）",")",")"):"")}).join(tr("、",", ","; "))):tr("凭证已齐","receipts complete","comprobantes completos"))+tr("。","." ,".")+"</p>";
   }
 }
+// STD_CHECK_START · 标准材料清单：常见报税需求里应该有什么，只列文件、不判资格、不算税。
+var STD_ITEMS=[
+{id:"id",forms:[],kinds:[],
+ label:["身份证件（驾照或护照）","Photo ID (driver's license or passport)","Identificación con foto (licencia o pasaporte)"],
+ why:["核对姓名与地址，自己申报或交给会计师都要用到。","To match name and address, whether you file yourself or hand it to your accountant.","Para cotejar nombre y dirección, ya sea que declare usted o lo entregue a su contador."]},
+{id:"w2",forms:["W-2"],kinds:["wages"],
+ label:["W-2 工资单（每个雇主一份）","W-2 wage statements (one per employer)","Formularios W-2 (uno por empleador)"],
+ why:["雇主的预扣税额在这张表上，缺一张就少一块预扣。","Your employer's withholding is on this form; a missing one drops withholding.","La retención del empleador está en este formulario; si falta uno, falta retención."]},
+{id:"interest",forms:["1099-INT"],kinds:["interest"],
+ label:["1099-INT 银行利息单","1099-INT bank interest","1099-INT de intereses bancarios"],
+ why:["银行超过 $10 的利息都会寄这张表。","Banks issue this once interest passes $10.","Los bancos lo emiten cuando los intereses superan $10."]},
+{id:"div",forms:["1099-DIV"],kinds:["dividends"],
+ label:["1099-DIV 股息单","1099-DIV dividends","1099-DIV de dividendos"],
+ why:["股息和已扣的外国税都在这张表上。","Dividends and foreign tax withheld appear here.","Los dividendos y el impuesto extranjero retenido aparecen aquí."]},
+{id:"brokerage",forms:["1099-B"],kinds:[],
+ label:["1099-B 券商对账单（含年终汇总）","1099-B brokerage statement (with year-end summary)","1099-B del corredor (con resumen de fin de año)"],
+ why:["买卖记录与成本要靠它配对。","Trades and cost basis are matched from it.","Las operaciones y el costo se concilian con él."]},
+{id:"selfemp",forms:["Schedule C","Schedule SE","1099-NEC"],kinds:["selfemp"],
+ label:["自雇收入与费用收据","Self-employment income and expense receipts","Ingresos por cuenta propia y recibos de gastos"],
+ why:["收入单据与分类支出收据要能一一对上。","Income slips and categorized receipts should tie out one to one.","Los comprobantes de ingresos y los recibos por categoría deben cuadrar uno a uno."]},
+{id:"rental",forms:["Schedule E"],kinds:["rental"],
+ label:["房租收入与费用（按房产）","Rental income and expenses (per property)","Ingresos y gastos de alquiler (por propiedad)"],
+ why:["租金收据、1098、税单、维修收据按房产分开。","Rent receipts, 1098, tax bills and repairs, split by property.","Recibos de renta, 1098, impuestos y reparaciones, por propiedad."]},
+{id:"mortgage",forms:["1098"],kinds:[],
+ label:["1098 房贷利息单","1098 mortgage interest","1098 de intereses hipotecarios"],
+ why:["能否分项抵扣由 CPA 判，但表要先有。","Whether you itemize is your CPA's call; the form still has to be there.","Si detalla o no lo decide su CPA, pero el formulario debe estar."]},
+{id:"propertytax",forms:["房产税单"],kinds:[],
+ label:["房产税单（各管辖区）","Property tax bills (each jurisdiction)","Recibos de impuesto predial (cada jurisdicción)"],
+ why:["州与地方税抵扣有上限，金额要能对上税单。","State and local tax deductions are capped; the figure must match the bill.","La deducción de impuestos estatales y locales tiene tope; la cifra debe coincidir con el recibo."]},
+{id:"tuition",forms:["1098-T"],kinds:[],
+ label:["1098-T 学费单","1098-T tuition statement","1098-T de matrícula"],
+ why:["教育抵免按学生和年份算，四年上限要看历史。","Education credits count per student and year; the four-year cap needs history.","Los créditos educativos cuentan por estudiante y año; el tope de cuatro años requiere historial."]},
+{id:"childcare",forms:["Form 2441"],kinds:[],
+ label:["托育机构证明（含税号）","Childcare provider statement (with tax ID)","Constancia del proveedor de cuidado infantil (con ID fiscal)"],
+ why:["托育抵免要机构名称、税号和金额。","The childcare credit needs the provider's name, tax ID and amount.","El crédito por cuidado infantil requiere nombre, ID fiscal y monto del proveedor."]},
+{id:"donation",forms:["捐赠收据"],kinds:[],
+ label:["捐赠收据 / 确认函","Donation receipts / acknowledgment letters","Recibos de donativos / cartas de confirmación"],
+ why:["现金捐赠要书面确认，物品捐赠要清单。","Cash gifts need written acknowledgment; goods need an itemized list.","Los donativos en efectivo requieren acuse escrito; los bienes, una lista detallada."]},
+{id:"medical",forms:["医疗收据"],kinds:[],
+ label:["医疗 / 牙科费用汇总","Medical and dental expense summary","Resumen de gastos médicos y dentales"],
+ why:["只有超过 AGI 门槛的部分才算，先把票据汇总。","Only the part above the AGI floor counts; total the receipts first.","Solo cuenta la parte que supera el umbral de AGI; primero sume los recibos."]},
+{id:"estimated",forms:["预估税"],kinds:[],
+ label:["预估税缴款确认（1040-ES）","Estimated tax payment confirmations (1040-ES)","Confirmaciones de pagos estimados (1040-ES)"],
+ why:["已缴的四笔要和 IRS 账上一致。","The four payments must match what the IRS has on record.","Los cuatro pagos deben coincidir con lo que el IRS tiene registrado."]},
+{id:"state",forms:["州税"],kinds:[],
+ label:["州所得税表与缴款确认","State income tax form and payment confirmations","Formulario estatal de impuesto y confirmaciones de pago"],
+ why:["州表单独报，缺了会拖到最后一刻。","The state return is filed separately; a missing form delays the finish.","La declaración estatal se presenta aparte; si falta, se retrasa el cierre."]},
+{id:"bank",forms:[],kinds:[],
+ label:["收款银行账户信息（直接存款）","Bank account for direct deposit","Cuenta bancaria para depósito directo"],
+ why:["退税要账号与路由号；交纸质表也要填。","A refund needs the account and routing numbers; paper filings ask too.","El reembolso requiere número de cuenta y de ruta; el papel también lo pide."]}
+];
+function stdText(a){return LANG==="en"?a[1]:(LANG==="es"?a[2]:a[0]);}
+function stdCoveringRows(item){
+  var rows=(packet&&packet.checklist)?packet.checklist:[];
+  return rows.filter(function(it){return (item.forms||[]).indexOf(it.form)>=0||((item.kinds||[]).indexOf(it.kind)>=0);});
+}
+function stdTick(item){return !!(packet&&packet.stdTicks&&packet.stdTicks[item.id]);}
+function stdDone(item){return stdTick(item)||stdCoveringRows(item).some(rowResolved);}
+function stdCounts(){
+  var done=0,miss=0;
+  STD_ITEMS.forEach(function(item){if(stdDone(item))done++;else miss++;});
+  return {done:done,miss:miss,total:STD_ITEMS.length};
+}
+// STD_CHECK_LOGIC_END
+function renderStd(){
+  var box=$("stdBox");if(!box||!packet)return;
+  if(!packet.checklist.length){box.classList.add("hidden");box.innerHTML="";return;}
+  box.classList.remove("hidden");
+  var c=stdCounts();
+  var html="<h3>"+esc(tr("标准材料清单核对","Standard document checklist","Verificación de documentos estándar"))+"</h3>"
+    +"<p class='small'>"+esc(tr("常见报税需求该有的材料。清单里已经有并传了文件的，自动打勾；没有的勾上或加进清单。",
+      "Documents most returns need. Ones already in your checklist with a file are ticked automatically; tick or add the rest.",
+      "Documentos que la mayoría de las declaraciones necesita. Los que ya están en su lista con archivo se marcan solos; marque o agregue el resto."))+"</p>"
+    +"<p class='small'><b>"+esc(tr("已备 ","Ready: ","Listos: ")+c.done+" / "+c.total)+"</b>"
+    +(c.miss?" · <span class='badge missing'>"+esc(tr("缺 "+c.miss+" 项","missing "+c.miss,c.miss+" faltan"))+"</span>":" · <span class='badge uploaded'>"+esc(tr("都齐了","all covered","todo cubierto"))+"</span>")+"</p>";
+  STD_ITEMS.forEach(function(item){
+    var done=stdDone(item),rows=stdCoveringRows(item);
+    var note="";
+    if(!done&&rows.length)note=tr("清单里有这一项，还没传文件或数字。","It is in your checklist but has no file or figure yet.","Está en su lista pero aún sin archivo ni cifra.");
+    else if(!done&&!rows.length&&item.forms.length)note=tr("清单里没有这一项；今年有就加进来。","Not in your checklist; add it if it applies this year.","No está en su lista; agréguelo si aplica este año.");
+    html+="<div class='std-item "+(done?"std-done":"std-miss")+"' data-std-row='"+esc(item.id)+"'>"
+      +"<span class='std-main'><label><input type='checkbox' data-std='"+esc(item.id)+"'"+(done?" checked":"")+"> <span>"+esc(stdText(item.label))+"</span></label>"
+      +"<span class='std-why'>"+esc(stdText(item.why))+(note?" · "+esc(note):"")+"</span></span>";
+    if(!done&&!rows.length&&item.forms.length){
+      html+="<button type='button' class='secondary' data-std-add='"+esc(item.forms[0])+"'>"+esc(tr("＋加入清单","+ Add to checklist","+ Añadir a la lista"))+"</button>";
+    }
+    html+="</div>";
+  });
+  box.innerHTML=html;
+  box.querySelectorAll("[data-std]").forEach(function(cb){
+    cb.onchange=function(){
+      packet.stdTicks=packet.stdTicks||{};
+      packet.stdTicks[cb.getAttribute("data-std")]=!!cb.checked;
+      savePacket();renderStd();renderQuick();
+    };
+  });
+  box.querySelectorAll("[data-std-add]").forEach(function(b){
+    b.onclick=function(){
+      var form=b.getAttribute("data-std-add");
+      if(!packet.checklist.some(function(it){return it.form===form;}))packet.checklist.push({id:Date.now()+""+Math.random(),form:form,kind:formToKind(form),title:form,payer:"",request:requestText(form),status:"not-started",reason:"",fileName:"",isNew:true,transcriptNote:"",costs:costsTemplate(formToKind(form)),moreCollapsed:true});
+      savePacket();renderAll();
+    };
+  });
+}
+// 极简入口：清单生成后就在材料这一步给出「先导出」这一条，点一下直达导出并出 PDF。
+function renderQuick(){
+  var el=$("quickExport");if(!el||!packet)return;
+  if(!packet.checklist.length){el.classList.add("hidden");el.innerHTML="";return;}
+  var total=packet.checklist.length,done=packet.checklist.filter(rowResolved).length,c=stdCounts();
+  el.innerHTML="<p class='qe-line'><b>"+esc(tr("已生成 "+total+" 项 · 已备 "+done,"Generated "+total+" · ready "+done,"Generados "+total+" · listos "+done))+"</b>"
+    +(c.miss?" · "+esc(tr("标准清单还缺 "+c.miss+" 项","standard list: "+c.miss+" missing","lista estándar: faltan "+c.miss)):"")+"</p>"
+    +"<p class='qe-acts'><button type='button' id='btnQuickExport'>"+esc(tr("先导出清单（PDF）","Export the checklist now (PDF)","Exportar la lista ahora (PDF)"))+"</button>"
+    +"<a href='#' id='btnSeeStd'>"+esc(tr("看缺哪几项 →","See what is missing →","Ver qué falta →"))+"</a></p>"
+    +"<p class='small muted'>"+esc(tr("不用等文件凑齐：缺项会列在导出里，之后再补。","No need to wait for every file: gaps are listed in the export, and you can fill them later.","No espere a tenerlo todo: lo que falta se lista en la exportación y puede completarlo después."))+"</p>";
+  el.classList.remove("hidden");
+  var b=$("btnQuickExport");
+  if(b)b.onclick=function(){navigateToSection("s6");var p=$("btnPrint");if(p)p.click();};
+  var s=$("btnSeeStd");
+  if(s)s.onclick=function(e){e.preventDefault();var box=$("stdBox");if(box){box.classList.remove("hidden");box.scrollIntoView({behavior:"smooth",block:"center"});}};
+}
+// STD_CHECK_END
 function renderExports(){
   var ul=$("exportLog");ul.innerHTML="";
   if(!packet.exports.length)ul.innerHTML="<li class='muted small'>"+tr("暂无导出记录。","No exports yet.","Aún no hay exportaciones.")+"</li>";
@@ -2695,7 +2830,7 @@ function applyLean(){
   var lk=$("leanLink");
   if(lk)lk.onclick=function(e){e.preventDefault();document.body.classList.toggle("lean-open");applyLean();};
 }
-function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderExports,renderCpa,renderDraft,renderCommuteRules,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderMiss,renderDue,renderReturnState,renderForeign,renderPricing,renderDemo,applyCollapse,syncNavChrome];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}try{applyLean();}catch(e){}}
+function renderAll(){var fns=[renderChanges,renderLast,renderMerged,renderStd,renderQuick,renderExports,renderRenameBox,renderCpa,renderDraft,renderCommuteRules,renderWarnings,renderSubStatus,renderPlanCards,renderOrders,renderPriorCpa,renderReminders,renderProbe,renderDeep,renderSnaps,renderPriority,renderCheckSummary,renderMiss,renderDue,renderReturnState,renderForeign,renderPricing,renderDemo,applyCollapse,syncNavChrome];for(var i=0;i<fns.length;i++){try{fns[i]();}catch(e){try{console.error("render",fns[i].name,e);}catch(_){}}}try{renderStickyProgress();}catch(e){}try{renderHero();}catch(e){}try{renderFollowUp();}catch(e){}try{applyOrganizeStep();}catch(e){}try{applyLean();}catch(e){}}
 function secKeyFromH2(t){
   if(t.indexOf("州税范围")>=0)return "s3b";
   if(t.indexOf("去年有什么")>=0)return "s3";
@@ -5043,18 +5178,87 @@ document.querySelectorAll("[data-addsheet]").forEach(function(b){
   };
 });
 function csvCell(v){var s=String(v==null?"":v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+// SEMANTIC_NAME_START · 导出文件名：税年_表类型_付款方，会计师一眼认得出哪张表。
+// 原件不上传也不改名，这里给的是「发出去之前照这个改名」的名字，三份导出一致。
+var SEM_CODE_SPECIAL={"FinCEN 114 (FBAR)":"FBAR","房产税单":"PropertyTax","医疗收据":"Medical","捐赠收据":"Donation","预估税":"EstimatedTax","延期缴款":"Extension","IRS/州通知":"IRSNotice","州税":"StateTax","变化证明":"SupportDoc","不确定事项":"Question"};
+function semFormCode(form){
+  var f=String(form||"").trim();
+  if(SEM_CODE_SPECIAL[f])return SEM_CODE_SPECIAL[f];
+  var words=f.split(/\s+/).map(function(w){return w.replace(/[^A-Za-z0-9]/g,"");}).filter(Boolean);
+  if(!words.length||/[^\x00-\x7F]/.test(f))return "Doc";
+  return words.map(function(w){return /^[0-9]/.test(w)?w.toUpperCase():(w.charAt(0).toUpperCase()+w.slice(1));}).join("");
+}
+function semSlug(v,fallback){
+  var s=String(v==null?"":v).trim().replace(/[\\/:*?"<>|]/g," ").replace(/[（(][^)）]*[)）]/g," ");
+  s=s.replace(/[^0-9A-Za-z\u4e00-\u9fff]+/g," ").split(/\s+/).filter(Boolean).map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join("");
+  if(!s)return fallback||"NoPayer";
+  return s.slice(0,40);
+}
+function semTaxYear(){
+  try{if(typeof OUTLOOK_TAX_YEAR==="number")return OUTLOOK_TAX_YEAR;}catch(e){}
+  return new Date().getFullYear();
+}
+function semExt(it){
+  var m=String(it.fileName||"").match(/\.([A-Za-z0-9]{2,5})$/);
+  if(m)return "."+m[1].toLowerCase();
+  if(String(it.fileName||"").indexOf("拍照")>=0)return ".jpg";
+  return ".pdf";
+}
+function semanticFileName(it,year){
+  var form=it.form||rowTitle(it);
+  return (year||semTaxYear())+"_"+semFormCode(form)+"_"+semSlug(it.payer,"NoPayer")+semExt(it);
+}
+// 同一张表同一个付款方会有第二份：按出现顺序加 _2、_3，让导出的名字互不相同。
+function semanticMap(){
+  var seen={},out=[];
+  ((packet&&packet.checklist)?packet.checklist:[]).forEach(function(it){
+    if(!it.fileName)return;
+    var base=semanticFileName(it);
+    var m=base.match(/\.[A-Za-z0-9]{2,5}$/),ext=m?m[0]:"",stem=m?base.slice(0,base.length-ext.length):base;
+    var key=base.toLowerCase();
+    if(seen[key]){seen[key]++;base=stem+"_"+seen[key]+ext;}else seen[key]=1;
+    out.push({id:it.id,from:it.fileName,to:base});
+  });
+  return out;
+}
+function semNameById(){var m={};semanticMap().forEach(function(r){m[r.id]=r.to;});return m;}
+function renameTableHtml(){
+  var map=semanticMap();
+  if(!map.length)return "";
+  return "<h2>"+tr("导出文件命名对照（照这个改名再发）","File naming map (rename before sending)","Mapa de nombres (renombre antes de enviar)")+"</h2><table><tr><th>"+tr("原文件名","Original name","Nombre original")+"</th><th>"+tr("建议文件名","Suggested name","Nombre sugerido")+"</th></tr>"+map.map(function(r){return "<tr><td>"+esc(r.from)+"</td><td>"+esc(r.to)+"</td></tr>";}).join("")+"</table>";
+}
+function renderRenameBox(){
+  var box=$("renameBox");if(!box||!packet)return;
+  var map=semanticMap();
+  if(!map.length){box.innerHTML="<p class='small muted'>"+esc(tr("还没上传文件。上传后这里按「税年_表类型_付款方」给出建议文件名，改好名再发给会计师，一眼认得出哪张表。","No files yet. Once you upload, this lists a suggested name per file (year_form_payer) so your accountant can tell them apart at a glance.","Aún no hay archivos. Al subirlos, aquí verá un nombre sugerido por archivo (año_formulario_pagador) para que su contador los distinga de un vistazo."))+"</p>";return;}
+  box.innerHTML="<h3>"+esc(tr("导出文件命名对照（照这个改名再发）","File naming map (rename before sending)","Mapa de nombres (renombre antes de enviar)"))+"</h3>"
+    +"<p class='small muted'>"+esc(tr("按「税年_表类型_付款方」自动生成。原件仍在你本机，我们只改名不存原件；三份导出用的是同一套名字。","Generated as year_form_payer. The originals stay on your device — we only suggest names, never store the files; all three exports use the same names.","Se generan como año_formulario_pagador. Los originales siguen en su dispositivo: solo sugerimos nombres, no guardamos archivos; las tres exportaciones usan los mismos nombres."))+"</p>"
+    +"<table><tr><th>"+esc(tr("原文件名","Original name","Nombre original"))+"</th><th>"+esc(tr("建议文件名","Suggested name","Nombre sugerido"))+"</th></tr>"
+    +map.map(function(r){return "<tr><td class='small'>"+esc(r.from)+"</td><td class='small'><b>"+esc(r.to)+"</b></td></tr>";}).join("")+"</table>"
+    +"<p><button type='button' id='btnCopyRename' class='secondary'>"+esc(tr("复制改名对照","Copy the naming map","Copiar el mapa"))+"</button> <span class='small' id='renameMsg'></span></p>";
+  var b=$("btnCopyRename");
+  if(b)b.onclick=function(){
+    var txt=map.map(function(r){return r.from+" → "+r.to;}).join("\n");
+    var msg=$("renameMsg");
+    function ok(){if(msg)msg.textContent=tr("已复制。","Copied.","Copiado.");}
+    function fail(){if(msg)msg.textContent=tr("复制没成功，请手动选中表格。","Copy failed — select the table manually.","No se pudo copiar; seleccione la tabla manualmente.");}
+    try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(ok,fail);}else fail();}catch(e){fail();}
+  };
+}
+// SEMANTIC_NAME_END
 $("btnExportCsv").onclick=function(){
   var head=LANG==="zh"
-    ?["序号","表类型","付款方","今年需备文件","状态","不适用原因","文件名","是否今年新增","备注","确认数字类别","确认数字金额","证据来源","凭证核对","表格数","核对结果"]
+    ?["序号","表类型","付款方","今年需备文件","状态","不适用原因","文件名","是否今年新增","备注","确认数字类别","确认数字金额","证据来源","凭证核对","表格数","核对结果","建议文件名"]
     :LANG==="es"
-    ?["No.","Tipo de formulario","Pagador","Qué preparar este año","Estado","Motivo de no aplicable","Nombre del archivo","Nuevo este año","Nota","Categoría de la cifra","Monto de la cifra","Fuente de evidencia","Verificación del comprobante","Cifra del formulario","Resultado"]
-    :["No.","Form type","Payer","What to prepare this year","Status","Not-applicable reason","File name","New this year","Note","Figure category","Figure amount","Evidence source","Receipt check","Form figure","Result"];
+    ?["No.","Tipo de formulario","Pagador","Qué preparar este año","Estado","Motivo de no aplicable","Nombre del archivo","Nuevo este año","Nota","Categoría de la cifra","Monto de la cifra","Fuente de evidencia","Verificación del comprobante","Cifra del formulario","Resultado","Nombre de archivo sugerido"]
+    :["No.","Form type","Payer","What to prepare this year","Status","Not-applicable reason","File name","New this year","Note","Figure category","Figure amount","Evidence source","Receipt check","Form figure","Result","Suggested file name"];
+  var semMap=semNameById();
   var lines=[head.map(csvCell).join(",")];
-  packet.checklist.forEach(function(it,i){lines.push([i+1,exRowTitle(it),exPayer(it.payer),requestLabel(it.request),statusText(it.status),it.reason||"",it.fileName||"",it.isNew?tr("是","Yes","Sí"):tr("否","No","No"),it.transcriptNote||"",it.figure?it.figure.cat:"",it.figure?fmtMoney(it.figure.cents):"",it.figure?(it.figure.source||""):"",it.figure?(it.voucherChecked?tr("已核对","checked","verificado"):tr("未核对","not checked","sin verificar")):"",it.formAmountCents!=null?fmtMoney(it.formAmountCents):"",matchStatus(it)].map(csvCell).join(","))});
+  packet.checklist.forEach(function(it,i){lines.push([i+1,exRowTitle(it),exPayer(it.payer),requestLabel(it.request),statusText(it.status),it.reason||"",it.fileName||"",it.isNew?tr("是","Yes","Sí"):tr("否","No","No"),it.transcriptNote||"",it.figure?it.figure.cat:"",it.figure?fmtMoney(it.figure.cents):"",it.figure?(it.figure.source||""):"",it.figure?(it.voucherChecked?tr("已核对","checked","verificado"):tr("未核对","not checked","sin verificar")):"",it.formAmountCents!=null?fmtMoney(it.formAmountCents):"",matchStatus(it),semMap[it.id]||""].map(csvCell).join(","))});
   packet.checklist.forEach(function(it){
     (it.costs||[]).forEach(function(e){
       if(e.cents==null)return;
-      lines.push([lines.length,exRowTitle(it),exPayer(it.payer),exRowTitle(it)+tr("（成本）"," (cost)"," (costo)"),tr("已填数字","figure entered","cifra ingresada"),"","",tr("否","No","No"),"",(e.custom?(e.customLabel||tr("其他","Other","Otros")):(exText(e.label)||e.label)),fmtMoney(e.cents),tr("填报","entered","ingresado"),"","",tr("填报数字，须CPA核对","entered by you; your CPA must verify","ingresado por usted; su CPA debe verificarlo")].map(csvCell).join(","));
+      lines.push([lines.length,exRowTitle(it),exPayer(it.payer),exRowTitle(it)+tr("（成本）"," (cost)"," (costo)"),tr("已填数字","figure entered","cifra ingresada"),"","",tr("否","No","No"),"",(e.custom?(e.customLabel||tr("其他","Other","Otros")):(exText(e.label)||e.label)),fmtMoney(e.cents),tr("填报","entered","ingresado"),"","",tr("填报数字，须CPA核对","entered by you; your CPA must verify","ingresado por usted; su CPA debe verificarlo"),""].map(csvCell).join(","));
     });
   });
   var blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
@@ -5248,7 +5452,8 @@ $("btnSupportSend").onclick=function(){if(isGuest()){showAuth();return;}
   });
 };
 $("btnExportJson").onclick=function(){
-  var data={tool:"ClearToFile 可交 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,change_dir:packet.changesDir||{},last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,form_display:exRowTitle(it),request_display:requestLabel(it.request),status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||"",figure:it.figure?{category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||""}:null,voucher_checked:!!it.voucherChecked,form_amount_cents:it.formAmountCents!=null?it.formAmountCents:null,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it),kind:it.kind||null,costs:(it.costs||[]).map(function(e){return {label:e.custom?(e.customLabel||"其他"):e.label,amount_cents:e.cents,amount_display:e.cents==null?null:fmtMoney(e.cents)}})}}),draft_estimate:{lines:draftLines().map(function(it){return {form:it.form,payer:it.payer,category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||"",voucher_checked:!!it.voucherChecked,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),totals_by_category:(function(){var o={};var t=draftTotals();Object.keys(t.byCat).forEach(function(c){o[c]=fmtMoney(t.byCat[c]);});return o;})(),grand_total_display:fmtMoney(draftTotals().grand),counts:{figures:draftLines().length,voucher_checked:draftLines().filter(function(it){return it.voucherChecked}).length,form_matched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length,form_mismatched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length},label:"预估草稿，非申报表，须 CPA 对照凭证与表格数核对"},warnings:computeWarnings(),prior_cpa:packet.priorCpa||null,transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存你的账号，不进导出文件。发送记录由用户标记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。预估草稿金额为用户确认的证据数字，非申报表，须 CPA 对照凭证与表格数核对；IRS 对照提醒只作请核对提醒，不代表 IRS 已认定任何问题；工具不提取、不保存社保号。去年会计师信息由客户自填，平台不验证、不背书。收入填报数字为用户自填草稿，须CPA核对。"};
+  var semMap=semNameById();
+  var data={tool:"ClearToFile 可交 V1",format_version:"1.0",formats:["CSV（通用表格，可导入 Excel / 报税软件）","JSON（机器可读清单）","PDF（打印版，含会计师审核签字栏）"],exported_at:new Date().toISOString(),account:currentUser,changes:packet.changes,change_dir:packet.changesDir||{},last_year:packet.lastYear,checklist:packet.checklist.map(function(it){return {form:it.form,payer:it.payer,request:it.request,form_display:exRowTitle(it),request_display:requestLabel(it.request),status:it.status,status_text:statusText(it.status),reason:it.reason||"",file_name:it.fileName||"",file_name_semantic:semMap[it.id]||"",is_new_this_year:!!it.isNew,transcript_note:it.transcriptNote||"",figure:it.figure?{category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||""}:null,voucher_checked:!!it.voucherChecked,form_amount_cents:it.formAmountCents!=null?it.formAmountCents:null,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it),kind:it.kind||null,costs:(it.costs||[]).map(function(e){return {label:e.custom?(e.customLabel||"其他"):e.label,amount_cents:e.cents,amount_display:e.cents==null?null:fmtMoney(e.cents)}})}}),rename_map:semanticMap().map(function(r){return {original:r.from,suggested:r.to};}),draft_estimate:{lines:draftLines().map(function(it){return {form:it.form,payer:it.payer,category:it.figure.cat,amount_cents:it.figure.cents,amount_display:fmtMoney(it.figure.cents),source:it.figure.source||"",voucher_checked:!!it.voucherChecked,form_amount_display:it.formAmountCents!=null?fmtMoney(it.formAmountCents):null,match_status:matchStatus(it)}}),totals_by_category:(function(){var o={};var t=draftTotals();Object.keys(t.byCat).forEach(function(c){o[c]=fmtMoney(t.byCat[c]);});return o;})(),grand_total_display:fmtMoney(draftTotals().grand),counts:{figures:draftLines().length,voucher_checked:draftLines().filter(function(it){return it.voucherChecked}).length,form_matched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents===it.figure.cents}).length,form_mismatched:draftLines().filter(function(it){return it.formAmountCents!=null&&it.formAmountCents!==it.figure.cents}).length},label:"预估草稿，非申报表，须 CPA 对照凭证与表格数核对"},warnings:computeWarnings(),prior_cpa:packet.priorCpa||null,transcript:packet.transcript,cpa_review:packet.cpaReview||null,disclaimer:"只整理、不算税、不报税、不给税务结论。不确定事项的追问回答（含量额）只存你的账号，不进导出文件。发送记录由用户标记，不代表 CPA 已签字确认；CPA 签字以打印版签字栏手签为准，平台不抽报税费、不替代签字。预估草稿金额为用户确认的证据数字，非申报表，须 CPA 对照凭证与表格数核对；IRS 对照提醒只作请核对提醒，不代表 IRS 已认定任何问题；工具不提取、不保存社保号。去年会计师信息由客户自填，平台不验证、不背书。收入填报数字为用户自填草稿，须CPA核对。"};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="tax-packet-checklist.json";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
   packet.exports.push(new Date().toLocaleString()+" 导出机器可读清单 JSON（"+packet.checklist.length+" 项）");savePacket();renderExports();
@@ -5375,7 +5580,8 @@ function coverHtml(){
 }
 
 $("btnPrint").onclick=function(){
-  var rows=packet.checklist.map(function(it,i){return "<tr><td>"+(i+1)+"</td><td>"+esc(exRowTitle(it))+"</td><td>"+esc(exPayer(it.payer))+"</td><td>"+esc(requestLabel(it.request))+"</td><td>"+esc(statusText(it.status))+"</td><td>"+esc(it.reason||it.fileName||"")+(it.figure?" · "+tr("数字：","Figure: ","Cifra: ")+esc(it.figure.cat)+" "+fmtMoney(it.figure.cents)+"（"+tr("凭证：","receipt: ","comprobante: ")+(it.voucherChecked?tr("已核对","checked","verificado"):tr("未核对","not checked","sin verificar"))+"；"+tr("表格：","form: ","formulario: ")+esc(matchStatus(it))+"）":"")+((it.costs||[]).some(function(e){return e.cents!=null;})?" · "+tr("成本：","Costs: ","Costos: ")+(it.costs||[]).filter(function(e){return e.cents!=null;}).map(function(e){return esc(e.custom?(e.customLabel||tr("其他","Other","Otros")):(exText(e.label)||e.label))+" "+fmtMoney(e.cents);}).join(tr("、",", ","; ")):"")+"</td></tr>"}).join("")||"<tr><td colspan='6'>"+tr("暂无清单","No checklist yet","Aún no hay lista")+"</td></tr>";
+  var semMap=semNameById();
+  var rows=packet.checklist.map(function(it,i){return "<tr><td>"+(i+1)+"</td><td>"+esc(exRowTitle(it))+"</td><td>"+esc(exPayer(it.payer))+"</td><td>"+esc(requestLabel(it.request))+"</td><td>"+esc(statusText(it.status))+"</td><td>"+esc(it.reason||it.fileName||"")+(it.fileName?"<br><span class='small'>"+tr("导出名：","export name: ","nombre: ")+esc(semMap[it.id]||"")+"</span>":"")+(it.figure?" · "+tr("数字：","Figure: ","Cifra: ")+esc(it.figure.cat)+" "+fmtMoney(it.figure.cents)+"（"+tr("凭证：","receipt: ","comprobante: ")+(it.voucherChecked?tr("已核对","checked","verificado"):tr("未核对","not checked","sin verificar"))+"；"+tr("表格：","form: ","formulario: ")+esc(matchStatus(it))+"）":"")+((it.costs||[]).some(function(e){return e.cents!=null;})?" · "+tr("成本：","Costs: ","Costos: ")+(it.costs||[]).filter(function(e){return e.cents!=null;}).map(function(e){return esc(e.custom?(e.customLabel||tr("其他","Other","Otros")):(exText(e.label)||e.label))+" "+fmtMoney(e.cents);}).join(tr("、",", ","; ")):"")+"</td></tr>"}).join("")||"<tr><td colspan='6'>"+tr("暂无清单","No checklist yet","Aún no hay lista")+"</td></tr>";
   var cnt=function(s){return packet.checklist.filter(function(it){return it.status===s}).length};
   var cpaBlock=packet.cpaReview?("<p>"+tr("发送记录：已发送给会计师 · 日期：","Sent record: handed to your accountant · date: ","Registro de envío: entregado a su contador · fecha: ")+esc(packet.cpaReview.date||"")+(packet.cpaReview.note?" · "+tr("备注：","note: ","nota: ")+esc(packet.cpaReview.note):"")+tr("（本记录由用户标记，不代表 CPA 已签字；以封面签字栏手签为准）"," (marked by the user; it does not mean the CPA has signed. The handwritten signature on the cover is what counts.)"," (marcado por el usuario; no significa que el CPA haya firmado. Lo que cuenta es la firma manuscrita de la portada.)")+"</p>"):"";
   var dLines=draftLines();
@@ -5396,6 +5602,7 @@ $("btnPrint").onclick=function(){
     +"<h2>"+tr("待补","To gather","Por reunir")+"</h2>"+missingTableHtml()
     +draftBlock+warnPrint
     +"<h2>"+tr("清单明细","Checklist details","Detalle de la lista")+"</h2><table><tr><th>#</th><th>"+tr("表","Form","Formulario")+"</th><th>"+tr("付款方","Payer","Pagador")+"</th><th>"+tr("今年需备文件","What to prepare this year","Qué preparar este año")+"</th><th>"+tr("状态","Status","Estado")+"</th><th>"+tr("原因/文件名","Reason / file name","Motivo / nombre del archivo")+"</th></tr>"+rows+"</table>"
+    +renameTableHtml()
     +cpaBlock
     +"</div>";
   var printTitle=tr("checklist_zh","checklist_en","checklist_es");
