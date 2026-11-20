@@ -1105,7 +1105,7 @@ function track(name,props){
 // 服务端落库：攒够 8 条或 3 秒发一次，页面要走时用 keepalive 再补一发。
 // 只发服务端白名单里的名字（与 Worker 的 NAMES 一致）；不在表里的动作仍只落本机与 abacus 计数。
 // 同站、无 cookie（credentials omit）、失败静默：埋点坏了也不许影响页面。
-var EV_NAMES={open:1,generate:1,save:1,export:1,export_done:1,pass_claimed:1,"flow-step1":1,"flow-step2":1,"flow-step3":1,"flow-step4":1,"flow-step5":1,"demo_drag":1,"demo_cta_pass":1};
+var EV_NAMES={open:1,generate:1,save:1,export:1,export_done:1,pass_claimed:1,"flow-step1":1,"flow-step2":1,"flow-step3":1,"flow-step4":1,"flow-step5":1,"demo_drag":1,"demo_cta_pass":1,"auth_open":1};
 var EV_Q=[],EV_TIMER=0;
 function evBase(){try{if(typeof TpoApi!=="undefined"&&TpoApi.base)return TpoApi.base;}catch(e){}return "https://tax-packet-api.szzxli711.workers.dev";}
 function evFlush(){
