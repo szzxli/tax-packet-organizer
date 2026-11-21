@@ -6189,6 +6189,10 @@ body.tpo-first #startCard .hero-cta{display:inline-block!important}
   #heroBox.llm{padding:10px 12px!important}
   #heroBox .llm-input textarea{min-height:80px!important}
 }
+
+/* 语言切换：外观不动，触区补到 44px 高（WCAG 2.5.5） */
+.lang-switch button{position:relative}
+.lang-switch button::before{content:"";position:absolute;left:-3px;right:-3px;top:50%;height:44px;transform:translateY(-50%)}
 </style>
 
 
