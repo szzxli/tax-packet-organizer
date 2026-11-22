@@ -223,7 +223,31 @@ check("卡 4 下面有新的会计定位句与交接口径单按钮，旧的「�
   assert.ok(!out.includes("少问你三次"), "旧句仍在：" + out);
   assert.ok(!html.includes("少问你三次"), "旧句仍在文件里");
   assert.ok(out.includes(BTN_PRINT), out);
-  assert.ok(out.indexOf(NOTE_C4) > out.indexOf("卡 4 · 今年变了什么"), "提示句应在卡 4 之后");
+  assert.ok(out.indexOf(NOTE_C4) > out.indexOf("卡 4"), "提示句应在卡 4 之后");
+});
+
+check("一图替四卡：图上四个节点，明细四张、只有补贴默认展开", () => {
+  const out = sandbox.planCardsHtml(state({}), true);
+  assert.equal((out.match(/class='pm-node/g) || []).length, 4, "节点数不对");
+  assert.equal((out.match(/<details class='plan-card'/g) || []).length, 4, "明细卡数不对");
+  assert.equal((out.match(/<details class='plan-card' data-plan-card open/g) || []).length, 1, "只该补贴默认展开");
+  assert.ok(out.indexOf("class='plan-map'") < out.indexOf("<details class='plan-card'"), "图应在明细前");
+});
+
+check("一图替四卡：未领票时图上四个节点只写「季票」，不漏档位与缺口", () => {
+  const out = sandbox.planCardsHtml(state({ status: "mfj", income: "150000", k401: "10000" }), false);
+  const map = out.slice(out.indexOf("class='plan-map'"), out.indexOf("</svg>"));
+  assert.ok(!/22%/.test(map), "未领票泄露了档位：" + map);
+  assert.ok(!/\$\d/.test(map), "未领票泄露了金额：" + map);
+  assert.ok((map.match(/>季票<\/text>/g) || []).length >= 4, "四个节点应写季票");
+});
+
+check("一图替四卡：填数与缴款后，图上档位与退休缺口跟着变", () => {
+  const out = sandbox.planCardsHtml(state({ status: "mfj", income: "150000", k401: "10000" }), true);
+  const map = out.slice(out.indexOf("class='plan-map'"), out.indexOf("</svg>"));
+  assert.ok(map.includes(">22%</text>"), "档位没上图");
+  assert.ok(map.includes(">" + sandbox.planMoney(24500 - 10000) + "</text>"), "退休缺口没上图");
+  assert.ok(map.includes(">2027 起</text>"), "政策节点没上图");
 });
 
 check("未登录：卡 2 有输入与三个选项，卡 1/3/4 只出引导", () => {

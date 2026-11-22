@@ -286,6 +286,29 @@ select option{background:#0f141b;color:#e6edf3}
 .sub-three-item b{display:block;color:#16324f;margin-bottom:4px}
 .sub-three-item span{font-size:13px;color:#41576a}
 .plan-card{border:1px solid #232e3a;border-radius:14px;padding:14px 16px;background:#131a22;margin:12px 0}
+.plan-card>summary{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;cursor:pointer;list-style:none}
+.plan-card>summary::-webkit-details-marker{display:none}
+.plan-card>summary::after{content:"▾";color:#8A96A6;font-size:12px;flex:none}
+.plan-card[open]>summary::after{content:"▴"}
+.plan-tag{flex:0 0 100%}
+.plan-title{font-size:15px;font-weight:600;color:#e6edf3;min-width:0;overflow-wrap:anywhere}
+.plan-sum{font-size:12px;color:#8A4B00;font-weight:600;margin-left:auto;white-space:nowrap}
+.plan-body{padding-top:10px}
+.plan-map{margin:6px 0 14px;border:1px solid #232e3a;border-radius:14px;padding:10px 8px 6px;background:#0f141b}
+.plan-map svg{display:block;width:100%;max-width:560px;height:auto;margin:0 auto}
+.pm-node rect{fill:#131a22;stroke:#2a3846;stroke-width:1}
+.pm-node.pm-dir rect{stroke:#8A96A6;stroke-dasharray:4 3}
+.pm-t{font-size:12px;fill:#e6edf3}
+.pm-v{font-size:15px;font-weight:700;fill:#2fd4a0}
+.pm-node.pm-dir .pm-v{fill:#e8b26a}
+.pm-edge{stroke:#2fd4a0;stroke-width:3;fill:none}
+.pm-edge.pm-dir{stroke:#8A96A6;stroke-dasharray:5 4}
+.pm-elabel{font-size:11px;fill:#93a3b5;paint-order:stroke;stroke:#0f141b;stroke-width:3px;stroke-linejoin:round}
+.pm-center circle{fill:#16324f;stroke:#2fd4a0;stroke-width:1.5}
+.pm-center .pm-t{fill:#cfe0ee;font-size:11px}
+.pm-center .pm-v{fill:#fff;font-size:17px}
+.plan-map-legend{font-size:11px;color:#7b8b9b;text-align:center;margin:2px 0 4px}
+@media(max-width:480px){.plan-title{font-size:14px}.plan-sum{font-size:11px}}
 .plan-tag{font-size:12px;letter-spacing:.06em;color:#2fd6a3;font-weight:700}
 .plan-card h4{margin:4px 0 8px;font-size:17px;color:#e6edf3}
 .plan-card .plan-q{font-size:13px;color:#93a3b5;margin:0 0 10px}
@@ -1686,8 +1709,45 @@ function planHas1095A(){
   }
   return false;
 }
-function planCard(titleTag,title,q,body,boundary){
-  return "<div class='plan-card'><div class='plan-tag'>"+esc(titleTag)+"</div><h4>"+esc(title)+"</h4>"+(q?"<p class='plan-q'>"+esc(q)+"</p>":"")+body+"<p class='plan-note'>"+esc(boundary)+"</p></div>";
+function planCard(titleTag,title,q,body,boundary,open,statusTxt){
+  return "<details class='plan-card' data-plan-card"+(open?" open":"")+"><summary><span class='plan-tag'>"+esc(titleTag)+"</span><span class='plan-title'>"+esc(title)+"</span><span class='plan-sum'>"+esc(statusTxt||"")+"</span></summary><div class='plan-body'>"+(q?"<p class='plan-q'>"+esc(q)+"</p>":"")+body+"<p class='plan-note'>"+esc(boundary)+"</p></div></details>";
+}
+// 一图替四卡：中心是你的数，四条边分别指向下面的明细卡；线型只用 num（能有数，实线）与 dir（只给方向，虚线）。
+function planMapSvg(s,unlocked){
+  s=s||{};
+  var RET=(typeof RULES!=="undefined"&&RULES&&RULES.retirement)||{};
+  var inc=planAmount(s.income),st=s.status||"";
+  var b=(unlocked&&st&&inc!=null)?planBracket(st,inc):null;
+  var a=unlocked?planAmount(s.k401):null,i=unlocked?planAmount(s.ira):null;
+  var gap401=(a!=null&&RET.k401_limit!=null)?(RET.k401_limit-a):null;
+  var gapIra=(i!=null&&RET.ira_limit!=null)?(RET.ira_limit-i):null;
+  if(gap401!=null&&gap401<=0)gap401=null;
+  if(gapIra!=null&&gapIra<=0)gapIra=null;
+  var gap=(gap401!=null)?gap401:(gapIra!=null?gapIra:null);
+  var lock=planLang("季票","Pass","Pase");
+  var toFill=planLang("待填","To fill","Por llenar");
+  var stPos=!unlocked?lock:(b?(b.rate+"%"):toFill);
+  var stSub=!unlocked?lock:((planHas1095A()||s.marketplace)?planLang("要对账","Reconcile","Conciliar"):planLang("等你勾","Tick if applies","Marque si aplica"));
+  var stRet=!unlocked?lock:(gap!=null?planMoney(gap):toFill);
+  var stPol=!unlocked?lock:planLang("2027 起","From 2027","Desde 2027");
+  var centerVal=(inc!=null&&unlocked)?planMoney(inc):(unlocked?toFill:lock);
+  var node=function(x,y,title,val,kind){
+    return "<g class='pm-node pm-"+kind+"'><rect x='"+x+"' y='"+y+"' width='150' height='58' rx='10'/><text class='pm-t' x='"+(x+75)+"' y='"+(y+22)+"' text-anchor='middle'>"+esc(title)+"</text><text class='pm-v' x='"+(x+75)+"' y='"+(y+44)+"' text-anchor='middle'>"+esc(val)+"</text></g>";
+  };
+  var edge=function(x,y,lx,ly,label,kind){
+    return "<line class='pm-edge pm-"+kind+"' x1='180' y1='150' x2='"+x+"' y2='"+y+"'/><text class='pm-elabel' x='"+lx+"' y='"+ly+"' text-anchor='middle'>"+esc(label)+"</text>";
+  };
+  return "<div class='plan-map'><svg viewBox='0 0 360 300' role='img' aria-label='"+esc(planLang("你的数牵动这四件事","Your numbers drive these four things","Sus datos mueven estas cuatro cosas"))+"'>"+
+    edge(90,74,125,100,planLang("落在哪一档","which bracket","en qué tramo"),"num")+
+    edge(270,74,235,100,planLang("要不要对账","reconcile?","¿conciliar?"),"dir")+
+    edge(90,226,125,200,planLang("还差多少","room left","cuánto falta"),"num")+
+    edge(270,226,235,200,planLang("何时生效","when it starts","cuándo empieza"),"dir")+
+    node(15,16,planLang("你的位置（税档）","Where you stand (bracket)","Dónde está (tramo)"),stPos,"num")+
+    node(195,16,planLang("补贴（8962）","Subsidy (8962)","Subsidio (8962)"),stSub,"dir")+
+    node(15,226,planLang("退休额度","Retirement room","Margen de retiro"),stRet,"num")+
+    node(195,226,planLang("2027 新规","2027 new rule","Regla nueva 2027"),stPol,"dir")+
+    "<g class='pm-center'><circle cx='180' cy='150' r='46'/><text class='pm-t' x='180' y='142' text-anchor='middle'>"+esc(planLang("你的数","Your numbers","Sus datos"))+"</text><text class='pm-v' x='180' y='163' text-anchor='middle'>"+esc(centerVal)+"</text></g>"+
+    "</svg><p class='plan-map-legend'>"+esc(planLang("实线＝能有数；虚线＝只给方向。图只标结构，不算税、不判资格。","Solid = a figure is possible; dashed = direction only. Structure only: no tax calculation, no eligibility decision.","Línea continua = puede haber una cifra; discontinua = solo dirección. Solo estructura: sin calcular impuestos ni decidir elegibilidad."))+"</p></div>";
 }
 function planCardsHtml(state,unlocked){
   var html="";
@@ -1696,6 +1756,21 @@ function planCardsHtml(state,unlocked){
   // 锁定态只说「要填什么」，不给任何结论；卡 1 / 卡 3 用预告句，卡 4 仍是通用锁句。
   var lock1=planLang("要一行数：去年 1040 上的应税收入（第 15 行左右）。领票后在这里填，当场出结论。","One number: last year's taxable income on Form 1040 (around line 15). Claim the pass, fill it in here, and you'll see the result right away.","Un dato: el ingreso gravable del Formulario 1040 del año pasado (alrededor de la línea 15). Reclame el pase, complételo aquí y verá el resultado al instante.");
   var lock3=planLang("要三行：今年的 401(k)、今年的 IRA、去年 1040 的 AGI（第 11 行左右）。领票后在这里填。","Three lines: this year's 401(k), this year's IRA, and last year's AGI on Form 1040 (around line 11). Fill them in here after claiming the pass.","Tres datos: el 401(k) de este año, la IRA de este año y el AGI del Formulario 1040 del año pasado (alrededor de la línea 11). Complételos aquí después de reclamar el pase.");
+  // 图下每张卡收成明细层：summary 只放一行状态，结论与输入仍在展开后的正文里。
+  var lockS=planLang("季票","Pass","Pase");
+  var toFill2=planLang("待填","To fill","Por llenar");
+  var incS=planAmount(state.income);
+  var bS=(unlocked&&state.status&&incS!=null)?planBracket(state.status,incS):null;
+  var RET2=(typeof RULES!=="undefined"&&RULES&&RULES.retirement)||{};
+  var aS=unlocked?planAmount(state.k401):null,iS=unlocked?planAmount(state.ira):null;
+  var g41=(aS!=null&&RET2.k401_limit!=null)?RET2.k401_limit-aS:null;
+  var gira=(iS!=null&&RET2.ira_limit!=null)?RET2.ira_limit-iS:null;
+  var gS=(g41!=null&&g41>0)?g41:((gira!=null&&gira>0)?gira:null);
+  var sumPos=!unlocked?lockS:(bS?(bS.rate+"%"):toFill2);
+  var sumSub=!unlocked?lockS:((planHas1095A()||state.marketplace)?planLang("要对账","Reconcile","Conciliar"):planLang("等你勾","Tick if applies","Marque si aplica"));
+  var sumRet=!unlocked?lockS:(gS!=null?planMoney(gS):toFill2);
+  var sumPol=!unlocked?lockS:planLang("2027 起","From 2027","Desde 2027");
+  html+=planMapSvg(state,unlocked);
   if(!unlocked)html+="<div class='plan-guide'><p class='small' style='margin-top:0'>"+esc(guide)+"</p><p class='small sub-trust'>"+esc(planLang("交付前总核对：可交／不可交逐项列出，签字与判断在会计。","Pre-delivery check: ready / not-ready listed item by item; the signature and the judgement stay with your accountant.","Verificación previa: listo / no listo, punto por punto; la firma y el criterio son de su contador."))+"</p><p><button type='button' id='btnPlanClaim'>"+esc(planLang("领取免费季票，解锁另外三张卡","Claim a free season pass to unlock the other three cards","Reclamar el pase gratuito para desbloquear las otras tres tarjetas"))+"</button> <span id='planClaimMsg' class='small'></span></p></div>";
   var privacy="<p class='plan-note' style='margin:0 0 10px'>"+esc(planLang("应税收入、AGI、401(k)/IRA 缴款、家庭人数只存在这台电脑的浏览器里，不进清单、不同步服务器；换设备要重填。","Taxable income, AGI, 401(k)/IRA contributions, and household size stay in this browser only — not in your packet, not synced to the server. Re-enter them on another device.","El ingreso gravable, el AGI, las aportaciones 401(k)/IRA y el tamaño del hogar quedan solo en este navegador: no entran en su paquete ni se sincronizan con el servidor. Vuelva a ingresarlos en otro dispositivo."))+"</p>";
   var body1;
@@ -1710,7 +1785,7 @@ function planCardsHtml(state,unlocked){
       "<p class='plan-note' style='margin:6px 0 0'>"+esc(planLang("这是去年的位置，用来定今年的方向。今年收入变动大，按你估的数填。","This is last year's figure — it sets the direction for this year. If this year's income moved a lot, use your estimate.","Este es el dato del año pasado: orienta el de este año. Si sus ingresos cambiaron mucho, use su estimación."))+"</p></div></div>"+
       "<div class='plan-out' id='plan1Out'></div>";
   }else{body1="<p class='plan-lock'>"+esc(lock1)+"</p>";}
-  html+=planCard(planLang("卡 1 · 你的位置","Card 1 · Where you stand","Tarjeta 1 · Dónde está"),planLang("你的位置（税档）","Where you stand (tax bracket)","Dónde está (tramo de impuesto)"),planLang("我今年大概处在什么位置？","Roughly where do I stand this year?","¿Dónde estoy más o menos este año?"),body1,planLang("只标结构，不算税、不判资格、不构成建议。","Only the structure: no tax calculation, no eligibility decision, no advice.","Solo la estructura: sin calcular impuestos, sin decidir elegibilidad, sin asesoría."));
+  html+=planCard(planLang("卡 1","Card 1","Tarjeta 1"),planLang("你的位置（税档）","Where you stand (tax bracket)","Dónde está (tramo de impuesto)"),planLang("我今年大概处在什么位置？","Roughly where do I stand this year?","¿Dónde estoy más o menos este año?"),body1,planLang("只标结构，不算税、不判资格、不构成建议。","Only the structure: no tax calculation, no eligibility decision, no advice.","Solo la estructura: sin calcular impuestos, sin decidir elegibilidad, sin asesoría."),false,sumPos);
 
   // 卡 2 对所有人免费可见（未登录也能填、能出结论），另外三张仍挂在季票里。
   var r=function(v,lz,le,ls){return "<label><input type='checkbox' name='planChanged' value='"+v+"'"+(state[v]?" checked":"")+"> "+esc(planLang(lz,le,ls))+"</label>";};
@@ -1719,7 +1794,7 @@ function planCardsHtml(state,unlocked){
     "<div class='plan-opts'>"+r("chgUp","收入涨了","Income went up","Los ingresos subieron")+r("chgSize","人数变了","Household size changed","Cambió el tamaño del hogar")+r("chgSame","都没变","Neither changed","No cambió ninguno")+r("chgUnsure","不确定","Not sure","No estoy seguro")+"</div>"+
     "<div style='margin-top:10px'><label for='planHousehold'>"+esc(planLang("今年家里几个人（可留空）","People in your household this year (optional)","Personas en su hogar este año (opcional)"))+"</label><input id='planHousehold' inputmode='numeric' autocomplete='off' placeholder='"+esc(planLang("例如：3","e.g. 3","p. ej. 3"))+"' value='"+esc(state.household)+"'></div>"+
     "<div class='plan-out' id='plan2Out'></div>";
-  html+=planCard(planLang("补贴（免费）","Subsidy (free)","Subsidio (gratis)"),planLang("补贴会不会变（1095-A / 8962）","Will the subsidy change? (1095-A / 8962)","¿Cambiará el subsidio? (1095-A / 8962)"),planLang("家里的补贴、医保会不会跟着变？","Will my household subsidy or coverage change?","¿Cambiará el subsidio o la cobertura de mi hogar?"),body2,planLang("只提示要对账，不估算补贴、不判资格。","It only flags the reconciliation; it does not estimate the credit or decide eligibility.","Solo indica la conciliación; no estima el crédito ni decide la elegibilidad."));
+  html+=planCard(planLang("补贴 · 免费","Subsidy · free","Subsidio · gratis"),planLang("补贴会不会变（1095-A / 8962）","Will the subsidy change? (1095-A / 8962)","¿Cambiará el subsidio? (1095-A / 8962)"),planLang("家里的补贴、医保会不会跟着变？","Will my household subsidy or coverage change?","¿Cambiará el subsidio o la cobertura de mi hogar?"),body2,planLang("只提示要对账，不估算补贴、不判资格。","It only flags the reconciliation; it does not estimate the credit or decide eligibility.","Solo indica la conciliación; no estima el crédito ni decide la elegibilidad."),true,sumSub);
 
   var body3;
   if(unlocked){
@@ -1729,7 +1804,7 @@ function planCardsHtml(state,unlocked){
       "<p class='plan-note' style='margin:6px 0 0'>"+esc(planLang("去年的数，用来判断抵免方向。","Last year's figure — it sets the direction for the credit.","El dato del año pasado: orienta el crédito."))+"</p></div>"+
       "<div class='plan-out' id='plan3Out'></div>";
   }else{body3="<p class='plan-lock'>"+esc(lock3)+"</p>";}
-  html+=planCard(planLang("卡 3 · 退休账户","Card 3 · Retirement accounts","Tarjeta 3 · Cuentas de retiro"),planLang("退休账户（401(k) / IRA）","Retirement accounts (401(k) / IRA)","Cuentas de retiro (401(k) / IRA)"),planLang("退休账户还能补多少、够不够格？","How much room is left in my retirement accounts?","¿Cuánto espacio me queda en las cuentas de retiro?"),body3,planLang("只核对上限，不算省多少税、不给缴款顺序。","Only a limit check: no tax-savings estimate, no contribution-order advice.","Solo verifica límites: sin estimar ahorro fiscal ni recomendar el orden de aportes."));
+  html+=planCard(planLang("卡 3","Card 3","Tarjeta 3"),planLang("退休账户（401(k) / IRA）","Retirement accounts (401(k) / IRA)","Cuentas de retiro (401(k) / IRA)"),planLang("退休账户还能补多少、够不够格？","How much room is left in my retirement accounts?","¿Cuánto espacio me queda en las cuentas de retiro?"),body3,planLang("只核对上限，不算省多少税、不给缴款顺序。","Only a limit check: no tax-savings estimate, no contribution-order advice.","Solo verifica límites: sin estimar ahorro fiscal ni recomendar el orden de aportes."),false,sumRet);
 
   var body4;
   if(unlocked){
@@ -1737,7 +1812,7 @@ function planCardsHtml(state,unlocked){
       "<tr><td>"+esc(planLang(PLAN_C4_POLICY_ZH,PLAN_C4_POLICY_EN,PLAN_C4_POLICY_ES))+"</td><td>"+esc(planLang(PLAN_C4_WHO_ZH,PLAN_C4_WHO_EN,PLAN_C4_WHO_ES))+"</td><td>"+esc(planLang(PLAN_C4_TODO_ZH,PLAN_C4_TODO_EN,PLAN_C4_TODO_ES))+"</td></tr></table>"+
       "<p class='plan-note' style='margin:8px 0 0'>"+esc(planLang(PLAN_C4_SRC_ZH,PLAN_C4_SRC_EN,PLAN_C4_SRC_ES))+"</p>";
   }else{body4="<p class='plan-lock'>"+esc(lock)+"</p>";}
-  html+=planCard(planLang("卡 4 · 今年变了什么","Card 4 · What changed this year","Tarjeta 4 · Qué cambió este año"),planLang("今年变了什么（政策）","What changed this year (policy)","Qué cambió este año (política)"),planLang("今年有什么新规矩是我不知道的？","What new rule should I know about?","¿Qué regla nueva debería conocer?"),body4,planLang("只列政策口径，不承诺金额、不推荐机构。","Policy wording only: no promised amount, no institution recommendations.","Solo el texto de la política: sin prometer montos ni recomendar instituciones."));
+  html+=planCard(planLang("卡 4","Card 4","Tarjeta 4"),planLang("今年变了什么（政策）","What changed this year (policy)","Qué cambió este año (política)"),planLang("今年有什么新规矩是我不知道的？","What new rule should I know about?","¿Qué regla nueva debería conocer?"),body4,planLang("只列政策口径，不承诺金额、不推荐机构。","Policy wording only: no promised amount, no institution recommendations.","Solo el texto de la política: sin prometer montos ni recomendar instituciones."),false,sumPol);
   html+="<p class='small muted'>"+esc(planLang("打印这一页给会计。你交了什么、还缺什么，纸上都写着——他替你出面的时候，手里有东西。","Print this page for your accountant. What you handed over and what's still missing is all on it — so when he speaks for you, he has something in hand.","Imprima esta página para su contador. Lo que entregó y lo que todavía falta está todo en ella: cuando él hable por usted, tendrá algo en la mano."))+"</p>"+
     "<p><button type='button' id='btnPlanPrint'>"+esc(planLang("生成交接口径单（打印 / 存 PDF）","Generate the handoff sheet (print / save PDF)","Generar la hoja de entrega (imprimir / guardar PDF)"))+"</button></p>";
   return privacy+html;
@@ -5993,6 +6068,17 @@ select option{background:#fff;color:#1E2A45}
 .plan-card{background:#fff!important;border-color:#E7E0D1!important}
 .plan-card h4{color:#12294B!important}.plan-card .plan-q{color:#5F6E80!important}
 .plan-out{color:#1E2A45!important}.plan-note{color:#5F6E80!important}.plan-tag{color:#8A4B00!important}
+.plan-title{color:#12294B!important}.plan-sum{color:#8A4B00!important}
+.plan-map{background:#fff!important;border-color:#E7E0D1!important}
+.pm-node rect{fill:#fff!important;stroke:#C9C1AF!important}
+.pm-node.pm-dir rect{stroke:#8C8271!important}
+.pm-t{fill:#12294B!important}.pm-v{fill:#0F7A5A!important}
+.pm-node.pm-dir .pm-v{fill:#8A4B00!important}
+.pm-edge{stroke:#0F7A5A!important}.pm-edge.pm-dir{stroke:#8C8271!important}
+.pm-elabel{fill:#5F6E80!important;stroke:#fff!important}
+.pm-center circle{fill:#0E5C8A!important;stroke:#0F7A5A!important}
+.pm-center .pm-t{fill:#DCEBF7!important}.pm-center .pm-v{fill:#fff!important}
+.plan-map-legend{color:#5F6E80!important}
 #demoCard,#graphCard,.demo-rows{background:#fff!important}
 #graphCard{border-color:#E7E0D1!important}
 #graphCard .rg-h{color:#12294B!important}
