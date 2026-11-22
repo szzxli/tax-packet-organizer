@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://tax-packet-api.szzxli711.workers.dev https://abacus.jasoncameron.dev; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0E2A47">
 <meta name="description" content="ClearToFile 可交：把报税材料按步骤整理成清单，跟踪缺项，导出前总核对，导出后自己核对或交给会计师复核。">
@@ -1547,10 +1549,34 @@ function adoptGuestPacket(email){
   if(has&&!load(packetKey(email),null)){save(packetKey(email),g);try{localStorage.removeItem(GUEST_KEY)}catch(e){}delete memStore[GUEST_KEY];return true;}
   return false;
 }
+function toHex(buf){return Array.from(new Uint8Array(buf)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}
+function newSalt(){var b=new Uint8Array(16);try{crypto.getRandomValues(b)}catch(e){for(var i=0;i<16;i++)b[i]=Math.floor(Math.random()*256)}return toHex(b)}
+var PW_ITER=120000;
+function pwHash(pass,email,salt){
+  if(window.crypto&&crypto.subtle&&crypto.subtle.importKey){
+    var pw=new TextEncoder().encode(email+":"+pass),sd=new TextEncoder().encode(salt);
+    return crypto.subtle.importKey("raw",pw,"PBKDF2",false,["deriveBits"]).then(function(k){
+      return crypto.subtle.deriveBits({name:"PBKDF2",salt:sd,iterations:PW_ITER,hash:"SHA-256"},k,256);
+    }).then(function(bits){return "pbkdf2$"+PW_ITER+"$"+salt+"$"+toHex(bits)}).catch(function(){
+      return sha(email+":"+pass).then(function(h){return "sha$"+h});
+    });
+  }
+  return sha(email+":"+pass).then(function(h){return "sha$"+h});
+}
+function pwVerify(pass,email,stored){
+  stored=String(stored||"");
+  if(!stored) return Promise.resolve(false);
+  if(stored.indexOf("pbkdf2$")===0){
+    var parts=stored.split("$");
+    return pwHash(pass,email,parts[2]).then(function(h){return h===stored});
+  }
+  if(stored.indexOf("sha$")===0) return sha(email+":"+pass).then(function(h){return "sha$"+h===stored});
+  return sha(email+":"+pass).then(function(h){return h===stored});
+}
 function localLogin(email,pass){
   var acc=accounts();if(!acc[email]){$("loginMsg").textContent=t("该邮箱未注册，请先注册");return}
-  sha(email+":"+pass).then(function(h){
-    if(h!==acc[email].hash){$("loginMsg").textContent="邮箱或密码不对，请检查后重试";return}
+  pwVerify(pass,email,acc[email].hash).then(function(ok){
+    if(!ok){$("loginMsg").textContent="邮箱或密码不对，请检查后重试";return}
     var merged=adoptGuestPacket(email);
     currentUser=email;try{localStorage.setItem("tpo_session",email)}catch(e){memStore["tpo_session"]=email}
     loadPacket(email).then(function(){showApp();if(merged){track("save",{where:saveFrom||"login",merged:true});alert("已把未登录时整理的包带进你的账号。");}if(pendingPage){var pp=pendingPage;pendingPage=null;showPage(pp);}});
@@ -4482,7 +4508,7 @@ $("btnRegister").onclick=function(){
   if(!apiOn()){
     if(accounts()[email]){$("regMsg").textContent=t("该邮箱已注册，请直接登录");return}
     $("regMsg").textContent="正在创建本机预览账号…";
-    sha(email+":"+pass).then(function(h){
+    pwHash(pass,email,newSalt()).then(function(h){
       var a=accounts();a[email]={hash:h};save("tpo_accounts",a);
       var merged=adoptGuestPacket(email);
       currentUser=email;try{localStorage.setItem("tpo_session",email)}catch(e){memStore["tpo_session"]=email}
@@ -4543,8 +4569,8 @@ $("btnLogin").onclick=function(){
     var c=(e&&e.code)||"";
     if(c==="bad_credentials"&&accounts()[email]){
       localOnly=true;
-      sha(email+":"+pass).then(function(h){
-        if(h!==accounts()[email].hash){$("loginMsg").textContent="邮箱或密码不对，请检查后重试";return}
+      pwVerify(pass,email,accounts()[email].hash).then(function(ok){
+        if(!ok){$("loginMsg").textContent="邮箱或密码不对，请检查后重试";return}
         var guestHad=load(GUEST_KEY,null);
         var guestHas=guestHad&&(((guestHad.checklist||[]).length)||((guestHad.uncertain||[]).length)||((guestHad.lastYear||[]).length));
         var accHad=load(packetKey(email),null);
