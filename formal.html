@@ -434,6 +434,7 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 .site-head p{margin:5px 0 0;font-size:13px;color:rgba(255,255,255,.8);max-width:640px}
 .site-head .lang-switch{position:static;margin:0;background:rgba(255,255,255,.12);padding:3px 6px;border-radius:999px;flex:none}
 .site-head .head-auth{flex:none;margin-left:auto;color:#cfe0ee;font-size:13px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,.32);border-radius:999px;padding:6px 12px;white-space:nowrap}
+.site-head .cta-short{display:none}
 @media(max-width:600px){header.site-head{padding:12px 12px;gap:8px}.site-head .brand-row{flex:1 0 100%;gap:8px}.site-head .brand-word{font-size:20px}.site-head .brand-mark{width:34px;height:34px}.site-head .lang-switch{margin-left:auto}.site-head p{display:none}}
 
 /* 首屏只给状态，金额留在卡底折叠 */
@@ -594,7 +595,12 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <textarea id="heroText" rows="3" data-i18n-ph="例如：今年换了工作，孩子上了大学；去年报过税的，写「和去年一样」也行。" placeholder="例如：今年换了工作，孩子上了大学；去年报过税的，写「和去年一样」也行。"></textarea>
 <button id="btnMake" type="button" class="secondary">生成我的清单</button>
 </div>
-<p class="llm-hint">只写变化，不用写数字。文件只在本机读，不上传、不存社保号。 <a href="#" id="btnAiOpen">不会写？用 AI 描述</a></p>
+<p class="llm-hint">只写变化，不用写数字。 <a href="#" id="btnAiOpen">不会写？用 AI 描述</a></p>
+<ul class="trust-row" aria-label="数据怎么处理" data-i18n-aria="数据怎么处理">
+<li><b>只在本机读</b><span>文件不上传</span></li>
+<li><b>不存社保号</b><span>识别只取表类型</span></li>
+<li><b>一键可删</b><span>账号里只存清单</span></li>
+</ul>
 <details class="llm-more"><summary>不知道怎么写？点选今年有的情况</summary>
 <div class="tag-grid" id="tagGrid">
 <button type="button" class="tag-btn" data-form="W-2" data-phrase="我今年有工资。">有工资</button>
@@ -1208,7 +1214,7 @@ Object.assign(I18N,{"报税前的你 · 不再迷路":{"en":"BEFORE YOU FILE · 
 "▶ 22 秒 · 看一遍":{"en":"▶ 22s · watch once","es":"▶ 22 s · véalo una vez"},
 "一句话就够":{"en":"one line is enough","es":"una frase basta"},
 "11/25 起有 3 场小组陪跑 · 免费":{"en":"From Nov 25 · 3 small-group sessions (held in Chinese) · free","es":"Desde el 25 nov · 3 sesiones en grupo (en chino) · gratis"},"11/25 起 · 3 场陪跑 · 免费":{"en":"From Nov 25 · 3 sessions · free","es":"Desde el 25 nov · 3 sesiones · gratis"},
-"只写变化，不用写数字。文件只在本机读，不上传、不存社保号。":{"en":"Just what changed — no numbers. Files are read on this device only: never uploaded, never store your SSN.","es":"Solo qué cambió; sin cifras. Los archivos se leen solo en este dispositivo: no se suben ni guardan su número de seguro social."},"▶ 看 22 秒怎么用":{"en":"▶ Watch 22s — how it works","es":"▶ Vea 22 s — cómo funciona"},"换个数：":{"en":"Change it:","es":"Cambie:"},"卖了房":{"en":"sold a house","es":"vendió casa"},"涨了薪":{"en":"a raise","es":"un aumento"},"换了工作":{"en":"new job","es":"nuevo trabajo"},"和去年一样":{"en":"Same as last year","es":"Igual que el año pasado"},"例如：今年换了工作，孩子上了大学；去年报过税的，写「和去年一样」也行。":{"en":"e.g. changed jobs, a child started college; if you filed last year, \"same as last year\" works too.","es":"ej.: cambié de trabajo, un hijo entró a la universidad; si declaró el año pasado, «igual que el año pasado» también sirve."},
+"只在本机读":{"en":"Read on this device","es":"Se lee en este dispositivo"},"文件不上传":{"en":"Files never uploaded","es":"Los archivos no se suben"},"不存社保号":{"en":"No SSN stored","es":"Sin SSN guardado"},"识别只取表类型":{"en":"Recognition takes form types only","es":"Solo se extrae el tipo de formulario"},"一键可删":{"en":"Delete in one click","es":"Eliminar con un clic"},"账号里只存清单":{"en":"Your account stores the checklist only","es":"La cuenta guarda solo la lista"},"▶ 看 22 秒怎么用":{"en":"▶ Watch 22s — how it works","es":"▶ Vea 22 s — cómo funciona"},"换个数：":{"en":"Change it:","es":"Cambie:"},"卖了房":{"en":"sold a house","es":"vendió casa"},"涨了薪":{"en":"a raise","es":"un aumento"},"换了工作":{"en":"new job","es":"nuevo trabajo"},"和去年一样":{"en":"Same as last year","es":"Igual que el año pasado"},"例如：今年换了工作，孩子上了大学；去年报过税的，写「和去年一样」也行。":{"en":"e.g. changed jobs, a child started college; if you filed last year, \"same as last year\" works too.","es":"ej.: cambié de trabajo, un hijo entró a la universidad; si declaró el año pasado, «igual que el año pasado» también sirve."},
 "不知道怎么写？点选今年有的情况":{"en":"Not sure how to write it? Tap what applies","es":"\u00bfNo sabe cómo escribirlo? Toque lo que aplique"},"拖动看收入落在哪":{"en":"Drag to see where you land","es":"Mueva para ver dónde cae"},"季票 · 内测免费":{"en":"Pass · free in beta","es":"Pase · gratis en beta"},"今年要备的清单":{"en":"This year's checklist","es":"Lista del año"},"交出去前总核对":{"en":"Pre-handoff check","es":"Chequeo previo"},"生成我的清单":{"en":"Generate my list","es":"Generar mi lista"},"订阅季票":{"en":"Subscribe","es":"Suscribirme"},
 "说一句今年变了什么":{"en":"Say what changed","es":"Diga qué cambió"},
 "拿到今年要备的清单":{"en":"Get your checklist","es":"Reciba su lista"},
@@ -1528,10 +1534,7 @@ var memStore={};
 function load(k,d){try{var v=localStorage.getItem(k);if(v)return JSON.parse(v);if(k in memStore)return memStore[k];return d}catch(e){return (k in memStore)?memStore[k]:d}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){memStore[k]=v;var w=$("storageWarn");if(w)w.classList.remove("hidden")}}
 function packetKey(email){return "tpo_packet_"+email}
-function accounts(){return load("tpo_accounts",{})}
 function pending(){return load("tpo_pending",{})}
-function fallbackHash(text){var h=2166136261;for(var i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return "fallback-"+(h>>>0).toString(16)}
-function sha(text){try{if(window.crypto&&crypto.subtle)return crypto.subtle.digest("SHA-256",new TextEncoder().encode(text)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}).catch(function(){return fallbackHash(text)})}catch(e){}return Promise.resolve(fallbackHash(text))}
 var currentUser=null,packet=null;
 var serverEntitlementEnd=0,serverSub=null,serverSyncTimer=null,localOnly=false;
 function apiOn(){return (typeof TpoApi!=="undefined")&&TpoApi.enabled();}
@@ -1548,39 +1551,6 @@ function adoptGuestPacket(email){
   var has=!!(g&&(((g.checklist||[]).length)||((g.uncertain||[]).length)||((g.lastYear||[]).length)));
   if(has&&!load(packetKey(email),null)){save(packetKey(email),g);try{localStorage.removeItem(GUEST_KEY)}catch(e){}delete memStore[GUEST_KEY];return true;}
   return false;
-}
-function toHex(buf){return Array.from(new Uint8Array(buf)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}
-function newSalt(){var b=new Uint8Array(16);try{crypto.getRandomValues(b)}catch(e){for(var i=0;i<16;i++)b[i]=Math.floor(Math.random()*256)}return toHex(b)}
-var PW_ITER=120000;
-function pwHash(pass,email,salt){
-  if(window.crypto&&crypto.subtle&&crypto.subtle.importKey){
-    var pw=new TextEncoder().encode(email+":"+pass),sd=new TextEncoder().encode(salt);
-    return crypto.subtle.importKey("raw",pw,"PBKDF2",false,["deriveBits"]).then(function(k){
-      return crypto.subtle.deriveBits({name:"PBKDF2",salt:sd,iterations:PW_ITER,hash:"SHA-256"},k,256);
-    }).then(function(bits){return "pbkdf2$"+PW_ITER+"$"+salt+"$"+toHex(bits)}).catch(function(){
-      return sha(email+":"+pass).then(function(h){return "sha$"+h});
-    });
-  }
-  return sha(email+":"+pass).then(function(h){return "sha$"+h});
-}
-function pwVerify(pass,email,stored){
-  stored=String(stored||"");
-  if(!stored) return Promise.resolve(false);
-  if(stored.indexOf("pbkdf2$")===0){
-    var parts=stored.split("$");
-    return pwHash(pass,email,parts[2]).then(function(h){return h===stored});
-  }
-  if(stored.indexOf("sha$")===0) return sha(email+":"+pass).then(function(h){return "sha$"+h===stored});
-  return sha(email+":"+pass).then(function(h){return h===stored});
-}
-function localLogin(email,pass){
-  var acc=accounts();if(!acc[email]){$("loginMsg").textContent=t("该邮箱未注册，请先注册");return}
-  pwVerify(pass,email,acc[email].hash).then(function(ok){
-    if(!ok){$("loginMsg").textContent="邮箱或密码不对，请检查后重试";return}
-    var merged=adoptGuestPacket(email);
-    currentUser=email;try{localStorage.setItem("tpo_session",email)}catch(e){memStore["tpo_session"]=email}
-    loadPacket(email).then(function(){showApp();if(merged){track("save",{where:saveFrom||"login",merged:true});alert("已把未登录时整理的包带进你的账号。");}if(pendingPage){var pp=pendingPage;pendingPage=null;showPage(pp);}});
-  });
 }
 function loadGuest(){packet=load(GUEST_KEY,null);if(!packet){packet=newPacket();save(GUEST_KEY,packet)}else{if(packet.changesCollapsed===undefined)packet.changesCollapsed=true;if(!packet.mergedV2){backfillRows();migrateSheets();packet.mergedV2=true;savePacket();}}}
 function gateNote(){return "<p class='small'>"+t("登录后可用：这是季票功能，登录后解锁。")+"</p><p><button class='secondary' onclick='showAuth()'>"+t("登录 / 注册")+"</button></p>";}
@@ -4505,17 +4475,7 @@ $("btnRegister").onclick=function(){
   var email=$("regEmail").value.trim().toLowerCase(),pass=$("regPass").value;
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){$("regMsg").textContent="邮箱格式不对";return}
   if(pass.length<8){$("regMsg").textContent="密码至少 8 位";return}
-  if(!apiOn()){
-    if(accounts()[email]){$("regMsg").textContent=t("该邮箱已注册，请直接登录");return}
-    $("regMsg").textContent="正在创建本机预览账号…";
-    pwHash(pass,email,newSalt()).then(function(h){
-      var a=accounts();a[email]={hash:h};save("tpo_accounts",a);
-      var merged=adoptGuestPacket(email);
-      currentUser=email;try{localStorage.setItem("tpo_session",email)}catch(e){memStore["tpo_session"]=email}
-      loadPacket(email).then(function(){showApp();track("save",{where:saveFrom||"register"});if(merged)alert("已把未登录时整理的包带进你的账号。");if(pendingPage){var pp=pendingPage;pendingPage=null;showPage(pp);}});
-    });
-    return;
-  }
+  if(!apiOn()){$("regMsg").textContent="网络未接通，请检查网络后再试。";return}
   $("regMsg").textContent="正在发送验证码…";
   TpoApi.register(email,pass).then(function(){
     $("verifyBox").classList.remove("hidden");$("regMsg").textContent="验证码已发到你的邮箱，请输入验证。";startResendCountdown();
@@ -4547,7 +4507,7 @@ $("btnResendCode").onclick=function(){
 };
 $("btnLogin").onclick=function(){
   var email=$("loginEmail").value.trim().toLowerCase(),pass=$("loginPass").value;
-  if(!apiOn()){localLogin(email,pass);return}
+  if(!apiOn()){$("loginMsg").textContent="网络未接通，请检查网络后再试。";return}
   $("loginMsg").textContent="正在登录…";
   TpoApi.login(email,pass).then(function(){
     localOnly=false;
@@ -4567,21 +4527,6 @@ $("btnLogin").onclick=function(){
     });
   }).catch(function(e){
     var c=(e&&e.code)||"";
-    if(c==="bad_credentials"&&accounts()[email]){
-      localOnly=true;
-      pwVerify(pass,email,accounts()[email].hash).then(function(ok){
-        if(!ok){$("loginMsg").textContent="邮箱或密码不对，请检查后重试";return}
-        var guestHad=load(GUEST_KEY,null);
-        var guestHas=guestHad&&(((guestHad.checklist||[]).length)||((guestHad.uncertain||[]).length)||((guestHad.lastYear||[]).length));
-        var accHad=load(packetKey(email),null);
-        currentUser=email;try{localStorage.setItem("tpo_session",email)}catch(e){memStore["tpo_session"]=email}
-        if(!accHad&&guestHas){save(packetKey(email),guestHad);try{localStorage.removeItem(GUEST_KEY)}catch(e){}delete memStore[GUEST_KEY];}
-        loadPacket(email).then(function(){showApp();});
-        if(guestHas&&!accHad){alert("已把未登录时整理的包带进你的账号。");}
-        if(pendingPage){var pp=pendingPage;pendingPage=null;showPage(pp);}
-      });
-      return;
-    }
     $("loginMsg").textContent=c==="bad_credentials"?"邮箱或密码不对，请检查后重试":c==="not_verified"?"该邮箱未验证，请先完成验证":("登录失败（"+c+"），请稍后再试。");
   });
 };
@@ -5869,9 +5814,8 @@ try{if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").
 (function(){var bs=document.querySelectorAll("[data-lang-btn]");for(var i=0;i<bs.length;i++){bs[i].addEventListener("click",function(){var l=this.getAttribute("data-lang-btn");setLang(l);});}})();
 (function init(){
   var s=null;try{s=localStorage.getItem("tpo_session")}catch(e){}if(!s)s=memStore["tpo_session"]||null;
-  function localRestore(){
-    if(s&&accounts()[s]){currentUser=s;loadPacket(s).then(function(){showApp();});}
-    else{currentUser=null;loadGuest();showApp();}
+  function restoreGuest(){
+    currentUser=null;loadGuest();showApp();
   }
   // 规则图：页面所有门槛都从 rules/graph.json 取；取不到就保持「先填这两项」空态。
   fetch("./rules/graph.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (g) {
@@ -5899,8 +5843,8 @@ try{if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").
     TpoApi.me().then(function(m){
       currentUser=(m&&m.email)||s;
       loadPacket(currentUser).then(function(){refreshEntitlement();showApp();if(ret){$("payMsg").textContent=ret==="paid"?t("付款完成，季票已开通，有效期见上方状态。"):t("已取消付款，未扣款。");if(ret==="paid")setTimeout(function(){refreshOrders();},3000);}});
-    }).catch(function(){localRestore();});
-  }else{localRestore();}
+    }).catch(function(){restoreGuest();});
+  }else{restoreGuest();}
 })();
 </script>
 <style id="polish">
@@ -5909,6 +5853,11 @@ try{if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").
 body{background:var(--p-bg);-webkit-font-smoothing:antialiased;letter-spacing:.005em}
 .one-thing{border-left:3px solid var(--p-accent);background:rgba(47,212,160,.07);border-radius:8px;padding:7px 10px;margin:0 0 10px;max-width:100%;overflow-wrap:anywhere;word-break:break-word}
 .one-thing p{margin:1px 0;overflow-wrap:anywhere;word-break:break-word}
+.trust-row{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0 0;padding:0}
+.trust-row li{background:rgba(255,255,255,.03);border:1px solid var(--p-line);border-radius:8px;padding:6px 8px;min-width:0}
+.trust-row b{display:block;font-size:12px;color:var(--p-text);font-weight:600;line-height:1.3}
+.trust-row span{display:block;font-size:11px;color:var(--p-sub);line-height:1.35;margin-top:2px}
+@media (max-width:480px){.trust-row{margin-top:6px}.trust-row li{padding:4px 6px}.trust-row b{font-size:11px}.trust-row span{display:none}}
 .one-thing .one-thing-lead{font-size:1em;line-height:1.3}
 .one-badge{display:inline-block;background:var(--p-accent);color:var(--p-accent-ink);border-radius:4px;padding:0 6px;margin-right:6px;font-size:.78em;vertical-align:1px;font-weight:600}
 .policy-timeline{margin:4px 0 0;padding-left:18px}

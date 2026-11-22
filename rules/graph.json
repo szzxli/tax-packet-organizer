@@ -928,7 +928,12 @@
     "最多可退",
     "合格",
     "eligible",
-    "entitled"
+    "eligib",
+    "entitled",
+    "entitl",
+    "qualif",
+    "通过审批",
+    "包过"
   ],
   "banned_replace": {
     "抵税": "少交"

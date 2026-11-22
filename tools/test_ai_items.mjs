@@ -45,6 +45,30 @@ check("清洗模块里没有写死的表清单", () => {
   assert.ok(!/"W-2"\s*,/.test(src), "模块里不应有写死的表数组");
   assert.ok(!/AI_FORM_ALLOW\s*=/.test(src), "旧的写死白名单应已删除");
 });
+check("禁用词四个字段都查：payer 里带承诺也整条丢", () => {
+  assert.deepEqual(sanitizeAiItems([{ form: "W-2", payer: "符合条件就能拿", prepare: "打开雇主给的工资单" }]), []);
+  assert.deepEqual(sanitizeAiItems([{ form: "1099-INT", payer: "You are entitled to it", prepare: "看银行利息" }]), []);
+});
+check("金额承诺闸：带具体金额或「退…数字」整条丢", () => {
+  const out = sanitizeAiItems([
+    item("W-2", "理由写「可退 $3,240」"),
+    item("1099-INT", "能退 3240 元"),
+    item("1099-DIV", "拿回￥1,200"),
+    item("W-2", "按表上第 1 栏填数"),
+  ]);
+  assert.equal(out.length, 1, "只应留没有金额承诺的那条");
+  assert.equal(out[0].prepare, "按表上第 1 栏填数");
+});
+check("插空格与英文词形绕过都要拦住", () => {
+  const out = sanitizeAiItems([
+    item("W-2", "符 合 条 件"),
+    item("W-2", "el igible"),
+    item("W-2", "qualification confirmed"),
+    item("W-2", "带上 1098-T 单子"),
+  ]);
+  assert.equal(out.length, 1, "只应留正常那条");
+  assert.equal(out[0].prepare, "带上 1098-T 单子");
+});
 check("空值安全、最多 20 条、字段截断", () => {
   assert.deepEqual(sanitizeAiItems(null), []);
   assert.deepEqual(sanitizeAiItems([item("", "x"), item("W-2", "")]), []);

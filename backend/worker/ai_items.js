@@ -35,9 +35,17 @@ export function aiFormAllowed(form) {
   return !!aiFormNode(form);
 }
 
+// 去空白后再比：模型会写「符 合 条 件」「el igible」这类插空格绕过。
+const squash = (v) => String(v == null ? "" : v).toLowerCase().replace(/[\s\u3000]+/g, "");
 function hitsBanned(text) {
-  const s = String(text || "").toLowerCase();
-  return AI_BANNED.some((w) => s.indexOf(String(w).toLowerCase()) >= 0);
+  const s = squash(text);
+  return AI_BANNED.some((w) => s.indexOf(squash(w)) >= 0);
+}
+// 金额承诺闸：出现具体金额（$3,240／¥1,200）或「退/拿回…数字」就整条丢。
+// 宁可少几条，也不把没算过的钱带进用户清单。
+const MONEY_CLAIM = /([$¥￥]\s*\d)|(退[^，。；,;]{0,6}\d)|(拿[回][^，。；,;]{0,6}\d)/;
+function claimsMoney(text) {
+  return MONEY_CLAIM.test(String(text || ""));
 }
 function soften(text) {
   let out = String(text || "");
@@ -57,7 +65,9 @@ export function sanitizeAiItems(items, description) {
     const why = soften(String(it.why || "").trim().slice(0, 200));
     if (!form || !prepare) continue;
     if (!aiFormAllowed(form)) continue;
-    if (hitsBanned(prepare) || hitsBanned(why)) continue;
+    // 禁用词四个字段都查（此前漏了 payer），金额承诺同样四处都拦。
+    if (hitsBanned(form) || hitsBanned(payer) || hitsBanned(prepare) || hitsBanned(why)) continue;
+    if (claimsMoney(payer) || claimsMoney(prepare) || claimsMoney(why)) continue;
     const scope = SCOPE.get(norm(form));
     if (scope) {
       // 1) 描述里没提这件事，就不许出现这张表
