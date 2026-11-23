@@ -458,6 +458,11 @@ html[lang="en"] .site-head .brand-zh,html[lang="es"] .site-head .brand-zh{displa
 .site-head .lang-switch{position:static;margin:0;background:rgba(255,255,255,.12);padding:3px 6px;border-radius:999px;flex:none}
 .site-head .head-auth{flex:none;margin-left:auto;color:#cfe0ee;font-size:13px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,.32);border-radius:999px;padding:6px 12px;white-space:nowrap}
 .site-head .cta-short{display:none}
+.head-steps{display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:2px}
+.head-steps .hs-tab{background:rgba(255,255,255,.10);color:#dbe7f2;border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:5px 11px;font-size:12px;min-height:32px;cursor:pointer;white-space:nowrap}
+.head-steps .hs-tab.active{background:#fff;color:#16324f;border-color:#fff;font-weight:700}
+.head-steps .hs-tab.done::after{content:" ✓"}
+@media(max-width:600px){.head-steps{gap:4px}.head-steps .hs-tab{padding:4px 8px;font-size:11px;min-height:30px}}
 @media(max-width:600px){header.site-head{padding:12px 12px;gap:8px}.site-head .brand-row{flex:1 0 100%;gap:8px}.site-head .brand-word{font-size:20px}.site-head .brand-mark{width:34px;height:34px}.site-head .lang-switch{margin-left:auto}.site-head p{display:none}}
 
 /* 首屏只给状态，金额留在卡底折叠 */
@@ -548,6 +553,11 @@ body:not(.lean-open) #faqCard,body:not(.lean-open) #supportCard{display:none!imp
 <a href="#" id="btnHeadAuth" class="head-auth hidden">登录 / 注册</a>
 </div>
 
+<div class="head-steps hidden no-print" id="headSteps" role="tablist" aria-label="整理步骤" data-i18n-aria="整理步骤">
+<button class="hs-tab" id="hsStep1" type="button" role="tab" aria-selected="true" aria-controls="appViewSections">① 今年哪里变了</button>
+<button class="hs-tab" id="hsStep2" type="button" role="tab" aria-selected="false" aria-controls="appViewSections">② 把材料放进来</button>
+<button class="hs-tab" id="hsStep3" type="button" role="tab" aria-selected="false" aria-controls="appViewSections">③ 交出去之前核一遍</button>
+</div>
 </header>
 <main>
 
@@ -3093,6 +3103,13 @@ function updateStepTabs(){
   var copy=$("flowStepDescription");if(copy)copy.textContent=t(descriptions[currentOrganizeStep]);
   [1,2,3].forEach(function(step){var tab=$("flowStep"+step);if(!tab)return;var active=step===currentOrganizeStep;tab.classList.toggle("active",active);tab.classList.toggle("done",stepDone(step));tab.setAttribute("aria-selected",active?"true":"false");});
   var panel=$("appViewSections");if(panel)panel.setAttribute("aria-labelledby","flowStep"+currentOrganizeStep);
+  var hs=$("headSteps");
+  if(hs){
+    var app=$("appView");
+    var showHs=!!(app&&!app.classList.contains("hidden")&&currentPage===1&&!document.body.classList.contains("tpo-first"));
+    hs.classList.toggle("hidden",!showHs);
+    [1,2,3].forEach(function(step){var hb=$("hsStep"+step);if(!hb)return;var active=step===currentOrganizeStep;hb.classList.toggle("active",active);hb.classList.toggle("done",stepDone(step));hb.setAttribute("aria-selected",active?"true":"false");hb.onclick=function(){setOrganizeStep(step,true);};});
+  }
 }
 function setOrganizeStep(step,scrollToGuide){
   currentOrganizeStep=Math.max(1,Math.min(3,Number(step)||1));
@@ -4139,7 +4156,8 @@ function renderHero(){
   var guide=$("journeyGuide");if(guide)guide.classList.toggle("hidden",currentPage!==1);
   document.body.classList.toggle("tpo-first", onEntry);
   // 这一步的号挂在 body 上：概览与演示片只在第 1 步出现，第 2、3 步各干各的事。
-  document.body.setAttribute("data-step", String(currentOrganizeStep));
+  document.body.setAttribute("data-step", String(currentOrganizeStep));  document.body.setAttribute("data-step", String(currentOrganizeStep));
+  try{updateStepTabs();}catch(e){}
   var rl=$("resumeLine");
   if(rl){
     var nHave=(packet&&packet.checklist)?packet.checklist.length:0;
