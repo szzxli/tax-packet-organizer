@@ -6286,6 +6286,8 @@ body.tpo-first #startCard .hero-cta{display:inline-block!important}
   function draw(){var line=document.getElementById("gLine"),b=document.getElementById("gNext");if(!line||!b)return;line.textContent=L[i][w()];b.textContent=N[i][w()];}
   function bind(){var b=document.getElementById("gNext");if(!b||b._b)return;b._b=1;b.onclick=function(){if(i<2){i++;draw();return;}try{track("demo_cta_pass");}catch(e){}try{goSub();}catch(e){}};draw();}
   document.addEventListener("DOMContentLoaded",bind);setTimeout(bind,1200);
+  // 引导卡在主脚本之外自行取词：语言切换时也重画，避免中文页残留上一语言。
+  try{new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:["lang"]});}catch(e){}
 })();
 </script>
 
